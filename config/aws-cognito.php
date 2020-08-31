@@ -1,28 +1,26 @@
 <?php
 
 return [
-    // AWS IAM Settings
+    // AWS configurations
     'credentials'       => [
-        'key'    => env('AWS_IAM_KEY', 'AKIAINIMMVLQLNSYMIEQ'),
-        'secret' => env('AWS_IAM_SECRET', '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'),
+        'key'    => env('AWS_ACCESS_KEY_ID'),
+        'secret' => env('AWS_ACCESS_KEY_SECRET'),
         'token' => null
     ],
 
-    // Cognito Settings
-    'region'            => env('AWS_COGNITO_REGION', 'ap-south-1'),
+    // Cognito configurations
+    'app_client_id'     => env('AWS_COGNITO_CLIENT_ID'),
+    'app_client_secret' => env('AWS_COGNITO_CLIENT_SECRET'),
+    'user_pool_id'      => env('AWS_COGNITO_USER_POOL_ID'),
+    'region'            => env('AWS_COGNITO_REGION', 'us-east-1'),
     'version'           => env('AWS_COGNITO_VERSION', 'latest'),
-    'app_client_id'     => env('AWS_COGNITO_CLIENT_ID', '6qt4ahujuglcpo9bgrqnlqkm2r'),
-    'app_client_secret' => env('AWS_COGNITO_CLIENT_SECRET', '1d8e41gjtt1fkbjjtb87aavks8gdu79o9bi083aa5jhv0vi074s1'),
-    'user_pool_id'      => env('AWS_COGNITO_USER_POOL_ID', 'ap-south-1_VBMmtfBs8'),
 
-    // Package configuration
-    'use_sso'           => env('USE_SSO', false),
+    // Package configurations
+    'use_sso'           => env('AWS_COGNITO_USE_SSO', false),
     'sso_user_fields'   => [
         'name',
         'email',
     ],
-
-    'sso_user_model'        => 'App\User',
-
     'delete_user'           => env('AWS_COGNITO_DELETE_USER', false),
+    'sso_user_model'        => env('AWS_COGNITO_USER_MODEL', 'App\User'),
 ];
