@@ -1,9 +1,19 @@
 <?php
 
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <support@ellaisys.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Ellaisys\Cognito;
 
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
+
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
@@ -68,19 +78,19 @@ class AwsCognitoClient
      * Checks if credentials of a user are valid.
      *
      * @see http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html
-     * @param string $email
+     * @param string $username
      * @param string $password
      * @return \Aws\Result|bool
      */
-    public function authenticate($email, $password)
+    public function authenticate($username, $password)
     {
         try {
             $response = $this->client->adminInitiateAuth([
                 'AuthFlow' => 'ADMIN_NO_SRP_AUTH',
                 'AuthParameters' => [
-                    'USERNAME' => $email,
+                    'USERNAME' => $username,
                     'PASSWORD' => $password,
-                    'SECRET_HASH' => $this->cognitoSecretHash($email),
+                    'SECRET_HASH' => $this->cognitoSecretHash($username),
                 ],
                 'ClientId' => $this->clientId,
                 'UserPoolId' => $this->poolId,
@@ -89,7 +99,7 @@ class AwsCognitoClient
             if ($exception->getAwsErrorCode() === self::RESET_REQUIRED ||
                 $exception->getAwsErrorCode() === self::USER_NOT_FOUND) {
                 return false;
-            }
+            } //End if
 
             throw $exception;
         }
@@ -101,12 +111,12 @@ class AwsCognitoClient
     /**
      * Registers a user in the given user pool.
      *
-     * @param $email
+     * @param $username
      * @param $password
      * @param array $attributes
      * @return bool
      */
-    public function register($email, $password, array $attributes = [])
+    public function register($username, $password, $email, array $attributes = [])
     {
         $attributes['email'] = $email;
 
@@ -114,20 +124,19 @@ class AwsCognitoClient
             $response = $this->client->signUp([
                 'ClientId' => $this->clientId,
                 'Password' => $password,
-                'SecretHash' => $this->cognitoSecretHash($email),
+                'SecretHash' => $this->cognitoSecretHash($username),
                 'UserAttributes' => $this->formatAttributes($attributes),
-                'Username' => $email,
+                'Username' => $username,
             ]);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
                 return false;
-            }
-
+            } //End if
             throw $e;
         }
 
         return (bool)$response['UserConfirmed'];
-    }
+    } //Function ends
 
 
     /**

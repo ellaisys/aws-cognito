@@ -1,11 +1,25 @@
 <?php
 
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <support@ellaisys.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Ellaisys\Cognito;
+
+use Ellaisys\Cognito\Guards\CognitoRequestGuard;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\ServiceProvider;
+//use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\Application;
+
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Auth;
 
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 
@@ -72,11 +86,24 @@ class AwsCognitoServiceProvider extends ServiceProvider
                 config('cognito.user_pool_id')
             );
         });
+        //$this->registerCognitoProvider();
 
-        $this->app['auth']->extend('cognito', function (Application $app, $name, array $config) {
+        $this->extendWebAuthGuard();
+        $this->extendApiAuthGuard();
+    }
+
+
+    /**
+     * Extend Cognito Web/Session Auth.
+     *
+     * @return void
+     */
+    protected function extendWebAuthGuard()
+    {
+        Auth::extend('cognito-session', function (Application $app, $name, array $config) {
             $guard = new CognitoGuard(
                 $name,
-                $client = $app->make(CognitoClient::class),
+                $client = $app->make(AwsCognitoClient::class),
                 $app['auth']->createUserProvider($config['provider']),
                 $app['session.store'],
                 $app['request']
@@ -88,6 +115,29 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
             return $guard;
         });
-    }
+    } //Function ends
+
+
+    /**
+     * Extend Cognito Api Auth.
+     *
+     * @return void
+     */
+    protected function extendApiAuthGuard()
+    {
+        Auth::extend('cognito-token', function ($app, $name, array $config) {
+            $guard = new CognitoRequestGuard(
+                $app['tymon.jwt'],
+                $client = $app->make(AwsCognitoClient::class),
+                $app['request'],
+                Auth::createUserProvider($config['provider'])
+            );
+
+            $guard->setDispatcher($this->app['events']);
+            $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
+
+            return $guard;
+        });
+    } //Function ends
     
 } //Class ends

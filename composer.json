@@ -11,7 +11,7 @@
     ],
     "type": "library",
     "license": "MIT",
-    "homepage": "https://ellaisys.github.io/",
+    "homepage": "https://github.com/ellaisys/aws-cognito",
     "authors": [
         {
             "name": "EllaiSys",

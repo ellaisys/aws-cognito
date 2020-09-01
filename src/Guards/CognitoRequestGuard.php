@@ -11,15 +11,10 @@
 
 namespace Ellaisys\Cognito\Guards;
 
-use Aws\Result;
-use Illuminate\Auth\SessionGuard;
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Contracts\Auth\StatefulGuard;
+use Aws\Result as AwsResult;
+use Illuminate\Http\Request;
+use Illuminate\Auth\RequestGuard;
 use Illuminate\Contracts\Auth\UserProvider;
-use Illuminate\Contracts\Session\Session;
-use Symfony\Component\HttpFoundation\Request;
-
-use Illuminate\Database\Eloquent\Model;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
@@ -27,8 +22,9 @@ use Exception;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
 
-class CognitoSessionGuard extends SessionGuard implements StatefulGuard
+class CognitoRequestGuard extends RequestGuard
 {
+
     /**
      * @var AwsCognitoClient
      */
@@ -36,24 +32,27 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
 
     /**
-     * CognitoSessionGuard constructor.
-     * 
-     * @param string $name
-     * @param AwsCognitoClient $client
-     * @param UserProvider $provider
-     * @param Session $session
-     * @param null|Request $request
+     * @var array
+     */
+    protected $storage;
 
+
+    /**
+     * CognitoRequestGuard constructor.
+     * 
+     * @param $callback
+     * @param AwsCognitoClient $client
+     * @param Request $request
+     * @param UserProvider $provider
      */
     public function __construct(
-        string $name,
-        AwsCognitoClient $client,
-        UserProvider $provider,
-        Session $session,
-        ?Request $request = null
+        $callback,
+        AwsCognitoClient $client, 
+        Request $request, 
+        UserProvider $provider = null
     ) {
         $this->client = $client;
-        parent::__construct($name, $provider, $session, $request);
+        parent::__construct($callback, $request, $provider);
     }
 
 
@@ -66,14 +65,17 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
     protected function hasValidCredentials($user, $credentials)
     {
         /** @var Result $response */
-        $result = $this->client->authenticate($credentials['email'], $credentials['password']);
+        $result = $this->client->authenticate($credentials['username'], $credentials['password']);
 
-        if ($result && $user instanceof Authenticatable) {
-            return true;
-        }
+        if ($result && $result instanceof AwsResult) {
+            $store = [];
+            $store['token'] = $result['AuthenticationResult']['AccessToken'];
+            $store['value'] = $result['AuthenticationResult'];
+            $store['value']['username'] = $credentials['username'];
+        } //End if
 
-        return false;
-    }
+        return ($result && $user instanceof Authenticatable);
+    } //Function ends
 
 
     /**
