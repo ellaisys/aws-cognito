@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Illuminate\Foundation\Auth\VerifiesEmails as BaseVerifiesEmails;
 
-trait VerifyEmailTrait
+trait VerifyEmail
 {
     use BaseVerifiesEmails;
 
@@ -28,7 +28,8 @@ trait VerifyEmailTrait
     public function show(Request $request)
     {
         return view('black-bits/laravel-cognito-auth::verify');
-    }
+    } //Function ends
+    
 
     /**
      * Mark the authenticated user's email address as verified.
@@ -67,7 +68,7 @@ trait VerifyEmailTrait
         }
 
         return redirect($this->redirectPath())->with('verified', true);
-    }
+    } //Function ends
 
 
     /**
@@ -95,6 +96,6 @@ trait VerifyEmailTrait
         }
 
         return response()->json(['success' => 'true']);
-    }
+    } //Function ends
     
 } //Trait ends

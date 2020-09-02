@@ -17,7 +17,7 @@ use Illuminate\Foundation\Auth\ResetsPasswords as BaseResetsPasswords;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
-trait ResetPasswordTrait
+trait ResetPassword
 {
     use BaseResetsPasswords;
 
@@ -31,11 +31,11 @@ trait ResetPasswordTrait
     {
         $this->validate($request, $this->rules(), $this->validationErrorMessages());
 
-        $client = app()->make(CognitoClient::class);
+        $client = app()->make(AwsCognitoClient::class);
 
         $user = $client->getUser($request->email);
 
-        if ($user['UserStatus'] == CognitoClient::FORCE_PASSWORD_STATUS) {
+        if ($user['UserStatus'] == AwsCognitoClient::FORCE_CHANGE_PASSWORD) {
             $response = $this->forceNewPassword($request);
         } else {
             $response = $client->resetPassword($request->token, $request->email, $request->password);
@@ -44,7 +44,7 @@ trait ResetPasswordTrait
         return $response == Password::PASSWORD_RESET
             ? $this->sendResetResponse($request, $response)
             : $this->sendResetFailedResponse($request, $response);
-    }
+    } //Function ends
 
 
     /**
@@ -55,11 +55,11 @@ trait ResetPasswordTrait
      */
     private function forceNewPassword($request)
     {
-        $client = app()->make(CognitoClient::class);
+        $client = app()->make(AwsCognitoClient::class);
         $login = $client->authenticate($request->email, $request->token);
 
         return $client->confirmPassword($request->email, $request->password, $login->get('Session'));
-    }
+    } //Function ends
 
 
     /**
@@ -76,7 +76,7 @@ trait ResetPasswordTrait
         return view('vendor.black-bits.laravel-cognito-auth.reset-password')->with(
             ['email' => $request->email]
         );
-    }
+    } //Function ends
 
 
     /**
@@ -91,6 +91,6 @@ trait ResetPasswordTrait
             'email'    => 'required|email',
             'password' => 'required|confirmed|min:8',
         ];
-    }
+    } //Function ends
 
 } //Trait ends

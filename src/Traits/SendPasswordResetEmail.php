@@ -18,7 +18,7 @@ use Ellaisys\Cognito\AwsCognitoClient;
 
 use Illuminate\Foundation\Auth\SendsPasswordResetEmails as BaseSendsPasswordResetEmails;
 
-trait SendPasswordResetEmailTrait
+trait SendPasswordResetEmail
 {
     use BaseSendsPasswordResetEmails;
 
@@ -36,7 +36,7 @@ trait SendPasswordResetEmailTrait
 
         if ($response == Password::RESET_LINK_SENT) {
             return redirect(route('aws-cognito.password-reset'));
-        }
+        } //End if
 
         return $this->sendResetLinkFailedResponse($request, $response);
     } //Function ends

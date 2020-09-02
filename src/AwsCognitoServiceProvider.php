@@ -15,11 +15,10 @@ use Ellaisys\Cognito\Guards\CognitoRequestGuard;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
-//use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Application;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Auth;
 
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 
@@ -36,12 +35,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        //Register configuration
         $this->mergeConfigFrom(__DIR__.'/../../config/aws-cognito.php', 'cognito');
-
-        // $configPath = __DIR__.'/../config/config.php'; //base_path('packages/ellaisys/exotel/config/config.php');
-
-        // //Register configuration
-        // $this->mergeConfigFrom($configPath, 'ellaisys-exotel'); 
 
         // //Register the singletons
         // $this->app->singleton(ExotelCall::class, function () {
@@ -56,7 +51,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
         // // $this->app->bind('exotel-call', function($app) {
         // //     return new ExotelCall();
         // // });
-    }
+    } //Function ends
 
 
     public function boot()
@@ -67,6 +62,21 @@ class AwsCognitoServiceProvider extends ServiceProvider
         ], 'config');
 
         //Set Singleton Class
+        $this->registerCognitoProvider();
+
+        //Set Guards
+        $this->extendWebAuthGuard();
+        $this->extendApiAuthGuard();
+    } //Function ends
+
+
+    /**
+     * Register Cognito Provider
+     *
+     * @return void
+     */
+    protected function registerCognitoProvider()
+    {
         $this->app->singleton(AwsCognitoClient::class, function (Application $app) {
             $aws_config = [
                 'region'      => config('cognito.region'),
@@ -79,18 +89,14 @@ class AwsCognitoServiceProvider extends ServiceProvider
                 $aws_config['credentials'] = Arr::only($credentials, ['key', 'secret', 'token']);
             } //End if
 
-            return new CognitoClient(
+            return new AwsCognitoClient(
                 new CognitoIdentityProviderClient($aws_config),
                 config('cognito.app_client_id'),
                 config('cognito.app_client_secret'),
                 config('cognito.user_pool_id')
             );
         });
-        //$this->registerCognitoProvider();
-
-        $this->extendWebAuthGuard();
-        $this->extendApiAuthGuard();
-    }
+    } //Function ends
 
 
     /**

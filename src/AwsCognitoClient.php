@@ -20,7 +20,8 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 class AwsCognitoClient
 {
     const NEW_PASSWORD_CHALLENGE = 'NEW_PASSWORD_REQUIRED';
-    const FORCE_PASSWORD_STATUS = 'FORCE_CHANGE_PASSWORD';
+    const FORCE_CHANGE_PASSWORD = 'FORCE_CHANGE_PASSWORD';
+
     const RESET_REQUIRED = 'PasswordResetRequiredException';
     const USER_NOT_FOUND = 'UserNotFoundException';
     const USERNAME_EXISTS = 'UsernameExistsException';
@@ -54,7 +55,7 @@ class AwsCognitoClient
 
 
     /**
-     * CognitoClient constructor.
+     * AwsCognitoClient constructor.
      * @param CognitoIdentityProviderClient $client
      * @param string $clientId
      * @param string $clientSecret

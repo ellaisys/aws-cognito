@@ -20,7 +20,7 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 use Illuminate\Foundation\Auth\AuthenticatesUsers as BaseAuthenticatesUsers;
 
-trait AuthenticateUserTrait
+trait AuthenticateUser
 {
     use BaseAuthenticatesUsers;
 
@@ -39,7 +39,8 @@ trait AuthenticateUserTrait
         }
 
         return $response;
-    }
+    } //Function ends
+
 
     /**
      * Create a local user if one does not exist.
@@ -50,7 +51,8 @@ trait AuthenticateUserTrait
     protected function createLocalUser($credentials)
     {
         return true;
-    }
+    } //Function ends
+
 
     /**
      * @param Request $request
@@ -76,7 +78,8 @@ trait AuthenticateUserTrait
         }
 
         return $this->sendFailedLoginResponse($request);
-    }
+    } //Function ends
+
 
     /**
      * @param CognitoIdentityProviderException $exception
@@ -86,5 +89,6 @@ trait AuthenticateUserTrait
         throw ValidationException::withMessages([
             $this->username() => $exception->getAwsErrorMessage(),
         ]);
-    }
-}
+    } //Function ends
+
+} //Trait ends
