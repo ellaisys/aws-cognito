@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Providers\Storage;
+namespace Ellaisys\Cognito\Providers;
 
 use Illuminate\Contracts\Cache\Repository as CacheContract;
 use Psr\SimpleCache\CacheInterface as PsrCacheInterface;

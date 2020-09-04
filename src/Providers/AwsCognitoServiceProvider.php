@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito;
+namespace Ellaisys\Cognito\Providers;
 
 use Ellaisys\Cognito\Guards\CognitoRequestGuard;
 
@@ -35,8 +35,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //Register configuration
-        $this->mergeConfigFrom(__DIR__.'/../../config/aws-cognito.php', 'cognito');
+        // //Register configuration
+        // $this->mergeConfigFrom(__DIR__.'/../../config/aws-cognito.php', 'cognito');
 
         // //Register the singletons
         // $this->app->singleton(ExotelCall::class, function () {
@@ -56,10 +56,16 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        //Configuration path
+        $path = realpath(__DIR__.'/../../config/config.php');
+
         //Publish config
         $this->publishes([
-            __DIR__.'/../config/aws-cognito.php' => config_path('cognito.php'),
+            $path => config_path('cognito.php'),
         ], 'config');
+
+        //Register configuration
+        $this->mergeConfigFrom($path, 'cognito');
 
         //Set Singleton Class
         $this->registerCognitoProvider();

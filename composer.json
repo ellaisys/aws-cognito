@@ -1,14 +1,7 @@
 {
     "name": "ellaisys/cognito",
     "description": "AWS Cognito package that allows Auth and other related features using the AWS SDK for PHP",
-    "keywords": [
-        "aws",
-        "cognito",
-        "oauth",
-        "authentication",
-        "user pool",
-        "ellaisys"
-    ],
+    "keywords": ["php", "laravel", "aws", "cognito", "auth", "authentication", "oauth", "user pool", "ellaisys"],
     "type": "library",
     "license": "MIT",
     "homepage": "https://github.com/ellaisys/aws-cognito",
@@ -20,6 +13,7 @@
             "homepage": "https://ellaisys.github.io/"
         }
     ],
+    "prefer-stable": true,
     "minimum-stability": "dev",
     "require": {
         "php": "^7.2.5",
@@ -37,7 +31,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Ellaisys\\Cognito\\AwsCognitoServiceProvider"
+                "Ellaisys\\Cognito\\Providers\\AwsCognitoServiceProvider"
             ],
             "aliases": {
                 "ExotelCall": "Ellaisys\\Cognito\\Facades\\AwsCognitoAuthFacade"

@@ -72,6 +72,11 @@ class CognitoRequestGuard extends RequestGuard
             $store['token'] = $result['AuthenticationResult']['AccessToken'];
             $store['value'] = $result['AuthenticationResult'];
             $store['value']['username'] = $credentials['username'];
+
+            //Save store data to storage
+
+            //Set storage
+            $this->storage = $store;
         } //End if
 
         return ($result && $user instanceof Authenticatable);
