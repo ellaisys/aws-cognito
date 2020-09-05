@@ -68,16 +68,21 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         /** @var Result $response */
         $result = $this->client->authenticate($credentials['email'], $credentials['password']);
 
-        if ($result && $user instanceof Authenticatable) {
-            return true;
-        }
+        if (!empty($result)) {
+            if ($user instanceof Authenticatable) {
+                return true;
+            } else {
+                throw new NoLocalUserException();
+            } //End if
+        } //End if
 
         return false;
-    }
+    } //Function ends
 
 
     /**
-     * Attempt to authenticate a user using the given credentials.
+     * Attempt to authenticate an existing user using the credentials
+     * using Cognito
      *
      * @param  array  $credentials
      * @param  bool   $remember
@@ -86,18 +91,24 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     public function attempt(array $credentials = [], $remember = false)
     {
-        $this->fireAttemptEvent($credentials, $remember);
+        try {
+            $this->fireAttemptEvent($credentials, $remember);
 
-        $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
+            $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
 
-        if ($this->hasValidCredentials($user, $credentials)) {
-            $this->login($user, $remember);
-            return true;
-        }
+            if ($this->hasValidCredentials($user, $credentials)) {
+                $this->login($user, $remember);
+                return true;
+            }
 
-        $this->fireFailedEvent($user, $credentials);
+            $this->fireFailedEvent($user, $credentials);
 
-        return false;
+            return false;
+        } catch (NoLocalUserException $e) {
+            
+        } catch (Exception $e) {
+            return false;
+        } //Try-catch ends
     } //Function ends
 
 } //Class ends

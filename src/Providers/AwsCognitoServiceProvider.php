@@ -11,6 +11,8 @@
 
 namespace Ellaisys\Cognito\Providers;
 
+use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\Guards\CognitoSessionGuard;
 use Ellaisys\Cognito\Guards\CognitoRequestGuard;
 
 use Illuminate\Support\Arr;
@@ -35,22 +37,6 @@ class AwsCognitoServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        // //Register configuration
-        // $this->mergeConfigFrom(__DIR__.'/../../config/aws-cognito.php', 'cognito');
-
-        // //Register the singletons
-        // $this->app->singleton(ExotelCall::class, function () {
-        //     return new ExotelCall();
-        // });
-        // // $this->app->singleton(ExotelSms::class, function () {
-        // //     return new ExotelSms();
-        // // });
-
-        // //Bind Facades
-        // $this->app->alias(ExotelCall::class, 'exotel-call');
-        // // $this->app->bind('exotel-call', function($app) {
-        // //     return new ExotelCall();
-        // // });
     } //Function ends
 
 
@@ -66,6 +52,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
         //Register configuration
         $this->mergeConfigFrom($path, 'cognito');
+
+        $this->registerPolicies();
 
         //Set Singleton Class
         $this->registerCognitoProvider();
@@ -113,7 +101,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function extendWebAuthGuard()
     {
         Auth::extend('cognito-session', function (Application $app, $name, array $config) {
-            $guard = new CognitoGuard(
+            $guard = new CognitoSessionGuard(
                 $name,
                 $client = $app->make(AwsCognitoClient::class),
                 $app['auth']->createUserProvider($config['provider']),

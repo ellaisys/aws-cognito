@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Traits;
+namespace Ellaisys\Cognito\Auth;
 
 use Illuminate\Http\Request;
 
