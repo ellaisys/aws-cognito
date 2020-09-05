@@ -67,19 +67,26 @@ class CognitoRequestGuard extends RequestGuard
         /** @var Result $response */
         $result = $this->client->authenticate($credentials['username'], $credentials['password']);
 
-        if ($result && $result instanceof AwsResult) {
-            $store = [];
-            $store['token'] = $result['AuthenticationResult']['AccessToken'];
-            $store['value'] = $result['AuthenticationResult'];
-            $store['value']['username'] = $credentials['username'];
+        if (!empty($result) && $result instanceof AwsResult) {
+            if ($user instanceof Authenticatable) {
+                //Create token object
+                $store = [];
+                $store['token'] = $result['AuthenticationResult']['AccessToken'];
+                $store['value'] = $result['AuthenticationResult'];
+                $store['value']['username'] = $credentials['username'];
 
-            //Save store data to storage
+                //Save store data to storage
 
-            //Set storage
-            $this->storage = $store;
+                //Set storage
+                $this->storage = $store;
+
+                return true;
+            } else {
+                throw new NoLocalUserException();
+            } //End if
         } //End if
 
-        return ($result && $user instanceof Authenticatable);
+        return false;
     } //Function ends
 
 
@@ -93,18 +100,24 @@ class CognitoRequestGuard extends RequestGuard
      */
     public function attempt(array $credentials = [], $remember = false)
     {
-        $this->fireAttemptEvent($credentials, $remember);
+        try {
+            $this->fireAttemptEvent($credentials, $remember);
 
-        $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
+            $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
 
-        if ($this->hasValidCredentials($user, $credentials)) {
-            $this->login($user, $remember);
-            return true;
-        }
+            if ($this->hasValidCredentials($user, $credentials)) {
+                $this->login($user, $remember);
+                return true;
+            } //End if
 
-        $this->fireFailedEvent($user, $credentials);
+            $this->fireFailedEvent($user, $credentials);
 
-        return false;
+            return false;
+        } catch (NoLocalUserException $e) {
+                
+        } catch (Exception $e) {
+            return false;
+        } //Try-catch ends
     } //Function ends
 
 } //Class ends
