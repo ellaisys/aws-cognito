@@ -21,7 +21,7 @@
         "aws/aws-sdk-php": "^3.149"
     },
     "require-dev": {
-        "phpunit/phpunit": "^8.5"
+        "phpunit/phpunit": "^9.0"
     },
     "autoload": {
         "psr-4": {
@@ -34,7 +34,6 @@
                 "Ellaisys\\Cognito\\Providers\\AwsCognitoServiceProvider"
             ],
             "aliases": {
-                "ExotelCall": "Ellaisys\\Cognito\\Facades\\AwsCognitoAuthFacade"
             }
         },
         "branch-alias": {
