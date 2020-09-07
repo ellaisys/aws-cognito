@@ -32,6 +32,14 @@ class CognitoRequestGuard extends RequestGuard
 
 
     /**
+     * The AwsCognito instance.
+     *
+     * @var \Ellaisys\Cognito\AwsCognito
+     */
+    protected $cognito;
+
+
+    /**
      * @var array
      */
     protected $storage;
@@ -52,6 +60,7 @@ class CognitoRequestGuard extends RequestGuard
         UserProvider $provider = null
     ) {
         $this->client = $client;
+        $this->cognito = $callback;
         parent::__construct($callback, $request, $provider);
     }
 
@@ -75,10 +84,13 @@ class CognitoRequestGuard extends RequestGuard
                 $store['value'] = $result['AuthenticationResult'];
                 $store['value']['username'] = $credentials['username'];
 
-                //Save store data to storage
-
                 //Set storage
-                $this->storage = $store;
+                $this->storage = $store;                
+
+                //Set Token
+                $this->setToken($store['token']);
+
+                //Save store data to storage
 
                 return true;
             } else {
@@ -118,6 +130,21 @@ class CognitoRequestGuard extends RequestGuard
         } catch (Exception $e) {
             return false;
         } //Try-catch ends
+    } //Function ends
+
+
+    /**
+     * Set the token.
+     *
+     * @param  \Ellaisys\Cognito\AwsCognitoToken|string  $token
+     *
+     * @return $this
+     */
+    public function setToken($token)
+    {
+        $this->cognito->setToken($token);
+
+        return $this;
     } //Function ends
 
 } //Class ends

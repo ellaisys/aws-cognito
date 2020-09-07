@@ -1,11 +1,8 @@
-# AWS Cognito Package for Laravel 7.x
+# Laravel Package to easily manage authentication with AWS Cognito
 AWS Cognito package using the AWS SDK for PHP
 
-# Laravel Package to easily manage authentication with AWS Cognito
-
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/black-bits/laravel-cognito-auth.svg?style=flat-square)](https://packagist.org/packages/black-bits/laravel-cognito-auth)
-[![Total Downloads](https://img.shields.io/packagist/dt/black-bits/laravel-cognito-auth.svg?style=flat-square)](https://packagist.org/packages/black-bits/laravel-cognito-auth)
-[![StyleCI](https://styleci.io/repos/137779073/shield)](https://styleci.io/repos/137779073)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/ellaisys/aws-cognito.svg?style=flat-square)](https://packagist.org/packages/ellaisys/aws-cognito)
+[![Total Downloads](https://img.shields.io/packagist/dt/ellaisys/aws-cognito.svg?style=flat-square)](https://packagist.org/packages/ellaisys/aws-cognito)
 
 This package provides a simple way to use AWS Cognito authentication in Laravel 7.x for Web and API Auth Drivers.
 The idea of this package, and some of the code, is based on the package from Pod-Point which you can find here: [Pod-Point/laravel-cognito-auth](https://github.com/Pod-Point/laravel-cognito-auth), [black-bits/laravel-cognito-auth](https://github.com/black-bits/laravel-cognito-auth) and [tymondesigns/jwt-auth](https://github.com/tymondesigns/jwt-auth).
@@ -58,11 +55,11 @@ to look the following:
 ```
 'guards' => [
     'web' => [
-        'driver' => 'cognito', // This line is important 
+        'driver' => 'cognito-session', // This line is important for using AWS Cognito as Web Driver
         'provider' => 'users',
     ],
     'api' => [
-        'driver' => 'token',
+        'driver' => 'cognito-token', // This line is important for using AWS Cognito as API Driver
         'provider' => 'users',
     ],
 ],

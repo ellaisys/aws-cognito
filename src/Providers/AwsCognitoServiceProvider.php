@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito\Providers;
 
+use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Guards\CognitoSessionGuard;
 use Ellaisys\Cognito\Guards\CognitoRequestGuard;
@@ -55,6 +56,9 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
         $this->registerPolicies();
 
+        //Register Alias
+        $this->registerAliases();
+
         //Set Singleton Class
         $this->registerCognitoProvider();
 
@@ -62,6 +66,27 @@ class AwsCognitoServiceProvider extends ServiceProvider
         $this->extendWebAuthGuard();
         $this->extendApiAuthGuard();
     } //Function ends
+
+
+    /**
+     * Bind some aliases.
+     *
+     * @return void
+     */
+    protected function registerAliases()
+    {
+        $this->app->alias('ellaisys.aws.cognito', AwsCognito::class);
+        // $this->app->alias('tymon.jwt.auth', JWTAuth::class);
+        // $this->app->alias('tymon.jwt.provider.jwt', JWTContract::class);
+        // $this->app->alias('tymon.jwt.provider.jwt.namshi', Namshi::class);
+        // $this->app->alias('tymon.jwt.provider.jwt.lcobucci', Lcobucci::class);
+        // $this->app->alias('tymon.jwt.provider.auth', Auth::class);
+        // $this->app->alias('tymon.jwt.provider.storage', Storage::class);
+        // $this->app->alias('tymon.jwt.manager', Manager::class);
+        // $this->app->alias('tymon.jwt.blacklist', Blacklist::class);
+        // $this->app->alias('tymon.jwt.payload.factory', Factory::class);
+        // $this->app->alias('tymon.jwt.validators.payload', PayloadValidator::class);
+    }
 
 
     /**
@@ -127,7 +152,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
     {
         Auth::extend('cognito-token', function ($app, $name, array $config) {
             $guard = new CognitoRequestGuard(
-                $app['tymon.jwt'],
+                $app['ellaisys.aws.cognito'],
                 $client = $app->make(AwsCognitoClient::class),
                 $app['request'],
                 Auth::createUserProvider($config['provider'])
