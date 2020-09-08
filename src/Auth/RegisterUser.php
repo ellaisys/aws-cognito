@@ -53,4 +53,5 @@ trait RegisterUser
 
         return $this->registered($request, $user) ?: redirect($this->redirectPath());
     } //Function ends
-}
+
+} //Trait ends

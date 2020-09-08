@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
 
@@ -26,6 +27,33 @@ class AwsCognito
      * @var \Ellaisys\Cognito\AwsCognitoToken|null
      */
     protected $token;
+
+
+    /**
+     * JWT constructor.
+     *
+     * @param  \Tymon\JWTAuth\Manager  $manager
+     * @param  \Tymon\JWTAuth\Http\Parser\Parser  $parser
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        // $this->manager = $manager;
+        // $this->parser = $parser;
+    }
+
+
+    /**
+     * Get Instance.
+     *
+     * @return \Ellaisys\Cognito\AwsCognitoToken|null
+     */
+    public static function getInstance()
+    {
+        Log::info('Ellaisys\Cognito\AwsCognito::getInstance');
+        //return $this;
+    } //Function ends
 
 
     /**

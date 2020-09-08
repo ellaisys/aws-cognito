@@ -14,7 +14,7 @@ namespace Ellaisys\Cognito\Providers;
 use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Guards\CognitoSessionGuard;
-use Ellaisys\Cognito\Guards\CognitoRequestGuard;
+use Ellaisys\Cognito\Guards\CognitoTokenGuard;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
@@ -38,6 +38,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        //Register Alias
+        $this->registerAliases();
     } //Function ends
 
 
@@ -56,8 +58,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
         $this->registerPolicies();
 
-        //Register Alias
-        $this->registerAliases();
+        //Register facades
+        $this->registerCognitoFacades();
 
         //Set Singleton Class
         $this->registerCognitoProvider();
@@ -76,17 +78,20 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function registerAliases()
     {
         $this->app->alias('ellaisys.aws.cognito', AwsCognito::class);
-        // $this->app->alias('tymon.jwt.auth', JWTAuth::class);
-        // $this->app->alias('tymon.jwt.provider.jwt', JWTContract::class);
-        // $this->app->alias('tymon.jwt.provider.jwt.namshi', Namshi::class);
-        // $this->app->alias('tymon.jwt.provider.jwt.lcobucci', Lcobucci::class);
-        // $this->app->alias('tymon.jwt.provider.auth', Auth::class);
-        // $this->app->alias('tymon.jwt.provider.storage', Storage::class);
-        // $this->app->alias('tymon.jwt.manager', Manager::class);
-        // $this->app->alias('tymon.jwt.blacklist', Blacklist::class);
-        // $this->app->alias('tymon.jwt.payload.factory', Factory::class);
-        // $this->app->alias('tymon.jwt.validators.payload', PayloadValidator::class);
     }
+
+
+    /**
+     * Register Cognito Facades
+     *
+     * @return void
+     */
+    protected function registerCognitoFacades()
+    {
+        $this->app->singleton('ellaisys.aws.cognito', function (Application $app) {
+            return (new AwsCognito());
+        });
+    } //Function ends
 
 
     /**
@@ -151,14 +156,14 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function extendApiAuthGuard()
     {
         Auth::extend('cognito-token', function ($app, $name, array $config) {
-            $guard = new CognitoRequestGuard(
+
+            $guard = new CognitoTokenGuard(
                 $app['ellaisys.aws.cognito'],
                 $client = $app->make(AwsCognitoClient::class),
                 $app['request'],
                 Auth::createUserProvider($config['provider'])
             );
 
-            $guard->setDispatcher($this->app['events']);
             $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
 
             return $guard;
