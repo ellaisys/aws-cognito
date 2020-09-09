@@ -64,13 +64,13 @@ class CognitoTokenGuard extends TokenGuard
      * @param UserProvider $provider
      */
     public function __construct(
-        AwsCognito $facade,
+        AwsCognito $cognito,
         AwsCognitoClient $client, 
         Request $request, 
         UserProvider $provider = null,
         string $keyUsername = 'email'
     ) {
-        $this->cognito = $facade;
+        $this->cognito = $cognito;
         $this->client = $client;
         $this->keyUsername = $keyUsername;
 
@@ -159,7 +159,7 @@ class CognitoTokenGuard extends TokenGuard
     private function login($user)
     {
         $token = $this->storage['token'];
-        $this->setToken($token);
+        $this->setToken($token, $this->storage['value']);
         $this->setUser($user);
 
         return $token;
@@ -173,9 +173,9 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @return $this
      */
-    public function setToken($token)
+    public function setToken($token, $value=null)
     {
-        $this->cognito->setToken($token);
+        $this->cognito->setToken($token, $value)->storeToken();
 
         return $this;
     } //Function ends
@@ -193,7 +193,7 @@ class CognitoTokenGuard extends TokenGuard
         $this->invalidate($forceForever);
         $this->user = null;
         $this->cognito->unsetToken();
-    }
+    } //Function ends
 
 
     /**
@@ -206,6 +206,16 @@ class CognitoTokenGuard extends TokenGuard
     public function invalidate($forceForever = false)
     {
         return $this->requireToken()->invalidate($forceForever);
-    }
+    } //Function ends
+
+
+    /**
+     * Get the authenticated user.
+     *
+     * @return \Illuminate\Contracts\Auth\Authenticatable
+     */
+    public function user() {
+        return $this->cognito->user();
+    } //Function ends
 
 } //Class ends

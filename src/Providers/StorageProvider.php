@@ -11,11 +11,10 @@
 
 namespace Ellaisys\Cognito\Providers;
 
-use Illuminate\Contracts\Cache\Repository as CacheContract;
+use Illuminate\Support\Facades\Cache;
 use Psr\SimpleCache\CacheInterface as PsrCacheInterface;
-use Ellaisys\Cognito\Contracts\Storage\StorageContract;
 
-class StorageProvider implements StorageContract
+class StorageProvider
 {
     /**
      * The cache repository contract.
@@ -52,9 +51,10 @@ class StorageProvider implements StorageContract
      *
      * @return void
      */
-    public function __construct(CacheContract $cache)
+    public function __construct(string $provider='file')
     {
-        $this->cache = $cache;
+        $this->cache = Cache::store($provider);
+        $this->supportsTags = false;
     }
 
 
@@ -67,17 +67,17 @@ class StorageProvider implements StorageContract
      *
      * @return void
      */
-    public function add($key, $value, $minutes)
+    public function add($key, $value, $duration=3600)
     {
         // If the laravel version is 5.8 or higher then convert minutes to seconds.
         if ($this->laravelVersion !== null
             && is_int($minutes)
-            && version_compare($this->laravelVersion, '5.8', '>=')
+            && version_compare($this->laravelVersion, '5.8', '<')
         ) {
-            $minutes = $minutes * 60;
+            $duration = ($duration/60);
         }
 
-        $this->cache()->put($key, $value, $minutes);
+        $this->cache()->put($key, $value, $duration);
     }
 
 
@@ -92,6 +92,19 @@ class StorageProvider implements StorageContract
     public function forever($key, $value)
     {
         $this->cache()->forever($key, $value);
+    }
+
+
+    /**
+     * Check for an item in storage.
+     *
+     * @param  string  $key
+     *
+     * @return bool
+     */
+    public function has($key)
+    {
+        return $this->cache()->has($key);
     }
 
 
@@ -117,8 +130,12 @@ class StorageProvider implements StorageContract
      */
     public function destroy($key)
     {
-        return $this->cache()->forget($key);
-    }
+        if ($this->has($key)) {
+            return $this->cache()->forget($key);
+        } //End if
+
+        return false;
+    } //Function ends
 
 
     /**
@@ -129,7 +146,7 @@ class StorageProvider implements StorageContract
     public function flush()
     {
         $this->cache()->flush();
-    }
+    } //Function ends
 
 
     /**
@@ -141,14 +158,14 @@ class StorageProvider implements StorageContract
     {
         if ($this->supportsTags === null) {
             $this->determineTagSupport();
-        }
+        } //End if
 
         if ($this->supportsTags) {
             return $this->cache->tags($this->tag);
-        }
+        } //End if
 
         return $this->cache;
-    }
+    } //Function ends
 
 
     /**
@@ -159,7 +176,7 @@ class StorageProvider implements StorageContract
         $this->laravelVersion = $version;
 
         return $this;
-    }
+    } //Function ends
 
 
     /**
@@ -190,6 +207,6 @@ class StorageProvider implements StorageContract
                 $this->supportsTags = false;
             }
         }
-    }
+    } //Function ends
     
 } //Class ends

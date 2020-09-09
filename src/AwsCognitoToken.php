@@ -21,16 +21,23 @@ class AwsCognitoToken
     private $token;
 
     /**
+     * @var array
+     */
+    private $value;
+
+    /**
      * Create a new JSON Web Token.
      *
      * @param  string  $token
      *
      * @return void
      */
-    public function __construct($token)
+    public function __construct($token, $value=null)
     {
         $this->token = (string) (new AwsCognitoTokenValidator)->check($token);
+        $this->value = $value;
     }
+
 
     /**
      * Get the token.
@@ -40,7 +47,19 @@ class AwsCognitoToken
     public function get()
     {
         return $this->token;
-    }
+    } //Function ends
+
+
+    /**
+     * Get the token.
+     *
+     * @return array
+     */
+    public function value()
+    {
+        return $this->value;
+    } //Function ends
+
 
     /**
      * Get the token when casting to string.
@@ -50,6 +69,6 @@ class AwsCognitoToken
     public function __toString()
     {
         return $this->get();
-    }
+    } //Function ends
 
 } //Class ends
