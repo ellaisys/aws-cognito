@@ -124,7 +124,7 @@ At the current state you need to have those 4 form fields defined in here. Those
 ## Single Sign-On
 
 With our package and AWS Cognito we provide you a simple way to use Single Sign-Ons. 
-For configuration options take a look at the config [aws-cognito.php](/config/aws-cognito.php).
+For configuration options take a look at the config [cognito.php](/config/cognito.php).
 
 To enable single sign-on you can set USE_SSO to true in your .env file.
 ```
@@ -150,8 +150,26 @@ Now when a user is registered in your other app but not in your second app and w
 What you want to do is set this field to be nullable, so that users can be created without passwords. 
 From now on, Passwords are stored in Cognito.
 Any additional registration data you have, for example `firstname`, `lastname` needs to be added in 
-[aws-cognito.php](/config/aws-cognito.php) sso_user_fields config to be pushed to Cognito. Otherwise they are only stored locally 
+[cognito.php](/config/cognito.php) sso_user_fields config to be pushed to Cognito. Otherwise they are only stored locally 
 and are not available if you want to use Single Sign On's.*
+
+
+## Middleware configuration for API Routes
+In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware
+
+    ```
+    protected $routeMiddleware = [
+        ...
+        'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
+    ]
+    ```
+
+To use the middleware into the routes, as shown below
+
+    ```
+    Route::middleware('aws-cognito')->get('user', 'NameOfTheController@functionName');
+    ```
+
 
 ## Registering Users 
 
@@ -198,11 +216,10 @@ Select your user pool and click on `MFA and verifications`  You will see a headl
 You have to remove all checked fields here. Once done, you should see a red alert:
  `You have not selected either email or phone number verification, so your users will not be able to recover their passwords without contacting you for support.`
 
-7. Now you have told Cognito to stop sending you messages when a user registers on your app and you can handle it all by yourself. 
+7. Now you have told Cognito to stop sending you messages when a user registers on your app and you can handle it all by yourself.
 
 As a sidenote: Password Forgot Emails will still be triggered through Cognito. You cannot turn them off, so make sure to style those emails
 to suit your needs. Also make sure to send the email from a proper FROM address. 
-
 
 ## Delete User
 
