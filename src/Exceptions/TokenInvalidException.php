@@ -2,11 +2,15 @@
 
 namespace Ellaisys\Cognito\Exceptions;
 
-use Exception;
 use Throwable;
+
+use Exception;
+use Illuminate\Auth\AuthenticationException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class TokenInvalidException extends Exception
 {
+
     /**
      * Report the exception.
      *
@@ -14,7 +18,8 @@ class TokenInvalidException extends Exception
      */
     public function report()
     {
-        //
+        throw new AuthenticationException();
+        // throw new UnauthorizedHttpException(401, "Invalid Authentication Token");
     }
 
 

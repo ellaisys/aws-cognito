@@ -81,7 +81,7 @@ abstract class BaseMiddleware extends Middleware
                 throw new UnauthorizedHttpException('aws-cognito', 'User not found');
             } //End if
         } catch (TokenInvalidException $e) {
-            throw new UnauthorizedHttpException('aws-cognito', 'Token is invalid.');
+            throw new TokenInvalidException($e);
         } catch (AwsCognitoException $e) {
             throw new UnauthorizedHttpException('aws-cognito', $e->getMessage(), $e, $e->getCode());
         } //Try-catch ends
