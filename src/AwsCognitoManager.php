@@ -98,7 +98,7 @@ class AwsCognitoManager
      */
     public function decode()
     {
-        return new AwsCognitoToken($this->tokenKey, $this->tokenValue);
+        return ($this->tokenValue)?new AwsCognitoToken($this->tokenKey, $this->tokenValue):null;
     } //Function ends
 
 

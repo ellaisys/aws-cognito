@@ -51,5 +51,5 @@ return [
     | while persisting the token. You can use the providers in the cache config.
     |
     */
-    'storage_provider' => env('AWS_COGNITO_TOKEN_STORAGE', 'file')
+    'storage_provider' => env('AWS_COGNITO_TOKEN_STORAGE', 'file'),
 ];

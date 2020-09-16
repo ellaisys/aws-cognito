@@ -6,9 +6,8 @@ use Throwable;
 
 use Exception;
 use Illuminate\Auth\AuthenticationException;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
-class TokenInvalidException extends Exception
+class NoTokenException extends Exception
 {
 
     /**
@@ -16,10 +15,9 @@ class TokenInvalidException extends Exception
      *
      * @return void
      */
-    public function report()
+    public function report($message = 'Authentication token not provided')
     {
-        throw new AuthenticationException();
-        // throw new UnauthorizedHttpException(401, "Invalid Authentication Token");
+        throw new AuthenticationException($message);
     }
 
 

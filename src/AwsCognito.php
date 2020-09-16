@@ -22,7 +22,7 @@ use Ellaisys\Cognito\Http\Parser\Parser;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
-use Ellaisys\Cognito\Exceptions\TokenInvalidException;
+use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 
 class AwsCognito
 {
@@ -183,6 +183,10 @@ class AwsCognito
         $token = $this->manager->fetch($this->token->get())->decode();
         $this->token = $token;
 
+        if (empty($this->token)) {
+            throw new InvalidTokenException();
+        } //End if
+
         return $this; //->user();
     } //Function ends
 
@@ -197,10 +201,11 @@ class AwsCognito
         return $this->authenticate();
     }
 
+
     /**
      * Get the authenticated user.
      * 
-     * @throws TokenInvalidException
+     * @throws InvalidTokenException
      *
      * @return \Illuminate\Contracts\Auth\Authenticatable
      */
@@ -208,10 +213,10 @@ class AwsCognito
     {
         $value = $username = null;
 
-        //Get username from token
-        $value = $this->token->value();
+        //Get Token Value
+        $value = ($this->token)?$this->token->value():null;
         if (empty($value)) {
-            throw new TokenInvalidException();
+            throw new InvalidTokenException();
         } //End if
         $username = $value['username'];
 

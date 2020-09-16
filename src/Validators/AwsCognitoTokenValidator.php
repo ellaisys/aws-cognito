@@ -11,7 +11,7 @@
 
 namespace Ellaisys\Cognito\Validators;
 
-use Ellaisys\Cognito\Exceptions\TokenInvalidException;
+use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 
 class AwsCognitoTokenValidator
 {
@@ -30,7 +30,7 @@ class AwsCognitoTokenValidator
     /**
      * @param  string  $token
      *
-     * @throws \Ellaisys\Cognito\Exceptions\TokenInvalidException
+     * @throws \Ellaisys\Cognito\Exceptions\InvalidTokenException
      *
      * @return string
      */
@@ -39,13 +39,13 @@ class AwsCognitoTokenValidator
         $parts = explode('.', $token);
 
         if (count($parts) !== 3) {
-            throw new TokenInvalidException('Wrong number of segments');
+            throw new InvalidTokenException('Wrong number of segments');
         } //End if
 
         $parts = array_filter(array_map('trim', $parts));
 
         if (count($parts) !== 3 || implode('.', $parts) !== $token) {
-            throw new TokenInvalidException('Malformed token');
+            throw new InvalidTokenException('Malformed token');
         }
 
         return $token;

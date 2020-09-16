@@ -19,7 +19,8 @@ use Ellaisys\Cognito\AwsCognito;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
-use Ellaisys\Cognito\Exceptions\TokenInvalidException;
+use Ellaisys\Cognito\Exceptions\NoTokenException;
+use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 abstract class BaseMiddleware extends Middleware
@@ -58,7 +59,7 @@ abstract class BaseMiddleware extends Middleware
     public function checkForToken(Request $request)
     {
         if (! $this->cognito->parser()->setRequest($request)->hasToken()) {
-            throw new UnauthorizedHttpException('aws-cognito', 'Token not provided');
+            throw new NoTokenException();
         } //End if
     } //Function ends
 
@@ -80,8 +81,8 @@ abstract class BaseMiddleware extends Middleware
             if (! $this->cognito->parseToken()->authenticate()) {
                 throw new UnauthorizedHttpException('aws-cognito', 'User not found');
             } //End if
-        } catch (TokenInvalidException $e) {
-            throw new TokenInvalidException($e);
+        } catch (InvalidTokenException $e) {
+            throw new InvalidTokenException($e);
         } catch (AwsCognitoException $e) {
             throw new UnauthorizedHttpException('aws-cognito', $e->getMessage(), $e, $e->getCode());
         } //Try-catch ends
