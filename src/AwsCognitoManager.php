@@ -12,6 +12,7 @@
 namespace Ellaisys\Cognito;
 
 use Ellaisys\Cognito\AwsCognitoToken;
+use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\Providers\StorageProvider;
 
 use Exception;
@@ -39,25 +40,17 @@ class AwsCognitoManager
     /**
      * The AWS Cognito token.
      *
-     * @var \Ellaisys\Cognito\AwsCognitoToken|null
+     * @var string|null
      */
     protected $token;
 
 
     /**
-     * The AWS Cognito token key.
-     *
-     * @var \string|null
+     * The AwsCognito Claim token
+     * 
+     * @var \Ellaisys\Cognito\AwsCognitoClaim|null
      */
-    protected $tokenKey;
-
-
-    /**
-     * The AWS Cognito token value.
-     *
-     * @var \array|null
-     */
-    protected $tokenValue;
+    protected $claim;
 
 
     /**
@@ -77,28 +70,27 @@ class AwsCognitoManager
 
 
     /**
-     * Persist token.
+     * Encode the claim.
      *
-     * @return \boolean
+     * @return \AwsCognitoManager
      */
-    public function encode(AwsCognitoToken $token)
+    public function encode(AwsCognitoClaim $claim)
     {
-        $this->token = $token;
-        $this->tokenKey = $token->get();
-        $this->tokenValue = $token->value();
+        $this->claim = $claim;
+        $this->token = $claim->getToken();
 
         return $this;
     } //Function ends
 
 
     /**
-     * Persist token.
+     * Decode token.
      *
      * @return \boolean
      */
     public function decode()
     {
-        return ($this->tokenValue)?new AwsCognitoToken($this->tokenKey, $this->tokenValue):null;
+        return ($this->claim)?$this->claim:null;
     } //Function ends
 
 
@@ -109,39 +101,37 @@ class AwsCognitoManager
      */
     public function store()
     {
-        $key = $this->tokenKey;
-        $value = json_encode($this->tokenValue);
-        $duration = ($this->tokenValue)?(int) $this->tokenValue['ExpiresIn']:3600;
-
-        $this->provider->add($key, $value, $duration);
+        $data = $this->claim->getData();
+        $durationInSecs = ($data)?(int) $data['ExpiresIn']:3600;
+        $this->provider->add($this->token, json_encode($this->claim), $durationInSecs);
 
         return true;
     } //Function ends
 
 
     /**
-     * Persist token.
+     * Get Token from store.
      *
-     * @return \boolean
+     * @return \AwsCognitoManager
      */
-    public function fetch(string $tokenKey)
+    public function fetch(string $token)
     {
-        $this->tokenKey = $tokenKey;
-        $value = $this->provider->get($tokenKey);
-        $this->tokenValue = $value?json_decode($value, true):null;
+        $this->token = $token;
+        $claim = $this->provider->get($token);
+        $this->claim = $claim?json_decode($claim, true):null;
 
         return $this;
     } //Function ends
 
 
     /**
-     * Persist token.
+     * Release token.
      *
-     * @return \boolean
+     * @return \AwsCognitoManager
      */
-    public function release(string $tokenKey)
+    public function release(string $token)
     {
-        $this->provider->destroy($tokenKey);
+        $this->provider->destroy($token);
 
         return $this;
     } //Function ends

@@ -2,8 +2,10 @@
 
 namespace Ellaisys\Cognito\Exceptions;
 
-use Exception;
 use Throwable;
+
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class NoLocalUserException extends Exception
 {
@@ -14,7 +16,7 @@ class NoLocalUserException extends Exception
      */
     public function report()
     {
-        //
+        throw new ModelNotFoundException();
     }
 
 

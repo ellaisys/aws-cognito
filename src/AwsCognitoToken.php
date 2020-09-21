@@ -15,15 +15,12 @@ use Ellaisys\Cognito\Validators\AwsCognitoTokenValidator;
 
 class AwsCognitoToken
 {
+    
     /**
      * @var string
      */
     private $token;
 
-    /**
-     * @var array
-     */
-    private $value;
 
     /**
      * Create a new JSON Web Token.
@@ -32,10 +29,9 @@ class AwsCognitoToken
      *
      * @return void
      */
-    public function __construct($token, $value=null)
+    public function __construct($token)
     {
         $this->token = (string) (new AwsCognitoTokenValidator)->check($token);
-        $this->value = $value;
     }
 
 
@@ -47,17 +43,6 @@ class AwsCognitoToken
     public function get()
     {
         return $this->token;
-    } //Function ends
-
-
-    /**
-     * Get the token.
-     *
-     * @return array
-     */
-    public function value()
-    {
-        return $this->value;
     } //Function ends
 
 

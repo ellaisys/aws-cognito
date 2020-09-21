@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 
+use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\AwsCognitoManager;
 use Ellaisys\Cognito\Http\Parser\Parser;
 
@@ -51,9 +52,17 @@ class AwsCognito
 
 
     /**
+     * The AwsCognito Claim token
+     * 
+     * @var \Ellaisys\Cognito\AwsCognitoClaim|null
+     */
+    protected $claim;
+
+
+    /**
      * The AWS Cognito token.
      *
-     * @var \Ellaisys\Cognito\AwsCognitoToken|null
+     * @var \Ellaisys\Cognito\AwsCognitoToken|string|null
      */
     protected $token;
 
@@ -97,7 +106,7 @@ class AwsCognito
      *
      * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      *
-     * @return $this
+     * @return \Ellaisys\Cognito\AwsCognito
      */
     public function parseToken()
     {
@@ -106,11 +115,6 @@ class AwsCognito
 
         if (empty($token)) {
             throw new AwsCognitoException('The token could not be parsed from the request');
-        } else {
-            $awsToken = (new AwsCognitoToken($token))->get();
-            if (empty($awsToken)) {
-                throw new AwsCognitoException('The token could not be validated.');
-            } //End if
         } //End if
 
         return $this->setToken($token);
@@ -120,13 +124,43 @@ class AwsCognito
     /**
      * Set the token.
      *
-     * @param  \Ellaisys\Cognito\AwsCognitoToken|string  $token
+     * @param  \string  $token
      *
-     * @return $this
+     * @return \Ellaisys\Cognito\AwsCognito
      */
-    public function setToken($token, $value=null)
+    public function setToken(string $token)
     {
-        $this->token = ($token instanceof AwsCognitoToken)?$token:(new AwsCognitoToken($token, $value));
+        $this->token = (new AwsCognitoToken($token));
+        if (empty($this->token)) {
+            throw new AwsCognitoException('The token could not be validated.');
+        } //End if
+
+        return $this;
+    } //Function ends
+
+
+    /**
+     * Get the token.
+     *
+     * @return \Ellaisys\Cognito\AwsCognitoClaim|null
+     */
+    public function getClaim()
+    {
+        return (!empty($this->claim))?$this->claim:null;
+    } //Function ends
+
+
+    /**
+     * Set the claim.
+     *
+     * @param  \Ellaisys\Cognito\AwsCognitoClaim  $claim
+     *
+     * @return \Ellaisys\Cognito\AwsCognito
+     */
+    public function setClaim(AwsCognitoClaim $claim)
+    {
+        $this->claim = $claim;
+        $this->token = $this->setToken($claim->getToken());
 
         return $this;
     } //Function ends
@@ -135,13 +169,14 @@ class AwsCognito
     /**
      * Unset the current token.
      *
-     * @return $this
+     * @return \Ellaisys\Cognito\AwsCognito
      */
-    public function unsetToken()
+    public function unsetToken($forceForever = false)
     {
         $tokenKey = $this->token->get();
-        $this->token = null;
         $this->manager->release($tokenKey);
+        $this->claim = null;
+        $this->token = null;
 
         return $this;
     } //Function ends
@@ -152,7 +187,7 @@ class AwsCognito
      *
      * @param  \Illuminate\Http\Request  $request
      *
-     * @return $this
+     * @return \Ellaisys\Cognito\AwsCognito
      */
     public function setRequest(Request $request)
     {
@@ -176,14 +211,14 @@ class AwsCognito
     /**
      * Authenticate a user via a token.
      *
-     * @return \Ellaisys\Cognito\Contracts\JWTSubject|false
+     * @return \Ellaisys\Cognito\AwsCognito|false
      */
     public function authenticate()
     {
-        $token = $this->manager->fetch($this->token->get())->decode();
-        $this->token = $token;
+        $claim = $this->manager->fetch($this->token->get())->decode();
+        $this->claim = $claim;
 
-        if (empty($this->token)) {
+        if (empty($this->claim)) {
             throw new InvalidTokenException();
         } //End if
 
@@ -199,7 +234,7 @@ class AwsCognito
     public function toUser()
     {
         return $this->authenticate();
-    }
+    } //Function ends
 
 
     /**
@@ -211,20 +246,13 @@ class AwsCognito
      */
     public function user()
     {
-        $value = $username = null;
-
-        //Get Token Value
-        $value = ($this->token)?$this->token->value():null;
-        if (empty($value)) {
+        //Get Claim
+        if (empty($this->claim)) {
             throw new InvalidTokenException();
         } //End if
-        $username = $value['username'];
 
-        dd($username);
-
-
-        return $this->auth->user();
-    }
+        return $this->claim->getUser();
+    } //Function ends
 
 
     /**
@@ -234,7 +262,7 @@ class AwsCognito
      */
     public function storeToken()
     {
-        return $this->manager->encode($this->token)->store();
+        return $this->manager->encode($this->claim)->store();
     } //Function ends
 
 } //Class ends

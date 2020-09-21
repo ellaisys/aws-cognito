@@ -20,6 +20,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 
 use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\AwsCognitoClaim;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
@@ -30,7 +31,9 @@ class CognitoTokenGuard extends TokenGuard
 {
 
     /**
-     * @var  \string  Username key
+     * Username key
+     * 
+     * @var  \string  
      */
     protected $keyUsername;
 
@@ -50,9 +53,11 @@ class CognitoTokenGuard extends TokenGuard
 
 
     /**
-     * @var \array
+     * The AwsCognito Claim token
+     * 
+     * @var \Ellaisys\Cognito\AwsCognitoClaim|null
      */
-    protected $storage;
+    protected $claim;
 
 
     /**
@@ -91,14 +96,8 @@ class CognitoTokenGuard extends TokenGuard
 
         if (!empty($result) && $result instanceof AwsResult) {
 
-            //Create token object
-            $store = [];
-            $store['token'] = $result['AuthenticationResult']['AccessToken'];
-            $store['value'] = $result['AuthenticationResult'];
-            $store['value']['username'] = $credentials[$this->keyUsername];
-
-            //Set storage
-            $this->storage = $store;
+            //Create claim token
+            $this->claim = new AwsCognitoClaim($result, $user, $credentials[$this->keyUsername]);
 
             if ($user instanceof Authenticatable) {
                 return true;
@@ -129,8 +128,7 @@ class CognitoTokenGuard extends TokenGuard
             $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
 
             if ($this->hasValidCredentials($user, $credentials)) {
-                $token = $this->login($user);
-                return $token;
+                return $this->login($user);
             } //End if
 
             //$this->fireFailedEvent($user, $credentials);
@@ -154,28 +152,30 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
      *
-     * @return string
+     * @return claim
      */
     private function login($user)
     {
-        $token = $this->storage['token'];
-        $this->setToken($token, $this->storage['value']);
-        $this->setUser($user);
+        if (!empty($this->claim)) {
+            //Set Token
+            $this->setToken();
 
-        return $token;
+            //Set user
+            $this->setUser($user);
+        } //End if
+
+        return $this->claim;
     } //Fucntion ends
 
 
     /**
      * Set the token.
      *
-     * @param  \Ellaisys\Cognito\AwsCognitoToken|string  $token
-     *
      * @return $this
      */
-    public function setToken($token, $value=null)
+    public function setToken()
     {
-        $this->cognito->setToken($token, $value)->storeToken();
+        $this->cognito->setClaim($this->claim)->storeToken();
 
         return $this;
     } //Function ends
@@ -192,7 +192,6 @@ class CognitoTokenGuard extends TokenGuard
     {
         $this->invalidate($forceForever);
         $this->user = null;
-        $this->cognito->unsetToken();
     } //Function ends
 
 
@@ -201,11 +200,11 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @param  bool  $forceForever
      *
-     * @return \Tymon\JWTAuth\JWT
+     * @return \Ellaisys\Cognito\AwsCognito
      */
     public function invalidate($forceForever = false)
     {
-        return $this->requireToken()->invalidate($forceForever);
+        return $this->cognito->unsetToken($forceForever);
     } //Function ends
 
 
@@ -215,7 +214,39 @@ class CognitoTokenGuard extends TokenGuard
      * @return \Illuminate\Contracts\Auth\Authenticatable
      */
     public function user() {
-        return $this->cognito->user();
+
+        //Check if the user exists
+        if (!is_null($this->user)) {
+			return $this->user;
+		} //End if
+
+        //Retrieve token from request and authenticate
+		return $this->getTokenForRequest();
     } //Function ends
+
+
+    /**
+	 * Get the token for the current request.
+	 * @return string
+	 */
+	public function getTokenForRequest () {
+        //Check for request having token
+        if (! $this->cognito->parser()->setRequest($this->request)->hasToken()) {
+            return null;
+        } //End if
+
+        if (! $this->cognito->parseToken()->authenticate()) {
+            throw new NoLocalUserException();
+        } //End if
+
+        //Get claim
+        $claim = $this->cognito->getClaim();
+        if (empty($claim)) {
+            return null;
+        } //End if
+
+        //Get user and return
+        return $this->user = $this->provider->retrieveById($claim['sub']);
+	} //Function ends
 
 } //Class ends
