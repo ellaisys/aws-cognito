@@ -157,18 +157,18 @@ and are not available if you want to use Single Sign On's.*
 ## Middleware configuration for API Routes
 In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware
 
-    ```
+```
     protected $routeMiddleware = [
         ...
         'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
     ]
-    ```
+```
 
 To use the middleware into the routes, as shown below
 
-    ```
+```
     Route::middleware('aws-cognito')->get('user', 'NameOfTheController@functionName');
-    ```
+```
 
 
 ## Registering Users 
