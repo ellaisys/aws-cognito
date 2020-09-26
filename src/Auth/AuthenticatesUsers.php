@@ -20,7 +20,7 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 use Illuminate\Foundation\Auth\AuthenticatesUsers as BaseAuthenticatesUsers;
 
-trait AuthenticateUser
+trait AuthenticatesUsers
 {
     use BaseAuthenticatesUsers;
 

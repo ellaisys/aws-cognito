@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Illuminate\Foundation\Auth\VerifiesEmails as BaseVerifiesEmails;
 
-trait VerifyEmail
+trait VerifiesEmails
 {
     use BaseVerifiesEmails;
 

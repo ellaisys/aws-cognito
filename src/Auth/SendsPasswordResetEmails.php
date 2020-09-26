@@ -18,7 +18,11 @@ use Ellaisys\Cognito\AwsCognitoClient;
 
 use Illuminate\Foundation\Auth\SendsPasswordResetEmails as BaseSendsPasswordResetEmails;
 
-trait SendPasswordResetEmail
+use Exception;
+use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+
+trait SendsPasswordResetEmails
 {
     use BaseSendsPasswordResetEmails;
 

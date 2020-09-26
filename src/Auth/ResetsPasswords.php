@@ -17,7 +17,11 @@ use Illuminate\Foundation\Auth\ResetsPasswords as BaseResetsPasswords;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
-trait ResetPassword
+use Exception;
+use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+
+trait ResetsPasswords
 {
     use BaseResetsPasswords;
 

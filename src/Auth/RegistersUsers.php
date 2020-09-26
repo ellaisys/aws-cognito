@@ -19,7 +19,7 @@ use Exception;
 use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 
-trait RegisterUser
+trait RegistersUsers
 {
 
     /**
