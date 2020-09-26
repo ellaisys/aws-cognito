@@ -120,8 +120,6 @@ Our package is providing you 5 traits you can just add to your Auth Controllers 
 
 In the simplest way you just go through your Auth Controllers and change namespaces from the traits which are currently implemented from Laravel.
 
-During the publishing process of our package you created a view which you will find under `Resources/views/vendor/black-bits/laravel-cognito-auth`. 
-
 You can change structure to suit your needs. Please be aware of the @extend statement in the blade file to fit into your project structure. 
 At the current state you need to have those 4 form fields defined in here. Those are `token`, `email`, `password`, `password_confirmation`. 
 
