@@ -12,17 +12,15 @@
 namespace Ellaisys\Cognito\Auth;
 
 use Illuminate\Http\Request;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Foundation\Auth\RegistersUsers as BaseSendsRegistersUsers;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 
 trait RegisterUser
 {
-    use BaseSendsRegistersUsers;
 
     /**
      * Handle a registration request for the application.
@@ -31,14 +29,15 @@ trait RegisterUser
      * @return \Illuminate\Http\Response
      * @throws InvalidUserFieldException
      */
-    public function register(Request $request)
+    public function createCognitoUser(Request $request)
     {
-        $this->validator($request->all())->validate();
-
+        //Initialize Cognito Attribute array
         $attributes = [];
 
+        //Get the registeration fields
         $userFields = config('cognito.sso_user_fields');
 
+        //Iterate the fields
         foreach ($userFields as $userField) {
             if ($request->filled($userField)) {
                 $attributes[$userField] = $request->get($userField);
@@ -47,11 +46,9 @@ trait RegisterUser
             } //End if
         } //Loop ends
 
-        app()->make(AwsCognitoClient::class)->register($request->email, $request->password, $attributes);
-
-        event(new Registered($user = $this->create($request->all())));
-
-        return $this->registered($request, $user) ?: redirect($this->redirectPath());
+        //Register the user in Cognito
+        $userKey = $request->has('username')?'username':'email';
+        return app()->make(AwsCognitoClient::class)->register($request->input($userKey), $request->password, $request->email, $attributes);
     } //Function ends
 
 } //Trait ends

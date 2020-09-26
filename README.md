@@ -83,20 +83,23 @@ You also need a new IAM Role with the following Access Rights:
 - AmazonCognitoPowerUser
 - AmazonESCognitoAccess
 
-From this user you can fetch the AWS_COGNITO_KEY and AWS_COGNITO_SECRET.
+From this user you can fetch the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
 
 ### Cognito API configuration
 
 Add the following fields to your `.env` file and set the values according to your AWS settings:
 
 ```
-AWS_COGNITO_KEY=
-AWS_COGNITO_SECRET=
-AWS_COGNITO_REGION=
-AWS_COGNITO_CLIENT_ID=
-AWS_COGNITO_CLIENT_SECRET=
-AWS_COGNITO_USER_POOL_ID=
-AWS_COGNITO_DELETE_USER=
+# AWS configurations for cloud storage
+AWS_ACCESS_KEY_ID="Axxxxxxxxxxxxxxxxxxxxxxxx6"
+AWS_SECRET_ACCESS_KEY="mxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+"
+
+# AWS Cognito configurations
+AWS_COGNITO_CLIENT_ID="6xxxxxxxxxxxxxxxxxxxxxxxxr"
+AWS_COGNITO_CLIENT_SECRET="1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1"
+AWS_COGNITO_USER_POOL_ID="xxxxxxxxxxxxxxxxx"
+AWS_COGNITO_REGION="xxxxxxxxxxx"
+AWS_COGNITO_VERSION="latest"
 ```
 
 ### Importing existing users into the Cognito Pool
@@ -157,18 +160,18 @@ and are not available if you want to use Single Sign On's.*
 ## Middleware configuration for API Routes
 In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware
 
-```
+    ```
     protected $routeMiddleware = [
         ...
         'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
     ]
-```
+    ```
 
 To use the middleware into the routes, as shown below
 
-```
+    ```
     Route::middleware('aws-cognito')->get('user', 'NameOfTheController@functionName');
-```
+    ```
 
 
 ## Registering Users 

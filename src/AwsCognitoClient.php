@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
 
@@ -168,6 +169,7 @@ class AwsCognitoClient
      * @param $username
      * @param $password
      * @param array $attributes
+     * 
      * @return bool
      */
     public function register($username, $password, $email, array $attributes = [])

@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
 use Ellaisys\Cognito\AwsCognitoClient;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
 
@@ -92,21 +93,40 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
     public function attempt(array $credentials = [], $remember = false)
     {
         try {
+            //Fire event for authenticating
             $this->fireAttemptEvent($credentials, $remember);
 
+            //Get user from presisting store
             $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
 
+            //Authenticate with cognito
             if ($this->hasValidCredentials($user, $credentials)) {
                 $this->login($user, $remember);
-                return true;
-            }
 
+                //Fire successful attempt
+                $this->fireAuthenticatedEvent($user);
+
+                return true;
+            } //End if
+
+            //Fire failed attempt
             $this->fireFailedEvent($user, $credentials);
 
             return false;
         } catch (NoLocalUserException $e) {
-            
+            //Fire failed attempt
+            $this->fireFailedEvent($user, $credentials);
+
+            throw new NoLocalUserException();
+        } catch (AwsCognitoException $e) {
+            //Fire failed attempt
+            $this->fireFailedEvent($user, $credentials);
+
+            throw new AwsCognitoException();
         } catch (Exception $e) {
+            //Fire failed attempt
+            $this->fireFailedEvent($user, $credentials);
+
             return false;
         } //Try-catch ends
     } //Function ends
