@@ -98,9 +98,10 @@ AWS_SECRET_ACCESS_KEY="mxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+"
 AWS_COGNITO_CLIENT_ID="6xxxxxxxxxxxxxxxxxxxxxxxxr"
 AWS_COGNITO_CLIENT_SECRET="1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1"
 AWS_COGNITO_USER_POOL_ID="xxxxxxxxxxxxxxxxx"
-AWS_COGNITO_REGION="xxxxxxxxxxx"
-AWS_COGNITO_VERSION="latest"
+AWS_COGNITO_REGION="xxxxxxxxxxx" //optional - default value is 'us-east-1'
+AWS_COGNITO_VERSION="latest" //optional - default value is 'latest'
 ```
+For more details on how to find AWS_COGNITO_CLIENT_ID, AWS_COGNITO_CLIENT_SECRET and AWS_COGNITO_USER_POOL_ID for your application, please refer COGNITOCONFIG.md
 
 ### Importing existing users into the Cognito Pool
 
