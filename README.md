@@ -1,4 +1,4 @@
-# Laravel Package to easily manage authentication with AWS Cognito
+# Laravel Package to manage Web and API authentication with AWS Cognito
 AWS Cognito package using the AWS SDK for PHP
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/ellaisys/aws-cognito.svg?style=flat-square)](https://packagist.org/packages/ellaisys/aws-cognito)
