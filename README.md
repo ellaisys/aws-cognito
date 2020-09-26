@@ -101,7 +101,7 @@ AWS_COGNITO_USER_POOL_ID="xxxxxxxxxxxxxxxxx"
 AWS_COGNITO_REGION="xxxxxxxxxxx" //optional - default value is 'us-east-1'
 AWS_COGNITO_VERSION="latest" //optional - default value is 'latest'
 ```
-For more details on how to find AWS_COGNITO_CLIENT_ID, AWS_COGNITO_CLIENT_SECRET and AWS_COGNITO_USER_POOL_ID for your application, please refer COGNITOCONFIG.md
+For more details on how to find AWS_COGNITO_CLIENT_ID, AWS_COGNITO_CLIENT_SECRET and AWS_COGNITO_USER_POOL_ID for your application, please refer [COGNITOCONFIG File](COGNITOCONFIG.md)
 
 ### Importing existing users into the Cognito Pool
 
@@ -269,7 +269,7 @@ If you discover any security related issues, please email [support@ellaisys.com]
 
 ## Support us
 
-Black Bits, Inc. is a web and consulting agency specialized in Laravel and AWS based in Grants Pass, Oregon. You'll find an overview of what we do [on our website](https://blackbits.io).
+EllaiSys is a web and consulting agency specialized in Cloud Computing (AWS and Azure), DevOps, and Product Engneering. We specialize into LAMP and Microsoft stack development. You'll find an overview of what we do [on our website](https://ellaisys.com).
 
 ## License
 
