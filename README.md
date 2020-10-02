@@ -3,6 +3,8 @@ AWS Cognito package using the AWS SDK for PHP
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/ellaisys/aws-cognito.svg?style=flat-square)](https://packagist.org/packages/ellaisys/aws-cognito)
 [![Total Downloads](https://img.shields.io/packagist/dt/ellaisys/aws-cognito.svg?style=flat-square)](https://packagist.org/packages/ellaisys/aws-cognito)
+[![License](https://img.shields.io/packagist/dt/ellaisys/aws-cognito.svg?style=flat-square)](https://packagist.org/packages/ellaisys/aws-cognito)
+
 
 This package provides a simple way to use AWS Cognito authentication in Laravel 7.x for Web and API Auth Drivers.
 The idea of this package, and some of the code, is based on the package from Pod-Point which you can find here: [Pod-Point/laravel-cognito-auth](https://github.com/Pod-Point/laravel-cognito-auth), [black-bits/laravel-cognito-auth](https://github.com/black-bits/laravel-cognito-auth) and [tymondesigns/jwt-auth](https://github.com/tymondesigns/jwt-auth).
