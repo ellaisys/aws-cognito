@@ -11,34 +11,64 @@
 
 namespace Ellaisys\Cognito\Auth;
 
+use Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
-use Illuminate\Foundation\Auth\AuthenticatesUsers as BaseAuthenticatesUsers;
 
 trait AuthenticatesUsers
 {
-    use BaseAuthenticatesUsers;
 
     /**
      * Attempt to log the user into the application.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return bool
+     * @param  \Illuminate\Support\Collection  $request
+     * @param  \string $guard (optional)
+     * @param  \string $paramUsername (optional)
+     * @param  \string $paramPassword (optional)
+     * 
+     * @return mixed
      */
-    protected function attemptLogin(Request $request)
+    protected function attemptLogin(Collection $request, string $guard='web', string $paramUsername='email', string $paramPassword='password')
     {
         try {
-            $response = $this->guard()->attempt($this->credentials($request), $request->has('remember'));
-        } catch (NoLocalUserException $e) {
-            $response = $this->createLocalUser($this->credentials($request));
-        }
+            //Get key fields
+            $keyUsername = 'email';
+            $keyPassword = 'password';
+            $rememberMe = $request->has('remember')?$request['remember']:false;
 
-        return $response;
+            //Generate credentials array
+            $credentials = [
+                $keyUsername => $request[$paramUsername], 
+                $keyPassword => $request[$paramPassword]
+            ];
+
+            //Authenticate User
+            $claim = Auth::guard($guard)->attempt($credentials, $rememberMe);
+        } catch (NoLocalUserException $e) {
+            Log::error('AuthenticatesUsers:attemptLogin:NoLocalUserException');
+
+            if (config('cognito.add_missing_local_user_sso')) {
+                $response = $this->createLocalUser($credentials);
+            } //End if
+            
+        } catch (CognitoIdentityProviderException $e) {
+            Log::error('AuthenticatesUsers:attemptLogin:CognitoIdentityProviderException');
+            return $this->sendFailedCognitoResponse($e);
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:attemptLogin:Exception');
+            return $this->sendFailedLoginResponse($request, $e);
+        } //Try-catch ends
+
+        return $claim;
     } //Function ends
 
 
@@ -55,33 +85,8 @@ trait AuthenticatesUsers
 
 
     /**
-     * @param Request $request
-     */
-    public function login(Request $request)
-    {
-        $this->validateLogin($request);
-
-        if ($this->hasTooManyLoginAttempts($request)) {
-            $this->fireLockoutEvent($request);
-
-            return $this->sendLockoutResponse($request);
-        }
-
-        try {
-            if ($this->attemptLogin($request)) {
-                return $this->sendLoginResponse($request);
-            }
-        } catch (CognitoIdentityProviderException $c) {
-            return $this->sendFailedCognitoResponse($c);
-        } catch (Exception $e) {
-            return $this->sendFailedLoginResponse($request);
-        }
-
-        return $this->sendFailedLoginResponse($request);
-    } //Function ends
-
-
-    /**
+     * Handle Failed Cognito Exception
+     * 
      * @param CognitoIdentityProviderException $exception
      */
     private function sendFailedCognitoResponse(CognitoIdentityProviderException $exception)
@@ -89,6 +94,23 @@ trait AuthenticatesUsers
         throw ValidationException::withMessages([
             $this->username() => $exception->getAwsErrorMessage(),
         ]);
+    } //Function ends
+
+
+    /**
+     * Handle Generic Exception
+     * 
+     * @param  \Collection $request
+     * @param  \Exception $exception
+     */
+    private function sendFailedLoginResponse(Collection $request, Exception $exception=null)
+    {
+        $message = 'FailedLoginResponse';
+        if (!empty($exception)) {
+            $message = $exception->getMessage();
+        } //End if
+        
+        throw new HttpException(400, $message);
     } //Function ends
 
 } //Trait ends

@@ -128,31 +128,19 @@ At the current state you need to have those 4 form fields defined in here. Those
 With our package and AWS Cognito we provide you a simple way to use Single Sign-Ons. 
 For configuration options take a look at the config [cognito.php](/config/cognito.php).
 
-To enable single sign-on you can set USE_SSO to true in your .env file.
-```
-USE_SSO=true
-```
 
-When you have SSO enabled in your config and a user tries to login into your application we will check if the user exists 
-in your Cognito pool. If the user exists, he will be created automatically in your database and is logged in simultaneously.
+When you want SSO enabled and a user tries to login into your application, the package checks if the user exists in your AWS Cognito pool. If the user exists, he will be created automatically in your database provided the `add_missing_local_user_sso` is to `true`, and is logged in simultaneously.
 
-That's what we use the fields `sso_user_model` and `sso_user_fields` for. In `sso_user_model` you define the class of your user model.
-In most cases this will simply be _App\User_. 
+That's what we use the fields `sso_user_model` and `cognito_user_fields` for. In `sso_user_model` you define the class of your user model. In most cases this will simply be _App\User_. 
 
-With `sso_user_fields` you can define the fields which should be stored in Cognito. Put attention here. If you define a field 
-which you do not send with the Register Request this will throw you an InvalidUserFieldException and you won't be able to register. 
+With `cognito_user_fields` you can define the fields which should be stored in Cognito. Put attention here. If you define a field which you do not send with the Register Request this will throw you an InvalidUserFieldException and you won't be able to register. 
 
-Now that you have registered your users with their attributes in the Cognito pool and your database and you want to attach a second 
-app which should use the same pool. Well, that's actually pretty easy. You set up your project like you are used to and install our 
-laravel-cognito-auth package. On both sites set `use_sso` to true. Be sure you entered exactly the same pool id. 
-Now when a user is registered in your other app but not in your second app and wants to login he gets created. That's all you need to do. 
+Now that you have registered your users with their attributes in the AWS Cognito pool and your database and you want to attach a second app which should use the same pool. Well, that's actually pretty easy. You can use the API provisions that allows multiple projects to consume the same AWS Cognito pool. 
 
+*IMPORTANT: if your users table has a password field you are not going to need this anymore. What you want to do is set this field to be nullable, so that users can be created without passwords. From now on, Passwords are stored in Cognito.
 
-*IMPORTANT: if your users table has a password field you are not going to need this anymore. 
-What you want to do is set this field to be nullable, so that users can be created without passwords. 
-From now on, Passwords are stored in Cognito.
 Any additional registration data you have, for example `firstname`, `lastname` needs to be added in 
-[cognito.php](/config/cognito.php) sso_user_fields config to be pushed to Cognito. Otherwise they are only stored locally 
+[cognito.php](/config/cognito.php) cognito_user_fields config to be pushed to Cognito. Otherwise they are only stored locally 
 and are not available if you want to use Single Sign On's.*
 
 
@@ -266,6 +254,7 @@ If you discover any security related issues, please email [support@ellaisys.com]
 ## Credits
 
 - [EllaiSys Team](https://github.com/ellaisys)
+- [Amit Dhongde](https://github.com/amitdhongde)
 
 ## Support us
 

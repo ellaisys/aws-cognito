@@ -35,7 +35,7 @@ trait RegistersUsers
         $attributes = [];
 
         //Get the registeration fields
-        $userFields = config('cognito.sso_user_fields');
+        $userFields = config('cognito.cognito_user_fields');
 
         //Iterate the fields
         foreach ($userFields as $userField) {

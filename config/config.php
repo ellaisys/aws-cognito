@@ -33,13 +33,32 @@ return [
     'region'            => env('AWS_COGNITO_REGION', 'us-east-1'),
     'version'           => env('AWS_COGNITO_VERSION', 'latest'),
 
-    // Package configurations
-    'use_sso'           => env('AWS_COGNITO_USE_SSO', false),
-    'sso_user_fields'   => [
-        'name',
-        'email',
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Fields & DB Mapping
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the default cognito fields that shall be needed to be
+    | updated. The array value is a mapping with DB model or Request data.
+    |
+    */
+    'cognito_user_fields'   => [
+        'name' => 'name',
+        'email' => 'username',
     ],
-    'delete_user'           => env('AWS_COGNITO_DELETE_USER', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | SSO Settings
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the SSO settings into the application.
+    |
+    */
+    'add_missing_local_user_sso'    => env('AWS_COGNITO_ADD_LOCAL_USER', false),
+    'delete_user'                   => env('AWS_COGNITO_DELETE_USER', false),
+
+    // Package configurations
     'sso_user_model'        => env('AWS_COGNITO_USER_MODEL', 'App\User'),
 
     /*
