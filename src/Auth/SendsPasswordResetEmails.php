@@ -12,14 +12,15 @@
 namespace Ellaisys\Cognito\Auth;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Foundation\Auth\SendsPasswordResetEmails as BaseSendsPasswordResetEmails;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
 use Exception;
-use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait SendsPasswordResetEmails
 {
@@ -27,25 +28,36 @@ trait SendsPasswordResetEmails
     /**
      * Send a reset link to the given user.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Support\Collection  $request
      * @param  \string  $usernameKey (optional)
      * 
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function sendResetLinkEmail(Request $request, string $usernameKey='email', bool $resetTypeCode=true)
+    public function sendResetLinkEmail(Collection $request, string $usernameKey='email', bool $resetTypeCode=true, bool $isJsonResponse=false)
     {
-        $this->validateEmail($request);
-
         //Cognito reset link
-        if ($this->sendCognitoResetLinkEmail($request[$usernameKey])) {
-            if ($resetTypeCode) {
-                return redirect(route('cognito.form.reset.password.code'));
-            } else {
-                return redirect(route('welcome'));
-            } //End if            
+        $response = $this->sendCognitoResetLinkEmail($request[$usernameKey]);
+
+        //JSON Response
+        if ($isJsonResponse) {
+            return $response;
         } //End if
 
-        return $this->sendResetLinkFailedResponse($request, $response);
+        //Action Response
+        if ($response) {
+            if ($resetTypeCode) {
+                return redirect(route('cognito.form.reset.password.code'))
+                    ->withInput($request->only($usernameKey))
+                    ->with('success', true);
+            } else {
+                return redirect(route('welcome'))
+                    ->with('success', true);
+            } //End if
+        } else {
+            return redirect()->back()
+                ->withInput($request->only($usernameKey))
+                ->withErrors([$usernameKey => 'cognito.invalid_user']);
+        } //End if
     } //Function ends
 
 

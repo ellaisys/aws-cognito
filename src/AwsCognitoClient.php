@@ -268,20 +268,27 @@ class AwsCognitoClient
      * @param array $attributes
      * @return bool
      */
-    public function inviteUser($username, array $attributes = [])
+    public function inviteUser(string $username, array $attributes = [])
     {
-        $attributes['email'] = $username;
-        $attributes['email_verified'] = 'true';
+        //Force validate email
+        if ($attributes['email']) {
+            $attributes['email_verified'] = 'true';
+        } //End if
 
+        //Generate payload
+        $payload = [
+            'UserPoolId' => $this->poolId,
+            'Username' => $username,
+            'UserAttributes' => $this->formatAttributes($attributes),
+        ];
+        if (config('cognito.add_user_delivery_mediums')!="DEFAULT") {
+            $payload['DesiredDeliveryMediums'] = [
+                config('cognito.add_user_delivery_mediums')
+            ];                
+        } //End if
+        
         try {
-            $this->client->AdminCreateUser([
-                'UserPoolId' => $this->poolId,
-                'DesiredDeliveryMediums' => [
-                    'EMAIL',
-                ],
-                'Username' => $username,
-                'UserAttributes' => $this->formatAttributes($attributes),
-            ]);
+            $this->client->AdminCreateUser($payload);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
                 return false;

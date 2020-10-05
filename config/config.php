@@ -49,6 +49,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cognito New User
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the default cognito when a new user is add to the
+    | User Pool.
+    |
+    | The options available are "DEFAULT", "EMAIL", "SMS"
+    |
+    */
+    'add_user_delivery_mediums'     => env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'DEFAULT'),
+
+    /*
+    |--------------------------------------------------------------------------
     | SSO Settings
     |--------------------------------------------------------------------------
     |

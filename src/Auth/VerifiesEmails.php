@@ -12,55 +12,52 @@
 namespace Ellaisys\Cognito\Auth;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+
 use Ellaisys\Cognito\AwsCognitoClient;
-use Illuminate\Foundation\Auth\VerifiesEmails as BaseVerifiesEmails;
+
+use Exception;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait VerifiesEmails
-{
-    use BaseVerifiesEmails;
-
-    /**
-     * Show the email verification notice.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response|\Illuminate\View\View
-     */
-    public function show(Request $request)
-    {
-        return view('black-bits/laravel-cognito-auth::verify');
-    } //Function ends
-    
+{ 
 
     /**
      * Mark the authenticated user's email address as verified.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param  \Illuminate\Support\Collection  $request
      * @return \Illuminate\Http\RedirectResponse
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function verify(Request $request)
+    public function verify(Collection $request)
     {
-        $request->validate(['email' => 'required|email', 'confirmation_code' => 'required|numeric']);
 
-        $response = app()->make(AwsCognitoClient::class)->confirmUserSignUp($request->email, $request->confirmation_code);
+        $validator = Validator::make($request, [
+            'email' => 'required|email', 
+            'confirmation_code' => 'required|numeric',
+        ]);
+
+        $response = app()->make(AwsCognitoClient::class)->confirmUserSignUp($request['email'], $request['confirmation_code']);
 
         if ($response == 'validation.invalid_user') {
             return redirect()->back()
                 ->withInput($request->only('email'))
-                ->withErrors(['email' => trans('black-bits/laravel-cognito-auth::validation.invalid_user')]);
+                ->withErrors(['email' => 'cognito.validation.invalid_user']);
         }
 
         if ($response == 'validation.invalid_token') {
             return redirect()->back()
                 ->withInput($request->only('email'))
-                ->withErrors(['confirmation_code' => trans('black-bits/laravel-cognito-auth::validation.invalid_token')]);
+                ->withErrors(['confirmation_code' => 'cognito.validation.invalid_token']);
         }
 
         if ($response == 'validation.exceeded') {
             return redirect()->back()
                 ->withInput($request->only('email'))
-                ->withErrors(['confirmation_code' => trans('black-bits/laravel-cognito-auth::validation.exceeded')]);
+                ->withErrors(['confirmation_code' => 'cognito.validation.exceeded']);
         }
 
         if ($response == 'validation.confirmed') {
@@ -74,25 +71,24 @@ trait VerifiesEmails
     /**
      * Resend the email verification notification.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param  \Illuminate\Support\Collection  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function resend(Request $request)
+    public function resend(Collection $request)
     {
-        $request->validate(['email' => 'required|email']);
 
         $response = app()->make(AwsCognitoClient::class)->resendToken($request->email);
 
         if ($response == 'validation.invalid_user') {
-            return response()->json(['error' => trans('black-bits/laravel-cognito-auth::validation.invalid_user')], 400);
+            return response()->json(['error' => 'cognito.validation.invalid_user'], 400);
         }
 
         if ($response == 'validation.exceeded') {
-            return response()->json(['error' => trans('black-bits/laravel-cognito-auth::validation.exceeded')], 400);
+            return response()->json(['error' => 'cognito.validation.exceeded'], 400);
         }
 
         if ($response == 'validation.confirmed') {
-            return response()->json(['error' => trans('black-bits/laravel-cognito-auth::validation.confirmed')], 400);
+            return response()->json(['error' => 'cognito.validation.confirmed'], 400);
         }
 
         return response()->json(['success' => 'true']);
