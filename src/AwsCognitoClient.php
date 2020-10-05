@@ -172,9 +172,8 @@ class AwsCognitoClient
      * 
      * @return bool
      */
-    public function register($username, $password, $email, array $attributes = [])
+    public function register($username, $password, array $attributes = [])
     {
-        $attributes['email'] = $email;
 
         try {
             $response = $this->client->signUp([

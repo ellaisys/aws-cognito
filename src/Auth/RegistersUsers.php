@@ -12,6 +12,8 @@
 namespace Ellaisys\Cognito\Auth;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
@@ -25,11 +27,11 @@ trait RegistersUsers
     /**
      * Handle a registration request for the application.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Support\Collection  $request
      * @return \Illuminate\Http\Response
      * @throws InvalidUserFieldException
      */
-    public function createCognitoUser(Request $request)
+    public function createCognitoUser(Collection $request)
     {
         //Initialize Cognito Attribute array
         $attributes = [];
@@ -38,9 +40,9 @@ trait RegistersUsers
         $userFields = config('cognito.cognito_user_fields');
 
         //Iterate the fields
-        foreach ($userFields as $userField) {
-            if ($request->filled($userField)) {
-                $attributes[$userField] = $request->get($userField);
+        foreach ($userFields as $key => $userField) {
+            if ($request->has($userField)) {
+                $attributes[$key] = $request->get($userField);
             } else {
                 throw new InvalidUserFieldException("The configured user field {$userField} is not provided in the request.");
             } //End if
@@ -48,7 +50,8 @@ trait RegistersUsers
 
         //Register the user in Cognito
         $userKey = $request->has('username')?'username':'email';
-        return app()->make(AwsCognitoClient::class)->register($request->input($userKey), $request->password, $request->email, $attributes);
+
+        return app()->make(AwsCognitoClient::class)->register($request[$userKey], $request['password'], $attributes);
     } //Function ends
 
 } //Trait ends

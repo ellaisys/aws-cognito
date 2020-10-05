@@ -44,7 +44,7 @@ return [
     */
     'cognito_user_fields'   => [
         'name' => 'name',
-        'email' => 'username',
+        'email' => 'email',
     ],
 
     /*
