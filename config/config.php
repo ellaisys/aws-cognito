@@ -43,7 +43,7 @@ return [
     |
     */
     'cognito_user_fields'   => [
-        'name' => 'name',
+        'name' => 'first_name',
         'email' => 'email',
     ],
 

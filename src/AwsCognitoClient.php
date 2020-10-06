@@ -29,6 +29,14 @@ class AwsCognitoClient
 
 
     /**
+     * Constant representing the user needs to reset password.
+     *
+     * @var string
+     */
+    const RESET_REQUIRED_PASSWORD = 'RESET_REQUIRED';
+
+
+    /**
      * Constant representing the force new password status.
      *
      * @var string
@@ -151,11 +159,6 @@ class AwsCognitoClient
                 'UserPoolId' => $this->poolId,
             ]);
         } catch (CognitoIdentityProviderException $exception) {
-            if ($exception->getAwsErrorCode() === self::RESET_REQUIRED ||
-                $exception->getAwsErrorCode() === self::USER_NOT_FOUND) {
-                return false;
-            } //End if
-
             throw $exception;
         }
 
@@ -288,7 +291,7 @@ class AwsCognitoClient
         } //End if
         
         try {
-            $this->client->AdminCreateUser($payload);
+            $this->client->adminCreateUser($payload);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
                 return false;
@@ -385,6 +388,39 @@ class AwsCognitoClient
 
         return Password::PASSWORD_RESET;
     } //Function ends
+
+
+    /**
+     * Changes the password for a specified user in a user pool.
+     *
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ChangePassword.html
+     *
+     * @param string $accessToken
+     * @param string $passwordOld
+     * @param string $passwordNew
+     * @return bool
+     */
+    public function changePassword(string $accessToken, string $passwordOld, string $passwordNew)
+    {
+        try {
+            $this->client->changePassword([
+                'AccessToken' => $accessToken,
+                'PreviousPassword' => $passwordOld,
+                'ProposedPassword' => $passwordNew
+            ]);            
+        } catch (CognitoIdentityProviderException $e) {
+            if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
+                return Password::INVALID_USER;
+            } //End if
+
+            if ($e->getAwsErrorCode() === self::INVALID_PASSWORD) {
+                return Lang::has('passwords.password') ? 'passwords.password' : $e->getAwsErrorMessage();
+            } //End if
+
+            throw $e;
+        }
+        return true;
+    }
 
 
     public function invalidatePassword($username)

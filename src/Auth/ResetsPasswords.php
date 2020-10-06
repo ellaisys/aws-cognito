@@ -12,57 +12,57 @@
 namespace Ellaisys\Cognito\Auth;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Foundation\Auth\ResetsPasswords as BaseResetsPasswords;
+use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
 use Exception;
+use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 
 trait ResetsPasswords
 {
-    use BaseResetsPasswords;
 
     /**
      * Reset the given user's password.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request|Illuminate\Support\Collection  $request
+     * @param  string  $paramUsername (optional)
+     * @param  string  $paramToken (optional)
+     * @param  string  $passwordNew (optional)
+     * 
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function reset(Request $request)
+    public function reset($request, string $paramUsername='email', string $paramToken='token', string $passwordNew='password')
     {
-        $this->validate($request, $this->rules(), $this->validationErrorMessages());
+        if ($request instanceof Request) {
+            //Validate request
+            $validator = Validator::make($request->all(), $this->rules());
 
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
+            $request = collect($request->all());
+        } //End if
+
+        //Create AWS Cognito Client
         $client = app()->make(AwsCognitoClient::class);
 
-        $user = $client->getUser($request->email);
+        //Get User Data
+        $user = $client->getUser($request[$paramUsername]);
 
-        if ($user['UserStatus'] == AwsCognitoClient::FORCE_CHANGE_PASSWORD) {
-            $response = $this->forceNewPassword($request);
+        if ($user['UserStatus'] == AwsCognitoClient::RESET_REQUIRED_PASSWORD) {
+            $response = $client->resetPassword($request[$paramToken], $request[$paramUsername], $request[$passwordNew]);
         } else {
-            $response = $client->resetPassword($request->token, $request->email, $request->password);
-        }
+            return false;
+        } //End if
 
-        return $response == Password::PASSWORD_RESET
-            ? $this->sendResetResponse($request, $response)
-            : $this->sendResetFailedResponse($request, $response);
-    } //Function ends
-
-
-    /**
-     * If a user is being forced to set a new password for the first time follow that flow instead.
-     *
-     * @param  \Illuminate\Http\Request $request
-     * @return string
-     */
-    private function forceNewPassword($request)
-    {
-        $client = app()->make(AwsCognitoClient::class);
-        $login = $client->authenticate($request->email, $request->token);
-
-        return $client->confirmPassword($request->email, $request->password, $login->get('Session'));
+        return $response;
     } //Function ends
 
 
@@ -91,7 +91,8 @@ trait ResetsPasswords
     protected function rules()
     {
         return [
-            'token'    => 'required',
+            'token'    => 'required_without:code',
+            'code'     => 'required_without:token',
             'email'    => 'required|email',
             'password' => 'required|confirmed|min:8',
         ];

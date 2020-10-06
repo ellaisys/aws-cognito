@@ -16,6 +16,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
+use Ellaisys\Cognito\AwsCognitoClient;
+
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -53,6 +55,7 @@ trait AuthenticatesUsers
 
             //Authenticate User
             $claim = Auth::guard($guard)->attempt($credentials, $rememberMe);
+
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:NoLocalUserException');
 
@@ -103,12 +106,24 @@ trait AuthenticatesUsers
      * @param  \Collection $request
      * @param  \Exception $exception
      */
-    private function sendFailedLoginResponse(Collection $request, Exception $exception=null)
+    private function sendFailedLoginResponse(Collection $request, Exception $exception=null, bool $isJsonResponse=false)
     {
         $message = 'FailedLoginResponse';
         if (!empty($exception)) {
             $message = $exception->getMessage();
         } //End if
+
+        if ($isJsonResponse) {
+            return  response()->json([
+                'error' => 'cognito.validation.auth.failed', 
+                'message' => $message 
+            ], 400);
+        } else {
+            return redirect()
+                ->withErrors([
+                    'username' => $message,
+                ]);
+        }
         
         throw new HttpException(400, $message);
     } //Function ends

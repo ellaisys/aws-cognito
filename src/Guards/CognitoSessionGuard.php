@@ -11,7 +11,10 @@
 
 namespace Ellaisys\Cognito\Guards;
 
-use Aws\Result;
+use Aws\Result as AwsResult;
+
+use Illuminate\Support\Facades\Log;
+
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\StatefulGuard;
@@ -27,6 +30,7 @@ use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 {
@@ -34,6 +38,12 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      * @var AwsCognitoClient
      */
     protected $client;
+
+
+    /**
+     * @var Authentication Challenge
+     */
+    protected $challengeName;
 
 
     /**
@@ -69,7 +79,15 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         /** @var Result $response */
         $result = $this->client->authenticate($credentials['email'], $credentials['password']);
 
-        if (!empty($result)) {
+        if (!empty($result) && $result instanceof AwsResult) {
+            if ($result['ChallengeName']==AwsCognitoClient::NEW_PASSWORD_CHALLENGE) {
+                $this->challengeName = AwsCognitoClient::NEW_PASSWORD_CHALLENGE;
+            } //End if
+
+            if ($result['ChallengeName']==AwsCognitoClient::RESET_REQUIRED_PASSWORD) {
+                $this->challengeName = AwsCognitoClient::RESET_REQUIRED_PASSWORD;
+            } //End if
+
             if ($user instanceof Authenticatable) {
                 return true;
             } else {
@@ -106,6 +124,21 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 //Fire successful attempt
                 $this->fireAuthenticatedEvent($user);
 
+                if (!empty($this->challengeName)) {
+                    switch ($this->challengeName) {
+                        case AwsCognitoClient::NEW_PASSWORD_CHALLENGE:
+                            return redirect(route('cognito.form.change.password'))
+                                ->with('success', true)
+                                ->with('force', true)
+                                ->with('messaage', $this->challengeName);
+                            break;
+                        
+                        default:
+                            return true;
+                            break;
+                    } //End switch
+                } //End if
+
                 return true;
             } //End if
 
@@ -114,16 +147,45 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
             return false;
         } catch (NoLocalUserException $e) {
+            Log::error('CognitoSessionGuard:attempt:NoLocalUserException:'.$e->getMessage());
+
             //Fire failed attempt
             $this->fireFailedEvent($user, $credentials);
 
             throw new NoLocalUserException();
+        } catch (CognitoIdentityProviderException $e) {
+            Log::error('CognitoSessionGuard:attempt:CognitoIdentityProviderException:'.$e->getAwsErrorCode());
+
+            //Fire failed attempt
+            $this->fireFailedEvent($user, $credentials);
+
+            //Set proper route
+            if (!empty($e->getAwsErrorCode())) {
+                switch ($e->getAwsErrorCode()) {
+                    case 'PasswordResetRequiredException':
+                        return redirect(route('cognito.form.reset.password.code'))
+                            ->with('success', false)
+                            ->with('force', true)
+                            ->with('messaage', $e->getAwsErrorCode());
+                        break;
+                    
+                    default:
+                        return $e->getAwsErrorCode();
+                        break;
+                } //End switch
+            } //End if
+
+            return $e->getAwsErrorCode();
         } catch (AwsCognitoException $e) {
+            Log::error('CognitoSessionGuard:attempt:AwsCognitoException:'.$e->getMessage());
+
             //Fire failed attempt
             $this->fireFailedEvent($user, $credentials);
 
             throw new AwsCognitoException();
         } catch (Exception $e) {
+            Log::error('CognitoSessionGuard:attempt:Exception:'.$e->getMessage());
+
             //Fire failed attempt
             $this->fireFailedEvent($user, $credentials);
 
