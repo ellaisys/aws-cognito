@@ -114,7 +114,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
         //Storage Provider
         $this->app->singleton('ellaisys.aws.cognito.provider.storage', function (Application $app) {
             return (new StorageProvider(
-                config('cognito.storage_provider'),
+                config('cognito.storage_provider')
             ));
         });
 
