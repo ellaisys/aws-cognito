@@ -21,6 +21,14 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 class AwsCognitoClient
 {
     /**
+     * Constant representing the user status as Confirmed.
+     *
+     * @var string
+     */
+    const USER_STATUS_CONFIRMED = 'CONFIRMED';
+    
+    
+    /**
      * Constant representing the user needs a new password.
      *
      * @var string

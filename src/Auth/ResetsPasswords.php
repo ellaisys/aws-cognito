@@ -56,7 +56,9 @@ trait ResetsPasswords
         //Get User Data
         $user = $client->getUser($request[$paramUsername]);
 
-        if ($user['UserStatus'] == AwsCognitoClient::RESET_REQUIRED_PASSWORD) {
+        //Check user status and change password
+        if (($user['UserStatus'] == AwsCognitoClient::USER_STATUS_CONFIRMED) ||
+            ($user['UserStatus'] == AwsCognitoClient::RESET_REQUIRED_PASSWORD)) {
             $response = $client->resetPassword($request[$paramToken], $request[$paramUsername], $request[$passwordNew]);
         } else {
             return false;
