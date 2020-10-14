@@ -15,6 +15,9 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 
+use Exception;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+
 class AwsCognitoAuthenticate extends BaseMiddleware
 {
     /**
@@ -26,6 +29,10 @@ class AwsCognitoAuthenticate extends BaseMiddleware
      */
     public function handle(Request $request, Closure $next, $module=null, $right=null)
     {
+        if (auth()->guest()) {
+            return response()->json(['error' => 'UNAUTHORIZED_REQUEST'], 401);
+        } //End if
+
         $this->authenticate($request);
         return $next($request);
     } //Function ends

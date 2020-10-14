@@ -23,7 +23,7 @@ use Ellaisys\Cognito\Exceptions\NoTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
-abstract class BaseMiddleware extends Middleware
+abstract class BaseMiddleware //extends Middleware
 {
     
     /**
@@ -85,7 +85,9 @@ abstract class BaseMiddleware extends Middleware
             throw new InvalidTokenException($e);
         } catch (AwsCognitoException $e) {
             throw new UnauthorizedHttpException('aws-cognito', $e->getMessage(), $e, $e->getCode());
-        } //Try-catch ends
+        } catch (Exception $e) {
+            throw $e;
+        }//Try-catch ends
     } //Function ends
 
 
