@@ -81,13 +81,9 @@ abstract class BaseMiddleware //extends Middleware
             if (! $this->cognito->parseToken()->authenticate()) {
                 throw new UnauthorizedHttpException('aws-cognito', 'User not found');
             } //End if
-        } catch (InvalidTokenException $e) {
-            throw new InvalidTokenException($e);
-        } catch (AwsCognitoException $e) {
-            throw new UnauthorizedHttpException('aws-cognito', $e->getMessage(), $e, $e->getCode());
         } catch (Exception $e) {
             throw $e;
-        }//Try-catch ends
+        } //Try-catch ends
     } //Function ends
 
 
