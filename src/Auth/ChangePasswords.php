@@ -55,13 +55,16 @@ trait ChangePasswords
 
         //Get User Data
         $user = $client->getUser($request[$paramUsername]);
-
-        if ($user['UserStatus'] == AwsCognitoClient::FORCE_CHANGE_PASSWORD) {
-            $response = $this->forceNewPassword($client, $request, $paramUsername, $passwordOld, $passwordNew);
-        } else if ($user['UserStatus'] == AwsCognitoClient::RESET_REQUIRED_PASSWORD) {
-            return response()->json(['error' => 'cognito.validation.reset_required.invalid_request'], 400);
+        if (empty($user)) {
+            $response = response()->json(['error' => 'cognito.validation.reset_required.invalid_email'], 400);
         } else {
-            $response = $this->changePassword($client, $request, $paramUsername, $passwordOld, $passwordNew);
+            if ($user['UserStatus'] == AwsCognitoClient::FORCE_CHANGE_PASSWORD) {
+                $response = $this->forceNewPassword($client, $request, $paramUsername, $passwordOld, $passwordNew);
+            } else if ($user['UserStatus'] == AwsCognitoClient::RESET_REQUIRED_PASSWORD) {
+                $response = response()->json(['error' => 'cognito.validation.reset_required.invalid_request'], 400);
+            } else {
+                $response = $this->changePassword($client, $request, $paramUsername, $passwordOld, $passwordNew);
+            } //End if
         } //End if
 
         return $response;

@@ -163,16 +163,6 @@ To use the middleware into the routes, as shown below
     Route::middleware('aws-cognito')->get('user', 'NameOfTheController@functionName');
     ```
 
-In case you are using API authentication guards, make sure to add the authorization token into the request header.
-To ensure that the application gets the request header data, please add the below line into the htaccess [.htaccess](/public/.htaccess) file
-
-    ```
-    RewriteEngine On
-
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-    ```
 
 ## Registering Users 
 
