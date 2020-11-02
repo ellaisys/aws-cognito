@@ -212,11 +212,12 @@ class AwsCognitoClient
      * @param string $username
      * @return string
      */
-    public function sendResetLink($username)
+    public function sendResetLink($username, array $extras=null)
     {
         try {
             $result = $this->client->forgotPassword([
                 'ClientId' => $this->clientId,
+                'ClientMetadata' => $this->buildClientMetadata(['username' => $username], $extras),
                 'SecretHash' => $this->cognitoSecretHash($username),
                 'Username' => $username,
             ]);
@@ -597,6 +598,24 @@ class AwsCognitoClient
             ];
         } //Loop ends
 
+        return $userAttributes;
+    } //Function ends
+
+
+    /**
+     * Build Client Metadata to be forwarded to Cognito.
+     *
+     * @param array $attributes
+     * @return array
+     */
+    protected function buildClientMetadata(array $attributes, array $extras=null)
+    {
+        if (!empty($extras)) {
+            $userAttributes = array_merge($attributes, $extras);
+        } else {
+            $userAttributes = $attributes;
+        } //End if
+        
         return $userAttributes;
     } //Function ends
     

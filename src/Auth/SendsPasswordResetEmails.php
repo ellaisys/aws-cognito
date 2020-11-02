@@ -33,10 +33,10 @@ trait SendsPasswordResetEmails
      * 
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function sendResetLinkEmail(Collection $request, string $usernameKey='email', bool $resetTypeCode=true, bool $isJsonResponse=false)
+    public function sendResetLinkEmail(Collection $request, string $usernameKey='email', bool $resetTypeCode=true, bool $isJsonResponse=false, array $attributes=null)
     {
         //Cognito reset link
-        $response = $this->sendCognitoResetLinkEmail($request[$usernameKey]);
+        $response = $this->sendCognitoResetLinkEmail($request[$usernameKey], $attributes);
 
         //JSON Response
         if ($isJsonResponse) {
@@ -67,10 +67,10 @@ trait SendsPasswordResetEmails
      * @param  \string  $username
      * @return \bool
      */
-    public function sendCognitoResetLinkEmail(string $username)
+    public function sendCognitoResetLinkEmail(string $username, array $attributes=null)
     {
         //Send AWS Cognito reset link
-        $response = app()->make(AwsCognitoClient::class)->sendResetLink($username);
+        $response = app()->make(AwsCognitoClient::class)->sendResetLink($username, $attributes);
 
         return ($response == Password::RESET_LINK_SENT);
     } //Function ends
