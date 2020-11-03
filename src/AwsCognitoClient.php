@@ -215,12 +215,15 @@ class AwsCognitoClient
     public function sendResetLink($username, array $extras=null)
     {
         try {
-            $result = $this->client->forgotPassword([
+            //Build payload
+            $payload = [
                 'ClientId' => $this->clientId,
                 'ClientMetadata' => $this->buildClientMetadata(['username' => $username], $extras),
                 'SecretHash' => $this->cognitoSecretHash($username),
                 'Username' => $username,
-            ]);
+            ];
+
+            $result = $this->client->forgotPassword($payload);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
                 return Password::INVALID_USER;
@@ -245,6 +248,8 @@ class AwsCognitoClient
     public function resetPassword($code, $username, $password)
     {
         try {
+
+
             $this->client->confirmForgotPassword([
                 'ClientId' => $this->clientId,
                 'ConfirmationCode' => $code,
