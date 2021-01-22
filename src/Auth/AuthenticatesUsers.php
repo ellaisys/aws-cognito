@@ -39,7 +39,7 @@ trait AuthenticatesUsers
      * 
      * @return mixed
      */
-    protected function attemptLogin(Collection $request, string $guard='web', string $paramUsername='email', string $paramPassword='password')
+    protected function attemptLogin(Collection $request, string $guard='web', string $paramUsername='email', string $paramPassword='password', bool $isJsonResponse=false)
     {
         try {
             //Get key fields
@@ -69,7 +69,7 @@ trait AuthenticatesUsers
             return $this->sendFailedCognitoResponse($e);
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLogin:Exception');
-            return $this->sendFailedLoginResponse($request, $e);
+            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse);
         } //Try-catch ends
 
         return $claim;
