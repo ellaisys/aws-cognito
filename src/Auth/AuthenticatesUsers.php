@@ -63,7 +63,7 @@ trait AuthenticatesUsers
                 $response = $this->createLocalUser($credentials);
             } //End if
             
-            return $this->sendFailedLoginResponse($request, $e);
+            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse);
         } catch (CognitoIdentityProviderException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:CognitoIdentityProviderException');
             return $this->sendFailedCognitoResponse($e);
