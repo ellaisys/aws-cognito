@@ -207,18 +207,19 @@ class AwsCognitoClient
 
     /**
      * Send a password reset code to a user.
-     * @see http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ForgotPassword.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ForgotPassword.html
      *
      * @param string $username
+     * @param array $clientMetadata (optional)
      * @return string
      */
-    public function sendResetLink($username, array $extras=null)
+    public function sendResetLink($username, array $clientMetadata=null)
     {
         try {
             //Build payload
             $payload = [
                 'ClientId' => $this->clientId,
-                'ClientMetadata' => $this->buildClientMetadata(['username' => $username], $extras),
+                'ClientMetadata' => $this->buildClientMetadata(['username' => $username], $clientMetadata),
                 'SecretHash' => $this->cognitoSecretHash($username),
                 'Username' => $username,
             ];
@@ -238,7 +239,7 @@ class AwsCognitoClient
 
     /**
      * Reset a users password based on reset code.
-     * http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html.
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html
      *
      * @param string $code
      * @param string $username
@@ -279,13 +280,14 @@ class AwsCognitoClient
 
     /**
      * Register a user and send them an email to set their password.
-     * http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html.
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html
      *
      * @param $username
      * @param array $attributes
+     * @param array $clientMetadata (optional)
      * @return bool
      */
-    public function inviteUser(string $username, array $attributes = [])
+    public function inviteUser(string $username, array $attributes = [], array $clientMetadata=null)
     {
         //Force validate email
         if ($attributes['email']) {
@@ -297,6 +299,7 @@ class AwsCognitoClient
             'UserPoolId' => $this->poolId,
             'Username' => $username,
             'UserAttributes' => $this->formatAttributes($attributes),
+            'ClientMetadata' => $this->buildClientMetadata([], $clientMetadata)
         ];
         if (config('cognito.add_user_delivery_mediums')!="DEFAULT") {
             $payload['DesiredDeliveryMediums'] = [
@@ -611,12 +614,12 @@ class AwsCognitoClient
      * Build Client Metadata to be forwarded to Cognito.
      *
      * @param array $attributes
-     * @return array
+     * @return array $clientMetadata (optional)
      */
-    protected function buildClientMetadata(array $attributes, array $extras=null)
+    protected function buildClientMetadata(array $attributes, array $clientMetadata=null)
     {
-        if (!empty($extras)) {
-            $userAttributes = array_merge($attributes, $extras);
+        if (!empty($clientMetadata)) {
+            $userAttributes = array_merge($attributes, $clientMetadata);
         } else {
             $userAttributes = $attributes;
         } //End if

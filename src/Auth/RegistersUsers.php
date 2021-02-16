@@ -31,7 +31,7 @@ trait RegistersUsers
      * @return \Illuminate\Http\Response
      * @throws InvalidUserFieldException
      */
-    public function createCognitoUser(Collection $request)
+    public function createCognitoUser(Collection $request, array $clientMetadata=null)
     {
         //Initialize Cognito Attribute array
         $attributes = [];
@@ -53,7 +53,7 @@ trait RegistersUsers
         //Register the user in Cognito
         $userKey = $request->has('username')?'username':'email';
 
-        return app()->make(AwsCognitoClient::class)->inviteUser($request[$userKey], $attributes);
+        return app()->make(AwsCognitoClient::class)->inviteUser($request[$userKey], $attributes, $clientMetadata);
     } //Function ends
 
 } //Trait ends
