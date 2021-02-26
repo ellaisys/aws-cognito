@@ -1,3 +1,5 @@
+<img src="https://www.ellaisys.com/wp-content/uploads/2020/11/eis_aws_cognito.png" width="100%" alt="EllaiSys AWS Cloud Capability"/>
+
 # Laravel Package to manage Web and API authentication with AWS Cognito
 AWS Cognito package using the AWS SDK for PHP
 
@@ -55,7 +57,7 @@ php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServ
 Last but not least you want to change the auth driver. To do so got to your config\auth.php file and change it 
 to look the following:
 
-```
+```php
 'guards' => [
     'web' => [
         'driver' => 'cognito-session', // This line is important for using AWS Cognito as Web Driver
@@ -150,7 +152,7 @@ and are not available if you want to use Single Sign On's.*
 ## Middleware configuration for API Routes
 In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware
 
-    ```
+    ```php
     protected $routeMiddleware = [
         ...
         'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
@@ -159,7 +161,7 @@ In case you are using this library as API driver, you can register the middlewar
 
 To use the middleware into the routes, as shown below
 
-    ```
+    ```php
     Route::middleware('aws-cognito')->get('user', 'NameOfTheController@functionName');
     ```
 
@@ -179,7 +181,7 @@ We have found a neat way to get around this default behaviour.
 5. The link should point to a controller action where you first check if a user with this token exists. 
 If such a exists in the database you make a call to Cognito and set the user Attributes to email_verified true and confirm the signUp.
 
-    ```
+    ```php
      public function verifyEmail(
             $token,
             CognitoClient $cognitoClient,
@@ -222,7 +224,7 @@ from the CognitoClient.
 To delete the user you should call deleteUser and pass the email of the user as a parameter to it.
 After the user has been deleted in your cognito pool, delete your user from your database too.
 
-```
+```php
     $cognitoClient->deleteUser($user->email);
     $user->delete();
 ```
