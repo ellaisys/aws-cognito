@@ -53,7 +53,10 @@ trait RegistersUsers
         //Register the user in Cognito
         $userKey = $request->has('username')?'username':'email';
 
-        return app()->make(AwsCognitoClient::class)->inviteUser($request[$userKey], $attributes, $clientMetadata);
+        //Temporary Password paramter
+        $password = $request->has('password')?$request['password']:null;
+
+        return app()->make(AwsCognitoClient::class)->inviteUser($request[$userKey], $password, $attributes, $clientMetadata);
     } //Function ends
 
 } //Trait ends

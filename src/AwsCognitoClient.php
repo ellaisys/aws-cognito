@@ -198,6 +198,7 @@ class AwsCognitoClient
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
                 return false;
             } //End if
+
             throw $e;
         }
 
@@ -287,7 +288,7 @@ class AwsCognitoClient
      * @param array $clientMetadata (optional)
      * @return bool
      */
-    public function inviteUser(string $username, array $attributes = [], array $clientMetadata=null)
+    public function inviteUser(string $username, string $password=null, array $attributes = [], array $clientMetadata=null)
     {
         //Force validate email
         if ($attributes['email']) {
@@ -298,9 +299,19 @@ class AwsCognitoClient
         $payload = [
             'UserPoolId' => $this->poolId,
             'Username' => $username,
-            'UserAttributes' => $this->formatAttributes($attributes),
-            'ClientMetadata' => $this->buildClientMetadata([], $clientMetadata)
+            'UserAttributes' => $this->formatAttributes($attributes)
         ];
+
+        //Set Client Metadata
+        if (!empty($clientMetadata)) {
+            $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
+        } //End if
+
+        //Set Temporary password
+        if (!empty($password)) {
+            $payload['TemporaryPassword'] = $password;
+        } //End if
+
         if (config('cognito.add_user_delivery_mediums')!="DEFAULT") {
             $payload['DesiredDeliveryMediums'] = [
                 config('cognito.add_user_delivery_mediums')

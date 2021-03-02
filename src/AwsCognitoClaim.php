@@ -17,6 +17,8 @@ use Illuminate\Contracts\Auth\Authenticatable;
 
 use Ellaisys\Cognito\Validators\AwsCognitoTokenValidator;
 
+use Exception;
+
 class AwsCognitoClaim
 {
 
@@ -61,6 +63,9 @@ class AwsCognitoClaim
     {
         try {
             $authResult = $result['AuthenticationResult'];
+            if (!is_array($authResult)) {
+                throw new Exception('Malformed AWS Authentication Result.', 400);
+            } //End if
 
             //Create token object
             $token = $authResult['AccessToken'];
@@ -71,8 +76,8 @@ class AwsCognitoClaim
             $this->user = $user;
             $this->sub = $user['id'];
 
-        } catch(\Exception $e) {
-            throw new Exception();
+        } catch(Exception $e) {
+            throw $e;
         } //Try-catch ends
     } //Function ends
 

@@ -1,5 +1,7 @@
 <?php
 
+use Ellaisys\Cognito\AwsCognitoClient;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -84,4 +86,63 @@ return [
     |
     */
     'storage_provider' => env('AWS_COGNITO_TOKEN_STORAGE', 'file'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Challenge Status Names for Forced Access.
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the package action based on the Challenge Status 
+    | received from the AWS Cognito Authentication. If the challenge status 
+    | is 'NEW_PASSWORD_CHALLENGE' and/or 'RESET_REQUIRED_PASSWORD', the 
+    | configuration that follows below will execute.
+    |
+    */
+    'forced_challenge_names' => [
+        AwsCognitoClient::NEW_PASSWORD_CHALLENGE, 
+        AwsCognitoClient::RESET_REQUIRED_PASSWORD
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Force Password Change by the User based on Cognito Status in Web Request (Session Guard)
+    |--------------------------------------------------------------------------
+    |
+    | This setting controls the action, in case the AWS Cognito authentication
+    | response includes the Challenge Names defined by 'forced_challenge_names'
+    | configuration in this file. The below flag, if set to 'true', will force 
+    | the web application user to be directed to certain route view/page. 
+    |
+    | In case the route name needs to be changed, you can set the below parameter 
+    | and map it in web.php route page.
+    |
+    */
+    'force_password_change_web' => env('AWS_COGNITO_FORCE_PASSWORD_CHANGE_WEB', true),
+    'force_redirect_route_name' => env('AWS_COGNITO_FORCE_PASSWORD_ROUTE_NAME', 'cognito.form.change.password'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Force Password Change by User based on Cognito Status in API Request (Token Guard)
+    |--------------------------------------------------------------------------
+    |
+    | This setting controls the action, in case the AWS Cognito authentication
+    | response includes the Challenge Names defined by 'forced_challenge_names'
+    | configuration in this file. The below flag, if set to 'true', will force 
+    | the user requesting API authentication by sharing the data required for
+    | changing the password.
+    |
+    */
+    'force_password_change_api' => env('AWS_COGNITO_FORCE_PASSWORD_CHANGE_API', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Force Auto Password Update based on Cognito Status in API Request (Token Guard)
+    |--------------------------------------------------------------------------
+    |
+    | This option enables the password to be auto updated into the AWS Cognito 
+    | User Pool. This feature will work only if the 'force_password_change_api'
+    | is set to false.
+    |
+    */
+    'force_password_auto_update_api' => env('AWS_COGNITO_FORCE_PASSWORD_AUTO_UPDATE_API', false),
 ];

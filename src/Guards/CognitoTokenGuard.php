@@ -94,19 +94,44 @@ class CognitoTokenGuard extends TokenGuard
     {
         /** @var Result $response */
         $result = $this->client->authenticate($credentials[$this->keyUsername], $credentials['password']);
-
+       
         if (!empty($result) && $result instanceof AwsResult) {
 
-            //Create claim token
-            $this->claim = new AwsCognitoClaim($result, $user, $credentials[$this->keyUsername]);
+            if (isset($result['ChallengeName']) && 
+                in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) 
+            {
+                //Check for forced action on challenge status
+                if (config('cognito.force_password_change_api')) {
+                    $this->claim = [
+                        'session_token' => $result['Session'],
+                        'username' => $credentials[$this->keyUsername],
+                        'status' => $result['ChallengeName']
+                    ];
+                } else {
+                    if (config('cognito.force_password_auto_update_api')) {
+                        //Force set password same as authenticated with challenge state
+                        $this->client->confirmPassword($credentials[$this->keyUsername], $credentials['password'], $result['Session']);
 
-            if ($user instanceof Authenticatable) {
-                return true;
-            } else {
-                throw new NoLocalUserException();
+                        //Get the result object again
+                        $result = $this->client->authenticate($credentials[$this->keyUsername], $credentials['password']);
+                        if (empty($result)) {
+                            return false;
+                        } //End if
+                    } else {
+                        $this->claim = null;
+                    } //End if
+                } //End if
             } //End if
+
+            //Create Claim for confirmed users
+            if (!isset($result['ChallengeName'])) {
+                //Create claim token
+                $this->claim = new AwsCognitoClaim($result, $user, $credentials[$this->keyUsername]);
+            } //End if     
+
+            return ($this->claim)?true:false;
         } else {
-            throw new AwsCognitoException();
+            return false;
         } //End if
 
         return false;
@@ -124,20 +149,21 @@ class CognitoTokenGuard extends TokenGuard
     public function attempt(array $credentials = [], $remember = false)
     {
         try {
-            //$this->fireAttemptEvent($credentials, $remember);
-
             $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
+
+            //Check if the user exists in local data store
+            if (!($user instanceof Authenticatable)) {
+                throw new NoLocalUserException();
+            } //End if
 
             if ($this->hasValidCredentials($user, $credentials)) {
                 return $this->login($user);
             } //End if
 
-            //$this->fireFailedEvent($user, $credentials);
-
             return false;
         } catch (NoLocalUserException $e) {
             Log::error('CognitoTokenGuard:attempt:NoLocalUserException:');
-            throw new NoLocalUserException();
+            throw $e;
         } catch (CognitoIdentityProviderException $e) {
             Log::error('CognitoTokenGuard:attempt:CognitoIdentityProviderException:'.$e->getAwsErrorCode());
 
@@ -164,10 +190,10 @@ class CognitoTokenGuard extends TokenGuard
             return $e->getAwsErrorCode();
         } catch (AwsCognitoException $e) {
             Log::error('CognitoTokenGuard:attempt:AwsCognitoException:'. $e->getMessage());
-            throw new AwsCognitoException();
+            throw $e;
         } catch (Exception $e) {
             Log::error('CognitoTokenGuard:attempt:Exception:'.$e->getMessage());
-            return false;
+            throw $e;
         } //Try-catch ends
     } //Function ends
 
@@ -182,8 +208,13 @@ class CognitoTokenGuard extends TokenGuard
     private function login($user)
     {
         if (!empty($this->claim)) {
-            //Set Token
-            $this->setToken();
+
+            //Save the claim if it matches the Cognito Claim
+            if ($this->claim instanceof AwsCognitoClaim) {
+
+                //Set Token
+                $this->setToken();
+            } //End if
 
             //Set user
             $this->setUser($user);
