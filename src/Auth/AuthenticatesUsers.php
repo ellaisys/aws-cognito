@@ -33,9 +33,10 @@ trait AuthenticatesUsers
      * Attempt to log the user into the application.
      *
      * @param  \Illuminate\Support\Collection  $request
-     * @param  \string $guard (optional)
-     * @param  \string $paramUsername (optional)
-     * @param  \string $paramPassword (optional)
+     * @param  \string  $guard (optional)
+     * @param  \string  $paramUsername (optional)
+     * @param  \string  $paramPassword (optional)
+     * @param  \bool  $isJsonResponse (optional)
      * 
      * @return mixed
      */
@@ -124,7 +125,7 @@ trait AuthenticatesUsers
                 ->withErrors([
                     'username' => $message,
                 ]);
-        }
+        } //End if
         
         throw new HttpException(400, $message);
     } //Function ends

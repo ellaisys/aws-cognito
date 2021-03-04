@@ -17,6 +17,7 @@ We decided to use it and contribute it to the community as a package, that encou
 Currently we have the following features implemented in our package:
 
 - Registration and Confirmation E-Mail
+- Forced password change at first login
 - Login
 - Remember Me Cookie
 - Single Sign On
@@ -25,9 +26,10 @@ Currently we have the following features implemented in our package:
 - Edit User Attributes
 - Reset User Password
 - Confirm Sign Up
+- Easy API Token handling (uses the cache driver)
 
 ### Disclaimer
-_This package is currently in development and is not production ready._
+_This package is currently in production ready mode with already a few implementations done. We would be happy to hear from you, about the defects or new feature enhancements. However, this being a free support, we would not be able to commit to support SLAs or timelines._
 
 ## Installation
 
@@ -105,6 +107,7 @@ AWS_COGNITO_CLIENT_SECRET="1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1"
 AWS_COGNITO_USER_POOL_ID="xxxxxxxxxxxxxxxxx"
 AWS_COGNITO_REGION="xxxxxxxxxxx" //optional - default value is 'us-east-1'
 AWS_COGNITO_VERSION="latest" //optional - default value is 'latest'
+
 ```
 For more details on how to find AWS_COGNITO_CLIENT_ID, AWS_COGNITO_CLIENT_SECRET and AWS_COGNITO_USER_POOL_ID for your application, please refer [COGNITOCONFIG File](COGNITOCONFIG.md)
 
@@ -153,68 +156,203 @@ and are not available if you want to use Single Sign On's.*
 In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware
 
     ```php
+
     protected $routeMiddleware = [
         ...
         'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
     ]
+
     ```
 
-To use the middleware into the routes, as shown below
+To use the middleware into the **Web routes**, you can use the std auth middleware as shown below
 
     ```php
+
+    Route::middleware('auth')->get('user', 'NameOfTheController@functionName');
+
+    ```
+
+To use the middleware into the **API routes**, as shown below
+
+    ```php
+
     Route::middleware('aws-cognito')->get('user', 'NameOfTheController@functionName');
+
     ```
 
 
 ## Registering Users 
 
-As a default, if you are registering a new user with Cognito, Cognito will send you an email during signUp were the user can verify themselves. 
-If the user now clicks on the link in the email he will be redirected to a confirmation page which is provided by Cognito. 
-In most cases, this is not you what you want. You want the user to stay on your page. 
+As a default, if you are registering a new user with Cognito, Cognito will send you an email during signUp that includes the username and temporary password for the users to verify themselves.
 
-We have found a neat way to get around this default behaviour. 
+Using this library in conjunction with **AWS Lambda**, once can look to customize the email template and content. The email template can be text or html based. The Lambda code for not included in this code repository. You can create your own. Any object (array) that you pass to the registration method is transferred as is to the lambda function, we are not prescriptive about the attribute names.
 
-1. You need to create an extra field for the user where you want to store the verification token. This field has to be nullable.
-2. Create an Event Listener that listens for Registered Event which is fired after the user has been registered. 
-3. In this event listener, you generate a token and store that in the field you created above. 
-4. You create an email and send that token, stored in a link, to the user.  
-5. The link should point to a controller action where you first check if a user with this token exists. 
-If such a exists in the database you make a call to Cognito and set the user Attributes to email_verified true and confirm the signUp.
+We have made is very easy for anyone to use the default behaviour. 
+
+1. You don't need to create an extra field to store the verification token.
+2. You don't have to bother about the Sessions or API tokens, they are managed for you. The session or token is managed via the standard mechanism of Laravel. You have the liberty to keep it where ever you want, no security loop holes.
+3. If you use the trait provided by us 'Ellaisys\Cognito\Auth\RegistersUsers', the code will be limited to just a few lines
+4. if you are using the Laravel scafolding, then make the password nullable in DB or drop it from schema. Passwords will be only managed by AWS Cognito.
 
     ```php
-     public function verifyEmail(
-            $token,
-            CognitoClient $cognitoClient,
-            CognitoUserPropertyAccessor $cognitoUserPropertyAccessor
-        ) {
-            $user = User::whereToken($token)->firstOrFail();
-    
-            $user->token = null;
-            $user->save();
-    
-            $cognitoClient->setUserAttributes($user->email, [
-                'email_verified' => 'true',
-            ]);
-    
-            if ($cognitoUserPropertyAccessor->getUserStatus($user->email) != 'CONFIRMED') {
-                $cognitoClient->confirmSignUp($user->email);
-                return response()->redirectToRoute('login');
+        use Ellaisys\Cognito\Auth\RegistersUsers;
+
+        class UserController extends BaseController
+        {
+            use RegistersUsers;
+
+            public function register(Request $request)
+            {
+                $validator = $request->validate([
+                    'name' => 'required|max:255',
+                    'email' => 'required|email|max:64|unique:users',
+                    'password' => 'sometimes|confirmed|min:6|max:64',
+                ]);
+
+                //Create credentials object
+                $collection = collect($request->all());
+                $data = $collection->only('name', 'email', 'password'); //passing 'password' is optional.
+
+                //Register User in cognito
+                if ($cognitoRegistered=$this->createCognitoUser($data)) {
+
+                    //If successful, create the user in local db
+                    User::create($collection->only('name', 'email'));
+                } //End if
+
+                //Redirect to view
+                return view('login');
             }
-    
-            return response()->redirectToRoute('dashboard');
         }
+
     ```
 
-6. Now you need to turn off Cognito to send you emails. Go into your AWS account and navigate to the Cognito section. 
-Select your user pool and click on `MFA and verifications`  You will see a headline: 
-`Do you want to require verification of emails or phone numbers?`
-You have to remove all checked fields here. Once done, you should see a red alert:
- `You have not selected either email or phone number verification, so your users will not be able to recover their passwords without contacting you for support.`
+5. You don't need to turn off Cognito to send you emails. We rather propose the use of AWS Cognito or AWS SMS mailers, such that use credentials are always secure.
 
-7. Now you have told Cognito to stop sending you messages when a user registers on your app and you can handle it all by yourself.
+## User Authentication
 
-As a sidenote: Password Forgot Emails will still be triggered through Cognito. You cannot turn them off, so make sure to style those emails
-to suit your needs. Also make sure to send the email from a proper FROM address. 
+We have provided you with a useful trait that make the authentication very simple (with Web or API routes). You don't have to worry about any additional code to manage sessions and token (for API).
+
+The trait takes in some additional parameters, refer below the function signature of the trait. Note that the function takes the object of **Illuminate\Support\Collection** instead of **Illuminate\Http\Request**. This will allow you to use this function in any tier of the code.
+
+Also, the 'guard' name is passed, so that you can use the same for multiple guards in your project. The function has the capability to handle the Session and Token Guards with multiple drivers and providers in auth.php
+
+```php
+
+    namespace Ellaisys\Cognito\Auth;
+
+    protected function attemptLogin (
+        Collection $request, string $guard='web', 
+        string $paramUsername='email', string $paramPassword='password', 
+        bool $isJsonResponse=false
+    ) {
+        ...
+        ...
+
+
+        ...
+    }
+
+```
+
+In case you want to use this trait for Web login, you can write the code as shown below in the AuthController.php
+
+```php
+
+    namespace App\Http\Controllers;
+
+    ...
+
+    use Ellaisys\Cognito\AwsCognitoClaim;
+    use Ellaisys\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
+
+    class AuthController extends Controller
+    {
+        use CognitoAuthenticatesUsers;
+
+        /**
+         * Authenticate User
+         * 
+         * @throws \HttpException
+         * 
+         * @return mixed
+         */
+        public function login(\Illuminate\Http\Request $request)
+        {
+            ...
+
+            //Convert request to collection
+            $collection = collect($request->all());
+
+            //Authenticate with Cognito Package Trait (with 'web' as the auth guard)
+            if ($response = $this->attemptLogin($collection, 'web')) {
+                if ($response===true) {
+                    return redirect(route('home'))->with('success', true);
+                } else if ($response===false) {
+                    // If the login attempt was unsuccessful you may increment the number of attempts
+                    // to login and redirect the user back to the login form. Of course, when this
+                    // user surpasses their maximum number of attempts they will get locked out.
+                    //
+                    //$this->incrementLoginAttempts($request);
+                    //
+                    //$this->sendFailedLoginResponse($collection, null);
+                } else {
+                    return $response;
+                } //End if
+            } //End if
+
+        } //Function ends
+
+        ...
+    } //Class ends
+
+```
+
+In case you want to use this trait for API based login, you can write the code as shown below in the AuthApiController.php
+
+```php
+
+    namespace App\Api\Controller;
+
+    ...
+
+    use Ellaisys\Cognito\AwsCognitoClaim;
+    use Ellaisys\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
+
+    class AuthApiController extends Controller
+    {
+        use CognitoAuthenticatesUsers;
+
+        /**
+         * Authenticate User
+         * 
+         * @throws \HttpException
+         * 
+         * @return mixed
+         */
+        public function login(\Illuminate\Http\Request $request)
+        {
+            ...
+
+            //Convert request to collection
+            $collection = collect($request->all());
+
+            //Authenticate with Cognito Package Trait (with 'api' as the auth guard)
+            if ($claim = $this->attemptLogin($collection, 'api', 'username', 'password', true)) {
+                if ($claim instanceof AwsCognitoClaim) {
+                    return $claim->getData();
+                } else {
+                    return response()->json(['status' => 'error', 'message' => $claim], 400);
+                } //End if
+            } //End if
+
+        } //Function ends
+
+
+        ...
+    } //Class ends
+
+```
 
 ## Delete User
 
