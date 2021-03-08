@@ -43,33 +43,33 @@ composer require ellaisys/aws-cognito
 Using a version prior to Laravel 5.5 you need to manually register the service provider.
 
 ```php
-// config/app.php
-'providers' => [
-    ...
-    Ellaisys\Cognito\Providers\AwsCognitoServiceProvider::class,
-    
-];
+    // config/app.php
+    'providers' => [
+        ...
+        Ellaisys\Cognito\Providers\AwsCognitoServiceProvider::class,
+        
+    ];
 ```
 
 Next you can publish the config and the view.
 
 ```bash
-php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider"
+    php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider"
 ```
 Last but not least you want to change the auth driver. To do so got to your config\auth.php file and change it 
 to look the following:
 
 ```php
-'guards' => [
-    'web' => [
-        'driver' => 'cognito-session', // This line is important for using AWS Cognito as Web Driver
-        'provider' => 'users',
+    'guards' => [
+        'web' => [
+            'driver' => 'cognito-session', // This line is important for using AWS Cognito as Web Driver
+            'provider' => 'users',
+        ],
+        'api' => [
+            'driver' => 'cognito-token', // This line is important for using AWS Cognito as API Driver
+            'provider' => 'users',
+        ],
     ],
-    'api' => [
-        'driver' => 'cognito-token', // This line is important for using AWS Cognito as API Driver
-        'provider' => 'users',
-    ],
-],
 ```
 
 ## Cognito User Pool
@@ -96,17 +96,17 @@ From this user you can fetch the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
 
 Add the following fields to your `.env` file and set the values according to your AWS settings:
 
-```
-# AWS configurations for cloud storage
-AWS_ACCESS_KEY_ID="Axxxxxxxxxxxxxxxxxxxxxxxx6"
-AWS_SECRET_ACCESS_KEY="mxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+"
+```php
+    # AWS configurations for cloud storage
+    AWS_ACCESS_KEY_ID="Axxxxxxxxxxxxxxxxxxxxxxxx6"
+    AWS_SECRET_ACCESS_KEY="mxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+"
 
-# AWS Cognito configurations
-AWS_COGNITO_CLIENT_ID="6xxxxxxxxxxxxxxxxxxxxxxxxr"
-AWS_COGNITO_CLIENT_SECRET="1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1"
-AWS_COGNITO_USER_POOL_ID="xxxxxxxxxxxxxxxxx"
-AWS_COGNITO_REGION="xxxxxxxxxxx" //optional - default value is 'us-east-1'
-AWS_COGNITO_VERSION="latest" //optional - default value is 'latest'
+    # AWS Cognito configurations
+    AWS_COGNITO_CLIENT_ID="6xxxxxxxxxxxxxxxxxxxxxxxxr"
+    AWS_COGNITO_CLIENT_SECRET="1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1"
+    AWS_COGNITO_USER_POOL_ID="xxxxxxxxxxxxxxxxx"
+    AWS_COGNITO_REGION="xxxxxxxxxxx" //optional - default value is 'us-east-1'
+    AWS_COGNITO_VERSION="latest" //optional - default value is 'latest'
 
 ```
 For more details on how to find AWS_COGNITO_CLIENT_ID, AWS_COGNITO_CLIENT_SECRET and AWS_COGNITO_USER_POOL_ID for your application, please refer [COGNITOCONFIG File](COGNITOCONFIG.md)
@@ -155,30 +155,30 @@ and are not available if you want to use Single Sign On's.*
 ## Middleware configuration for API Routes
 In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware
 
-    ```php
+```php
 
     protected $routeMiddleware = [
         ...
         'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
     ]
 
-    ```
+```
 
 To use the middleware into the **Web routes**, you can use the std auth middleware as shown below
 
-    ```php
+```php
 
     Route::middleware('auth')->get('user', 'NameOfTheController@functionName');
 
-    ```
+```
 
 To use the middleware into the **API routes**, as shown below
 
-    ```php
+```php
 
     Route::middleware('aws-cognito')->get('user', 'NameOfTheController@functionName');
 
-    ```
+```
 
 
 ## Registering Users 
@@ -194,38 +194,38 @@ We have made is very easy for anyone to use the default behaviour.
 3. If you use the trait provided by us 'Ellaisys\Cognito\Auth\RegistersUsers', the code will be limited to just a few lines
 4. if you are using the Laravel scafolding, then make the password nullable in DB or drop it from schema. Passwords will be only managed by AWS Cognito.
 
-    ```php
-        use Ellaisys\Cognito\Auth\RegistersUsers;
+```php
+    use Ellaisys\Cognito\Auth\RegistersUsers;
 
-        class UserController extends BaseController
+    class UserController extends BaseController
+    {
+        use RegistersUsers;
+
+        public function register(Request $request)
         {
-            use RegistersUsers;
+            $validator = $request->validate([
+                'name' => 'required|max:255',
+                'email' => 'required|email|max:64|unique:users',
+                'password' => 'sometimes|confirmed|min:6|max:64',
+            ]);
 
-            public function register(Request $request)
-            {
-                $validator = $request->validate([
-                    'name' => 'required|max:255',
-                    'email' => 'required|email|max:64|unique:users',
-                    'password' => 'sometimes|confirmed|min:6|max:64',
-                ]);
+            //Create credentials object
+            $collection = collect($request->all());
+            $data = $collection->only('name', 'email', 'password'); //passing 'password' is optional.
 
-                //Create credentials object
-                $collection = collect($request->all());
-                $data = $collection->only('name', 'email', 'password'); //passing 'password' is optional.
+            //Register User in cognito
+            if ($cognitoRegistered=$this->createCognitoUser($data)) {
 
-                //Register User in cognito
-                if ($cognitoRegistered=$this->createCognitoUser($data)) {
+                //If successful, create the user in local db
+                User::create($collection->only('name', 'email'));
+            } //End if
 
-                    //If successful, create the user in local db
-                    User::create($collection->only('name', 'email'));
-                } //End if
-
-                //Redirect to view
-                return view('login');
-            }
+            //Redirect to view
+            return view('login');
         }
+    }
 
-    ```
+```
 
 5. You don't need to turn off Cognito to send you emails. We rather propose the use of AWS Cognito or AWS SMS mailers, such that use credentials are always secure.
 
@@ -363,8 +363,8 @@ To delete the user you should call deleteUser and pass the email of the user as 
 After the user has been deleted in your cognito pool, delete your user from your database too.
 
 ```php
-    $cognitoClient->deleteUser($user->email);
-    $user->delete();
+        $cognitoClient->deleteUser($user->email);
+        $user->delete();
 ```
 
 We have implemented a new config option `delete_user`, which you can access through `AWS_COGNITO_DELETE_USER` env var. 
@@ -375,7 +375,7 @@ restore themselves after a successful login.
 To access our CognitoClient you can simply pass it as a parameter to your Controller Action where you want to perform 
 the deletion. 
 
-```
+```php
     public function deleteUser(Request $request, AwsCognitoClient $client)
 ```
 
