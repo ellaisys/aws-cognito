@@ -235,7 +235,7 @@ We have provided you with a useful trait that make the authentication very simpl
 
 The trait takes in some additional parameters, refer below the function signature of the trait. Note that the function takes the object of **Illuminate\Support\Collection** instead of **Illuminate\Http\Request**. This will allow you to use this function in any tier of the code.
 
-Also, the 'guard' name is passed, so that you can use the same for multiple guards in your project. The function has the capability to handle the Session and Token Guards with multiple drivers and providers in auth.php
+Also, the 'guard' name reference is passed, so that you can reuse the function for multiple guard drivers in your project. The function has the capability to handle the Session and Token Guards with multiple drivers and providers as defined in /config/auth.php
 
 ```php
 
@@ -386,11 +386,11 @@ Laravel will take care of the dependency injection by itself.
     the email address.
 ```
 
-### Changelog
+## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
-### Security
+## Security
 
 If you discover any security related issues, please email [support@ellaisys.com](mailto:support@ellaisys.com) and also add it to the issue tracker.
 
