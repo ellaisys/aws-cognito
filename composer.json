@@ -13,8 +13,11 @@
             "homepage": "https://ellaisys.github.io/"
         }
     ],
+    "support": {
+        "email": "support@ellaisys.com"
+    },
     "prefer-stable": true,
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {
         "php": "^7.0",
         "guzzlehttp/guzzle": ">=6.0",
