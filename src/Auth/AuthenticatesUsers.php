@@ -62,6 +62,10 @@ trait AuthenticatesUsers
 
             if (config('cognito.add_missing_local_user_sso')) {
                 $response = $this->createLocalUser($credentials);
+                
+                if ($response) {
+                    return $claim;
+                }
             } //End if
             
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse);
@@ -85,7 +89,10 @@ trait AuthenticatesUsers
      */
     protected function createLocalUser($credentials)
     {
-        return true;
+        $userModel = config('cognito.sso_user_model');
+        $user = $userModel::create($credentials);
+        
+        return $user;
     } //Function ends
 
 
