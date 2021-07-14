@@ -27,6 +27,8 @@ Currently we have the following features implemented in our package:
 - Reset User Password
 - Confirm Sign Up
 - Easy API Token handling (uses the cache driver)
+- DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)
+- Automatic API token authorization (for new cognito users)
 
 ### Disclaimer
 _This package is currently in production ready mode with already a few implementations done. We would be happy to hear from you, about the defects or new feature enhancements. However, this being a free support, we would not be able to commit to support SLAs or timelines._
@@ -385,6 +387,41 @@ Laravel will take care of the dependency injection by itself.
     IMPORTANT: You want to secure this action by maybe security questions, a second delete password or by confirming 
     the email address.
 ```
+
+## Storing Web Sessions or API Tokens in DynamoDB (Useful for multiserver/container implementation)
+
+If you have a deployment architecture, that involves multiple servers and you want to maintain the web sessions or API tokens across the servers, you can use the AWS DynamoDB. The library is capable of handling the DynamoDB with ease. All that you need to do is create the table in AWS DynamoDB and change a few configurations.
+
+### Creating a new table in AWS DynamoDB
+1. Go to the AWS Console and create a new table. 
+2. Enter the unique table name as per your preferences.
+3. The primary key (or partition key) should be **key** of type **string**
+4. Use default settings and click the **Create** button
+
+### Update the .env file for Dynamo DB configurations
+Add/Edit the following fields to your `.env` file and set the values according to your AWS settings:
+
+```php
+
+    # Cache Configuration
+    CACHE_DRIVER="dynamodb"
+    DYNAMODB_CACHE_TABLE="table-name-of-your-choice" //This should match the table name provided above
+
+    # Session Configuration
+    SESSION_DRIVER="dynamodb"
+    SESSION_LIFETIME=120
+    SESSION_DOMAIN="set-your-domain-name" //The domain name can be as per your preference
+    SESSION_SECURE_COOKIE=true
+
+    # DynamoDB Configuration
+    DYNAMODB_ENDPOINT="https://dynamodb.us-west-2.amazonaws.com" // You can change the endpoint based of different regions
+
+```
+
+Refer the [AWS DynamoDB Documentation](https://docs.aws.amazon.com/general/latest/gr/ddb.html) and refer the endpoints provided in **Service endpoints** section.
+
+Update the DynamoDB table for the TTL columns as **expires_at**
+
 
 ## Changelog
 
