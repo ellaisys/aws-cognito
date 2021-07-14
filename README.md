@@ -17,7 +17,7 @@ We decided to use it and contribute it to the community as a package, that encou
 Currently we have the following features implemented in our package:
 
 - Registration and Confirmation E-Mail
-- Forced password change at first login
+- Forced password change at first login (configurable)
 - Login
 - Remember Me Cookie
 - Single Sign On
@@ -28,7 +28,6 @@ Currently we have the following features implemented in our package:
 - Confirm Sign Up
 - Easy API Token handling (uses the cache driver)
 - DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)
-- Automatic API token authorization (for new cognito users)
 
 ### Disclaimer
 _This package is currently in production ready mode with already a few implementations done. We would be happy to hear from you, about the defects or new feature enhancements. However, this being a free support, we would not be able to commit to support SLAs or timelines._
@@ -421,6 +420,20 @@ Add/Edit the following fields to your `.env` file and set the values according t
 Refer the [AWS DynamoDB Documentation](https://docs.aws.amazon.com/general/latest/gr/ddb.html) and refer the endpoints provided in **Service endpoints** section.
 
 Update the DynamoDB table for the TTL columns as **expires_at**
+
+
+## Automatic User Password update for API usage (for New Cognito Users)
+
+In case of the new cognito users, the AWS SDK will send a session key and the user is expected to change the password, in a forced mode. Make sure you force the users to change the password for the first login by new cognito user.
+
+However, if you have an API based implementation, and want to automatically authenticate the user without forcing the password change, you may do that with below setting fields to your `.env` file
+
+```php
+
+    AWS_COGNITO_FORCE_PASSWORD_CHANGE_API=false     //Make true for forcing password change
+    AWS_COGNITO_FORCE_PASSWORD_AUTO_UPDATE_API=true //Make false for stopping auto password change
+
+```
 
 
 ## Changelog
