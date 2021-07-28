@@ -26,8 +26,8 @@ class AwsCognitoClient
      * @var string
      */
     const USER_STATUS_CONFIRMED = 'CONFIRMED';
-    
-    
+
+
     /**
      * Constant representing the user needs a new password.
      *
@@ -98,7 +98,7 @@ class AwsCognitoClient
      * @var string
      */
     const EXPIRED_CODE = 'ExpiredCodeException';
-    
+
      /**
      * Constant representing the SMS MFA challenge.
      *
@@ -187,7 +187,7 @@ class AwsCognitoClient
      * @param $username
      * @param $password
      * @param array $attributes
-     * 
+     *
      * @return bool
      */
     public function register($username, $password, array $attributes = [])
@@ -322,9 +322,9 @@ class AwsCognitoClient
         if (config('cognito.add_user_delivery_mediums')!="DEFAULT") {
             $payload['DesiredDeliveryMediums'] = [
                 config('cognito.add_user_delivery_mediums')
-            ];                
+            ];
         } //End if
-        
+
         try {
             $this->client->adminCreateUser($payload);
         } catch (CognitoIdentityProviderException $e) {
@@ -442,7 +442,7 @@ class AwsCognitoClient
                 'AccessToken' => $accessToken,
                 'PreviousPassword' => $passwordOld,
                 'ProposedPassword' => $passwordNew
-            ]);            
+            ]);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
                 return Password::INVALID_USER;
@@ -606,6 +606,32 @@ class AwsCognitoClient
         return $user;
     } //Function ends
 
+    /**
+     * Responds to MFA challenge.
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html
+     *
+     * @param string $session
+     * @param string $challengeValue
+     * @param string $challengeName
+     * @return \Aws\Result|false
+     */
+    public function respondMFAChallenge(string $session, string $challengeValue, string $challengeName = AwsCognitoClient::SMS_MFA)
+    {
+        try {
+            $challenge = $this->client->respondToAuthChallenge([
+                'ClientId' => $this->clientId,
+                'ChallengeName' => $challengeName,
+                'ChallengeResponses' => [
+                    'SMS_MFA' => $challengeValue
+                ],
+                'Session' => $session
+            ]);
+        } catch (CognitoIdentityProviderException $e) {
+            return false;
+        }
+
+        return $challenge;
+    }
 
     /**
      * Format attributes in Name/Value array.
@@ -641,8 +667,8 @@ class AwsCognitoClient
         } else {
             $userAttributes = $attributes;
         } //End if
-        
+
         return $userAttributes;
     } //Function ends
-    
+
 } //Class ends
