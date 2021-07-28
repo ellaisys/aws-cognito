@@ -619,26 +619,26 @@ class AwsCognitoClient
      */
     public function respondMFAChallenge(string $session, string $challengeValue, string $username, string $challengeName = AwsCognitoClient::SMS_MFA)
     {
-            try {
-                $challenge = $this->client->respondToAuthChallenge([
-                    'ClientId' => $this->clientId,
-                    'ChallengeName' => $challengeName,
-                    'ChallengeResponses' => [
-                        'SMS_MFA_CODE' => $challengeValue,
-                        'USERNAME' => $username,
-                        'SECRET_HASH' => $this->cognitoSecretHash($username),
-                    ],
-                    'Session' => $session,
-                ]);
-            } catch (CognitoIdentityProviderException $e) {
-                if ($e->getAwsErrorCode() === 'NotAuthorizedException') {
-                    return 'mfa.not_authorized';
-                } else if ($e->getAwsErrorCode() === self::CODE_MISMATCH) {
-                    return 'mfa.invalid_session';
-                }
-
-                return false;
+        try {
+            $challenge = $this->client->respondToAuthChallenge([
+                'ClientId' => $this->clientId,
+                'ChallengeName' => $challengeName,
+                'ChallengeResponses' => [
+                    'SMS_MFA_CODE' => $challengeValue,
+                    'USERNAME' => $username,
+                    'SECRET_HASH' => $this->cognitoSecretHash($username),
+                ],
+                'Session' => $session,
+            ]);
+        } catch (CognitoIdentityProviderException $e) {
+            if ($e->getAwsErrorCode() === 'NotAuthorizedException') {
+                return 'mfa.not_authorized';
+            } else if ($e->getAwsErrorCode() === self::CODE_MISMATCH) {
+                return 'mfa.invalid_session';
             }
+
+            return false;
+        }
 
         return $challenge;
     }

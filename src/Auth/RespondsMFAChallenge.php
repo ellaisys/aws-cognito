@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito\Auth;
 
+use Aws\Result as AWSResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -46,7 +47,7 @@ trait RespondsMFAChallenge
 
         if (is_string($result)) {
             return $response = response()->json(['error' => 'cognito.'.$result], 400);
-        } else if (is_array($result) && isset($result['AuthenticationResult'])) {
+        } else if ($result instanceof AWSResult) {
             return $result['AuthenticationResult'];
         }
 
