@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Password;
 
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
+use PHPUnit\Exception;
 
 class AwsCognitoClient
 {
@@ -612,23 +613,30 @@ class AwsCognitoClient
      *
      * @param string $session
      * @param string $challengeValue
+     * @param string $username
      * @param string $challengeName
      * @return \Aws\Result|false
      */
-    public function respondMFAChallenge(string $session, string $challengeValue, string $challengeName = AwsCognitoClient::SMS_MFA)
+    public function respondMFAChallenge(string $session, string $challengeValue, string $username, string $challengeName = AwsCognitoClient::SMS_MFA)
     {
-        try {
-            $challenge = $this->client->respondToAuthChallenge([
-                'ClientId' => $this->clientId,
-                'ChallengeName' => $challengeName,
-                'ChallengeResponses' => [
-                    'SMS_MFA' => $challengeValue
-                ],
-                'Session' => $session
-            ]);
-        } catch (CognitoIdentityProviderException $e) {
-            return false;
-        }
+            try {
+                $challenge = $this->client->respondToAuthChallenge([
+                    'ClientId' => $this->clientId,
+                    'ChallengeName' => $challengeName,
+                    'ChallengeResponses' => [
+                        'SMS_MFA_CODE' => $challengeValue,
+                        'USERNAME' => $username,
+                        'SECRET_HASH' => $this->cognitoSecretHash($username),
+                    ],
+                    'Session' => $session,
+                ]);
+            } catch (CognitoIdentityProviderException $e) {
+                if ($e->getAwsErrorCode() === 'NotAuthorizedException') {
+                    return 'mfa.not_authorized';
+                }
+
+                return false;
+            }
 
         return $challenge;
     }
