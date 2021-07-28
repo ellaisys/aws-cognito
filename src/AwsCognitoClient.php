@@ -98,6 +98,13 @@ class AwsCognitoClient
      * @var string
      */
     const EXPIRED_CODE = 'ExpiredCodeException';
+    
+     /**
+     * Constant representing the SMS MFA challenge.
+     *
+     * @var string
+     */
+    const SMS_MFA = 'SMS_MFA';
 
 
     /**
