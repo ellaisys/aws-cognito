@@ -44,9 +44,9 @@ trait RespondsMFAChallenge
         //Responds MFA challenge
         $result = $client->respondMFAChallenge($request['session'], $request['value'], $request['email']);
 
-        if ($result === 'mfa.not_authorized') {
-            return $response = response()->json(['error' => 'cognito.mfa.not_authorized'], 400);
-        } else if (isset($result['AuthenticationResult'])) {
+        if (is_string($result)) {
+            return $response = response()->json(['error' => 'cognito.'.$result], 400);
+        } else if (is_array($result) && isset($result['AuthenticationResult'])) {
             return $result['AuthenticationResult'];
         }
 

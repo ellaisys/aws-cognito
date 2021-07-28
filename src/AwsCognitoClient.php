@@ -633,6 +633,8 @@ class AwsCognitoClient
             } catch (CognitoIdentityProviderException $e) {
                 if ($e->getAwsErrorCode() === 'NotAuthorizedException') {
                     return 'mfa.not_authorized';
+                } else if ($e->getAwsErrorCode() === self::CODE_MISMATCH) {
+                    return 'mfa.invalid_session';
                 }
 
                 return false;
