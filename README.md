@@ -118,11 +118,12 @@ If you are already working on an existing project and want to integrate Cognito 
 
 ## Usage
 
-Our package is providing you 5 traits you can just add to your Auth Controllers to get our package running.
+Our package is providing you 6 traits you can just add to your Auth Controllers to get our package running.
 
 - Ellaisys\Cognito\Auth\AuthenticatesUsers
 - Ellaisys\Cognito\Auth\RegistersUsers
 - Ellaisys\Cognito\Auth\ResetsPasswords
+- Ellaisys\Cognito\Auth\RespondsMFAChallenge
 - Ellaisys\Cognito\Auth\SendsPasswordResetEmails
 - Ellaisys\Cognito\Auth\VerifiesEmails
 
