@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Password;
 
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
+use PHPUnit\Exception;
 
 class AwsCognitoClient
 {
@@ -26,8 +27,8 @@ class AwsCognitoClient
      * @var string
      */
     const USER_STATUS_CONFIRMED = 'CONFIRMED';
-    
-    
+
+
     /**
      * Constant representing the user needs a new password.
      *
@@ -98,6 +99,13 @@ class AwsCognitoClient
      * @var string
      */
     const EXPIRED_CODE = 'ExpiredCodeException';
+
+     /**
+     * Constant representing the SMS MFA challenge.
+     *
+     * @var string
+     */
+    const SMS_MFA = 'SMS_MFA';
 
 
     /**
@@ -180,7 +188,7 @@ class AwsCognitoClient
      * @param $username
      * @param $password
      * @param array $attributes
-     * 
+     *
      * @return bool
      */
     public function register($username, $password, array $attributes = [])
@@ -315,9 +323,9 @@ class AwsCognitoClient
         if (config('cognito.add_user_delivery_mediums')!="DEFAULT") {
             $payload['DesiredDeliveryMediums'] = [
                 config('cognito.add_user_delivery_mediums')
-            ];                
+            ];
         } //End if
-        
+
         try {
             $this->client->adminCreateUser($payload);
         } catch (CognitoIdentityProviderException $e) {
@@ -435,7 +443,7 @@ class AwsCognitoClient
                 'AccessToken' => $accessToken,
                 'PreviousPassword' => $passwordOld,
                 'ProposedPassword' => $passwordNew
-            ]);            
+            ]);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
                 return Password::INVALID_USER;
@@ -599,6 +607,41 @@ class AwsCognitoClient
         return $user;
     } //Function ends
 
+    /**
+     * Responds to MFA challenge.
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html
+     *
+     * @param string $session
+     * @param string $challengeValue
+     * @param string $username
+     * @param string $challengeName
+     * @return \Aws\Result|false
+     */
+    public function respondMFAChallenge(string $session, string $challengeValue, string $username, string $challengeName = AwsCognitoClient::SMS_MFA)
+    {
+        try {
+            $challenge = $this->client->respondToAuthChallenge([
+                'ClientId' => $this->clientId,
+                'ChallengeName' => $challengeName,
+                'ChallengeResponses' => [
+                    'SMS_MFA_CODE' => $challengeValue,
+                    'USERNAME' => $username,
+                    'SECRET_HASH' => $this->cognitoSecretHash($username),
+                ],
+                'Session' => $session,
+            ]);
+        } catch (CognitoIdentityProviderException $e) {
+            if ($e->getAwsErrorCode() === 'NotAuthorizedException') {
+                return 'mfa.not_authorized';
+            } else if ($e->getAwsErrorCode() === self::CODE_MISMATCH) {
+                return 'mfa.invalid_session';
+            }
+
+            return false;
+        }
+
+        return $challenge;
+    }
 
     /**
      * Get user details by access token.
@@ -655,8 +698,8 @@ class AwsCognitoClient
         } else {
             $userAttributes = $attributes;
         } //End if
-        
+
         return $userAttributes;
     } //Function ends
-    
+
 } //Class ends
