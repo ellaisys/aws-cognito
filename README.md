@@ -447,7 +447,7 @@ If you discover any security related issues, please email [support@ellaisys.com]
 ## Credits
 
 - [EllaiSys Team](https://github.com/ellaisys)
-- [Amit Dhongde](https://github.com/amitdhongde)
+- [GitHub Contributors](https://github.com/ellaisys/aws-cognito/graphs/contributors)
 
 ## Support us
 
