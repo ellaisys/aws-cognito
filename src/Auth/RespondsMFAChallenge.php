@@ -39,7 +39,7 @@ trait RespondsMFAChallenge
 
 
     /**
-     * AwsCognito constructor.
+     * RespondsMFAChallenge constructor.
      *
      * @param AwsCognito $cognito
      */
