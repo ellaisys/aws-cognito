@@ -64,7 +64,7 @@ trait AuthenticatesUsers
                 $response = $this->createLocalUser($credentials);
                 
                 if ($response) {
-                    return $claim;
+                    return $response;
                 }
             } //End if
             
