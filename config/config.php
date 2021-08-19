@@ -1,6 +1,6 @@
 <?php
 
-use Ellaisys\Cognito\AwsCognitoClient;
+use Sunnydesign\Cognito\AwsCognitoClient;
 
 return [
     /*

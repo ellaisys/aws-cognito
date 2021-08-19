@@ -9,16 +9,16 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Http\Middleware;
+namespace Sunnydesign\Cognito\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 
 use Exception;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
-use Ellaisys\Cognito\Exceptions\NoTokenException;
-use Ellaisys\Cognito\Exceptions\InvalidTokenException;
+use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
+use Sunnydesign\Cognito\Exceptions\NoTokenException;
+use Sunnydesign\Cognito\Exceptions\InvalidTokenException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class AwsCognitoAuthenticate extends BaseMiddleware

@@ -47,7 +47,7 @@ Using a version prior to Laravel 5.5 you need to manually register the service p
     // config/app.php
     'providers' => [
         ...
-        Ellaisys\Cognito\Providers\AwsCognitoServiceProvider::class,
+        Sunnydesign\Cognito\Providers\AwsCognitoServiceProvider::class,
         
     ];
 ```
@@ -55,7 +55,7 @@ Using a version prior to Laravel 5.5 you need to manually register the service p
 Next you can publish the config and the view.
 
 ```bash
-    php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider"
+    php artisan vendor:publish --provider="Sunnydesign\Cognito\Providers\AwsCognitoServiceProvider"
 ```
 Last but not least you want to change the auth driver. To do so got to your config\auth.php file and change it 
 to look the following:
@@ -120,12 +120,12 @@ If you are already working on an existing project and want to integrate Cognito 
 
 Our package is providing you 6 traits you can just add to your Auth Controllers to get our package running.
 
-- Ellaisys\Cognito\Auth\AuthenticatesUsers
-- Ellaisys\Cognito\Auth\RegistersUsers
-- Ellaisys\Cognito\Auth\ResetsPasswords
-- Ellaisys\Cognito\Auth\RespondsMFAChallenge
-- Ellaisys\Cognito\Auth\SendsPasswordResetEmails
-- Ellaisys\Cognito\Auth\VerifiesEmails
+- Sunnydesign\Cognito\Auth\AuthenticatesUsers
+- Sunnydesign\Cognito\Auth\RegistersUsers
+- Sunnydesign\Cognito\Auth\ResetsPasswords
+- Sunnydesign\Cognito\Auth\RespondsMFAChallenge
+- Sunnydesign\Cognito\Auth\SendsPasswordResetEmails
+- Sunnydesign\Cognito\Auth\VerifiesEmails
 
 
 In the simplest way you just go through your Auth Controllers and change namespaces from the traits which are currently implemented from Laravel.
@@ -161,7 +161,7 @@ In case you are using this library as API driver, you can register the middlewar
 
     protected $routeMiddleware = [
         ...
-        'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
+        'aws-cognito' => \Sunnydesign\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
     ]
 
 ```
@@ -193,11 +193,11 @@ We have made is very easy for anyone to use the default behaviour.
 
 1. You don't need to create an extra field to store the verification token.
 2. You don't have to bother about the Sessions or API tokens, they are managed for you. The session or token is managed via the standard mechanism of Laravel. You have the liberty to keep it where ever you want, no security loop holes.
-3. If you use the trait provided by us 'Ellaisys\Cognito\Auth\RegistersUsers', the code will be limited to just a few lines
+3. If you use the trait provided by us 'Sunnydesign\Cognito\Auth\RegistersUsers', the code will be limited to just a few lines
 4. if you are using the Laravel scafolding, then make the password nullable in DB or drop it from schema. Passwords will be only managed by AWS Cognito.
 
 ```php
-    use Ellaisys\Cognito\Auth\RegistersUsers;
+    use Sunnydesign\Cognito\Auth\RegistersUsers;
 
     class UserController extends BaseController
     {
@@ -241,7 +241,7 @@ Also, the 'guard' name reference is passed, so that you can reuse the function f
 
 ```php
 
-    namespace Ellaisys\Cognito\Auth;
+    namespace Sunnydesign\Cognito\Auth;
 
     protected function attemptLogin (
         Collection $request, string $guard='web', 
@@ -265,8 +265,8 @@ In case you want to use this trait for Web login, you can write the code as show
 
     ...
 
-    use Ellaisys\Cognito\AwsCognitoClaim;
-    use Ellaisys\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
+    use Sunnydesign\Cognito\AwsCognitoClaim;
+    use Sunnydesign\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
 
     class AuthController extends Controller
     {
@@ -318,8 +318,8 @@ In case you want to use this trait for API based login, you can write the code a
 
     ...
 
-    use Ellaisys\Cognito\AwsCognitoClaim;
-    use Ellaisys\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
+    use Sunnydesign\Cognito\AwsCognitoClaim;
+    use Sunnydesign\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
 
     class AuthApiController extends Controller
     {

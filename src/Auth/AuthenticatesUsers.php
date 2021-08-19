@@ -9,19 +9,19 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Auth;
+namespace Sunnydesign\Cognito\Auth;
 
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
-use Ellaisys\Cognito\AwsCognitoClient;
+use Sunnydesign\Cognito\AwsCognitoClient;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
-use Ellaisys\Cognito\Exceptions\NoLocalUserException;
+use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
+use Sunnydesign\Cognito\Exceptions\NoLocalUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 

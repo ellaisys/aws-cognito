@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Guards;
+namespace Sunnydesign\Cognito\Guards;
 
 use Aws\Result as AwsResult;
 use Illuminate\Http\Request;
@@ -18,14 +18,14 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 
-use Ellaisys\Cognito\AwsCognito;
-use Ellaisys\Cognito\AwsCognitoClient;
-use Ellaisys\Cognito\AwsCognitoClaim;
+use Sunnydesign\Cognito\AwsCognito;
+use Sunnydesign\Cognito\AwsCognitoClient;
+use Sunnydesign\Cognito\AwsCognitoClaim;
 
 use Exception;
-use Ellaisys\Cognito\Exceptions\NoLocalUserException;
-use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Sunnydesign\Cognito\Exceptions\NoLocalUserException;
+use Sunnydesign\Cognito\Exceptions\InvalidUserModelException;
+use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoTokenGuard extends TokenGuard
@@ -48,7 +48,7 @@ class CognitoTokenGuard extends TokenGuard
     /**
      * The AwsCognito instance.
      *
-     * @var \Ellaisys\Cognito\AwsCognito
+     * @var \Sunnydesign\Cognito\AwsCognito
      */
     protected $cognito;
 
@@ -56,7 +56,7 @@ class CognitoTokenGuard extends TokenGuard
     /**
      * The AwsCognito Claim token
      * 
-     * @var \Ellaisys\Cognito\AwsCognitoClaim|null
+     * @var \Sunnydesign\Cognito\AwsCognitoClaim|null
      */
     protected $claim;
 
@@ -256,7 +256,7 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @param  bool  $forceForever
      *
-     * @return \Ellaisys\Cognito\AwsCognito
+     * @return \Sunnydesign\Cognito\AwsCognito
      */
     public function invalidate($forceForever = false)
     {

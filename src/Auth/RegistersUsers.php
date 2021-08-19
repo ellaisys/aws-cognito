@@ -9,17 +9,17 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Auth;
+namespace Sunnydesign\Cognito\Auth;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
-use Ellaisys\Cognito\AwsCognitoClient;
+use Sunnydesign\Cognito\AwsCognitoClient;
 
 use Exception;
-use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Sunnydesign\Cognito\Exceptions\InvalidUserFieldException;
+use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
 
 trait RegistersUsers
 {

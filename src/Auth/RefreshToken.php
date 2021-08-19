@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Auth;
+namespace Sunnydesign\Cognito\Auth;
 
-use Ellaisys\Cognito\AwsCognitoClient;
+use Sunnydesign\Cognito\AwsCognitoClient;
 
 trait RefreshToken
 {

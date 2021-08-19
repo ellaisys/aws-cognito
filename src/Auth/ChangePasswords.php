@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Auth;
+namespace Sunnydesign\Cognito\Auth;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -17,12 +17,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 
-use Ellaisys\Cognito\AwsCognitoClient;
+use Sunnydesign\Cognito\AwsCognitoClient;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
-use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Sunnydesign\Cognito\Exceptions\InvalidUserFieldException;
+use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
 
 trait ChangePasswords
 {
@@ -79,7 +79,7 @@ trait ChangePasswords
     /**
      * If a user is being forced to set a new password for the first time follow that flow instead.
      *
-     * @param  \Ellaisys\Cognito\AwsCognitoClient  $client
+     * @param  \Sunnydesign\Cognito\AwsCognitoClient  $client
      * @param  \Illuminate\Support\Collection  $request
      * @param  string  $paramUsername
      * @param  string  $passwordOld
@@ -100,7 +100,7 @@ trait ChangePasswords
     /**
      * If a user is being forced to set a new password for the first time follow that flow instead.
      *
-     * @param  \Ellaisys\Cognito\AwsCognitoClient  $client
+     * @param  \Sunnydesign\Cognito\AwsCognitoClient  $client
      * @param  \Illuminate\Support\Collection  $request
      * @param  string  $paramUsername
      * @param  string  $passwordOld

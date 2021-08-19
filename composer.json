@@ -28,13 +28,13 @@
     },
     "autoload": {
         "psr-4": {
-          "Ellaisys\\Cognito\\": "src/"
+          "Sunnydesign\\Cognito\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Ellaisys\\Cognito\\Providers\\AwsCognitoServiceProvider"
+                "Sunnydesign\\Cognito\\Providers\\AwsCognitoServiceProvider"
             ],
             "aliases": {
             }

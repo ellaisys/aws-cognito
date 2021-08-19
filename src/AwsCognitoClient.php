@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito;
+namespace Sunnydesign\Cognito;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
