@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Guards;
+namespace Sunnydesign\Cognito\Guards;
 
 use Aws\Result as AwsResult;
 
@@ -24,12 +24,12 @@ use Symfony\Component\HttpFoundation\Request;
 
 use Illuminate\Database\Eloquent\Model;
 
-use Ellaisys\Cognito\AwsCognitoClient;
+use Sunnydesign\Cognito\AwsCognitoClient;
 
 use Exception;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
-use Ellaisys\Cognito\Exceptions\NoLocalUserException;
-use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
+use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
+use Sunnydesign\Cognito\Exceptions\NoLocalUserException;
+use Sunnydesign\Cognito\Exceptions\InvalidUserModelException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoSessionGuard extends SessionGuard implements StatefulGuard

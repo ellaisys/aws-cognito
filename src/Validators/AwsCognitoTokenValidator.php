@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Validators;
+namespace Sunnydesign\Cognito\Validators;
 
-use Ellaisys\Cognito\Exceptions\InvalidTokenException;
+use Sunnydesign\Cognito\Exceptions\InvalidTokenException;
 
 class AwsCognitoTokenValidator
 {
@@ -30,7 +30,7 @@ class AwsCognitoTokenValidator
     /**
      * @param  string  $token
      *
-     * @throws \Ellaisys\Cognito\Exceptions\InvalidTokenException
+     * @throws \Sunnydesign\Cognito\Exceptions\InvalidTokenException
      *
      * @return string
      */
