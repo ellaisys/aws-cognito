@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Sunnydesign\Cognito;
+namespace Ellaisys\Cognito;
 
 use Aws\Result as AwsResult;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\Authenticatable;
 
-use Sunnydesign\Cognito\Validators\AwsCognitoTokenValidator;
+use Ellaisys\Cognito\Validators\AwsCognitoTokenValidator;
 
 use Exception;
 

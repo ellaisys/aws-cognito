@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Sunnydesign\Cognito\Auth;
+namespace Ellaisys\Cognito\Auth;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -17,12 +17,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 
-use Sunnydesign\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\AwsCognitoClient;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
-use Sunnydesign\Cognito\Exceptions\InvalidUserFieldException;
-use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 
 trait ResetsPasswords
 {

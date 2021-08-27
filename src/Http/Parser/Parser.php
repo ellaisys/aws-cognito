@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Sunnydesign\Cognito\Http\Parser;
+namespace Ellaisys\Cognito\Http\Parser;
 
 use Illuminate\Http\Request;
 
