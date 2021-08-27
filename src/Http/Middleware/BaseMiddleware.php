@@ -9,18 +9,18 @@
  * file that was distributed with this source code.
  */
 
-namespace Sunnydesign\Cognito\Http\Middleware;
+namespace Ellaisys\Cognito\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 
-use Sunnydesign\Cognito\AwsCognito;
+use Ellaisys\Cognito\AwsCognito;
 
 use Exception;
-use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
-use Sunnydesign\Cognito\Exceptions\NoTokenException;
-use Sunnydesign\Cognito\Exceptions\InvalidTokenException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\NoTokenException;
+use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 abstract class BaseMiddleware //extends Middleware
@@ -29,7 +29,7 @@ abstract class BaseMiddleware //extends Middleware
     /**
      * The Cognito Authenticator.
      *
-     * @var \Sunnydesign\Cognito\AwsCognito
+     * @var \Ellaisys\Cognito\AwsCognito
      */
     protected $cognito;
 
@@ -37,7 +37,7 @@ abstract class BaseMiddleware //extends Middleware
     /**
      * Create a new BaseMiddleware instance.
      *
-     * @param  \Sunnydesign\Cognito\AwsCognito  $cognito
+     * @param  \Ellaisys\Cognito\AwsCognito  $cognito
      *
      * @return void
      */

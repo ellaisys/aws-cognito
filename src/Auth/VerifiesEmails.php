@@ -9,16 +9,16 @@
  * file that was distributed with this source code.
  */
 
-namespace Sunnydesign\Cognito\Auth;
+namespace Ellaisys\Cognito\Auth;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
-use Sunnydesign\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\AwsCognitoClient;
 
 use Exception;
-use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait VerifiesEmails

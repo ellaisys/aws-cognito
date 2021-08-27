@@ -9,22 +9,22 @@
  * file that was distributed with this source code.
  */
 
-namespace Sunnydesign\Cognito;
+namespace Ellaisys\Cognito;
 
-use Sunnydesign\Cognito\AwsCognitoToken;
-use Sunnydesign\Cognito\AwsCognitoClaim;
-use Sunnydesign\Cognito\Providers\StorageProvider;
+use Ellaisys\Cognito\AwsCognitoToken;
+use Ellaisys\Cognito\AwsCognitoClaim;
+use Ellaisys\Cognito\Providers\StorageProvider;
 
 use Exception;
-use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
-use Sunnydesign\Cognito\Exceptions\TokenBlacklistedException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\TokenBlacklistedException;
 
 class AwsCognitoManager
 {
     /**
      * The provider.
      *
-     * @var \Sunnydesign\Cognito\Providers\StorageProvider
+     * @var \Ellaisys\Cognito\Providers\StorageProvider
      */
     protected $provider;
 
@@ -48,7 +48,7 @@ class AwsCognitoManager
     /**
      * The AwsCognito Claim token
      * 
-     * @var \Sunnydesign\Cognito\AwsCognitoClaim|null
+     * @var \Ellaisys\Cognito\AwsCognitoClaim|null
      */
     protected $claim;
 
@@ -56,7 +56,7 @@ class AwsCognitoManager
     /**
      * Constructor.
      *
-     * @param  \Sunnydesign\Cognito\Providers\StorageProvider  $provider
+     * @param  \Ellaisys\Cognito\Providers\StorageProvider  $provider
      * @param  \Tymon\JWTAuth\Blacklist  $blacklist
      * @param  \Tymon\JWTAuth\Factory  $payloadFactory
      *

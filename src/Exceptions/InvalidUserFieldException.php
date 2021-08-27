@@ -1,6 +1,6 @@
 <?php
 
-namespace Sunnydesign\Cognito\Exceptions;
+namespace Ellaisys\Cognito\Exceptions;
 
 use Throwable;
 

@@ -1,5 +1,5 @@
 {
-    "name": "sunnydesign/aws-cognito",
+    "name": "ellaisys/aws-cognito",
     "description": "AWS Cognito package that allows Auth and other related features using the AWS SDK for PHP",
     "keywords": ["php", "laravel", "aws", "cognito", "auth", "authentication", "oauth", "user pool", "ellaisys"],
     "type": "library",
@@ -28,13 +28,13 @@
     },
     "autoload": {
         "psr-4": {
-          "Sunnydesign\\Cognito\\": "src/"
+          "Ellaisys\\Cognito\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Sunnydesign\\Cognito\\Providers\\AwsCognitoServiceProvider"
+                "Ellaisys\\Cognito\\Providers\\AwsCognitoServiceProvider"
             ],
             "aliases": {
             }

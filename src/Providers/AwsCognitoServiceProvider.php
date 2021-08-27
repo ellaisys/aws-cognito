@@ -9,18 +9,18 @@
  * file that was distributed with this source code.
  */
 
-namespace Sunnydesign\Cognito\Providers;
+namespace Ellaisys\Cognito\Providers;
 
-use Sunnydesign\Cognito\AwsCognito;
-use Sunnydesign\Cognito\AwsCognitoClient;
-use Sunnydesign\Cognito\AwsCognitoManager;
-use Sunnydesign\Cognito\Guards\CognitoSessionGuard;
-use Sunnydesign\Cognito\Guards\CognitoTokenGuard;
+use Ellaisys\Cognito\AwsCognito;
+use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\AwsCognitoManager;
+use Ellaisys\Cognito\Guards\CognitoSessionGuard;
+use Ellaisys\Cognito\Guards\CognitoTokenGuard;
 
-use Sunnydesign\Cognito\Http\Parser\Parser;
-use Sunnydesign\Cognito\Http\Parser\AuthHeaders;
+use Ellaisys\Cognito\Http\Parser\Parser;
+use Ellaisys\Cognito\Http\Parser\AuthHeaders;
 
-use Sunnydesign\Cognito\Providers\StorageProvider;
+use Ellaisys\Cognito\Providers\StorageProvider;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;

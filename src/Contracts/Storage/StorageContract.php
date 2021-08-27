@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Sunnydesign\Cognito\Contracts\Storage;
+namespace Ellaisys\Cognito\Contracts\Storage;
 
 interface StorageContract
 {

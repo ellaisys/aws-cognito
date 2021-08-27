@@ -9,19 +9,19 @@
  * file that was distributed with this source code.
  */
 
-namespace Sunnydesign\Cognito\Auth;
+namespace Ellaisys\Cognito\Auth;
 
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
-use Sunnydesign\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\AwsCognitoClient;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
-use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
-use Sunnydesign\Cognito\Exceptions\NoLocalUserException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
@@ -64,7 +64,7 @@ trait AuthenticatesUsers
                 $response = $this->createLocalUser($credentials);
                 
                 if ($response) {
-                    return $response;
+                    return $claim;
                 }
             } //End if
             

@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Sunnydesign\Cognito;
+namespace Ellaisys\Cognito;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
@@ -17,20 +17,20 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 
-use Sunnydesign\Cognito\AwsCognitoClaim;
-use Sunnydesign\Cognito\AwsCognitoManager;
-use Sunnydesign\Cognito\Http\Parser\Parser;
+use Ellaisys\Cognito\AwsCognitoClaim;
+use Ellaisys\Cognito\AwsCognitoManager;
+use Ellaisys\Cognito\Http\Parser\Parser;
 
 use Exception;
-use Sunnydesign\Cognito\Exceptions\AwsCognitoException;
-use Sunnydesign\Cognito\Exceptions\InvalidTokenException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 
 class AwsCognito
 {
     /**
      * The authentication provider.
      *
-     * @var \Sunnydesign\Cognito\Contracts\Providers\Auth
+     * @var \Ellaisys\Cognito\Contracts\Providers\Auth
      */
     protected $auth;
 
@@ -38,7 +38,7 @@ class AwsCognito
     /**
      * Aws Cognito Manager
      *
-     * @var \Sunnydesign\Cognito\AwsCognitoManager
+     * @var \Ellaisys\Cognito\AwsCognitoManager
      */
     protected $manager;
 
@@ -46,7 +46,7 @@ class AwsCognito
     /**
      * The HTTP parser.
      *
-     * @var \Sunnydesign\Cognito\Http\Parser\Parser
+     * @var \Ellaisys\Cognito\Http\Parser\Parser
      */
     protected $parser;
 
@@ -54,7 +54,7 @@ class AwsCognito
     /**
      * The AwsCognito Claim token
      * 
-     * @var \Sunnydesign\Cognito\AwsCognitoClaim|null
+     * @var \Ellaisys\Cognito\AwsCognitoClaim|null
      */
     protected $claim;
 
@@ -62,7 +62,7 @@ class AwsCognito
     /**
      * The AWS Cognito token.
      *
-     * @var \Sunnydesign\Cognito\AwsCognitoToken|string|null
+     * @var \Ellaisys\Cognito\AwsCognitoToken|string|null
      */
     protected $token;
 
@@ -70,8 +70,8 @@ class AwsCognito
     /**
      * JWT constructor.
      *
-     * @param  \Sunnydesign\Cognito\Manager  $manager
-     * @param  \Sunnydesign\Cognito\Http\Parser\Parser  $parser
+     * @param  \Ellaisys\Cognito\Manager  $manager
+     * @param  \Ellaisys\Cognito\Http\Parser\Parser  $parser
      *
      * @return void
      */
@@ -85,7 +85,7 @@ class AwsCognito
     /**
      * Get the token.
      *
-     * @return \Sunnydesign\Cognito\AwsCognitoToken|null
+     * @return \Ellaisys\Cognito\AwsCognitoToken|null
      */
     public function getToken()
     {
@@ -104,9 +104,9 @@ class AwsCognito
     /**
      * Parse the token from the request.
      *
-     * @throws \Sunnydesign\Cognito\Exceptions\AwsCognitoException
+     * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      *
-     * @return \Sunnydesign\Cognito\AwsCognito
+     * @return \Ellaisys\Cognito\AwsCognito
      */
     public function parseToken()
     {
@@ -126,7 +126,7 @@ class AwsCognito
      *
      * @param  \string  $token
      *
-     * @return \Sunnydesign\Cognito\AwsCognito
+     * @return \Ellaisys\Cognito\AwsCognito
      */
     public function setToken(string $token)
     {
@@ -142,7 +142,7 @@ class AwsCognito
     /**
      * Get the token.
      *
-     * @return \Sunnydesign\Cognito\AwsCognitoClaim|null
+     * @return \Ellaisys\Cognito\AwsCognitoClaim|null
      */
     public function getClaim()
     {
@@ -153,9 +153,9 @@ class AwsCognito
     /**
      * Set the claim.
      *
-     * @param  \Sunnydesign\Cognito\AwsCognitoClaim  $claim
+     * @param  \Ellaisys\Cognito\AwsCognitoClaim  $claim
      *
-     * @return \Sunnydesign\Cognito\AwsCognito
+     * @return \Ellaisys\Cognito\AwsCognito
      */
     public function setClaim(AwsCognitoClaim $claim)
     {
@@ -169,7 +169,7 @@ class AwsCognito
     /**
      * Unset the current token.
      *
-     * @return \Sunnydesign\Cognito\AwsCognito
+     * @return \Ellaisys\Cognito\AwsCognito
      */
     public function unsetToken($forceForever = false)
     {
@@ -187,7 +187,7 @@ class AwsCognito
      *
      * @param  \Illuminate\Http\Request  $request
      *
-     * @return \Sunnydesign\Cognito\AwsCognito
+     * @return \Ellaisys\Cognito\AwsCognito
      */
     public function setRequest(Request $request)
     {
@@ -200,7 +200,7 @@ class AwsCognito
     /**
      * Get the Parser instance.
      *
-     * @return \Sunnydesign\Cognito\Http\Parser\Parser
+     * @return \Ellaisys\Cognito\Http\Parser\Parser
      */
     public function parser()
     {
@@ -211,7 +211,7 @@ class AwsCognito
     /**
      * Authenticate a user via a token.
      *
-     * @return \Sunnydesign\Cognito\AwsCognito|false
+     * @return \Ellaisys\Cognito\AwsCognito|false
      */
     public function authenticate()
     {

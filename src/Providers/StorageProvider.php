@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Sunnydesign\Cognito\Providers;
+namespace Ellaisys\Cognito\Providers;
 
 use Illuminate\Support\Facades\Cache;
 use Psr\SimpleCache\CacheInterface as PsrCacheInterface;
