@@ -11,7 +11,10 @@
 
 namespace Ellaisys\Cognito\Auth;
 
+use App\Models\User;
 use Aws\Result as AWSResult;
+use Ellaisys\Cognito\AwsCognito;
+use Ellaisys\Cognito\AwsCognitoClaim;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -27,6 +30,27 @@ use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 
 trait RespondsMFAChallenge
 {
+    /**
+     * The AwsCognito instance.
+     *
+     * @var \Ellaisys\Cognito\AwsCognito
+     */
+    protected $cognito;
+
+
+    /**
+     * RespondsMFAChallenge constructor.
+     *
+     * @param AwsCognito $cognito
+     */
+    public function __construct(AwsCognito $cognito) {
+        $this->cognito = $cognito;
+    }
+
+    /**
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     * @throws ValidationException
+     */
     public function respondMFAChallenge($request)
     {
         if ($request instanceof Request) {
@@ -48,6 +72,9 @@ trait RespondsMFAChallenge
         if (is_string($result)) {
             return $response = response()->json(['error' => 'cognito.'.$result], 400);
         } else if ($result instanceof AWSResult) {
+            $user = User::where('email', $request['email'])->first();
+            $claim = new AwsCognitoClaim($result, $user, 'email');
+            $this->cognito->setClaim($claim)->storeToken();
             return $result['AuthenticationResult'];
         }
 

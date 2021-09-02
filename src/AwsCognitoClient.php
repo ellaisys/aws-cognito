@@ -535,44 +535,6 @@ class AwsCognitoClient
     } //Function ends
 
 
-    /**
-     * @param string $refreshToken
-     * @param string $username
-     * @return mixed|string|void|null
-     */
-    public function refreshToken(string $refreshToken, string $username)
-    {
-        try {
-            $response = $this->client->initiateAuth([
-                'AuthFlow' => 'REFRESH_TOKEN_AUTH',
-                'ClientId' => $this->clientId,
-                'UserPoolId' => $this->poolId,
-                'AuthParameters' => [
-                    'SECRET_HASH' => $this->cognitoSecretHash($username),
-                    'REFRESH_TOKEN' => $refreshToken
-                ],
-            ]);
-
-            return $response->get('AuthenticationResult');
-        } catch (CognitoIdentityProviderException $e) {
-
-            if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
-                return 'validation.invalid_user';
-            } //End if
-
-            if ($e->getAwsErrorCode() === self::CODE_MISMATCH || $e->getAwsErrorCode() === self::EXPIRED_CODE) {
-                return 'validation.invalid_token';
-            } //End if
-
-            if ($e->getAwsErrorCode() === 'LimitExceededException') {
-                return 'validation.exceeded';
-            } //End if
-
-            throw $e;
-        }
-    } //Function ends
-
-
     // HELPER FUNCTIONS
     /**
      * Set a users attributes.
