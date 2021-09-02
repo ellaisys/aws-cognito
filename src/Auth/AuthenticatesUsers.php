@@ -66,6 +66,7 @@ trait AuthenticatesUsers
                 if ($response) {
                     return $response;
                 }
+
             } //End if
             
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse);
