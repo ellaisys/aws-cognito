@@ -43,15 +43,12 @@ trait AuthenticatesUsers
     protected function attemptLogin(Collection $request, string $guard='web', string $paramUsername='email', string $paramPassword='password', bool $isJsonResponse=false)
     {
         try {
-            //Get key fields
-            $keyUsername = 'email';
-            $keyPassword = 'password';
             $rememberMe = $request->has('remember')?$request['remember']:false;
 
             //Generate credentials array
             $credentials = [
-                $keyUsername => $request[$paramUsername], 
-                $keyPassword => $request[$paramPassword]
+                $paramUsername => $request[$paramUsername], 
+                $paramPassword => $request[$paramPassword]
             ];
 
             //Authenticate User
