@@ -21,6 +21,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AWS configurations
+    |--------------------------------------------------------------------------
+    |
+    | You can choose to have users sign in with an email address, phone number, username or preferred username
+    |
+    */
+    'signin_attribute' => env('AWS_COGNITO_SIGNIN_ATTRIBUTE', 'email'),
+
+    /*
+    |--------------------------------------------------------------------------
     | AWS Cognito configurations
     |--------------------------------------------------------------------------
     |

@@ -176,7 +176,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
                 $client = $app->make(AwsCognitoClient::class),
                 $app['auth']->createUserProvider($config['provider']),
                 $app['session.store'],
-                $app['request']
+                $app['request'],
+                config('cognito.signin_attribute')
             );
 
             $guard->setCookieJar($this->app['cookie']);
@@ -201,7 +202,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
                 $app['ellaisys.aws.cognito'],
                 $client = $app->make(AwsCognitoClient::class),
                 $app['request'],
-                Auth::createUserProvider($config['provider'])
+                Auth::createUserProvider($config['provider']),
+                config('cognito.signin_attribute')
             );
 
             $guard->setRequest($app->refresh('request', $guard, 'setRequest'));

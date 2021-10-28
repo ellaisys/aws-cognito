@@ -34,6 +34,14 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 {
+
+    /**
+     * Username key
+     * 
+     * @var  \string  
+     */
+    protected $keyUsername;
+
     /**
      * @var AwsCognitoClient
      */
@@ -61,9 +69,11 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         AwsCognitoClient $client,
         UserProvider $provider,
         Session $session,
-        ?Request $request = null
+        ?Request $request = null,
+        string $keyUsername = 'email'
     ) {
         $this->client = $client;
+        $this->keyUsername = $keyUsername;
         parent::__construct($name, $provider, $session, $request);
     }
 
@@ -77,7 +87,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
     protected function hasValidCredentials($user, $credentials)
     {
         /** @var Result $response */
-        $result = $this->client->authenticate($credentials['email'], $credentials['password']);
+        $result = $this->client->authenticate($credentials[$this->keyUsername], $credentials['password']);
 
         if (!empty($result) && $result instanceof AwsResult) {
 

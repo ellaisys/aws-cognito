@@ -106,6 +106,7 @@ Add the following fields to your `.env` file and set the values according to you
     AWS_COGNITO_USER_POOL_ID="xxxxxxxxxxxxxxxxx"
     AWS_COGNITO_REGION="xxxxxxxxxxx" //optional - default value is 'us-east-1'
     AWS_COGNITO_VERSION="latest" //optional - default value is 'latest'
+    AWS_COGNITO_SIGNIN_ATTRIBUTE="email" //optional - default value is 'email', you can choose to have users sign in with an email address, phone number, username or preferred username
 
 ```
 For more details on how to find AWS_COGNITO_CLIENT_ID, AWS_COGNITO_CLIENT_SECRET and AWS_COGNITO_USER_POOL_ID for your application, please refer [COGNITOCONFIG File](COGNITOCONFIG.md)
