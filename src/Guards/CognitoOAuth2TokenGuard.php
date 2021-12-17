@@ -28,7 +28,7 @@ use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
-class CognitoTokenGuard extends TokenGuard
+class CognitoOAuth2TokenGuard extends TokenGuard
 {
 
     /**
@@ -38,12 +38,6 @@ class CognitoTokenGuard extends TokenGuard
      */
     protected $keyUsername;
 
-    /**
-     * Username key
-     *
-     * @var  \string
-     */
-    protected $keyCode;
 
     /**
      * @var  \AwsCognitoClient
@@ -80,13 +74,11 @@ class CognitoTokenGuard extends TokenGuard
         AwsCognitoClient $client, 
         Request $request, 
         UserProvider $provider = null,
-        string $keyUsername = 'email',
-        string $keyCode = 'code'
+        string $keyUsername = 'email'
     ) {
         $this->cognito = $cognito;
         $this->client = $client;
         $this->keyUsername = $keyUsername;
-        $this->keyCode = $keyCode;
 
         parent::__construct($provider, $request);
     }
@@ -102,7 +94,6 @@ class CognitoTokenGuard extends TokenGuard
     {
         /** @var Result $response */
         $result = $this->client->authenticate($credentials[$this->keyUsername], $credentials['password']);
-        $test = $this->client->getUserByAccessToken($credentials[$this->keyCode]);
        
         if (!empty($result) && $result instanceof AwsResult) {
 

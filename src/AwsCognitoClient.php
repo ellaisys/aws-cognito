@@ -182,6 +182,10 @@ class AwsCognitoClient
     } //Function ends
 
 
+    public function authenticateWithCode($code) {
+
+    }
+
     /**
      * Registers a user in the given user pool.
      *

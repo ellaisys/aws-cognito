@@ -16,6 +16,7 @@ use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoManager;
 use Ellaisys\Cognito\Guards\CognitoSessionGuard;
 use Ellaisys\Cognito\Guards\CognitoTokenGuard;
+use Ellaisys\Cognito\Guards\CognitoOAuth2TokenGuard;
 
 use Ellaisys\Cognito\Http\Parser\Parser;
 use Ellaisys\Cognito\Http\Parser\AuthHeaders;
@@ -198,6 +199,28 @@ class AwsCognitoServiceProvider extends ServiceProvider
         Auth::extend('cognito-token', function (Application $app, $name, array $config) {
 
             $guard = new CognitoTokenGuard(
+                $app['ellaisys.aws.cognito'],
+                $client = $app->make(AwsCognitoClient::class),
+                $app['request'],
+                Auth::createUserProvider($config['provider'])
+            );
+
+            $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
+
+            return $guard;
+        });
+    } //Function ends
+
+    /**
+     * Extend Cognito Api Auth.
+     *
+     * @return void
+     */
+    protected function extendApiOAuth2Guard()
+    {
+        Auth::extend('cognito-oauth2-token', function (Application $app, $name, array $config) {
+
+            $guard = new CognitoOAuth2TokenGuard(
                 $app['ellaisys.aws.cognito'],
                 $client = $app->make(AwsCognitoClient::class),
                 $app['request'],

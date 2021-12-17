@@ -34,7 +34,8 @@ return [
     'user_pool_id'      => env('AWS_COGNITO_USER_POOL_ID'),
     'region'            => env('AWS_COGNITO_REGION', 'us-east-1'),
     'version'           => env('AWS_COGNITO_VERSION', 'latest'),
-
+    'auth_redirect_uri' => env('AWS_COGNITO_REDIRECT_URI'),
+    'auth_uri'          => env('AWS_COGNITO_URI'),
     /*
     |--------------------------------------------------------------------------
     | Cognito Fields & DB Mapping
