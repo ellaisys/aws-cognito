@@ -11,6 +11,9 @@
 
 namespace Ellaisys\Cognito;
 
+
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
@@ -131,6 +134,11 @@ class AwsCognitoClient
      */
     protected $poolId;
 
+    protected $httpClient;
+    protected $cognitoCodeUri;
+    protected $cognitoRedirectUri;
+
+
 
     /**
      * AwsCognitoClient constructor.
@@ -141,15 +149,21 @@ class AwsCognitoClient
      */
     public function __construct(
         CognitoIdentityProviderClient $client,
+        Client $httpClient,
         $clientId,
         $clientSecret,
-        $poolId
+        $poolId,
+        $cognitoCodeUri,
+        $cognitoRedirectUri
     )
     {
         $this->client = $client;
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
         $this->poolId = $poolId;
+        $this->httpClient = $httpClient;
+        $this->cognitoCodeUri = $cognitoCodeUri;
+        $this->cognitoRedirectUri = $cognitoRedirectUri;
     }
 
 
@@ -183,7 +197,23 @@ class AwsCognitoClient
 
 
     public function authenticateWithCode($code) {
-
+        try {
+            $authHeader = $this->cognitoAuthHeader();
+            $response = $this->httpClient->request('POST', $this->cognitoCodeUri, [
+                'headers' => [
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                    'Authorization' => $authHeader
+                ],
+                'form_params' => [
+                    'grant_type' => 'authorization_code',
+                    'redirect_uri' => $this->cognitoRedirectUri,
+                    'response_type' => 'code',
+                    'code' => $code
+                ]
+            ]);
+        } catch (ClientException $e) {
+            Log::error("Error returning token from Cognito");
+        }
     }
 
     /**
@@ -705,5 +735,10 @@ class AwsCognitoClient
 
         return $userAttributes;
     } //Function ends
+
+    private function cognitoAuthHeader(): string
+    {
+        return 'Basic ' . base64_encode($this->clientId . ':' . $this->clientSecret);
+    }
 
 } //Class ends

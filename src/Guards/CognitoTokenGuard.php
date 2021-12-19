@@ -12,6 +12,7 @@
 namespace Ellaisys\Cognito\Guards;
 
 use Aws\Result as AwsResult;
+use Ellaisys\Cognito\Auth\LocalUser;
 use Illuminate\Http\Request;
 use Illuminate\Auth\TokenGuard;
 use Illuminate\Support\Facades\Log;
@@ -30,6 +31,7 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoTokenGuard extends TokenGuard
 {
+    use LocalUser;
 
     /**
      * Username key
@@ -161,7 +163,9 @@ class CognitoTokenGuard extends TokenGuard
             $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
 
             //Check if the user exists in local data store
-            if (!($user instanceof Authenticatable)) {
+            if (!($user instanceof Authenticatable) && config('cognito.add_missing_local_user_sso')) {
+                $this->createLocalUser($credentials);
+            } elseif (!($user instanceof Authenticatable)) {
                 throw new NoLocalUserException();
             } //End if
 

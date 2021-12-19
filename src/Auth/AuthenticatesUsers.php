@@ -66,15 +66,6 @@ trait AuthenticatesUsers
 
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:NoLocalUserException');
-
-            if (config('cognito.add_missing_local_user_sso')) {
-                $response = $this->createLocalUser($credentials);
-
-                if ($response) {
-                    return $claim;
-                }
-            } //End if
-
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse);
         } catch (CognitoIdentityProviderException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:CognitoIdentityProviderException');
@@ -88,19 +79,7 @@ trait AuthenticatesUsers
     } //Function ends
 
 
-    /**
-     * Create a local user if one does not exist.
-     *
-     * @param array $credentials
-     * @return mixed
-     */
-    protected function createLocalUser($credentials)
-    {
-        $userModel = config('cognito.sso_user_model');
-        $user = $userModel::create($credentials);
 
-        return $user;
-    } //Function ends
 
 
     /**

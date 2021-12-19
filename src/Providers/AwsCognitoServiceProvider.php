@@ -23,6 +23,7 @@ use Ellaisys\Cognito\Http\Parser\AuthHeaders;
 
 use Ellaisys\Cognito\Providers\StorageProvider;
 
+use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -156,9 +157,13 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
             return new AwsCognitoClient(
                 new CognitoIdentityProviderClient($aws_config),
+                new Client(),
                 config('cognito.app_client_id'),
                 config('cognito.app_client_secret'),
-                config('cognito.user_pool_id')
+                config('cognito.user_pool_id'),
+                config('cognito.auth_uri'),
+                config('cognito.auth_redirect_uri')
+
             );
         });
     } //Function ends
