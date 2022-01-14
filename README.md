@@ -13,6 +13,8 @@ AWS Cognito package using the AWS SDK for PHP
 This package provides a simple way to use AWS Cognito authentication in Laravel 7.x for Web and API Auth Drivers.
 The idea of this package, and some of the code, is based on the package from Pod-Point which you can find here: [Pod-Point/laravel-cognito-auth](https://github.com/Pod-Point/laravel-cognito-auth), [black-bits/laravel-cognito-auth](https://github.com/black-bits/laravel-cognito-auth) and [tymondesigns/jwt-auth](https://github.com/tymondesigns/jwt-auth).
 
+**[DEMO Application](https://demo.ellaisys.com/cognito)**. You can try and register and login. For the first time, it will force the user to change password. The **[source code](https://github.com/ellaisys/demo_cognito_app)** of the demo application is also available of the GitHub.
+
 We decided to use it and contribute it to the community as a package, that encourages standarised use and a RAD tool for authentication using AWS Cognito. 
 
 ## Features
@@ -83,13 +85,15 @@ you need for your `.env` file.
 *IMPORTANT: Don't forget to activate the checkbox to Enable sign-in API for server-based Authentication. 
 The Auth Flow is called: ADMIN_USER_PASSWORD_AUTH (formerly ADMIN_NO_SRP_AUTH)*
 
-You also need a new IAM Role with the following Access Rights:
+### AWS IAM configuration
+
+You also need a new **IAM Role** with the following Access Rights:
 
 - AmazonCognitoDeveloperAuthenticatedIdentities
 - AmazonCognitoPowerUser
 - AmazonESCognitoAccess
 
-From this user you can fetch the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+From this IAM User you must use the **AWS_ACCESS_KEY_ID** and **AWS_SECRET_ACCESS_KEY** in the laravel environment file.
 
 ### Cognito API configuration
 
