@@ -27,6 +27,39 @@ trait RegistersUsers
     /**
      * Handle a registration request for the application.
      *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
+    public function register(Request $request)
+    {
+        $cognitoRegistered=false;
+
+        //Validate request
+        $this->validator($request->all())->validate();
+
+        //Create credentials object
+        $collection = collect($request->all());
+
+        //Register User in Cognito
+        $cognitoRegistered=$this->createCognitoUser($collection);
+        if ($cognitoRegistered==true) {
+            //Create data to save
+            $data = $request->all();
+            unset($data['password']);
+
+            //Create user in local store
+            $user = $this->create($data);
+        } //End if
+
+        return $request->wantsJson()
+            ? new JsonResponse([], 201)
+            : redirect($this->redirectPath());
+    } //Function ends
+
+
+    /**
+     * Handle a registration request for the application.
+     *
      * @param  \Illuminate\Support\Collection  $request
      * @return \Illuminate\Http\Response
      * @throws InvalidUserFieldException
