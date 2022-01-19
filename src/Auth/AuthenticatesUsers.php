@@ -61,20 +61,20 @@ trait AuthenticatesUsers
             Log::error('AuthenticatesUsers:attemptLogin:NoLocalUserException');
 
             if (config('cognito.add_missing_local_user_sso')) {
-                $response = $this->createLocalUser($credentials);
+                $response = $this->createLocalUser($credentials, $keyPassword);
                 
                 if ($response) {
-                    return $claim;
-                }
+                    return $response;
+                } //End if
             } //End if
             
-            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse);
+            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
         } catch (CognitoIdentityProviderException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:CognitoIdentityProviderException');
-            return $this->sendFailedCognitoResponse($e);
+            return $this->sendFailedCognitoResponse($e, $isJsonResponse, $paramUsername);
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLogin:Exception');
-            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse);
+            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
         } //Try-catch ends
 
         return $claim;
@@ -87,10 +87,10 @@ trait AuthenticatesUsers
      * @param  array  $credentials
      * @return mixed
      */
-    protected function createLocalUser($credentials)
+    protected function createLocalUser($credentials, string $keyPassword='password')
     {
         $userModel = config('cognito.sso_user_model');
-        $user = $userModel::create($credentials);
+        $user = $userModel::create($credentials->except($keyPassword));
         
         return $user;
     } //Function ends
@@ -101,10 +101,10 @@ trait AuthenticatesUsers
      * 
      * @param CognitoIdentityProviderException $exception
      */
-    private function sendFailedCognitoResponse(CognitoIdentityProviderException $exception)
+    private function sendFailedCognitoResponse(CognitoIdentityProviderException $exception, bool $isJsonResponse=false, string $paramUsername='email')
     {
         throw ValidationException::withMessages([
-            $this->username() => $exception->getAwsErrorMessage(),
+            $paramUsername => $exception->getAwsErrorMessage(),
         ]);
     } //Function ends
 
@@ -115,7 +115,7 @@ trait AuthenticatesUsers
      * @param  \Collection $request
      * @param  \Exception $exception
      */
-    private function sendFailedLoginResponse(Collection $request, Exception $exception=null, bool $isJsonResponse=false)
+    private function sendFailedLoginResponse(Collection $request, Exception $exception=null, bool $isJsonResponse=false, string $paramUsername='email')
     {
         $message = 'FailedLoginResponse';
         if (!empty($exception)) {
@@ -129,8 +129,9 @@ trait AuthenticatesUsers
             ], 400);
         } else {
             return redirect()
+                ->back()
                 ->withErrors([
-                    'username' => $message,
+                    $paramUsername => $message,
                 ]);
         } //End if
         
