@@ -171,7 +171,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                         break;
                     
                     default:
-                        return $e->getAwsErrorCode();
+                        throw $e;
                         break;
                 } //End switch
             } //End if
