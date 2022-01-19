@@ -14,6 +14,7 @@ namespace Ellaisys\Cognito\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Password;
 
 use Ellaisys\Cognito\AwsCognitoClient;
@@ -33,7 +34,7 @@ trait SendsPasswordResetEmails
      * 
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function sendResetLinkEmail(Collection $request, string $usernameKey='email', bool $resetTypeCode=true, bool $isJsonResponse=false, array $attributes=null)
+    public function sendResetLinkEmail(\Illuminate\Http\Request $request, string $usernameKey='email', bool $resetTypeCode=true, bool $isJsonResponse=false, array $attributes=null)
     {
         //Cognito reset link
         $response = $this->sendCognitoResetLinkEmail($request[$usernameKey], $attributes);
@@ -45,12 +46,14 @@ trait SendsPasswordResetEmails
 
         //Action Response
         if ($response) {
-            if ($resetTypeCode) {
+            $routeCognito = Route::has('cognito.form.reset.password.code');
+
+            if ($resetTypeCode && $routeCognito) {
                 return redirect(route('cognito.form.reset.password.code'))
                     ->withInput($request->only($usernameKey))
                     ->with('success', true);
             } else {
-                return redirect(route('welcome'))
+                return redirect('/')
                     ->with('success', true);
             } //End if
         } else {
