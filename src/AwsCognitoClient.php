@@ -259,7 +259,6 @@ class AwsCognitoClient
     {
         try {
 
-
             $this->client->confirmForgotPassword([
                 'ClientId' => $this->clientId,
                 'ConfirmationCode' => $code,

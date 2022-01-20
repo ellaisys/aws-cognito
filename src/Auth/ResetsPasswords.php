@@ -37,34 +37,96 @@ trait ResetsPasswords
      * 
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function reset($request, string $paramUsername='email', string $paramToken='token', string $passwordNew='password')
+    public function reset(Request $request, string $paramUsername='email', string $paramToken='token', string $passwordNew='password')
     {
-        if ($request instanceof Request) {
-            //Validate request
-            $validator = Validator::make($request->all(), $this->rules());
+        $response = '';
+        try {
+            if ($request instanceof Request) {
+                $req = $request;
 
-            if ($validator->fails()) {
-                throw new ValidationException($validator);
+                //Validate request
+                $validator = Validator::make($request->all(), $this->rules());
+
+                if ($validator->fails()) {
+                    throw new ValidationException($validator);
+                } //End if
+
+                $request = collect($request->all());
             } //End if
 
-            $request = collect($request->all());
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Get User Data
+            $user = $client->getUser($request[$paramUsername]);
+
+            //Check user status and change password
+            if (($user['UserStatus'] == AwsCognitoClient::USER_STATUS_CONFIRMED) ||
+                ($user['UserStatus'] == AwsCognitoClient::RESET_REQUIRED_PASSWORD)) {
+                $response = $client->resetPassword($request[$paramToken], $request[$paramUsername], $request[$passwordNew]);
+            } else {
+                $response = false;
+            } //End if
+
+        } catch(Exception $e) {
+            return $this->sendResetFailedResponse($req, $e->getMessage());
+        } //Try-Catch ends
+
+        return $this->sendResetResponse($req, $response);
+    } //Function ends
+
+
+    /**
+     * Get the response for a successful password reset.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $response
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
+    protected function sendResetResponse(Request $request, $response)
+    {
+        if ($request->wantsJson()) {
+            return new JsonResponse(['message' => trans($response)], 200);
         } //End if
 
-        //Create AWS Cognito Client
-        $client = app()->make(AwsCognitoClient::class);
+        return redirect($this->redirectPath())
+            ->with('status', trans($response));
+    } //Function ends
 
-        //Get User Data
-        $user = $client->getUser($request[$paramUsername]);
 
-        //Check user status and change password
-        if (($user['UserStatus'] == AwsCognitoClient::USER_STATUS_CONFIRMED) ||
-            ($user['UserStatus'] == AwsCognitoClient::RESET_REQUIRED_PASSWORD)) {
-            $response = $client->resetPassword($request[$paramToken], $request[$paramUsername], $request[$passwordNew]);
-        } else {
-            return false;
+    /**
+     * Get the response for a failed password reset.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $response
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
+    protected function sendResetFailedResponse(Request $request, $response)
+    {
+        if ($request->wantsJson()) {
+            throw ValidationException::withMessages([
+                'email' => [trans($response)],
+            ]);
         } //End if
 
-        return $response;
+        return redirect()->back()
+            ->withInput($request->only('email'))
+            ->withErrors(['email' => trans($response)]);
+    } //Function ends
+
+
+    /**
+     * Get the post register / login redirect path.
+     *
+     * @return string
+     */
+    public function redirectPath()
+    {
+        if (method_exists($this, 'redirectTo')) {
+            return $this->redirectTo();
+        } //End if
+
+        return property_exists($this, 'redirectTo') ? $this->redirectTo : '/home';
     } //Function ends
 
 
@@ -79,7 +141,7 @@ trait ResetsPasswords
      */
     public function showResetForm(Request $request, $token = null)
     {
-        return view('vendor.black-bits.laravel-cognito-auth.reset-password')->with(
+        return view('auth.passwords.reset')->with(
             ['email' => $request->email]
         );
     } //Function ends
