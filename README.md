@@ -447,7 +447,21 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 If you discover any security related issues, please email [support@ellaisys.com](mailto:support@ellaisys.com) and also add it to the issue tracker.
 
-## Credits
+## Roadmap
+
+https://github.com/ellaisys/aws-cognito/wiki/RoadMap
+
+## How to contribute
+
+- Star this project on GitHub.
+- Report bugs or suggest features by creating new issues or adding comments to issues
+- Submit pull requests
+- Spread the word by blogging about SimplCommerce or sharing it on social networks
+- Donate to us
+
+## Credits & Contributors
+
+This project exists thanks to all the people who contribute.
 
 - [EllaiSys Team](https://github.com/ellaisys)
 - [GitHub Contributors](https://github.com/ellaisys/aws-cognito/graphs/contributors)
