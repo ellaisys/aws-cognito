@@ -23,7 +23,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - Login
 - Remember Me Cookie
 - Single Sign On
-- Forgot Password
+- Forgot Password (Resend - configurable)
 - User Deletion
 - Edit User Attributes
 - Reset User Password
@@ -155,6 +155,17 @@ Any additional registration data you have, for example `firstname`, `lastname` n
 [cognito.php](/config/cognito.php) cognito_user_fields config to be pushed to Cognito. Otherwise they are only stored locally 
 and are not available if you want to use Single Sign On's.*
 
+## Forgot password with resend option
+
+In case the user has not activated the account, AWS Cognito as a default feature does not allow user of use the forgot password feature. We have introduced the AWS documented feature that allows the password to be resent.
+
+We have made this configurable for the developers so that they can use it as per the business requirement. The configuration takes a boolean value. Default is true (allows resend of forgot password)
+
+```php
+
+    AWS_COGNITO_ALLOW_FORGOT_PASSWORD_RESEND=true
+
+```
 
 ## Middleware configuration for API Routes
 In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware

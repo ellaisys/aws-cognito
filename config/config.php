@@ -145,4 +145,15 @@ return [
     |
     */
     'force_password_auto_update_api' => env('AWS_COGNITO_FORCE_PASSWORD_AUTO_UPDATE_API', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allow forgot password to resend the request based on Cognito User Status
+    |--------------------------------------------------------------------------
+    |
+    | This option enables the user to request for password from the AWS Cognito 
+    | User Pool, where the user is not with confirmed status.
+    |
+    */
+    'allow_forgot_password_resend' => env('AWS_COGNITO_ALLOW_FORGOT_PASSWORD_RESEND', true),
 ];

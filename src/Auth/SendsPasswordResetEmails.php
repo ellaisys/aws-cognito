@@ -70,12 +70,48 @@ trait SendsPasswordResetEmails
      * @param  \string  $username
      * @return \bool
      */
-    public function sendCognitoResetLinkEmail(string $username, array $attributes=null)
+    public function sendCognitoResetLinkEmail(string $username, array $clientMetadata=null)
     {
-        //Send AWS Cognito reset link
-        $response = app()->make(AwsCognitoClient::class)->sendResetLink($username, $attributes);
+        $response = null;
 
-        return ($response == Password::RESET_LINK_SENT);
+        try {
+            //Get existing user data from cognito
+            $user = app()->make(AwsCognitoClient::class)->getUser($username);
+
+            //Change the action based on user status
+            switch ($user->get('UserStatus')) {
+                case 'FORCE_CHANGE_PASSWORD':
+                    //Check the config settings
+                    if (config('cognito.allow_forgot_password_resend')) {
+                        $attributes = [];
+
+                        //Get cognito user attributes
+                        $userAttributes = $user->get('UserAttributes');
+
+                        //Build attributes based requirement
+                        foreach ($userAttributes as $userAttribute) {
+                            if ($userAttribute['Name'] != 'sub') {
+                                $attributes[$userAttribute['Name']] = $userAttribute['Value'];
+                            } //End if
+                        } //Loop ends
+
+                        $response = app()->make(AwsCognitoClient::class)->inviteUser($username, null, $attributes, $clientMetadata, 'RESEND');
+                    } else {
+                        throw new HttpException(400, 'The forgot password resend is disabled.');
+                    } //End if
+                    break;
+                
+                case 'CONFIRMED';
+                default:
+                    //Send AWS Cognito reset link
+                    $response = app()->make(AwsCognitoClient::class)->sendResetLink($username, $clientMetadata);
+                    break;
+            } //End switch
+
+            return ($response == Password::RESET_LINK_SENT);
+        } catch (Exception $e) {
+            return false;
+        } //Try-catch ends
     } //Function ends
     
 } //Trait ends

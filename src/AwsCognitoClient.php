@@ -295,7 +295,8 @@ class AwsCognitoClient
      * @param array $clientMetadata (optional)
      * @return bool
      */
-    public function inviteUser(string $username, string $password=null, array $attributes = [], array $clientMetadata=null)
+    public function inviteUser(string $username, string $password=null, array $attributes = [], 
+                               array $clientMetadata=null, string $messageAction=null)
     {
         //Force validate email
         if ($attributes['email']) {
@@ -319,6 +320,11 @@ class AwsCognitoClient
             $payload['TemporaryPassword'] = $password;
         } //End if
 
+        //Set Message Action
+        if (!empty($messageAction)) {
+            $payload['MessageAction'] = $messageAction;
+        } //End If
+
         if (config('cognito.add_user_delivery_mediums')!="DEFAULT") {
             $payload['DesiredDeliveryMediums'] = [
                 config('cognito.add_user_delivery_mediums')
@@ -333,7 +339,7 @@ class AwsCognitoClient
             } //End if
 
             throw $e;
-        }
+        } //Try-catch ends
 
         return true;
     } //Function ends
