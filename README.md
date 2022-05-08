@@ -32,6 +32,20 @@ We decided to use it and contribute it to the community as a package, that encou
 - DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)
 - Easy configuration of Token Expiry (Manage using the cognito console, no code or configurations needed)
 
+## Compatability
+
+|PHP Version|Support|
+|-|-|
+|7.4|Yes|
+|8.0|Untested|
+|8.1|Untested|
+
+|Laravel Version|Support|
+|-|-|
+|7.x|Yes|
+|8.x|Yes|
+|9.x|Untested|
+
 ## Installation
 
 You can install the package via composer.
