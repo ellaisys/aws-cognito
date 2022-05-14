@@ -31,6 +31,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - Easy API Token handling (uses the cache driver)
 - DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)
 - Easy configuration of Token Expiry (Manage using the cognito console, no code or configurations needed)
+- Support for App Client without Secret **(NEW Feature)**
 
 ## Compatability
 
@@ -258,6 +259,22 @@ We have made is very easy for anyone to use the default behaviour.
 
 5. You don't need to turn off Cognito to send you emails. We rather propose the use of AWS Cognito or AWS SMS mailers, such that use credentials are always secure.
 
+6. In case you want to suppress the mails to be sent to the new users, you can configure the parameter given below to skip welcome mails to new user registration. Default configuration shall send the welcome email.
+
+```php
+
+    AWS_COGNITO_NEW_USER_MESSAGE_ACTION="SUPPRESS"
+
+```
+
+7. The configuration given below allows the new user's email address to be auto marked as verified. The default configuration
+
+```php
+
+    AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=false
+
+```
+
 ## User Authentication
 
 We have provided you with a useful trait that make the authentication very simple (with Web or API routes). You don't have to worry about any additional code to manage sessions and token (for API).
@@ -463,6 +480,15 @@ However, if you have an API based implementation, and want to automatically auth
 
 ```
 
+## Support for App Client without Secret enabled
+
+The library now supports where the AWS configuration of App Client with the Client Secret set to disabled. Use the below configuration into the environment file to enable/disable this. The default is marked as enable (i.e. we expect the App Client Secret to be enabled in AWS Cognito configuration)
+
+```php
+
+   AWS_COGNITO_CLIENT_SECRET_ALLOW=false
+
+```
 
 ## Changelog
 

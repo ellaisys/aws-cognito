@@ -77,36 +77,38 @@ trait SendsPasswordResetEmails
         try {
             //Get existing user data from cognito
             $user = app()->make(AwsCognitoClient::class)->getUser($username);
+            
+            if ($user) {
+                //Change the action based on user status
+                switch ($user->get('UserStatus')) {
+                    case 'FORCE_CHANGE_PASSWORD':
+                        //Check the config settings
+                        if (config('cognito.allow_forgot_password_resend')) {
+                            $attributes = [];
 
-            //Change the action based on user status
-            switch ($user->get('UserStatus')) {
-                case 'FORCE_CHANGE_PASSWORD':
-                    //Check the config settings
-                    if (config('cognito.allow_forgot_password_resend')) {
-                        $attributes = [];
+                            //Get cognito user attributes
+                            $userAttributes = $user->get('UserAttributes');
 
-                        //Get cognito user attributes
-                        $userAttributes = $user->get('UserAttributes');
+                            //Build attributes based requirement
+                            foreach ($userAttributes as $userAttribute) {
+                                if ($userAttribute['Name'] != 'sub') {
+                                    $attributes[$userAttribute['Name']] = $userAttribute['Value'];
+                                } //End if
+                            } //Loop ends
 
-                        //Build attributes based requirement
-                        foreach ($userAttributes as $userAttribute) {
-                            if ($userAttribute['Name'] != 'sub') {
-                                $attributes[$userAttribute['Name']] = $userAttribute['Value'];
-                            } //End if
-                        } //Loop ends
-
-                        $response = app()->make(AwsCognitoClient::class)->inviteUser($username, null, $attributes, $clientMetadata, 'RESEND');
-                    } else {
-                        throw new HttpException(400, 'The forgot password resend is disabled.');
-                    } //End if
-                    break;
-                
-                case 'CONFIRMED';
-                default:
-                    //Send AWS Cognito reset link
-                    $response = app()->make(AwsCognitoClient::class)->sendResetLink($username, $clientMetadata);
-                    break;
-            } //End switch
+                            $response = app()->make(AwsCognitoClient::class)->inviteUser($username, null, $attributes, $clientMetadata, 'RESEND');
+                        } else {
+                            throw new HttpException(400, 'The forgot password resend is disabled.');
+                        } //End if
+                        break;
+                    
+                    case 'CONFIRMED';
+                    default:
+                        //Send AWS Cognito reset link
+                        $response = app()->make(AwsCognitoClient::class)->sendResetLink($username, $clientMetadata);
+                        break;
+                } //End switch
+            } //End if
 
             return ($response == Password::RESET_LINK_SENT);
         } catch (Exception $e) {

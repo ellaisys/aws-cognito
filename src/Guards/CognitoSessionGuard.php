@@ -167,7 +167,9 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                         return redirect(route('cognito.form.reset.password.code'))
                             ->with('success', false)
                             ->with('force', true)
-                            ->with('messaage', $e->getAwsErrorCode());
+                            ->with('messaage', $e->getAwsErrorMessage())
+                            ->with('aws_error_code', $e->getAwsErrorCode())
+                            ->with('aws_error_message', $e->getAwsErrorMessage());
                         break;
                     
                     default:

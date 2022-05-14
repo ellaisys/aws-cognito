@@ -69,6 +69,12 @@ trait RegistersUsers
         //Initialize Cognito Attribute array
         $attributes = [];
 
+        //Get the configuration for new user invitation message action. 
+        $messageAction = config('cognito.new_user_message_action', null);
+
+        //Get the configuration for the forced verification of new user
+        $isUserEmailForcedVerified = config('cognito.force_new_user_email_verified', false);
+
         //Get the registeration fields
         $userFields = config('cognito.cognito_user_fields');
 
@@ -89,7 +95,11 @@ trait RegistersUsers
         //Temporary Password paramter
         $password = $request->has('password')?$request['password']:null;
 
-        return app()->make(AwsCognitoClient::class)->inviteUser($request[$userKey], $password, $attributes, $clientMetadata);
+        return app()->make(AwsCognitoClient::class)->inviteUser(
+            $request[$userKey], $password, $attributes, 
+            $clientMetadata, $messageAction, 
+            $isUserEmailForcedVerified
+        );
     } //Function ends
 
 } //Trait ends

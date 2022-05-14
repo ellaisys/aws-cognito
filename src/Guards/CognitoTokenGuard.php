@@ -184,7 +184,12 @@ class CognitoTokenGuard extends TokenGuard
                         break;
                 } //End switch
 
-                return response()->json(['error' => $errorCode, 'message' => $e->getAwsErrorCode() ], 400);
+                return response()->json([
+                    'error' => $errorCode,
+                    'message' => $e->getAwsErrorMessage(),
+                    'aws_error_code' => $e->getAwsErrorCode(),
+                    'aws_error_message' => $e->getAwsErrorMessage()
+                ], 400);
             } //End if
 
             return $e->getAwsErrorCode();
