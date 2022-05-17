@@ -1,3 +1,5 @@
+Release 21: Fix for the issue 28 (security issue in middleware)
+
 Release 20: Feature
  - Support for Cognito configuration, where Client Secret is disabled
  - New User email suppress feature using message action configuration
