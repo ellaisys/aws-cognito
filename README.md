@@ -38,14 +38,14 @@ We decided to use it and contribute it to the community as a package, that encou
 |PHP Version|Support|
 |-|-|
 |7.4|Yes|
-|8.0|Untested|
-|8.1|Untested|
+|8.0|Yes|
+|8.1|Yes|
 
 |Laravel Version|Support|
 |-|-|
 |7.x|Yes|
 |8.x|Yes|
-|9.x|Untested|
+|9.x|Yes|
 
 ## Installation
 
