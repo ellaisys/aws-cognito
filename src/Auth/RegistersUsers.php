@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito\Auth;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -37,14 +38,20 @@ trait RegistersUsers
         //Validate request
         $this->validator($request->all())->validate();
 
+        $data = $request->all();
+        if(empty($data['password'])) {
+            $data['password'] = bin2hex(openssl_random_pseudo_bytes(10));
+        }
+
         //Create credentials object
-        $collection = collect($request->all());
+        $collection = collect($data);
 
         //Register User in Cognito
         $cognitoRegistered=$this->createCognitoUser($collection);
         if ($cognitoRegistered==true) {
             //Create data to save
             $data = $request->all();
+
             unset($data['password']);
 
             //Create user in local store
@@ -52,7 +59,7 @@ trait RegistersUsers
         } //End if
 
         return $request->wantsJson()
-            ? new JsonResponse([], 201)
+            ? new JsonResponse($user, 201)
             : redirect($this->redirectPath());
     } //Function ends
 
@@ -69,7 +76,7 @@ trait RegistersUsers
         //Initialize Cognito Attribute array
         $attributes = [];
 
-        //Get the configuration for new user invitation message action. 
+        //Get the configuration for new user invitation message action.
         $messageAction = config('cognito.new_user_message_action', null);
 
         //Get the configuration for the forced verification of new user
@@ -96,8 +103,8 @@ trait RegistersUsers
         $password = $request->has('password')?$request['password']:null;
 
         return app()->make(AwsCognitoClient::class)->inviteUser(
-            $request[$userKey], $password, $attributes, 
-            $clientMetadata, $messageAction, 
+            $request[$userKey], $password, $attributes,
+            $clientMetadata, $messageAction,
             $isUserEmailForcedVerified
         );
     } //Function ends
