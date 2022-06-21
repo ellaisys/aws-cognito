@@ -40,6 +40,7 @@ trait RegistersUsers
         $this->validator($request->all())->validate();
 
         $data = $request->all();
+        // Generate random password if none provided
         if(empty($data['password'])) {
             $data['password'] = bin2hex(openssl_random_pseudo_bytes(10));
         }
@@ -60,6 +61,8 @@ trait RegistersUsers
             $this->setDefaultGroup($user->email);
         } //End if
 
+
+        // Return with user data
         return $request->wantsJson()
             ? new JsonResponse($user, 201)
             : redirect($this->redirectPath());

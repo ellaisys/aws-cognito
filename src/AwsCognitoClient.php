@@ -383,7 +383,7 @@ class AwsCognitoClient
      * @param string $messageAction (optional)
      * @return bool $isUserEmailForcedVerified (false)
      */
-    public function inviteUser(string $username, string $password=null, array $attributes = [], 
+    public function inviteUser(string $username, string $password=null, array $attributes = [],
                                array $clientMetadata=null, string $messageAction=null,
                                bool $isUserEmailForcedVerified = false)
     {

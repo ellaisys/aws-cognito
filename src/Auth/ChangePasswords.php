@@ -39,7 +39,6 @@ trait ChangePasswords
      */
     public function reset($request, string $paramUsername='email', string $passwordOld='password', string $passwordNew='new_password')
     {
-
         if ($request instanceof Request) {
             //Validate request
             $validator = Validator::make($request->all(), $this->rules());
@@ -50,7 +49,6 @@ trait ChangePasswords
 
             $request = collect($request->all());
         } //End if
-
 
         //Create AWS Cognito Client
         $client = app()->make(AwsCognitoClient::class);
