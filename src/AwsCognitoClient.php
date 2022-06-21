@@ -326,6 +326,52 @@ class AwsCognitoClient
         return Password::PASSWORD_RESET;
     } //Function ends
 
+    /**
+     * Gets the user's groups from Cognito
+     *
+     * @param string $username
+     * @return \Aws\Result
+     */
+    public function adminListGroupsForUser(string $username)
+    {
+        try {
+            $groups = $this->client->AdminListGroupsForUser([
+                    'UserPoolId' => $this->poolId, // REQUIRED
+                    'Username' => $username // REQUIRED
+                ]
+            );
+            return $groups;
+        } catch (CognitoIdentityProviderException $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return false;
+    }
+
+    /**
+     * Add a user to a given group
+     *
+     * @param string $username
+     * @param string $groupname
+     * @return bool
+     */
+    public function adminAddUserToGroup(string $username, string $groupname)
+    {
+
+        try {
+            $this->client->adminAddUserToGroup([
+                    'GroupName' => $groupname, // REQUIRED
+                    'UserPoolId' => $this->poolId, // REQUIRED
+                    'Username' => $username // REQUIRED
+                ]
+            );
+        } catch (CognitoIdentityProviderException $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return true;
+    } //Function ends
+
 
     /**
      * Register a user and send them an email to set their password.

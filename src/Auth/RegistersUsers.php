@@ -14,6 +14,7 @@ namespace Ellaisys\Cognito\Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\AwsCognitoClient;
@@ -56,12 +57,31 @@ trait RegistersUsers
 
             //Create user in local store
             $user = $this->create($data);
+            $this->setDefaultGroup($user->email);
         } //End if
 
         return $request->wantsJson()
             ? new JsonResponse($user, 201)
             : redirect($this->redirectPath());
     } //Function ends
+
+
+    /**
+     * Adds the newly created user to the default group (if one exists) in the config file.
+     *
+     * @param $username
+     * @return array
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     */
+    public function setDefaultGroup($username)
+    {
+        if (Config::get('cognito.default_user_group')) {
+            return app()->make(AwsCognitoClient::class)->adminAddUserToGroup(
+                $username, Config::get('cognito.default_user_group')
+            );
+        }
+        return [];
+    }
 
 
     /**
