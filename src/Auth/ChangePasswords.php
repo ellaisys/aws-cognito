@@ -34,7 +34,7 @@ trait ChangePasswords
      * @param  string  $paramUsername (optional)
      * @param  string  $passwordOld (optional)
      * @param  string  $passwordNew (optional)
-     * 
+     *
      * @return \Illuminate\Http\RedirectResponse
      */
     public function reset($request, string $paramUsername='email', string $passwordOld='password', string $passwordNew='new_password')
@@ -55,6 +55,7 @@ trait ChangePasswords
 
         //Get User Data
         $user = $client->getUser($request[$paramUsername]);
+
         if (empty($user)) {
             $response = response()->json(['error' => 'cognito.validation.reset_required.invalid_email'], 400);
         } else {
@@ -84,7 +85,7 @@ trait ChangePasswords
      * @param  string  $paramUsername
      * @param  string  $passwordOld
      * @param  string  $passwordNew
-     * 
+     *
      * @return string
      */
     private function forceNewPassword(AwsCognitoClient $client, $request, string $paramUsername, string $passwordOld, string $passwordNew)
@@ -105,7 +106,7 @@ trait ChangePasswords
      * @param  string  $paramUsername
      * @param  string  $passwordOld
      * @param  string  $passwordNew
-     * 
+     *
      * @return string
      */
     private function changePassword(AwsCognitoClient $client, $request, string $paramUsername, string $passwordOld, string $passwordNew)
