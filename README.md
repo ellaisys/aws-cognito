@@ -10,7 +10,7 @@ AWS Cognito package using the AWS SDK for PHP
 ![](https://img.shields.io/github/forks/ellaisys/aws-cognito?style=flat-square)
 ![APM](https://img.shields.io/packagist/l/ellaisys/aws-cognito?style=flat-square)
 
-This package provides a simple way to use AWS Cognito authentication in Laravel 7.x for Web and API Auth Drivers.
+This package provides a simple way to use AWS Cognito authentication in Laravel for Web and API Auth Drivers.
 The idea of this package, and some of the code, is based on the package from Pod-Point which you can find here: [Pod-Point/laravel-cognito-auth](https://github.com/Pod-Point/laravel-cognito-auth), [black-bits/laravel-cognito-auth](https://github.com/black-bits/laravel-cognito-auth) and [tymondesigns/jwt-auth](https://github.com/tymondesigns/jwt-auth).
 
 **[DEMO Application](https://demo.ellaisys.com/cognito)**. You can try and register and login. For the first time, it will force the user to change password. The **[source code](https://github.com/ellaisys/demo_cognito_app)** of the demo application is also available of the GitHub.
@@ -276,11 +276,11 @@ We have made is very easy for anyone to use the default behaviour.
 
 ```
 
-8. To assign a default group to a new user when registering set COGNITO_DEFAULT_USER_GROUP (or `default_user_group` in the config) to the name of a user group set in Cognito.
+8. To assign a default group to a new user when registering set a name of the user group as per the configuration done via AWS Cognito Management Console. The default value is set to null.
 
 ```php
 
-    COGNITO_DEFAULT_USER_GROUP="Customers"
+    AWS_COGNITO_DEFAULT_USER_GROUP="Customers"
 
 ```
 

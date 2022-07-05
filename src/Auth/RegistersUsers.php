@@ -14,7 +14,6 @@ namespace Ellaisys\Cognito\Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\AwsCognitoClient;
@@ -35,32 +34,28 @@ trait RegistersUsers
     public function register(Request $request)
     {
         $cognitoRegistered=false;
+        $user = [];
 
         //Validate request
         $this->validator($request->all())->validate();
 
+        //Create data to save
         $data = $request->all();
-        // Generate random password if none provided
-        if(empty($data['password'])) {
-            $data['password'] = bin2hex(openssl_random_pseudo_bytes(10));
-        }
 
         //Create credentials object
         $collection = collect($data);
 
         //Register User in Cognito
-        $cognitoRegistered=$this->createCognitoUser($collection);
+        $cognitoRegistered=$this->createCognitoUser($collection, config('cognito.default_user_group', null));
         if ($cognitoRegistered==true) {
-            //Create data to save
-            $data = $request->all();
-
-            unset($data['password']);
+            //Remove the password
+            if(!empty($data['password'])) {
+                unset($data['password']);
+            } //End if
 
             //Create user in local store
             $user = $this->create($data);
-            $this->setDefaultGroup($user->email);
         } //End if
-
 
         // Return with user data
         return $request->wantsJson()
@@ -78,13 +73,13 @@ trait RegistersUsers
      */
     public function setDefaultGroup($username)
     {
-        if (Config::get('cognito.default_user_group')) {
+        if (!empty(config('cognito.default_user_group', null))) {
             return app()->make(AwsCognitoClient::class)->adminAddUserToGroup(
-                $username, Config::get('cognito.default_user_group')
+                $username, config('cognito.default_user_group', null)
             );
-        }
+        } //End if
         return [];
-    }
+    } //Function ends
 
 
     /**
@@ -94,7 +89,7 @@ trait RegistersUsers
      * @return \Illuminate\Http\Response
      * @throws InvalidUserFieldException
      */
-    public function createCognitoUser(Collection $request, array $clientMetadata=null)
+    public function createCognitoUser(Collection $request, array $clientMetadata=null, string $groupname=null)
     {
         //Initialize Cognito Attribute array
         $attributes = [];
@@ -128,7 +123,8 @@ trait RegistersUsers
         return app()->make(AwsCognitoClient::class)->inviteUser(
             $request[$userKey], $password, $attributes,
             $clientMetadata, $messageAction,
-            $isUserEmailForcedVerified
+            $isUserEmailForcedVerified,
+            $groupname
         );
     } //Function ends
 

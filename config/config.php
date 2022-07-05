@@ -72,7 +72,7 @@ return [
     | The options available are "DEFAULT", "EMAIL", "SMS"
     |
     */
-    'add_user_delivery_mediums'     => env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'DEFAULT'),
+    'add_user_delivery_mediums' => env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'DEFAULT'),
 
 
     /*
@@ -85,8 +85,8 @@ return [
     | registration.
     |
     |
-     */
-    'default_user_group' => env('COGNITO_DEFAULT_USER_GROUP'),
+    */
+    'default_user_group' => env('AWS_COGNITO_DEFAULT_USER_GROUP', null),
 
 
     /*
