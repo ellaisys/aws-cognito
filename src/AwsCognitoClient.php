@@ -357,6 +357,7 @@ class AwsCognitoClient
      *
      * @param string $username
      * @param string $groupname
+     * 
      * @return bool
      */
     public function adminAddUserToGroup(string $username, string $groupname)

@@ -49,7 +49,7 @@ class AwsCognitoAuthenticate extends BaseMiddleware
             } //End if
 
             //Authenticate the request
-            $this->authenticate($request);
+            $this->authenticate($request, $guard);
 
             return $next($request);
         } catch (Exception $e) {

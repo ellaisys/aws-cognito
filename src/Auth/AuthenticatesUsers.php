@@ -39,10 +39,27 @@ trait AuthenticatesUsers
      */
     protected function getAdminListGroupsForUser(string $username)
     {
-        return app()->make(AwsCognitoClient::class)->adminListGroupsForUser(
-            $username
-        );
-    }
+        $groups = null;
+
+        try {
+            $result = app()->make(AwsCognitoClient::class)->adminListGroupsForUser($username);
+
+            if (!empty($result)) {
+                $groups = $result['Groups'];
+
+                if ((!empty($groups)) && is_array($groups)) {
+                    foreach ($groups as $key => &$value) {
+                        unset($value['UserPoolId']);
+                        unset($value['RoleArn']);
+                    } //Loop ends                    
+                } //End if
+            } //End if
+        } catch(Exception $e) {
+            Log::error('AuthenticatesUsers:getAdminListGroupsForUser:Exception');
+        } //Try-catch ends
+
+        return $groups;
+    } //End if
 
     
     /**

@@ -76,7 +76,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     protected function hasValidCredentials($user, $credentials)
     {
-        /** @var Result $response */
         $result = $this->client->authenticate($credentials['email'], $credentials['password']);
 
         if (!empty($result) && $result instanceof AwsResult) {

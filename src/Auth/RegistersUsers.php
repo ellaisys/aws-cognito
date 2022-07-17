@@ -31,7 +31,7 @@ trait RegistersUsers
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function register(Request $request)
+    public function register(Request $request, array $clientMetadata=null)
     {
         $cognitoRegistered=false;
         $user = [];
@@ -46,7 +46,7 @@ trait RegistersUsers
         $collection = collect($data);
 
         //Register User in Cognito
-        $cognitoRegistered=$this->createCognitoUser($collection, config('cognito.default_user_group', null));
+        $cognitoRegistered=$this->createCognitoUser($collection, $clientMetadata, config('cognito.default_user_group', null));
         if ($cognitoRegistered==true) {
             //Remove the password
             if(!empty($data['password'])) {
