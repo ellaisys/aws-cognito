@@ -76,7 +76,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     protected function hasValidCredentials($user, $credentials)
     {
-        /** @var Result $response */
         $result = $this->client->authenticate($credentials['email'], $credentials['password']);
 
         if (!empty($result) && $result instanceof AwsResult) {
@@ -167,11 +166,13 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                         return redirect(route('cognito.form.reset.password.code'))
                             ->with('success', false)
                             ->with('force', true)
-                            ->with('messaage', $e->getAwsErrorCode());
+                            ->with('messaage', $e->getAwsErrorMessage())
+                            ->with('aws_error_code', $e->getAwsErrorCode())
+                            ->with('aws_error_message', $e->getAwsErrorMessage());
                         break;
                     
                     default:
-                        return $e->getAwsErrorCode();
+                        throw $e;
                         break;
                 } //End switch
             } //End if

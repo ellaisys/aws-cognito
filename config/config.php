@@ -15,7 +15,7 @@ return [
     */
     'credentials'       => [
         'key'    => env('AWS_ACCESS_KEY_ID'),
-        'secret' => env('AWS_ACCESS_KEY_SECRET'),
+        'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'token' => null
     ],
 
@@ -37,6 +37,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AWS Cognito for Allowing the App Client Secret
+    |--------------------------------------------------------------------------
+    |
+    | If you have created the aws cognito, and don't plan to set the client
+    | secret, then use this configuration to help. By default we expect the
+    | client secret is configured and available.
+    |
+    */
+    'app_client_secret_allow' => env('AWS_COGNITO_CLIENT_SECRET_ALLOW', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cognito Fields & DB Mapping
     |--------------------------------------------------------------------------
     |
@@ -45,7 +57,7 @@ return [
     |
     */
     'cognito_user_fields'   => [
-        'name' => 'first_name',
+        'name' => 'name',
         'email' => 'email',
     ],
 
@@ -60,7 +72,22 @@ return [
     | The options available are "DEFAULT", "EMAIL", "SMS"
     |
     */
-    'add_user_delivery_mediums'     => env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'DEFAULT'),
+    'add_user_delivery_mediums' => env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'DEFAULT'),
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Default User Group
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the default cognito user group assigned to a user
+    | when added to a User Pool.  Leave null if not assigning a group on
+    | registration.
+    |
+    |
+    */
+    'default_user_group' => env('AWS_COGNITO_DEFAULT_USER_GROUP', null),
+
 
     /*
     |--------------------------------------------------------------------------
@@ -81,7 +108,7 @@ return [
     | Token Store
     |--------------------------------------------------------------------------
     |
-    | This option controls the default store connection provider that gets used 
+    | This option controls the default store connection provider that gets used
     | while persisting the token. You can use the providers in the cache config.
     |
     */
@@ -92,14 +119,14 @@ return [
     | Cognito Challenge Status Names for Forced Access.
     |--------------------------------------------------------------------------
     |
-    | This option controls the package action based on the Challenge Status 
-    | received from the AWS Cognito Authentication. If the challenge status 
-    | is 'NEW_PASSWORD_CHALLENGE' and/or 'RESET_REQUIRED_PASSWORD', the 
+    | This option controls the package action based on the Challenge Status
+    | received from the AWS Cognito Authentication. If the challenge status
+    | is 'NEW_PASSWORD_CHALLENGE' and/or 'RESET_REQUIRED_PASSWORD', the
     | configuration that follows below will execute.
     |
     */
     'forced_challenge_names' => [
-        AwsCognitoClient::NEW_PASSWORD_CHALLENGE, 
+        AwsCognitoClient::NEW_PASSWORD_CHALLENGE,
         AwsCognitoClient::RESET_REQUIRED_PASSWORD
     ],
 
@@ -110,10 +137,10 @@ return [
     |
     | This setting controls the action, in case the AWS Cognito authentication
     | response includes the Challenge Names defined by 'forced_challenge_names'
-    | configuration in this file. The below flag, if set to 'true', will force 
-    | the web application user to be directed to certain route view/page. 
+    | configuration in this file. The below flag, if set to 'true', will force
+    | the web application user to be directed to certain route view/page.
     |
-    | In case the route name needs to be changed, you can set the below parameter 
+    | In case the route name needs to be changed, you can set the below parameter
     | and map it in web.php route page.
     |
     */
@@ -127,7 +154,7 @@ return [
     |
     | This setting controls the action, in case the AWS Cognito authentication
     | response includes the Challenge Names defined by 'forced_challenge_names'
-    | configuration in this file. The below flag, if set to 'true', will force 
+    | configuration in this file. The below flag, if set to 'true', will force
     | the user requesting API authentication by sharing the data required for
     | changing the password.
     |
@@ -139,10 +166,44 @@ return [
     | Force Auto Password Update based on Cognito Status in API Request (Token Guard)
     |--------------------------------------------------------------------------
     |
-    | This option enables the password to be auto updated into the AWS Cognito 
+    | This option enables the password to be auto updated into the AWS Cognito
     | User Pool. This feature will work only if the 'force_password_change_api'
     | is set to false.
     |
     */
     'force_password_auto_update_api' => env('AWS_COGNITO_FORCE_PASSWORD_AUTO_UPDATE_API', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allow forgot password to resend the request based on Cognito User Status
+    |--------------------------------------------------------------------------
+    |
+    | This option enables the user to request for password from the AWS Cognito
+    | User Pool, where the user is not with confirmed status.
+    |
+    */
+    'allow_forgot_password_resend' => env('AWS_COGNITO_ALLOW_FORGOT_PASSWORD_RESEND', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allow new user email address to be verified during invitation
+    |--------------------------------------------------------------------------
+    |
+    | This option enables the user email address to be tagged as verified during
+    | the to invitation for the new user. The default value is set to true.
+    |
+    */
+    'force_new_user_email_verified' => env('AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Set the parameters for the new user message action
+    |--------------------------------------------------------------------------
+    |
+    | This option enables the new user message action. You can set the value to
+    | SUPPRESS in order to stop the invitation mails from being sent. The default
+    | value is set to null.
+    |
+    */
+    'new_user_message_action' => env('AWS_COGNITO_NEW_USER_MESSAGE_ACTION', null),
 ];

@@ -133,23 +133,32 @@ class AwsCognitoClient
 
 
     /**
+     * @var bool
+     */
+    protected $boolClientSecret;
+
+
+    /**
      * AwsCognitoClient constructor.
      * @param CognitoIdentityProviderClient $client
      * @param string $clientId
      * @param string $clientSecret
      * @param string $poolId
+     * @param bool boolClientSecret
      */
     public function __construct(
         CognitoIdentityProviderClient $client,
         $clientId,
         $clientSecret,
-        $poolId
+        $poolId,
+        $boolClientSecret
     )
     {
         $this->client = $client;
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
         $this->poolId = $poolId;
+        $this->boolClientSecret = $boolClientSecret;
     }
 
 
@@ -164,16 +173,25 @@ class AwsCognitoClient
     public function authenticate($username, $password)
     {
         try {
-            $response = $this->client->adminInitiateAuth([
+            //Build payload
+            $payload = [
                 'AuthFlow' => 'ADMIN_NO_SRP_AUTH',
                 'AuthParameters' => [
                     'USERNAME' => $username,
-                    'PASSWORD' => $password,
-                    'SECRET_HASH' => $this->cognitoSecretHash($username),
+                    'PASSWORD' => $password
                 ],
                 'ClientId' => $this->clientId,
                 'UserPoolId' => $this->poolId,
-            ]);
+            ];
+
+            //Add Secret Hash in case of Client Secret being configured
+            if ($this->boolClientSecret) {
+                $payload['AuthParameters'] = array_merge($payload['AuthParameters'], [
+                    'SECRET_HASH' => $this->cognitoSecretHash($username)
+                ]);
+            } //End if
+
+            $response = $this->client->adminInitiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
             throw $exception;
         }
@@ -195,20 +213,29 @@ class AwsCognitoClient
     {
 
         try {
-            $response = $this->client->signUp([
+            //Build payload
+            $payload = [
                 'ClientId' => $this->clientId,
                 'Password' => $password,
-                'SecretHash' => $this->cognitoSecretHash($username),
                 'UserAttributes' => $this->formatAttributes($attributes),
                 'Username' => $username,
-            ]);
+            ];
+
+            //Add Secret Hash in case of Client Secret being configured
+            if ($this->boolClientSecret) {
+                $payload = array_merge($payload, [
+                    'SecretHash' => $this->cognitoSecretHash($username)
+                ]);
+            } //End if
+
+            $response = $this->client->signUp($payload);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
                 return false;
             } //End if
 
             throw $e;
-        }
+        } //Try-catch ends
 
         return (bool)$response['UserConfirmed'];
     } //Function ends
@@ -229,9 +256,15 @@ class AwsCognitoClient
             $payload = [
                 'ClientId' => $this->clientId,
                 'ClientMetadata' => $this->buildClientMetadata(['username' => $username], $clientMetadata),
-                'SecretHash' => $this->cognitoSecretHash($username),
                 'Username' => $username,
             ];
+
+            //Add Secret Hash in case of Client Secret being configured
+            if ($this->boolClientSecret) {
+                $payload = array_merge($payload, [
+                    'SecretHash' => $this->cognitoSecretHash($username)
+                ]);
+            } //End if
 
             $result = $this->client->forgotPassword($payload);
         } catch (CognitoIdentityProviderException $e) {
@@ -240,7 +273,7 @@ class AwsCognitoClient
             } //End if
 
             throw $e;
-        }
+        } //Try-catch ends
 
         return Password::RESET_LINK_SENT;
     } //Function ends
@@ -258,32 +291,89 @@ class AwsCognitoClient
     public function resetPassword($code, $username, $password)
     {
         try {
-
-
-            $this->client->confirmForgotPassword([
+            //Build payload
+            $payload = [
                 'ClientId' => $this->clientId,
                 'ConfirmationCode' => $code,
                 'Password' => $password,
-                'SecretHash' => $this->cognitoSecretHash($username),
                 'Username' => $username,
-            ]);
+            ];
+
+            //Add Secret Hash in case of Client Secret being configured
+            if ($this->boolClientSecret) {
+                $payload = array_merge($payload, [
+                    'SecretHash' => $this->cognitoSecretHash($username)
+                ]);
+            } //End if
+
+            $this->client->confirmForgotPassword($payload);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
                 return Password::INVALID_USER;
-            }
+            } //End if
 
             if ($e->getAwsErrorCode() === self::INVALID_PASSWORD) {
                 return Lang::has('passwords.password') ? 'passwords.password' : $e->getAwsErrorMessage();
-            }
+            } //End if
 
             if ($e->getAwsErrorCode() === self::CODE_MISMATCH || $e->getAwsErrorCode() === self::EXPIRED_CODE) {
                 return Password::INVALID_TOKEN;
-            }
+            } //End if
 
             throw $e;
-        }
+        } //Try-catch ends
 
         return Password::PASSWORD_RESET;
+    } //Function ends
+
+
+    /**
+     * Gets the user's groups from Cognito
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminListGroupsForUser.html
+     *
+     * @param string $username
+     * @return \Aws\Result
+     */
+    public function adminListGroupsForUser(string $username)
+    {
+        try {
+            $groups = $this->client->AdminListGroupsForUser([
+                    'UserPoolId' => $this->poolId, // REQUIRED
+                    'Username' => $username // REQUIRED
+                ]
+            );
+            return $groups;
+        } catch (CognitoIdentityProviderException $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return false;
+    } //Function ends
+
+
+    /**
+     * Add a user to a given group
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminAddUserToGroup.html
+     *
+     * @param string $username
+     * @param string $groupname
+     * 
+     * @return bool
+     */
+    public function adminAddUserToGroup(string $username, string $groupname)
+    {
+        try {
+            $this->client->adminAddUserToGroup([
+                    'GroupName' => $groupname, // REQUIRED
+                    'UserPoolId' => $this->poolId, // REQUIRED
+                    'Username' => $username // REQUIRED
+                ]
+            );
+        } catch (CognitoIdentityProviderException $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return true;
     } //Function ends
 
 
@@ -292,14 +382,18 @@ class AwsCognitoClient
      * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html
      *
      * @param $username
+     * @param $password (optional) (default=null)
      * @param array $attributes
      * @param array $clientMetadata (optional)
-     * @return bool
+     * @param string $messageAction (optional)
+     * @return bool $isUserEmailForcedVerified (false)
      */
-    public function inviteUser(string $username, string $password=null, array $attributes = [], array $clientMetadata=null)
+    public function inviteUser(string $username, string $password=null, array $attributes = [],
+                               array $clientMetadata=null, string $messageAction=null,
+                               bool $isUserEmailForcedVerified = false, string $groupname=null)
     {
         //Force validate email
-        if ($attributes['email']) {
+        if ($attributes['email'] && $isUserEmailForcedVerified) {
             $attributes['email_verified'] = 'true';
         } //End if
 
@@ -320,6 +414,11 @@ class AwsCognitoClient
             $payload['TemporaryPassword'] = $password;
         } //End if
 
+        //Set Message Action
+        if (!empty($messageAction)) {
+            $payload['MessageAction'] = $messageAction;
+        } //End If
+
         if (config('cognito.add_user_delivery_mediums')!="DEFAULT") {
             $payload['DesiredDeliveryMediums'] = [
                 config('cognito.add_user_delivery_mediums')
@@ -328,13 +427,18 @@ class AwsCognitoClient
 
         try {
             $this->client->adminCreateUser($payload);
+
+            //Add user to the group
+            if (!empty($groupname)) {
+                $this->adminAddUserToGroup($username, $groupname);
+            } //End if
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
                 return false;
             } //End if
 
             throw $e;
-        }
+        } //Try-catch ends
 
         return true;
     } //Function ends
@@ -352,24 +456,33 @@ class AwsCognitoClient
     public function confirmPassword($username, $password, $session)
     {
         try {
-            $this->client->AdminRespondToAuthChallenge([
+            //Generate payload
+            $payload = [
                 'ClientId' => $this->clientId,
                 'UserPoolId' => $this->poolId,
                 'Session' => $session,
                 'ChallengeResponses' => [
                     'NEW_PASSWORD' => $password,
-                    'USERNAME' => $username,
-                    'SECRET_HASH' => $this->cognitoSecretHash($username),
+                    'USERNAME' => $username
                 ],
                 'ChallengeName' => 'NEW_PASSWORD_REQUIRED',
-            ]);
+            ];
+
+            //Add Secret Hash in case of Client Secret being configured
+            if ($this->boolClientSecret) {
+                $payload['ChallengeResponses'] = array_merge($payload['ChallengeResponses'], [
+                    'SECRET_HASH' => $this->cognitoSecretHash($username)
+                ]);
+            } //End if
+
+            $this->client->AdminRespondToAuthChallenge($payload);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::CODE_MISMATCH || $e->getAwsErrorCode() === self::EXPIRED_CODE) {
                 return Password::INVALID_TOKEN;
             } //End if
 
             throw $e;
-        }
+        } //Try-catch ends
 
         return Password::PASSWORD_RESET;
     } //Function ends
@@ -420,7 +533,7 @@ class AwsCognitoClient
             } //End if
 
             throw $e;
-        }
+        } //Try-catch ends
 
         return Password::PASSWORD_RESET;
     } //Function ends
@@ -454,9 +567,9 @@ class AwsCognitoClient
             } //End if
 
             throw $e;
-        }
+        } //Try-catch ends
         return true;
-    }
+    } //Function ends
 
 
     public function invalidatePassword($username)
@@ -465,7 +578,7 @@ class AwsCognitoClient
             'UserPoolId' => $this->poolId,
             'Username' => $username,
         ]);
-    }
+    } //Function ends
 
 
     public function confirmSignUp($username)
@@ -504,7 +617,7 @@ class AwsCognitoClient
             } //End if
 
             throw $e;
-        }
+        } //Try-catch ends
     } //Function ends
 
 
@@ -531,7 +644,7 @@ class AwsCognitoClient
             } //End if
 
             throw $e;
-        }
+        } //Try-catch ends
     } //Function ends
 
 
@@ -640,7 +753,7 @@ class AwsCognitoClient
             ]);
         } catch (CognitoIdentityProviderException $e) {
             return false;
-        }
+        } //Try-catch ends
 
         return $user;
     } //Function ends
@@ -676,10 +789,11 @@ class AwsCognitoClient
             }
 
             return false;
-        }
+        } //Try-catch ends
 
         return $challenge;
-    }
+    } //Function ends
+
 
     /**
      * Get user details by access token.

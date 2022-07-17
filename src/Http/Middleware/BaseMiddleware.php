@@ -73,14 +73,25 @@ abstract class BaseMiddleware //extends Middleware
      *
      * @return void
      */
-    public function authenticate(Request $request)
+    public function authenticate(Request $request, string $guard)
     {
         try {
-            $this->checkForToken($request);
+            switch ($guard) {
+                case 'web':
+                    $user = $request->user();
+                    if (!empty($user)) {
 
-            if (! $this->cognito->parseToken()->authenticate()) {
-                throw new UnauthorizedHttpException('aws-cognito', 'User not found');
-            } //End if
+                    } //End if
+                    break;
+                
+                default:
+                    $this->checkForToken($request);
+
+                    if (! $this->cognito->parseToken()->authenticate()) {
+                        throw new UnauthorizedHttpException('aws-cognito', 'User not found');
+                    } //End if
+                    break;
+            } //Switch ends
         } catch (Exception $e) {
             throw $e;
         } //Try-catch ends

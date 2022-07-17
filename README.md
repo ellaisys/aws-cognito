@@ -1,4 +1,4 @@
-<img src="https://www.ellaisys.com/wp-content/uploads/2020/11/eis_aws_cognito.png" width="100%" alt="EllaiSys AWS Cloud Capability"/>
+<img src="https://cdn.ellaisys.com/aws-cognito/banner.png" width="100%" alt="EllaiSys AWS Cloud Capability"/>
 
 # Laravel Package to manage Web and API authentication with AWS Cognito
 AWS Cognito package using the AWS SDK for PHP
@@ -6,14 +6,16 @@ AWS Cognito package using the AWS SDK for PHP
 ![Latest Version on Packagist](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square)
 ![Release Date](https://img.shields.io/github/release-date/ellaisys/aws-cognito?style=flat-square)
 ![Total Downloads](https://img.shields.io/packagist/dt/ellaisys/aws-cognito?style=flat-square)
-![](https://img.shields.io/github/stars/ellaisys/aws-cognito?style=flat-square) 
+![](https://img.shields.io/github/stars/ellaisys/aws-cognito?style=flat-square)
 ![](https://img.shields.io/github/forks/ellaisys/aws-cognito?style=flat-square)
 ![APM](https://img.shields.io/packagist/l/ellaisys/aws-cognito?style=flat-square)
 
-This package provides a simple way to use AWS Cognito authentication in Laravel 7.x for Web and API Auth Drivers.
+This package provides a simple way to use AWS Cognito authentication in Laravel for Web and API Auth Drivers.
 The idea of this package, and some of the code, is based on the package from Pod-Point which you can find here: [Pod-Point/laravel-cognito-auth](https://github.com/Pod-Point/laravel-cognito-auth), [black-bits/laravel-cognito-auth](https://github.com/black-bits/laravel-cognito-auth) and [tymondesigns/jwt-auth](https://github.com/tymondesigns/jwt-auth).
 
-We decided to use it and contribute it to the community as a package, that encourages standarised use and a RAD tool for authentication using AWS Cognito. 
+**[DEMO Application](https://demo.ellaisys.com/cognito)**. You can try and register and login. For the first time, it will force the user to change password. The **[source code](https://github.com/ellaisys/demo_cognito_app)** of the demo application is also available of the GitHub.
+
+We decided to use it and contribute it to the community as a package, that encourages standarised use and a RAD tool for authentication using AWS Cognito.
 
 ## Features
 - Registration and Confirmation E-Mail
@@ -21,7 +23,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - Login
 - Remember Me Cookie
 - Single Sign On
-- Forgot Password
+- Forgot Password (Resend - configurable)
 - User Deletion
 - Edit User Attributes
 - Reset User Password
@@ -29,6 +31,22 @@ We decided to use it and contribute it to the community as a package, that encou
 - Easy API Token handling (uses the cache driver)
 - DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)
 - Easy configuration of Token Expiry (Manage using the cognito console, no code or configurations needed)
+- Support for App Client without Secret **(NEW Feature)**
+- Support for Cognito Groups, including assigning a default group to a new user **(NEW Feature)**
+
+## Compatability
+
+|PHP Version|Support|
+|-|-|
+|7.4|Yes|
+|8.0|Yes|
+|8.1|Yes|
+
+|Laravel Version|Support|
+|-|-|
+|7.x|Yes|
+|8.x|Yes|
+|9.x|Yes|
 
 ## Installation
 
@@ -55,7 +73,7 @@ Next you can publish the config and the view.
 ```bash
     php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider"
 ```
-Last but not least you want to change the auth driver. To do so got to your config\auth.php file and change it 
+Last but not least you want to change the auth driver. To do so got to your config\auth.php file and change it
 to look the following:
 
 ```php
@@ -73,23 +91,25 @@ to look the following:
 
 ## Cognito User Pool
 
-In order to use AWS Cognito as authentication provider, you require a Cognito User Pool. 
+In order to use AWS Cognito as authentication provider, you require a Cognito User Pool.
 
-If you haven't created one already, go to your [Amazon management console](https://console.aws.amazon.com/cognito/home) and create a new user pool. 
+If you haven't created one already, go to your [Amazon management console](https://console.aws.amazon.com/cognito/home) and create a new user pool.
 
 Next, generate an App Client. This will give you the App client id and the App client secret
-you need for your `.env` file. 
+you need for your `.env` file.
 
-*IMPORTANT: Don't forget to activate the checkbox to Enable sign-in API for server-based Authentication. 
+*IMPORTANT: Don't forget to activate the checkbox to Enable sign-in API for server-based Authentication.
 The Auth Flow is called: ADMIN_USER_PASSWORD_AUTH (formerly ADMIN_NO_SRP_AUTH)*
 
-You also need a new IAM Role with the following Access Rights:
+### AWS IAM configuration
+
+You also need a new **IAM Role** with the following Access Rights:
 
 - AmazonCognitoDeveloperAuthenticatedIdentities
 - AmazonCognitoPowerUser
 - AmazonESCognitoAccess
 
-From this user you can fetch the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+From this IAM User you must use the **AWS_ACCESS_KEY_ID** and **AWS_SECRET_ACCESS_KEY** in the laravel environment file.
 
 ### Cognito API configuration
 
@@ -128,29 +148,40 @@ Our package is providing you 6 traits you can just add to your Auth Controllers 
 
 In the simplest way you just go through your Auth Controllers and change namespaces from the traits which are currently implemented from Laravel.
 
-You can change structure to suit your needs. Please be aware of the @extend statement in the blade file to fit into your project structure. 
-At the current state you need to have those 4 form fields defined in here. Those are `token`, `email`, `password`, `password_confirmation`. 
+You can change structure to suit your needs. Please be aware of the @extend statement in the blade file to fit into your project structure.
+At the current state you need to have those 4 form fields defined in here. Those are `token`, `email`, `password`, `password_confirmation`.
 
 ## Single Sign-On
 
-With our package and AWS Cognito we provide you a simple way to use Single Sign-Ons. 
+With our package and AWS Cognito we provide you a simple way to use Single Sign-Ons.
 For configuration options take a look at the config [cognito.php](/config/cognito.php).
 
 
 When you want SSO enabled and a user tries to login into your application, the package checks if the user exists in your AWS Cognito pool. If the user exists, he will be created automatically in your database provided the `add_missing_local_user_sso` is to `true`, and is logged in simultaneously.
 
-That's what we use the fields `sso_user_model` and `cognito_user_fields` for. In `sso_user_model` you define the class of your user model. In most cases this will simply be _App\User_. 
+That's what we use the fields `sso_user_model` and `cognito_user_fields` for. In `sso_user_model` you define the class of your user model. In most cases this will simply be _App\User_.
 
-With `cognito_user_fields` you can define the fields which should be stored in Cognito. Put attention here. If you define a field which you do not send with the Register Request this will throw you an InvalidUserFieldException and you won't be able to register. 
+With `cognito_user_fields` you can define the fields which should be stored in Cognito. Put attention here. If you define a field which you do not send with the Register Request this will throw you an InvalidUserFieldException and you won't be able to register.
 
-Now that you have registered your users with their attributes in the AWS Cognito pool and your database and you want to attach a second app which should use the same pool. Well, that's actually pretty easy. You can use the API provisions that allows multiple projects to consume the same AWS Cognito pool. 
+Now that you have registered your users with their attributes in the AWS Cognito pool and your database and you want to attach a second app which should use the same pool. Well, that's actually pretty easy. You can use the API provisions that allows multiple projects to consume the same AWS Cognito pool.
 
 *IMPORTANT: if your users table has a password field you are not going to need this anymore. What you want to do is set this field to be nullable, so that users can be created without passwords. From now on, Passwords are stored in Cognito.
 
-Any additional registration data you have, for example `firstname`, `lastname` needs to be added in 
-[cognito.php](/config/cognito.php) cognito_user_fields config to be pushed to Cognito. Otherwise they are only stored locally 
+Any additional registration data you have, for example `firstname`, `lastname` needs to be added in
+[cognito.php](/config/cognito.php) cognito_user_fields config to be pushed to Cognito. Otherwise they are only stored locally
 and are not available if you want to use Single Sign On's.*
 
+## Forgot password with resend option
+
+In case the user has not activated the account, AWS Cognito as a default feature does not allow user of use the forgot password feature. We have introduced the AWS documented feature that allows the password to be resent.
+
+We have made this configurable for the developers so that they can use it as per the business requirement. The configuration takes a boolean value. Default is true (allows resend of forgot password)
+
+```php
+
+    AWS_COGNITO_ALLOW_FORGOT_PASSWORD_RESEND=true
+
+```
 
 ## Middleware configuration for API Routes
 In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware
@@ -181,13 +212,13 @@ To use the middleware into the **API routes**, as shown below
 ```
 
 
-## Registering Users 
+## Registering Users
 
 As a default, if you are registering a new user with Cognito, Cognito will send you an email during signUp that includes the username and temporary password for the users to verify themselves.
 
 Using this library in conjunction with **AWS Lambda**, once can look to customize the email template and content. The email template can be text or html based. The Lambda code for not included in this code repository. You can create your own. Any object (array) that you pass to the registration method is transferred as is to the lambda function, we are not prescriptive about the attribute names.
 
-We have made is very easy for anyone to use the default behaviour. 
+We have made is very easy for anyone to use the default behaviour.
 
 1. You don't need to create an extra field to store the verification token.
 2. You don't have to bother about the Sessions or API tokens, they are managed for you. The session or token is managed via the standard mechanism of Laravel. You have the liberty to keep it where ever you want, no security loop holes.
@@ -228,6 +259,30 @@ We have made is very easy for anyone to use the default behaviour.
 ```
 
 5. You don't need to turn off Cognito to send you emails. We rather propose the use of AWS Cognito or AWS SMS mailers, such that use credentials are always secure.
+
+6. In case you want to suppress the mails to be sent to the new users, you can configure the parameter given below to skip welcome mails to new user registration. Default configuration shall send the welcome email.
+
+```php
+
+    AWS_COGNITO_NEW_USER_MESSAGE_ACTION="SUPPRESS"
+
+```
+
+7. The configuration given below allows the new user's email address to be auto marked as verified. The default configuration
+
+```php
+
+    AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=false
+
+```
+
+8. To assign a default group to a new user when registering set a name of the user group as per the configuration done via AWS Cognito Management Console. The default value is set to null.
+
+```php
+
+    AWS_COGNITO_DEFAULT_USER_GROUP="Customers"
+
+```
 
 ## User Authentication
 
@@ -357,7 +412,7 @@ In case you want to use this trait for API based login, you can write the code a
 ## Delete User
 
 If you want to give your users the ability to delete themselves from your app you can use our deleteUser function
-from the CognitoClient. 
+from the CognitoClient.
 
 To delete the user you should call deleteUser and pass the email of the user as a parameter to it.
 After the user has been deleted in your cognito pool, delete your user from your database too.
@@ -367,19 +422,19 @@ After the user has been deleted in your cognito pool, delete your user from your
         $user->delete();
 ```
 
-We have implemented a new config option `delete_user`, which you can access through `AWS_COGNITO_DELETE_USER` env var. 
-If you set this config to true, the user is deleted in the Cognito pool. If it is set to false, it will stay registered. 
-Per default this option is set to false. If you want this behaviour you should set USE_SSO to true to let the user 
+We have implemented a new config option `delete_user`, which you can access through `AWS_COGNITO_DELETE_USER` env var.
+If you set this config to true, the user is deleted in the Cognito pool. If it is set to false, it will stay registered.
+Per default this option is set to false. If you want this behaviour you should set USE_SSO to true to let the user
 restore themselves after a successful login.
 
-To access our CognitoClient you can simply pass it as a parameter to your Controller Action where you want to perform 
-the deletion. 
+To access our CognitoClient you can simply pass it as a parameter to your Controller Action where you want to perform
+the deletion.
 
 ```php
     public function deleteUser(Request $request, AwsCognitoClient $client)
 ```
 
-Laravel will take care of the dependency injection by itself. 
+Laravel will take care of the dependency injection by itself.
 
 ```
     IMPORTANT: You want to secure this action by maybe security questions, a second delete password or by confirming 
@@ -391,7 +446,7 @@ Laravel will take care of the dependency injection by itself.
 If you have a deployment architecture, that involves multiple servers and you want to maintain the web sessions or API tokens across the servers, you can use the AWS DynamoDB. The library is capable of handling the DynamoDB with ease. All that you need to do is create the table in AWS DynamoDB and change a few configurations.
 
 ### Creating a new table in AWS DynamoDB
-1. Go to the AWS Console and create a new table. 
+1. Go to the AWS Console and create a new table.
 2. Enter the unique table name as per your preferences.
 3. The primary key (or partition key) should be **key** of type **string**
 4. Use default settings and click the **Create** button
@@ -434,6 +489,15 @@ However, if you have an API based implementation, and want to automatically auth
 
 ```
 
+## Support for App Client without Secret enabled
+
+The library now supports where the AWS configuration of App Client with the Client Secret set to disabled. Use the below configuration into the environment file to enable/disable this. The default is marked as enable (i.e. we expect the App Client Secret to be enabled in AWS Cognito configuration)
+
+```php
+
+   AWS_COGNITO_CLIENT_SECRET_ALLOW=false
+
+```
 
 ## Changelog
 
@@ -443,7 +507,21 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 If you discover any security related issues, please email [support@ellaisys.com](mailto:support@ellaisys.com) and also add it to the issue tracker.
 
-## Credits
+## Roadmap
+
+https://github.com/ellaisys/aws-cognito/wiki/RoadMap
+
+## How to contribute
+
+- Star this project on GitHub.
+- Report bugs or suggest features by creating new issues or adding comments to issues
+- Submit pull requests
+- Spread the word by blogging about SimplCommerce or sharing it on social networks
+- Donate to us
+
+## Credits & Contributors
+
+This project exists thanks to all the people who contribute.
 
 - [EllaiSys Team](https://github.com/ellaisys)
 - [GitHub Contributors](https://github.com/ellaisys/aws-cognito/graphs/contributors)

@@ -157,7 +157,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
                 new CognitoIdentityProviderClient($aws_config),
                 config('cognito.app_client_id'),
                 config('cognito.app_client_secret'),
-                config('cognito.user_pool_id')
+                config('cognito.user_pool_id'),
+                config('cognito.app_client_secret_allow', true)
             );
         });
     } //Function ends

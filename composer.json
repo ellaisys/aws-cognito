@@ -4,7 +4,7 @@
     "keywords": ["php", "laravel", "aws", "cognito", "auth", "authentication", "oauth", "user pool", "ellaisys"],
     "type": "library",
     "license": "MIT",
-    "homepage": "https://github.com/ellaisys/aws-cognito",
+    "homepage": "https://ellaisys.github.io/aws-cognito/",
     "authors": [
         {
             "name": "EllaiSys",
