@@ -2,6 +2,7 @@ Release 22 (tag v1.0.7):
  - Feature: Add user to the Cognito Group
  - Feature: Get all the user's groups in cognito
  - Fix: Exception handling of the local user creation in Laravel 9.x
+ - Fix: No Token Exception at Web Login
 
 Release 21 (tag v1.0.6): 
  - Fix: Issue 28 (security issue in middleware)
