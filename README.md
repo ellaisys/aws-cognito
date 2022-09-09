@@ -31,8 +31,9 @@ We decided to use it and contribute it to the community as a package, that encou
 - Easy API Token handling (uses the cache driver)
 - DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)
 - Easy configuration of Token Expiry (Manage using the cognito console, no code or configurations needed)
-- Support for App Client without Secret **(NEW Feature)**
-- Support for Cognito Groups, including assigning a default group to a new user **(NEW Feature)**
+- Support for App Client without Secret
+- Support for Cognito Groups, including assigning a default group to a new user
+- Session (Web) now has AccessToken and RefreshToken as part of the claim object **(NEW Feature)**
 
 ## Compatability
 

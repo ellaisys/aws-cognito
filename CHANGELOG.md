@@ -1,3 +1,6 @@
+Release 23 (tag v1.0.8):
+ - Feature: Added the cognito claim (AccessToken and RefreshToken) to the session parameter.
+ 
 Release 22 (tag v1.0.7):
  - Feature: Add user to the Cognito Group
  - Feature: Get all the user's groups in cognito
