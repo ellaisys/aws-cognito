@@ -816,4 +816,42 @@ class AwsCognitoClient
         return $userAttributes;
     } //Function ends
 
+    /**
+     * Generate a new token using refresh token.
+     *
+     * @see http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html
+     * @param string $username
+     * @param string $refreshToken
+     * @return \Aws\Result|bool
+     */
+    public function refreshToken(string $username, string $refreshToken)
+    {
+        try {
+            //Build payload
+            $payload = [
+                'AuthFlow' => 'REFRESH_TOKEN_AUTH',
+                'AuthParameters' => [
+                    'REFRESH_TOKEN' => $refreshToken,
+                ],
+                'ClientId' => $this->clientId,
+                'UserPoolId' => $this->poolId,
+            ];
+
+            //Add Secret Hash in case of Client Secret being configured
+            if ($this->boolClientSecret) {
+                $payload['AuthParameters'] = array_merge($payload['AuthParameters'], [
+                    'SECRET_HASH' => $this->cognitoSecretHash($username)
+                ]);
+            } //End if
+
+            $response = $this->client->adminInitiateAuth($payload);
+
+            // Reuse same refreshToken
+            $response['AuthenticationResult']['RefreshToken'] = $refreshToken;
+        } catch (CognitoIdentityProviderException $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
 } //Class ends
