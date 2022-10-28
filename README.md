@@ -410,6 +410,62 @@ In case you want to use this trait for API based login, you can write the code a
 
 ```
 
+## Refresh Token
+
+You can use this trait for API to generate new token
+
+```php
+
+    namespace App\Api\Controller;
+
+    ...
+
+    use Ellaisys\Cognito\AwsCognitoClaim;
+    use Ellaisys\Cognito\Auth\RefreshToken;
+
+    class AuthApiController extends Controller
+    {
+        use RefreshToken;
+
+        /**
+         * Generate a new token using refresh token.
+         * 
+         * @throws \HttpException
+         * 
+         * @return mixed
+         */
+        public function refreshToken(\Illuminate\Http\Request $request)
+        {
+            ...
+
+            $validator = $request->validate([
+                'email' => 'required|email',
+                'refresh_token' => 'required'
+            ]);
+            
+            try {
+                if ($claim = $this->refresh($request, 'email', 'refresh_token')) {
+                    if ($claim instanceof AwsCognitoClaim) {
+                        return $claim->getData();
+                    } else {
+                        if ($claim->getData()->error == 'cognito.validation.invalid_username') {
+                            return response()->json(['status' => 'error', 'message' => $claim->getData()], 400);
+                        } //End if
+                    } //End if
+                } //End if
+            } catch (CognitoIdentityProviderException $exception) {
+                return response()->json(['status' => 'error', 'message' => 'Invalid refresh token.'], 400);
+            }
+
+        } //Function ends
+
+
+        ...
+    } //Class ends
+
+```
+
+
 ## Delete User
 
 If you want to give your users the ability to delete themselves from your app you can use our deleteUser function
