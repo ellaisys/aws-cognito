@@ -1,6 +1,7 @@
 
 Release 25 (tag v1.0.10)
  - Feature: Sign Out / Logout of the Access Token from AWS Cognito
+ - Feature: Refresh Token method added to the API storage
 
 Release 24 (tag v1.0.9)
  - Fix: Issue 49 (error with reset passwords expecting json value)
