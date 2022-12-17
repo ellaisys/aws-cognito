@@ -94,7 +94,7 @@ class AwsCognito
                 $this->parseToken();
             } catch (AwsCognitoException $e) {
                 $this->token = null;
-            }
+            } //try-catch ends
         } //End if
 
         return $this->token;

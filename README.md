@@ -18,9 +18,9 @@ The idea of this package, and some of the code, is based on the package from Pod
 We decided to use it and contribute it to the community as a package, that encourages standarised use and a RAD tool for authentication using AWS Cognito.
 
 ## Features
-- Registration and Confirmation E-Mail
+- Registration and Confirmation E-Mail (Sign Up)
 - Forced password change at first login (configurable)
-- Login
+- Login (Sign In)
 - Remember Me Cookie
 - Single Sign On
 - Forgot Password (Resend - configurable)
@@ -34,6 +34,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - Support for App Client without Secret
 - Support for Cognito Groups, including assigning a default group to a new user
 - Session (Web) now has AccessToken and RefreshToken as part of the claim object **(NEW Feature)**
+- Logout (Sign Out) - Remove access tokens from AWS **(NEW Feature)**
 
 ## Compatability
 
@@ -409,6 +410,19 @@ In case you want to use this trait for API based login, you can write the code a
     } //Class ends
 
 ```
+
+## Signout (Remove Access Token)
+
+The logout methods are now part of the guard implementations, the logout method removes the access-tokens from AWS and also removes from Application Storage managed by this library. Just calling the auth guard logout method will be sufficient. You can implement it into the routes or controller based on your development preference.
+
+```php
+
+   ...
+
+   Auth::guard('api')->logout();
+
+```
+
 
 ## Refresh Token
 

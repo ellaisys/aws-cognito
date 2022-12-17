@@ -12,14 +12,38 @@
 namespace Ellaisys\Cognito\Auth;
 
 use App\Models\User;
-use Ellaisys\Cognito\AwsCognitoClaim;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
+
+use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\AwsCognitoClaim;
+
+use Illuminate\Validation\ValidationException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait RefreshToken
 {
+    /**
+     * The AwsCognito instance.
+     *
+     * @var \Ellaisys\Cognito\AwsCognito
+     */
+    protected $cognito;
+
+
+    /**
+     * RespondsMFAChallenge constructor.
+     *
+     * @param AwsCognito $cognito
+     */
+    public function __construct(AwsCognito $cognito) {
+        $this->cognito = $cognito;
+    }
+
+
     /**
      * Generate a new token.
      *
@@ -51,12 +75,19 @@ trait RefreshToken
         //Use username from AWS to refresh token, not email from login!
         if (!empty($user['Username'])) {
             $response = $client->refreshToken($user['Username'], $request[$paramRefreshToken]);
+            if (empty($response) || empty($response['AuthenticationResult'])) {
+                throw new HttpException(400);
+            } //End if
 
             //Authenticate User
             $user = User::where('email', $request['email'])->first();
             $claim = new AwsCognitoClaim($response, $user, 'email');
+
+            //Store the token
             $this->cognito->setClaim($claim)->storeToken();
-            return $claim;
+
+            //Return the response object
+            return $response['AuthenticationResult'];
         } else {
             $response = response()->json(['error' => 'cognito.validation.invalid_username'], 400);
         } //End if

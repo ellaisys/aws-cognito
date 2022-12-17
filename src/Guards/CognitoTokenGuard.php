@@ -265,7 +265,19 @@ class CognitoTokenGuard extends TokenGuard
      */
     public function invalidate($forceForever = false)
     {
-        return $this->cognito->unsetToken($forceForever);
+        try {
+            //Get authentication token from request
+            $accessToken = $this->cognito->getToken();
+
+            //Revoke the token from AWS Cognito
+            if ($this->client->signOut($accessToken)) {
+
+                //Remove the token from application storage
+                return $this->cognito->unsetToken($forceForever);
+            } //End if
+        } catch (Exception $e) {
+            throw $e;
+        } //try-catch ends
     } //Function ends
 
 

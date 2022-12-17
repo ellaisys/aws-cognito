@@ -229,4 +229,45 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         } //Try-catch ends
     } //Function ends
 
+
+    /**
+     * Logout the user, thus invalidating the token.
+     *
+     * @param  bool  $forceForever
+     *
+     * @return void
+     */
+    public function logout($forceForever = false)
+    {
+        $this->invalidate($forceForever);
+        $this->user = null;
+    } //Function ends
+
+
+    /**
+     * Invalidate the token.
+     *
+     * @param  bool  $forceForever
+     *
+     * @return \Ellaisys\Cognito\AwsCognito
+     */
+    public function invalidate($forceForever = false)
+    {
+        try {
+            //Get authentication token from session
+            $session = $this->getSession();
+            $claim = $session->has('claim')?$session->get('claim'):null;
+            $accessToken = (!empty($claim))?$claim['token']:null;
+
+            //Revoke the token from AWS Cognito
+            if ($this->client->signOut($accessToken)) {
+
+                //Remove the token from application storage
+                return $session->invalidate();
+            } //End if
+        } catch (Exception $e) {
+            throw $e;
+        } //try-catch ends
+    } //Function ends
+    
 } //Class ends

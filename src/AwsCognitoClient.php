@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
 
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
+use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException ;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 use PHPUnit\Exception;
 
@@ -100,7 +101,15 @@ class AwsCognitoClient
      */
     const EXPIRED_CODE = 'ExpiredCodeException';
 
-     /**
+
+    /**
+     * Constant representing the not authorized exception.
+     *
+     * @var string
+     */
+    const COGNITO_NOT_AUTHORIZED_ERROR = 'NotAuthorizedException';
+
+    /**
      * Constant representing the SMS MFA challenge.
      *
      * @var string
@@ -720,6 +729,7 @@ class AwsCognitoClient
         return $user;
     } //Function ends
 
+
     /**
      * Responds to MFA challenge.
      * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html
@@ -816,6 +826,7 @@ class AwsCognitoClient
         return $userAttributes;
     } //Function ends
 
+    
     /**
      * Generate a new token using refresh token.
      *
@@ -854,4 +865,56 @@ class AwsCognitoClient
 
         return $response;
     } //Function ends
+    
+
+    /**
+     * Revoke all the access tokens from AWS Cognit for a specified refresh-token in a user pool.
+     *
+     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#revoketoken
+     *
+     * @param string $refreshToken
+     * @return bool
+     */
+    public function revokeToken(string $refreshToken)
+    {
+        try {
+            $this->client->revokeToken([
+                'ClientId'      => $this->clientId,
+                'ClientSecret'  => $this->clientSecret,
+                'Token'         => $refreshToken
+            ]);
+        } catch (Exception $e) {
+            throw $e;
+        } //Try-catch ends
+        return true;
+    } //Function ends
+
+
+    /**
+     * Revoke the access-token from AWS Cognito in a user pool.
+     *
+     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#globalsignout
+     *
+     * @param string $accessToken
+     * @return bool
+     */
+    public function signOut(string $accessToken)
+    {
+        try {
+            $this->client->globalSignOut([
+                'AccessToken' => $accessToken
+            ]);
+
+        } catch (CognitoIdentityProviderException $e) {
+            if ($e->getAwsErrorCode() === self::COGNITO_NOT_AUTHORIZED_ERROR) {
+                return true;
+            } //End if
+
+            throw $e;
+        } catch (Exception $e) {
+            throw $e;
+        } //Try-catch ends
+        return true;
+    } //Function ends
+
 } //Class ends

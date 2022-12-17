@@ -1,3 +1,10 @@
+
+Release 25 (tag v1.0.10)
+ - Feature: Sign Out / Logout of the Access Token from AWS Cognito
+
+Release 24 (tag v1.0.9)
+ - Fix: Issue 49 (error with reset passwords expecting json value)
+
 Release 23 (tag v1.0.8):
  - Feature: Added the cognito claim (AccessToken and RefreshToken) to the session parameter.
  
