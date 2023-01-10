@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito\Auth;
 
+use Auth;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -20,9 +21,11 @@ use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClaim;
 
+use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 trait RefreshToken
 {
@@ -53,46 +56,57 @@ trait RefreshToken
      *
      * @return mixed
      */
-    public function refresh($request, string $paramUsername='email', string $paramRefreshToken='refresh_token')
+    public function refresh(Request $request, string $paramUsername='email', string $paramRefreshToken='refresh_token')
     {
-        if ($request instanceof Request) {
-            //Validate request
-            $validator = Validator::make($request->all(), $this->rules());
+        try {
 
-            if ($validator->fails()) {
-                throw new ValidationException($validator);
+            if ($request instanceof Request) {
+                //Validate request
+                $validator = Validator::make($request->all(), $this->rules());
+
+                if ($validator->fails()) {
+                    throw new ValidationException($validator);
+                } //End if
+
+                $request = collect($request->all());
             } //End if
 
-            $request = collect($request->all());
-        } //End if
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
 
-        //Create AWS Cognito Client
-        $client = app()->make(AwsCognitoClient::class);
+            //Get Authenticated user
+            $authUser  = Auth::guard('api')->user();
 
-        //Get User Data
-        $user = $client->getUser($request[$paramUsername]);
+            //Get User Data
+            $user = $client->getUser($authUser[$paramUsername]);
 
-        //Use username from AWS to refresh token, not email from login!
-        if (!empty($user['Username'])) {
-            $response = $client->refreshToken($user['Username'], $request[$paramRefreshToken]);
-            if (empty($response) || empty($response['AuthenticationResult'])) {
-                throw new HttpException(400);
+            //Use username from AWS to refresh token, not email from login!
+            if (!empty($user['Username'])) {
+                $response = $client->refreshToken($user['Username'], $request[$paramRefreshToken]);
+                if (empty($response) || empty($response['AuthenticationResult'])) {
+                    throw new HttpException(400);
+                } //End if
+
+                //Authenticate User
+                $claim = new AwsCognitoClaim($response, $authUser, 'email');
+                if ($claim && $claim instanceof AwsCognitoClaim) { 
+                    //Store the token
+                    $this->cognito->setClaim($claim)->storeToken();
+
+                    //Return the response object
+                    return $claim->getData();    
+                } else {
+                    return false;            
+                } //End if
+            } else {
+                return response()->json(['error' => 'cognito.validation.invalid_username'], 400);
             } //End if
-
-            //Authenticate User
-            $user = User::where('email', $request['email'])->first();
-            $claim = new AwsCognitoClaim($response, $user, 'email');
-
-            //Store the token
-            $this->cognito->setClaim($claim)->storeToken();
-
-            //Return the response object
-            return $response['AuthenticationResult'];
-        } else {
-            $response = response()->json(['error' => 'cognito.validation.invalid_username'], 400);
-        } //End if
-
-        return $response;
+        } catch(Exception $e) {
+            if ($e instanceof CognitoIdentityProviderException) {
+                return response()->json(['error' => $e->getAwsErrorCode()], 400);
+            } //End if
+            throw $e;
+        } //Try-catch ends
     } //Function ends
 
 
@@ -104,7 +118,6 @@ trait RefreshToken
     protected function rules()
     {
         return [
-            'email'    => 'required|email',
             'refresh_token'    => 'required'
         ];
     } //Function ends
