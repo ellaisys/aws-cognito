@@ -170,6 +170,13 @@ class AwsCognitoClient
         $this->boolClientSecret = $boolClientSecret;
     }
 
+    /**
+     * @return CognitoIdentityProviderClient
+     */
+    public function getCognitoIdentityProviderClient()
+    {
+        return $this->client;
+    }
 
     /**
      * Checks if credentials of a user are valid.
