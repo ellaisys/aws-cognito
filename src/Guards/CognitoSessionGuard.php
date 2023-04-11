@@ -237,9 +237,9 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      *
      * @return void
      */
-    public function logout($forceForever = false)
+    public function logout($forceForever = false, $allDevices = false)
     {
-        $this->invalidate($forceForever);
+        $this->invalidate($forceForever, $allDevices);
         $this->user = null;
     } //Function ends
 
@@ -251,7 +251,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      *
      * @return \Ellaisys\Cognito\AwsCognito
      */
-    public function invalidate($forceForever = false)
+    public function invalidate($forceForever = false, $allDevices = false)
     {
         try {
             //Get authentication token from session
@@ -259,12 +259,31 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             $claim = $session->has('claim')?$session->get('claim'):null;
             $accessToken = (!empty($claim))?$claim['token']:null;
 
-            //Revoke the token from AWS Cognito
-            if ($this->client->signOut($accessToken)) {
+            if (!empty($accessToken)) {
+                //Revoke the token from AWS Cognito
+                if ($this->client->signOut($accessToken)) {
 
+                    //Global logout and invalidate the Refresh Token 
+                    if ($allDevices) {
+                        //Get claim data
+                        $dataClaim = (!empty($claim))?$claim['data']:null;
+                        if ($dataClaim) {
+                            //Retrive the Refresh Token from the claim
+                            $refreshToken = $dataClaim['RefreshToken'];
+
+                            //Invalidate the Refresh Token
+                            $this->client->revokeToken($refreshToken);
+                        } //End if
+                    } //End if
+
+                    //Remove the token from application storage
+                    return $session->invalidate();
+                } //End if
+            } else {
                 //Remove the token from application storage
                 return $session->invalidate();
             } //End if
+
         } catch (Exception $e) {
             throw $e;
         } //try-catch ends
