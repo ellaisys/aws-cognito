@@ -33,8 +33,9 @@ We decided to use it and contribute it to the community as a package, that encou
 - Easy configuration of Token Expiry (Manage using the cognito console, no code or configurations needed)
 - Support for App Client without Secret
 - Support for Cognito Groups, including assigning a default group to a new user
-- Session (Web) now has AccessToken and RefreshToken as part of the claim object **(NEW Feature)**
-- Logout (Sign Out) - Remove access tokens from AWS **(NEW Feature)**
+- Session (Web) now has AccessToken and RefreshToken as part of the claim object
+- Logout (Sign Out) - Remove access tokens from AWS
+- Forced Logout (Sign Out) - Revoke the RefreshToken from AWS **(NEW Feature)**
 
 ## Compatability
 
@@ -415,11 +416,18 @@ In case you want to use this trait for API based login, you can write the code a
 
 The logout methods are now part of the guard implementations, the logout method removes the access-tokens from AWS and also removes from Application Storage managed by this library. Just calling the auth guard logout method will be sufficient. You can implement it into the routes or controller based on your development preference.
 
+The logout method now takes an **optional** boolean parameter (true) to revoke RefreshToken. The default value is (false) and that will persist the Refresh Token with AWS Cognito.
+
 ```php
 
    ...
 
    Auth::guard('api')->logout();
+
+
+   ...
+
+   Auth::guard('api')->logout(true); //Revoke the Refresh Token.
 
 ```
 

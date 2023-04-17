@@ -1,3 +1,5 @@
+Release 26 (tag v1.0.11)
+ - Feature: Forced signout with RefreshToken revoked.
 
 Release 25 (tag v1.0.10)
  - Feature: Sign Out / Logout of the Access Token from AWS Cognito
