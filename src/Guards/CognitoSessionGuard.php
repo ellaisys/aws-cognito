@@ -259,6 +259,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             $claim = $session->has('claim')?$session->get('claim'):null;
             $accessToken = (!empty($claim))?$claim['token']:null;
 
+            //Check if the token is empty
             if (!empty($accessToken)) {
                 //Revoke the token from AWS Cognito
                 if ($this->client->signOut($accessToken)) {
@@ -278,12 +279,14 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
                     //Remove the token from application storage
                     return $session->invalidate();
-                } //End if
+                } else {
+                    //Remove the token from application storage
+                    return $session->invalidate();
+                } //End if                
             } else {
                 //Remove the token from application storage
                 return $session->invalidate();
             } //End if
-
         } catch (Exception $e) {
             throw $e;
         } //try-catch ends
