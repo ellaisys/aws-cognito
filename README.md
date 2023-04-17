@@ -33,8 +33,9 @@ We decided to use it and contribute it to the community as a package, that encou
 - Easy configuration of Token Expiry (Manage using the cognito console, no code or configurations needed)
 - Support for App Client without Secret
 - Support for Cognito Groups, including assigning a default group to a new user
-- Session (Web) now has AccessToken and RefreshToken as part of the claim object **(NEW Feature)**
-- Logout (Sign Out) - Remove access tokens from AWS **(NEW Feature)**
+- Session (Web) now has AccessToken and RefreshToken as part of the claim object
+- Logout (Sign Out) - Remove access tokens from AWS
+- MFA Implementation for Session and Token Guards **(NEW Feature)**
 
 ## Compatability
 
