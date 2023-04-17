@@ -249,9 +249,9 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @return void
      */
-    public function logout($forceForever = false, $allDevices = false)
+    public function logout(bool $forceForever = false)
     {
-        $this->invalidate($forceForever, $allDevices);
+        $this->invalidate($forceForever);
         $this->user = null;
     } //Function ends
 
@@ -263,7 +263,7 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @return \Ellaisys\Cognito\AwsCognito
      */
-    public function invalidate($forceForever = false, $allDevices = false)
+    public function invalidate(bool $forceForever = false)
     {
         try {
             //Get authentication token from request
@@ -273,10 +273,10 @@ class CognitoTokenGuard extends TokenGuard
             if ($this->client->signOut($accessToken)) {
 
                 //Global logout and invalidate the Refresh Token 
-                if ($allDevices) {
+                if ($forceForever) {
                     //Get claim data
-                    $dataClaim = $this->cognito->getClaim();
-                    if ($dataClaim) {
+                    $data = $this->cognito->getClaim();
+                    if ($data && ($dataClaim = $data['data'])) {
                         //Retrive the Refresh Token from the claim
                         $refreshToken = $dataClaim['RefreshToken'];
 

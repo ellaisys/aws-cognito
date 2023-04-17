@@ -237,9 +237,9 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      *
      * @return void
      */
-    public function logout($forceForever = false, $allDevices = false)
+    public function logout($forceForever = false)
     {
-        $this->invalidate($forceForever, $allDevices);
+        $this->invalidate($forceForever);
         $this->user = null;
     } //Function ends
 
@@ -251,7 +251,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      *
      * @return \Ellaisys\Cognito\AwsCognito
      */
-    public function invalidate($forceForever = false, $allDevices = false)
+    public function invalidate($forceForever = false)
     {
         try {
             //Get authentication token from session
@@ -265,7 +265,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 if ($this->client->signOut($accessToken)) {
 
                     //Global logout and invalidate the Refresh Token 
-                    if ($allDevices) {
+                    if ($forceForever) {
                         //Get claim data
                         $dataClaim = (!empty($claim))?$claim['data']:null;
                         if ($dataClaim) {
