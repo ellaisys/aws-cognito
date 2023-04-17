@@ -22,14 +22,20 @@ use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClaim;
 
+use Ellaisys\Cognito\Guards\Traits\BaseCognitoGuard;
+use Ellaisys\Cognito\Guards\Traits\CognitoMFA;
+
 use Exception;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoTokenGuard extends TokenGuard
 {
+
+    use BaseCognitoGuard, CognitoMFA;
 
     /**
      * Username key
@@ -90,37 +96,52 @@ class CognitoTokenGuard extends TokenGuard
      * @return bool
      * @throws InvalidUserModelException
      */
-    protected function hasValidCredentials($user, $credentials)
+    protected function hasValidCredentials($user, array $credentials, bool $remember = false)
     {
         /** @var Result $response */
         $result = $this->client->authenticate($credentials[$this->keyUsername], $credentials['password']);
        
+        //Result of type AWS Result
         if (!empty($result) && $result instanceof AwsResult) {
 
-            if (isset($result['ChallengeName']) && 
-                in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) 
-            {
-                //Check for forced action on challenge status
-                if (config('cognito.force_password_change_api')) {
-                    $this->claim = [
-                        'session_token' => $result['Session'],
-                        'username' => $credentials[$this->keyUsername],
-                        'status' => $result['ChallengeName']
-                    ];
-                } else {
-                    if (config('cognito.force_password_auto_update_api')) {
-                        //Force set password same as authenticated with challenge state
-                        $this->client->confirmPassword($credentials[$this->keyUsername], $credentials['password'], $result['Session']);
+            //Check in case of any challenge
+            if (isset($result['ChallengeName'])) {
+                switch ($result['ChallengeName']) {
+                    case 'SOFTWARE_TOKEN_MFA':
+                        $this->claim = [
+                            'status' => $result['ChallengeName'],
+                            'session' => $result['Session'],
+                            'username' => $credentials[$this->keyUsername],
+                            'user' => serialize($user)
+                        ];
+                        break;
+                    
+                    default:
+                        if (in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) {
+                            //Check for forced action on challenge status
+                            if (config('cognito.force_password_change_api')) {
+                                $this->claim = [
+                                    'session_token' => $result['Session'],
+                                    'username' => $credentials[$this->keyUsername],
+                                    'status' => $result['ChallengeName']
+                                ];
+                            } else {
+                                if (config('cognito.force_password_auto_update_api')) {
+                                    //Force set password same as authenticated with challenge state
+                                    $this->client->confirmPassword($credentials[$this->keyUsername], $credentials['password'], $result['Session']);
 
-                        //Get the result object again
-                        $result = $this->client->authenticate($credentials[$this->keyUsername], $credentials['password']);
-                        if (empty($result)) {
-                            return false;
+                                    //Get the result object again
+                                    $result = $this->client->authenticate($credentials[$this->keyUsername], $credentials['password']);
+                                    if (empty($result)) {
+                                        return false;
+                                    } //End if
+                                } else {
+                                    $this->claim = null;
+                                } //End if
+                            } //End if
                         } //End if
-                    } else {
-                        $this->claim = null;
-                    } //End if
-                } //End if
+                        break;
+                } //End switch                
             } //End if
 
             //Create Claim for confirmed users
@@ -146,7 +167,7 @@ class CognitoTokenGuard extends TokenGuard
      * @throws
      * @return bool
      */
-    public function attempt(array $credentials = [], $remember = false)
+    public function attempt(array $credentials = [], bool $remember = false)
     {
         try {
             $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
@@ -219,13 +240,33 @@ class CognitoTokenGuard extends TokenGuard
 
                 //Set Token
                 $this->setToken();
+            } else {
+                $key = $this->claim['session'];
+
+                //Save the challenge data
+                $this->setChallengeData($key, $user);
             } //End if
 
             //Set user
             $this->setUser($user);
         } //End if
 
-        return $this->claim;
+        //Send claim object
+        $claim = $this->claim;
+        if ($claim && $claim['status']) {
+            switch ($claim['status']) {
+                case 'SOFTWARE_TOKEN_MFA':
+                    unset($claim['username']);
+                    unset($claim['user']);
+                    break;
+                
+                default:
+                    # code...
+                    break;
+            } //Switch ends
+        } //End if
+
+        return $claim;
     } //Fucntion ends
 
 
@@ -238,6 +279,18 @@ class CognitoTokenGuard extends TokenGuard
     {
         $this->cognito->setClaim($this->claim)->storeToken();
 
+        return $this;
+    } //Function ends
+
+
+    /**
+     * Save the challenged claim.
+     *
+     * @return $this
+     */
+    public function setChallengeData(string $key, $user)
+    {
+        $this->cognito->setChallengeData($key, $this->claim);
         return $this;
     } //Function ends
 
@@ -321,5 +374,82 @@ class CognitoTokenGuard extends TokenGuard
         //Get user and return
         return $this->user = $this->provider->retrieveById($claim['sub']);
 	} //Function ends
+
+
+    /**
+	 * Get the user from the provider.
+	 * @return User
+	 */
+	public function getUser (string $identifier) {
+        return $this->provider->retrieveById($identifier);
+    } //Function ends
+
+
+    /**
+     * Associate the MFA Software Token
+     * 
+     * @param  string $appName (optional)
+     *
+     * @return array
+     */
+    public function associateSoftwareTokenMFA(string $appName=null, string $userParamToAddToQR='email') {
+        try {
+            //Get Access Token
+            $accessToken = $this->cognito->getToken();
+            if (!empty($accessToken)) {
+                $response = $this->client->associateSoftwareTokenMFA($accessToken);
+                if (!empty($response)) {
+                    //Build payload
+                    $secretCode = $response->get('SecretCode');
+                    $username = $this->user()[$userParamToAddToQR];
+                    $appName = (!empty($appName))?:config('app.name');
+                    $uriTotp = 'otpauth://totp/'.$appName.' ('.$username.')?secret='.$secretCode.'&issuer='.config('app.name');
+                    $payload = [
+                        'SecretCode' => $secretCode,
+                        'SecretCodeQR' => 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl='.$uriTotp.'&choe=UTF-8',
+                        'TotpUri' => $uriTotp
+                    ];
+                    return $payload;
+                } //End if
+            } else {
+                return null;
+            } //End if
+        } catch(Exception $e) {
+            throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+    
+    /**
+     * Verify the MFA Software Token
+     * 
+     * @param  string  $guard
+     * @param  string  $userCode
+     * @param  string  $deviceName (optional)
+     *
+     * @return array
+     */
+    public function verifySoftwareTokenMFA(string $userCode, string $deviceName=null) {
+        try {
+            //Get Access Token
+            $accessToken = $this->cognito->getToken();
+            if (!empty($accessToken)) {
+                $response = $this->client->verifySoftwareTokenMFA($userCode, $accessToken, null, $deviceName);
+                if (!empty($response)) {
+                    $payload = [
+                        'Status' => $response->get('Status')
+                    ];
+                    return $payload;
+                } //End if
+            } else {
+                return null;
+            } //End if
+        } catch(Exception $e) {
+            if ($e instanceof CognitoIdentityProviderException) {
+                return response()->json(['error' => ['code' => $e->getAwsErrorCode(), 'message' => $e->getAwsErrorMessage()]], 400);
+            } //End if
+            throw $e;
+        } //Try-catch ends
+    } //Function ends
 
 } //Class ends

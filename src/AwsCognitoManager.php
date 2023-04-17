@@ -103,9 +103,7 @@ class AwsCognitoManager
     {
         $data = $this->claim->getData();
         $durationInSecs = ($data)?(int) $data['ExpiresIn']:3600;
-        $this->provider->add($this->token, json_encode($this->claim), $durationInSecs);
-
-        return true;
+        return $this->storeData($this->token, $this->claim, $durationInSecs);
     } //Function ends
 
 
@@ -117,8 +115,7 @@ class AwsCognitoManager
     public function fetch(string $token)
     {
         $this->token = $token;
-        $claim = $this->provider->get($token);
-        $this->claim = $claim?json_decode($claim, true):null;
+        $this->claim = $this->fetchData($token);
 
         return $this;
     } //Function ends
@@ -134,6 +131,34 @@ class AwsCognitoManager
         $this->provider->destroy($token);
 
         return $this;
+    } //Function ends
+
+
+    /**
+     * Save challenge object
+     * 
+     * @param  string  $key
+     * @param  mixed  $data
+     * @param  int  $durationInSecs
+     *
+     * @return \boolean
+     */
+    public function storeData(string $key, $data, int $durationInSecs=3600)
+    {
+        $this->provider->add($key, json_encode($data), $durationInSecs);
+        return true;
+    } //Function ends
+
+
+    /**
+     * Retrive the data by key.
+     *
+     * @return \json
+     */
+    public function fetchData(string $key)
+    {
+        $data = $this->provider->get($key);
+        return $data?json_decode($data, true):null;
     } //Function ends
 
 } //Class ends

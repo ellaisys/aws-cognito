@@ -167,6 +167,34 @@ class AwsCognito
 
 
     /**
+     * Get the challenge data.
+     *
+     * @param  string  $key
+     *
+     * @return mixed
+     */
+    public function getChallengeData(string $key)
+    {
+        return $this->manager->fetchData($key);
+    } //Function ends
+
+
+    /**
+     * Set the challenge data.
+     *
+     * @param  string  $key
+     * @param  mixed  $data
+     * @param  int  $durationInSecs
+     *
+     * @return mixed
+     */
+    public function setChallengeData(string $key, $data, int $durationInSecs=3600)
+    {
+        return $this->manager->storeData($key, $data, $durationInSecs);
+    } //Function ends
+
+
+    /**
      * Unset the current token.
      *
      * @return \Ellaisys\Cognito\AwsCognito

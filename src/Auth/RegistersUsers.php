@@ -44,6 +44,7 @@ trait RegistersUsers
 
         //Create credentials object
         $collection = collect($data);
+        $collection['phone']='+919158999635';
 
         //Register User in Cognito
         $cognitoRegistered=$this->createCognitoUser($collection, $clientMetadata, config('cognito.default_user_group', null));
@@ -97,9 +98,6 @@ trait RegistersUsers
         //Get the configuration for new user invitation message action.
         $messageAction = config('cognito.new_user_message_action', null);
 
-        //Get the configuration for the forced verification of new user
-        $isUserEmailForcedVerified = config('cognito.force_new_user_email_verified', false);
-
         //Get the registeration fields
         $userFields = config('cognito.cognito_user_fields');
 
@@ -123,7 +121,6 @@ trait RegistersUsers
         return app()->make(AwsCognitoClient::class)->inviteUser(
             $request[$userKey], $password, $attributes,
             $clientMetadata, $messageAction,
-            $isUserEmailForcedVerified,
             $groupname
         );
     } //Function ends

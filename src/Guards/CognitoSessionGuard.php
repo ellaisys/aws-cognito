@@ -24,17 +24,25 @@ use Symfony\Component\HttpFoundation\Request;
 
 use Illuminate\Database\Eloquent\Model;
 
+
+use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClaim;
+
+use Ellaisys\Cognito\Guards\Traits\BaseCognitoGuard;
+use Ellaisys\Cognito\Guards\Traits\CognitoMFA;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 {
+
+    use BaseCognitoGuard, CognitoMFA;
 
     /**
      * Username key
@@ -51,6 +59,14 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
 
     /**
+     * The AwsCognito instance.
+     *
+     * @var \Ellaisys\Cognito\AwsCognito
+     */
+    protected $cognito;
+
+
+    /**
      * @var Authentication Challenge
      */
     protected $challengeName;
@@ -60,6 +76,12 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      * @var AwsResult
      */
     protected $awsResult;
+
+
+    /**
+     * @var Challenge Data based on 
+     */
+    protected $challengeData;
 
 
     /**
@@ -99,13 +121,30 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         $result = $this->client->authenticate($credentials['email'], $credentials['password']);
 
         if (!empty($result) && $result instanceof AwsResult) {
-            //Set value into global param
+            //Set value into class param
             $this->awsResult = $result;
 
-            if (isset($result['ChallengeName']) && 
-                in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) 
-            {
+            //Check in case of any challenge
+            if (isset($result['ChallengeName'])) {
+
+                //Set challenge into class param
                 $this->challengeName = $result['ChallengeName'];
+                switch ($result['ChallengeName']) {
+                    case 'SOFTWARE_TOKEN_MFA':
+                        $this->challengeData = [
+                            'status' => $result['ChallengeName'],
+                            'session_token' => $result['Session'],
+                            'username' => $credentials[$this->keyUsername],
+                            'user' => serialize($user)
+                        ];
+                        break;
+
+                    default:
+                        if (in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) {
+                            $this->challengeName = $result['ChallengeName'];
+                        } //End if
+                        break;
+                } //End switch                
             } //End if
 
             return ($user instanceof Authenticatable);
@@ -140,27 +179,47 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
             //Authenticate with cognito
             if ($this->hasValidCredentials($user, $credentials)) {
-                $this->login($user, $remember);
-
-                //Fire successful attempt
-                $this->fireValidatedEvent($user);
-                $this->fireAuthenticatedEvent($user);
-
-                if ((!empty($this->challengeName)) && config('cognito.force_password_change_web')) {
+                if (!empty($this->challengeName)) {
                     switch ($this->challengeName) {
-                        case AwsCognitoClient::NEW_PASSWORD_CHALLENGE:
-                        case AwsCognitoClient::RESET_REQUIRED_PASSWORD:
+                        case 'SOFTWARE_TOKEN_MFA':
+                            //Get Session and store details
+                            $session = $this->getSession();
+                            $session->invalidate();
+                            $session->put($this->challengeData['session_token'], json_decode(json_encode($this->challengeData), true));
 
-                            return redirect(route(config('cognito.force_redirect_route_name')))
+                            return redirect(route(config('cognito.force_mfa_code_route_name'), [
+                                'session_token' => $this->challengeData['session_token'],
+                                'status' => $this->challengeData['status'],
+                            ]))
                                 ->with('success', true)
                                 ->with('force', true)
                                 ->with('messaage', $this->challengeName);
                             break;
+    
+                        case AwsCognitoClient::NEW_PASSWORD_CHALLENGE:
+                        case AwsCognitoClient::RESET_REQUIRED_PASSWORD:
+                            $this->login($user, $remember);
+
+                            if (config('cognito.force_password_change_web', false)) {
+                                return redirect(route(config('cognito.force_redirect_route_name')))
+                                    ->with('success', true)
+                                    ->with('force', true)
+                                    ->with('messaage', $this->challengeName);
+                            } //End if
+                            break;
                         
                         default:
-                            return true;
+                            if (in_array($this->challengeName, config('cognito.forced_challenge_names'))) {
+                                $this->challengeName = $result['ChallengeName'];
+                            } //End if
                             break;
-                    } //End switch
+                    } //End switch      
+                } else { 
+                    $this->login($user, $remember);
+
+                    //Fire successful attempt
+                    $this->fireValidatedEvent($user);
+                    $this->fireAuthenticatedEvent($user);                    
                 } //End if
 
                 //Create Claim for confirmed users and store into session
@@ -170,6 +229,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
                     //Get Session and store details
                     $session = $this->getSession();
+                    $session->invalidate();
                     $session->put('claim', json_decode(json_encode($claim), true));
                 } //End if 
 
@@ -256,8 +316,13 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         try {
             //Get authentication token from session
             $session = $this->getSession();
+
+            //Get the claim from session
             $claim = $session->has('claim')?$session->get('claim'):null;
+            if (empty($claim)) { $session->invalidate(); throw new HttpException(400, 'EXCEPTION_INVALID_CLAIM'); }
+
             $accessToken = (!empty($claim))?$claim['token']:null;
+            if (empty($accessToken)) { throw new HttpException(400, 'EXCEPTION_INVALID_TOKEN'); }
 
             //Revoke the token from AWS Cognito
             if ($this->client->signOut($accessToken)) {
@@ -266,8 +331,10 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 return $session->invalidate();
             } //End if
         } catch (Exception $e) {
+            if ($forceForever) { return $session->invalidate(); }
+            
             throw $e;
         } //try-catch ends
     } //Function ends
-    
+
 } //Class ends

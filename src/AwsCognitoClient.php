@@ -15,10 +15,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
 
+use Execption;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException ;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
-use PHPUnit\Exception;
 
 class AwsCognitoClient
 {
@@ -109,12 +110,21 @@ class AwsCognitoClient
      */
     const COGNITO_NOT_AUTHORIZED_ERROR = 'NotAuthorizedException';
 
+
     /**
      * Constant representing the SMS MFA challenge.
      *
      * @var string
      */
     const SMS_MFA = 'SMS_MFA';
+
+    
+    /**
+     * Constant representing the SOFTWARE TOKEN MFA challenge.
+     *
+     * @var string
+     */
+    const SOFTWARE_TOKEN_MFA = 'SOFTWARE_TOKEN_MFA';
 
 
     /**
@@ -395,14 +405,19 @@ class AwsCognitoClient
      * @param array $attributes
      * @param array $clientMetadata (optional)
      * @param string $messageAction (optional)
-     * @return bool $isUserEmailForcedVerified (false)
+     * @return bool $groupname (optional)
      */
     public function inviteUser(string $username, string $password=null, array $attributes = [],
                                array $clientMetadata=null, string $messageAction=null,
-                               bool $isUserEmailForcedVerified = false, string $groupname=null)
+                               string $groupname=null)
     {
+        //Validate phone for MFA
+        if (config('cognito.mfa_setup')=="MFA_ENABLED") {
+            if (empty($attributes['phone_number'])) { throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING'); }
+        } //End if        
+        
         //Force validate email
-        if ($attributes['email'] && $isUserEmailForcedVerified) {
+        if ($attributes['email'] && config('cognito.force_new_user_email_verified', false)) {
             $attributes['email_verified'] = 'true';
         } //End if
 
@@ -428,13 +443,18 @@ class AwsCognitoClient
             $payload['MessageAction'] = $messageAction;
         } //End If
 
-        if (config('cognito.add_user_delivery_mediums')!="DEFAULT") {
-            $payload['DesiredDeliveryMediums'] = [
-                config('cognito.add_user_delivery_mediums')
-            ];
+        //Set Delivery Mediums
+        if ((config('cognito.add_user_delivery_mediums')!="NONE") || (config('cognito.mfa_setup')=="MFA_ENABLED")) {
+            if (config('cognito.add_user_delivery_mediums')=="BOTH") {
+                $payload['DesiredDeliveryMediums'] = ['EMAIL', 'SMS'];
+            } else {
+                $defaultDeliveryMedium = (config('cognito.mfa_setup')=="MFA_ENABLED")?"SMS":config('cognito.add_user_delivery_mediums', "EMAIL");
+                $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
+            } //End if
         } //End if
 
         try {
+            Log::info($payload);
             $this->client->adminCreateUser($payload);
 
             //Add user to the group
@@ -455,36 +475,17 @@ class AwsCognitoClient
 
     /**
      * Set a new password for a user that has been flagged as needing a password change.
-     * http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminRespondToAuthChallenge.html.
      *
      * @param string $username
      * @param string $password
      * @param string $session
+     * 
      * @return bool
      */
     public function confirmPassword($username, $password, $session)
     {
         try {
-            //Generate payload
-            $payload = [
-                'ClientId' => $this->clientId,
-                'UserPoolId' => $this->poolId,
-                'Session' => $session,
-                'ChallengeResponses' => [
-                    'NEW_PASSWORD' => $password,
-                    'USERNAME' => $username
-                ],
-                'ChallengeName' => 'NEW_PASSWORD_REQUIRED',
-            ];
-
-            //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload['ChallengeResponses'] = array_merge($payload['ChallengeResponses'], [
-                    'SECRET_HASH' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
-
-            $this->client->AdminRespondToAuthChallenge($payload);
+            $this->adminRespondToAuthChallenge('NEW_PASSWORD_REQUIRED', $session, $password, $username);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::CODE_MISMATCH || $e->getAwsErrorCode() === self::EXPIRED_CODE) {
                 return Password::INVALID_TOKEN;
@@ -657,6 +658,202 @@ class AwsCognitoClient
     } //Function ends
 
 
+    //MFA FUNCTIONS
+    /**
+     * Generate the Software MFA Token for the user
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AssociateSoftwareToken.html
+     *
+     * @param string $accessToken (optional)
+     * @param string $session (optional)
+     * 
+     * @return mixed
+     */
+    public function associateSoftwareTokenMFA(string $accessToken=null, string $session=null)
+    {
+        try {
+            //Build payload
+            $payload = [];
+
+            //Access Token based Software MFA Token
+            if (!empty($accessToken)) {
+                $payload = array_merge($payload, [ 'AccessToken' => $accessToken ]);
+                $session=null;
+            } //End if
+
+            //Session based Software MFA Token
+            if (!empty($session)) {
+                $payload = array_merge($payload, [ 'Session' => $session ]);
+            } //End if
+
+            $response = $this->client->associateSoftwareToken($payload);
+        } catch (Exception $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+
+    /**
+     * Verify the user code for the Software MFA Token
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_VerifySoftwareToken.html
+     *
+     * @param string $userCode
+     * @param string $accessToken (optional)
+     * @param string $session (optional)
+     * @param string $deviceName (optional)
+     * 
+     * @return mixed
+     */
+    public function verifySoftwareTokenMFA(string $userCode, string $accessToken=null, string $session=null, string $deviceName=null)
+    {
+        try {
+            //Build payload
+            $payload = [
+                'UserCode' => $userCode,
+                'FriendlyDeviceName' => $deviceName
+            ];
+
+            //Access Token based Software MFA Token
+            if (!empty($accessToken)) {
+                $payload = array_merge($payload, [ 'AccessToken' => $accessToken ]);
+                $session=null;
+            } //End if
+
+            //Session based Software MFA Token
+            if (!empty($session)) {
+                $payload = array_merge($payload, [ 'Session' => $session ]);
+            } //End if
+
+            $response = $this->client->verifySoftwareToken($payload);
+        } catch (Exception $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+
+    /**
+     * Set user MFA preference setting by self/user.
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SetUserMFAPreference.html
+     *
+     * @param string $username
+     * @return mixed
+     */
+    public function setUserMFAPreference(string $accessToken, bool $isEnable=false)
+    {
+        try {
+            //Build payload
+            $payload = [
+                'AccessToken' => $accessToken,
+                'UserPoolId' => $this->poolId
+            ];
+            $payload = array_merge($payload, $this->setMFAPreference($isEnable));
+
+            $response = $this->client->setUserMFAPreference($payload);
+        } catch (Exception $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+
+    /**
+     * Set user MFA preference setting by admin.
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminSetUserMFAPreference.html
+     *
+     * @param string $username
+     * 
+     * @return mixed
+     */
+    public function setUserMFAPreferenceByAdmin(string $username, bool $isEnable=false)
+    {
+        try {
+            //Build payload
+            $payload = [
+                'Username' => $username,
+                'UserPoolId' => $this->poolId
+            ];
+            $payload = array_merge($payload, $this->setMFAPreference($isEnable));
+            Log::info(json_encode($payload, JSON_PRETTY_PRINT));
+
+            $response = $this->client->adminSetUserMFAPreference($payload);
+        } catch (Exception $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+
+    /**
+     * Private method for Setting MFA preference objects
+     *
+     * @return mixed
+     */
+    private function setMFAPreference(bool $isEnable)
+    {
+        try {
+            //Build payload
+            $payload = [];
+
+            $mfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
+            $firstMfaType=null;
+            foreach ($mfaTypes as $mfaType) {
+                if (empty($firstMfaType)) { $firstMfaType=$mfaType; }
+                
+                $payload = array_merge($payload, [
+                    'SMSMfaSettings' => [
+                        'Enabled' => (config('cognito.mfa_setup', 'MFA_NONE')=='MFA_ENABLED')?($mfaType=='SMS_MFA'):false,
+                        'PreferredMfa' => ($firstMfaType=='SMS_MFA')
+                    ]
+                ]);
+
+                $payload = array_merge($payload, [
+                    'SoftwareTokenMfaSettings' => [
+                        'Enabled' => (config('cognito.mfa_setup', 'MFA_NONE')=='MFA_ENABLED')?($mfaType=='SOFTWARE_TOKEN_MFA'):false,
+                        'PreferredMfa' => ($firstMfaType=='SOFTWARE_TOKEN_MFA')
+                    ]
+                ]);
+            } //Loop ends
+
+            $response = $payload;
+        } catch (Exception $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+
+    /**
+     * Responds to MFA challenge
+     *
+     * @param string $challengeName
+     * @param string $session
+     * @param string $challengeValue
+     * @param string $username
+     *  
+     * @return \Aws\Result|false
+     */
+    public function authMFAChallenge(string $challengeName, string $session, string $challengeValue, string $username)
+    {
+        try {
+            if (in_array($challengeName, [AwsCognitoClient::SMS_MFA, AwsCognitoClient::SOFTWARE_TOKEN_MFA])) {
+                $response = $this->adminRespondToAuthChallenge($challengeName, $session, $challengeValue, $username);
+            } else {
+                throw new HttpException(400, 'ERROR_UNSUPPORTED_MFA_CHALLENGE');
+            } //End if
+        } catch (Exception $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+
     // HELPER FUNCTIONS
     /**
      * Set a users attributes.
@@ -675,6 +872,73 @@ class AwsCognitoClient
         ]);
 
         return true;
+    } //Function ends
+
+
+    /**
+     * Responds to an authentication challenge, as an administrator.
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminRespondToAuthChallenge.html
+     *
+     * @param string $challengeName
+     * @param string $session
+     * @param string $challengeValue
+     * @param string $username
+     *  
+     * @return \Aws\Result
+     */
+    protected function adminRespondToAuthChallenge(string $challengeName, string $session, string $challengeValue, string $username)
+    {
+        try {
+
+            //Build payload
+            $payload = [
+                'ClientId' => $this->clientId,
+                'UserPoolId' => $this->poolId,
+                'Session' => $session,
+                'ChallengeName' => $challengeName,
+            ];
+
+            //Set challenge response
+            $challengeResponse=['USERNAME' => $username];
+            switch ($challengeName) {
+                case 'SMS_MFA_CODE':
+                    $challengeResponse = array_merge($challengeResponse, [
+                        'SMS_MFA_CODE' => $challengeValue
+                    ]);
+                    break;
+
+                case 'SOFTWARE_TOKEN_MFA':
+                    $challengeResponse = array_merge($challengeResponse, [
+                        'SOFTWARE_TOKEN_MFA_CODE' => $challengeValue
+                    ]);
+                    break;
+                
+                case 'NEW_PASSWORD_REQUIRED':
+                    $challengeResponse = array_merge($challengeResponse, [
+                        'NEW_PASSWORD' => $challengeValue
+                    ]);
+                    break;
+                default:
+                    # code...
+                    break;
+            } //End Switch
+            $payload['ChallengeResponses'] = $challengeResponse;
+
+            //Add Secret Hash in case of Client Secret being configured
+            if ($this->boolClientSecret) {
+                $payload['ChallengeResponses'] = array_merge($payload['ChallengeResponses'], [
+                    'SECRET_HASH' => $this->cognitoSecretHash($username)
+                ]);
+            } //End if
+            Log::info(json_encode($payload, JSON_PRETTY_PRINT));
+
+            //Execute the payload
+            $response = $this->client->adminRespondToAuthChallenge($payload);
+        } catch (CognitoIdentityProviderException $e) {
+            throw $e;
+        } //Try-catch ends
+
+        return $response;
     } //Function ends
 
 
@@ -727,43 +991,6 @@ class AwsCognitoClient
         } //Try-catch ends
 
         return $user;
-    } //Function ends
-
-
-    /**
-     * Responds to MFA challenge.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html
-     *
-     * @param string $session
-     * @param string $challengeValue
-     * @param string $username
-     * @param string $challengeName
-     * @return \Aws\Result|false
-     */
-    public function respondMFAChallenge(string $session, string $challengeValue, string $username, string $challengeName = AwsCognitoClient::SMS_MFA)
-    {
-        try {
-            $challenge = $this->client->respondToAuthChallenge([
-                'ClientId' => $this->clientId,
-                'ChallengeName' => $challengeName,
-                'ChallengeResponses' => [
-                    'SMS_MFA_CODE' => $challengeValue,
-                    'USERNAME' => $username,
-                    'SECRET_HASH' => $this->cognitoSecretHash($username),
-                ],
-                'Session' => $session,
-            ]);
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === 'NotAuthorizedException') {
-                return 'mfa.not_authorized';
-            } else if ($e->getAwsErrorCode() === self::CODE_MISMATCH) {
-                return 'mfa.invalid_session';
-            }
-
-            return false;
-        } //Try-catch ends
-
-        return $challenge;
     } //Function ends
 
 
