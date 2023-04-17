@@ -249,7 +249,7 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @return void
      */
-    public function logout($forceForever = false)
+    public function logout(bool $forceForever = false)
     {
         $this->invalidate($forceForever);
         $this->user = null;
@@ -263,7 +263,7 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @return \Ellaisys\Cognito\AwsCognito
      */
-    public function invalidate($forceForever = false)
+    public function invalidate(bool $forceForever = false)
     {
         try {
             //Get authentication token from request
@@ -271,6 +271,19 @@ class CognitoTokenGuard extends TokenGuard
 
             //Revoke the token from AWS Cognito
             if ($this->client->signOut($accessToken)) {
+
+                //Global logout and invalidate the Refresh Token 
+                if ($forceForever) {
+                    //Get claim data
+                    $data = $this->cognito->getClaim();
+                    if ($data && ($dataClaim = $data['data'])) {
+                        //Retrive the Refresh Token from the claim
+                        $refreshToken = $dataClaim['RefreshToken'];
+
+                        //Invalidate the Refresh Token
+                        $this->client->revokeToken($refreshToken);
+                    } //End if
+                } //End if
 
                 //Remove the token from application storage
                 return $this->cognito->unsetToken($forceForever);
