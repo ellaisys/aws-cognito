@@ -18,9 +18,9 @@ The idea of this package, and some of the code, is based on the package from Pod
 We decided to use it and contribute it to the community as a package, that encourages standarised use and a RAD tool for authentication using AWS Cognito.
 
 ## Features
-- Registration and Confirmation E-Mail (Sign Up)
+- [Registration and Confirmation E-Mail (Sign Up)](#registering-users)
 - Forced password change at first login (configurable)
-- Login (Sign In)
+- [Login (Sign In)](#user-authentication)
 - Remember Me Cookie
 - Single Sign On
 - Forgot Password (Resend - configurable)
@@ -34,7 +34,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - Support for App Client without Secret
 - Support for Cognito Groups, including assigning a default group to a new user
 - Session (Web) now has AccessToken and RefreshToken as part of the claim object
-- Logout (Sign Out) - Remove access tokens from AWS
+- [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS **(NEW Feature)**](#signout-remove-access-token)
 
 ## Compatability
@@ -607,7 +607,7 @@ This project exists thanks to all the people who contribute.
 
 ## Support us
 
-EllaiSys is a web and consulting agency specialized in Cloud Computing (AWS and Azure), DevOps, and Product Engneering. We specialize into LAMP and Microsoft stack development. You'll find an overview of what we do [on our website](https://ellaisys.com).
+EllaiSys was a web and consulting agency specialized in Cloud Computing (AWS and Azure), DevOps, and Product Engneering. We closed our professional services offerings from Oct 2021, however the team continues to support the open source projects as our commitment towards the community. Anyone interested to support the development is welcome.
 
 ## License
 
