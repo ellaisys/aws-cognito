@@ -324,9 +324,31 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             $accessToken = (!empty($claim))?$claim['token']:null;
             if (empty($accessToken)) { throw new HttpException(400, 'EXCEPTION_INVALID_TOKEN'); }
 
-            //Revoke the token from AWS Cognito
-            if ($this->client->signOut($accessToken)) {
+            //Check if the token is empty
+            if (!empty($accessToken)) {
+                //Revoke the token from AWS Cognito
+                if ($this->client->signOut($accessToken)) {
 
+                    //Global logout and invalidate the Refresh Token 
+                    if ($forceForever) {
+                        //Get claim data
+                        $dataClaim = (!empty($claim))?$claim['data']:null;
+                        if ($dataClaim) {
+                            //Retrive the Refresh Token from the claim
+                            $refreshToken = $dataClaim['RefreshToken'];
+
+                            //Invalidate the Refresh Token
+                            $this->client->revokeToken($refreshToken);
+                        } //End if
+                    } //End if
+
+                    //Remove the token from application storage
+                    return $session->invalidate();
+                } else {
+                    //Remove the token from application storage
+                    return $session->invalidate();
+                } //End if                
+            } else {
                 //Remove the token from application storage
                 return $session->invalidate();
             } //End if
