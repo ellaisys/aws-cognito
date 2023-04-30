@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
 
+use Ellaisys\Cognito\Traits\AwsCognitoClientAdminAction;
+
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException ;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
@@ -22,6 +24,8 @@ use PHPUnit\Exception;
 
 class AwsCognitoClient
 {
+    use AwsCognitoClientAdminAction;
+
     /**
      * Constant representing the user status as Confirmed.
      *
@@ -585,15 +589,6 @@ class AwsCognitoClient
             throw $e;
         } //Try-catch ends
         return true;
-    } //Function ends
-
-
-    public function invalidatePassword($username)
-    {
-        $this->client->adminResetUserPassword([
-            'UserPoolId' => $this->poolId,
-            'Username' => $username,
-        ]);
     } //Function ends
 
 
