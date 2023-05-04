@@ -253,7 +253,7 @@ class CognitoTokenGuard extends TokenGuard
 
         //Send claim object
         $claim = $this->claim;
-        if ($claim && $claim['status']) {
+        if ($claim && is_array($claim) && $claim['status']) {
             switch ($claim['status']) {
                 case 'SOFTWARE_TOKEN_MFA':
                     unset($claim['username']);
