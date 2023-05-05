@@ -215,23 +215,25 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                             break;
                     } //End switch      
                 } else { 
-                    $this->login($user, $remember);
+                    //Create Claim for confirmed users and store into session
+                    if (!empty($this->awsResult)) {
+                        //Create claim token
+                        $claim = new AwsCognitoClaim($this->awsResult, $user, $credentials[$this->keyUsername]);
 
-                    //Fire successful attempt
-                    $this->fireValidatedEvent($user);
-                    $this->fireAuthenticatedEvent($user);                    
+                        //Get Session and store details
+                        $session = $this->getSession();
+                        $session->invalidate();
+                        $session->put('claim', json_decode(json_encode($claim), true));
+
+                        $this->login($user, $remember);
+
+                        //Fire successful attempt
+                        $this->fireValidatedEvent($user);
+                        $this->fireAuthenticatedEvent($user);  
+                    } else {
+                        throw new HttpException(400, 'ERROR_AWS_COGNITO');
+                    } //End if                 
                 } //End if
-
-                //Create Claim for confirmed users and store into session
-                if (!empty($this->awsResult)) {
-                    //Create claim token
-                    $claim = new AwsCognitoClaim($this->awsResult, $user, $credentials[$this->keyUsername]);
-
-                    //Get Session and store details
-                    $session = $this->getSession();
-                    $session->invalidate();
-                    $session->put('claim', json_decode(json_encode($claim), true));
-                } //End if 
 
                 return true;
             } //End if
