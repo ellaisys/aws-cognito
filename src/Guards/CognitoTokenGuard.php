@@ -142,13 +142,10 @@ class CognitoTokenGuard extends TokenGuard
                         } //End if
                         break;
                 } //End switch                
-            } //End if
-
-            //Create Claim for confirmed users
-            if (!isset($result['ChallengeName'])) {
+            } else { //Create Claim for confirmed users
                 //Create claim token
-                $this->claim = new AwsCognitoClaim($result, $user, $credentials[$this->keyUsername]);
-            } //End if     
+                $this->claim = new AwsCognitoClaim($result, $user, $credentials[$this->keyUsername]);                
+            } //End if 
 
             return ($this->claim)?true:false;
         } else {
@@ -280,6 +277,17 @@ class CognitoTokenGuard extends TokenGuard
         $this->cognito->setClaim($this->claim)->storeToken();
 
         return $this;
+    } //Function ends
+
+
+    /**
+     * Get the challenged claim.
+     *
+     * @return $this
+     */
+    public function getChallengeData(string $key)
+    {
+        return $this->cognito->getChallengeData($key);
     } //Function ends
 
 
@@ -461,6 +469,39 @@ class CognitoTokenGuard extends TokenGuard
             if ($e instanceof CognitoIdentityProviderException) {
                 return response()->json(['error' => ['code' => $e->getAwsErrorCode(), 'message' => $e->getAwsErrorMessage()]], 400);
             } //End if
+            throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+
+
+
+    /**
+     * Attempt MFA based Authentication
+     */
+    public function attemptMFA(array $challenge = [], Authenticatable $user, bool $remember=false) {
+        try {
+            $response = $this->attemptBaseMFA($challenge, $user, $remember);
+            //Result of type AWS Result
+            if (!empty($response)) {
+
+                //Handle the response as Aws Cognito Claim
+                if ($response instanceof AwsCognitoClaim) {
+                    $this->claim = $response;
+                    return $this->login($user);                
+                } //End if
+
+                //Handle if the object is a Aws Cognito Result
+                if ($response instanceof AwsResult) {
+                    //Check in case of any challenge
+                    if (isset($response['ChallengeName'])) {
+
+                    } else {
+
+                    } //End if
+                } //End if
+            } //End if
+        } catch(Exception $e) {
             throw $e;
         } //Try-catch ends
     } //Function ends

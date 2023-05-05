@@ -736,7 +736,6 @@ class AwsCognitoClient
                     'SECRET_HASH' => $this->cognitoSecretHash($username)
                 ]);
             } //End if
-            Log::info(json_encode($payload, JSON_PRETTY_PRINT));
 
             //Execute the payload
             $response = $this->client->adminRespondToAuthChallenge($payload);

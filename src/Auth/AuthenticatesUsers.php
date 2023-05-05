@@ -159,7 +159,10 @@ trait AuthenticatesUsers
                     break;
                 
                 case 'api': //API
-                    $user = Auth::guard($guard)->getUser();
+                    $challengeData = Auth::guard($guard)->getChallengeData($challenge['session']);
+                    $username = $challengeData['username'];
+                    $challenge['username'] = $username;
+                    $user = unserialize($challengeData['user']);
                     break;
                 
                 default:

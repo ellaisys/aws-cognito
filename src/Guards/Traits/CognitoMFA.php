@@ -34,7 +34,7 @@ trait CognitoMFA
     /**
      * Attempt MFA based Authentication
      */
-    public function attemptMFA(array $challenge = [], Authenticatable $user, bool $remember=false) {
+    public function attemptBaseMFA(array $challenge = [], Authenticatable $user, bool $remember=false) {
         try {
             $claim = null;
 
@@ -48,24 +48,10 @@ trait CognitoMFA
             if (!empty($result) && $result instanceof AwsResult) {
                 //Check in case of any challenge
                 if (isset($result['ChallengeName'])) { 
-
+                    return $result;
                 } else {
                     //Create claim token
-                    $claim = new AwsCognitoClaim($result, $user, $username);
-
-                    //Get Session and store details
-                    $session = $this->getSession();
-                    $session->forget($challenge['session']);
-                    $session->put('claim', json_decode(json_encode($claim), true));
-
-                    //Login user into the session
-                    $this->login($user, $remember);
-
-                    //Fire successful attempt
-                    $this->fireValidatedEvent($user);
-                    $this->fireAuthenticatedEvent($user);
-                    
-                    return true;
+                    return new AwsCognitoClaim($result, $user, $username);
                 } //End if
             } else {
                 throw new HttpException(400, 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER');
