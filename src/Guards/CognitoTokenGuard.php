@@ -405,41 +405,6 @@ class CognitoTokenGuard extends TokenGuard
         return $this->provider->retrieveById($identifier);
     } //Function ends
 
-
-    /**
-     * Associate the MFA Software Token
-     * 
-     * @param  string $appName (optional)
-     *
-     * @return array
-     */
-    public function associateSoftwareTokenMFA(string $appName=null, string $userParamToAddToQR='email') {
-        try {
-            //Get Access Token
-            $accessToken = $this->cognito->getToken();
-            if (!empty($accessToken)) {
-                $response = $this->client->associateSoftwareTokenMFA($accessToken);
-                if (!empty($response)) {
-                    //Build payload
-                    $secretCode = $response->get('SecretCode');
-                    $username = $this->user()[$userParamToAddToQR];
-                    $appName = (!empty($appName))?:config('app.name');
-                    $uriTotp = 'otpauth://totp/'.$appName.' ('.$username.')?secret='.$secretCode.'&issuer='.config('app.name');
-                    $payload = [
-                        'SecretCode' => $secretCode,
-                        'SecretCodeQR' => 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl='.$uriTotp.'&choe=UTF-8',
-                        'TotpUri' => $uriTotp
-                    ];
-                    return $payload;
-                } //End if
-            } else {
-                return null;
-            } //End if
-        } catch(Exception $e) {
-            throw $e;
-        } //Try-catch ends
-    } //Function ends
-
     
     /**
      * Verify the MFA Software Token
@@ -472,8 +437,6 @@ class CognitoTokenGuard extends TokenGuard
             throw $e;
         } //Try-catch ends
     } //Function ends
-
-
 
 
     /**

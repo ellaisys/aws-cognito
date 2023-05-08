@@ -50,9 +50,9 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function verifyMFA(string $guard='web', string $userCode)
+    public function verifyMFA(string $guard='web', string $userCode, string $deviceName='my device')
     {
-        $response = Auth::guard($guard)->verifySoftwareTokenMFA($userCode, 'Amit Phone');
+        $response = Auth::guard($guard)->verifySoftwareTokenMFA($userCode, $deviceName);
         if (!empty($response) && ($response['Status']=='SUCCESS')) {
             return $this->toggleMFA($guard, true);
         } //End if
@@ -104,11 +104,11 @@ trait RegisterMFA
                     throw new HttpException(400);
                 } //End if
             } else {
-                return response()->json(['error' => 'cognito.validation.invalid_username'], 400);
+                throw new HttpException(400, 'EXCEPTION_INVALID_USERNAME_OR_TOKEN');
             } //End if
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                return response()->json(['error' => ['code' => $e->getAwsErrorCode(), 'message' => $e->getAwsErrorMessage()]], 400);
+                throw new HttpException(400, $e->getAwsErrorMessage(), $e);
             } //End if
             throw $e;
         } //Try-catch ends
@@ -164,10 +164,7 @@ trait RegisterMFA
            
             //Use username for the MFA configurations
             if (!empty($username)) {
-                $response = $client->setUserMFAPreferenceByAdmin($username, $isEnable);
-                if (empty($response)) {
-                    throw new HttpException(400);
-                } //End if
+                return $client->setUserMFAPreferenceByAdmin($username, $isEnable);
             } else {
                 return response()->json(['error' => 'cognito.validation.invalid_username'], 400);
             } //End if

@@ -96,12 +96,14 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     public function __construct(
         string $name,
+        AwsCognito $cognito,
         AwsCognitoClient $client,
         UserProvider $provider,
         Session $session,
         ?Request $request = null,
         string $keyUsername = 'email'
     ) {
+        $this->cognito = $cognito;
         $this->client = $client;
         $this->awsResult = null;
         $this->keyUsername = $keyUsername;

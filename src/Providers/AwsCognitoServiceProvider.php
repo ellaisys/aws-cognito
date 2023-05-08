@@ -19,6 +19,7 @@ use Ellaisys\Cognito\Guards\CognitoTokenGuard;
 
 use Ellaisys\Cognito\Http\Parser\Parser;
 use Ellaisys\Cognito\Http\Parser\AuthHeaders;
+use Ellaisys\Cognito\Http\Parser\ClaimSession;
 
 use Ellaisys\Cognito\Providers\StorageProvider;
 
@@ -99,6 +100,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
                 $app['request'],
                 [
                     new AuthHeaders,
+                    new ClaimSession,
                     // new QueryString,
                     // new InputSource,
                     // new RouteParams,
@@ -174,6 +176,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
         Auth::extend('cognito-session', function (Application $app, $name, array $config) {
             $guard = new CognitoSessionGuard(
                 $name,
+                $app['ellaisys.aws.cognito'],
                 $client = $app->make(AwsCognitoClient::class),
                 $app['auth']->createUserProvider($config['provider']),
                 $app['session.store'],

@@ -226,7 +226,7 @@ class AwsCognitoClient
             $response = $this->client->adminInitiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
             throw $exception;
-        }
+        } //Try-catch ends
 
         return $response;
     } //Function ends
@@ -787,15 +787,13 @@ class AwsCognitoClient
     public function getUser($username)
     {
         try {
-            $user = $this->client->AdminGetUser([
+            return $this->client->adminGetUser([
                 'Username' => $username,
                 'UserPoolId' => $this->poolId,
             ]);
         } catch (CognitoIdentityProviderException $e) {
             return false;
         } //Try-catch ends
-
-        return $user;
     } //Function ends
 
 

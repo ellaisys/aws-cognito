@@ -26,4 +26,14 @@ trait BaseCognitoGuard
         return $this->cognito;
     } //Function ends
 
+
+    /**
+	 * Get the User Information from AWS Cognito
+     * 
+	 * @return  mixed
+	 */
+    public function getRemoteUserData(string $username) {
+        return $this->client->getUser($username);
+    } //Function ends
+
 } //Trait ends
