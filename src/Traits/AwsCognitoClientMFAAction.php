@@ -139,7 +139,6 @@ trait AwsCognitoClientMFAAction
                 'UserPoolId' => $this->poolId
             ];
             $payload = array_merge($payload, $this->setMFAPreference($isEnable));
-            Log::info(json_encode($payload, JSON_PRETTY_PRINT));
 
             $response = $this->client->adminSetUserMFAPreference($payload);
         } catch (Exception $e) {
@@ -194,15 +193,15 @@ trait AwsCognitoClientMFAAction
                 
                 $payload = array_merge($payload, [
                     'SMSMfaSettings' => [
-                        'Enabled' => (config('cognito.mfa_setup', 'MFA_NONE')=='MFA_ENABLED')?($mfaType=='SMS_MFA'):false,
-                        'PreferredMfa' => ($firstMfaType=='SMS_MFA')
+                        'Enabled' => ((config('cognito.mfa_setup', 'MFA_NONE')=='MFA_ENABLED') && ($isEnable))?($mfaType=='SMS_MFA'):false,
+                        'PreferredMfa' => (($firstMfaType=='SMS_MFA') && ($isEnable))
                     ]
                 ]);
 
                 $payload = array_merge($payload, [
                     'SoftwareTokenMfaSettings' => [
-                        'Enabled' => (config('cognito.mfa_setup', 'MFA_NONE')=='MFA_ENABLED')?($mfaType=='SOFTWARE_TOKEN_MFA'):false,
-                        'PreferredMfa' => ($firstMfaType=='SOFTWARE_TOKEN_MFA')
+                        'Enabled' => ((config('cognito.mfa_setup', 'MFA_NONE')=='MFA_ENABLED') && ($isEnable))?($mfaType=='SOFTWARE_TOKEN_MFA'):false,
+                        'PreferredMfa' => (($firstMfaType=='SOFTWARE_TOKEN_MFA') && ($isEnable))
                     ]
                 ]);
             } //Loop ends

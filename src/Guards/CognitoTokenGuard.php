@@ -405,39 +405,6 @@ class CognitoTokenGuard extends TokenGuard
         return $this->provider->retrieveById($identifier);
     } //Function ends
 
-    
-    /**
-     * Verify the MFA Software Token
-     * 
-     * @param  string  $guard
-     * @param  string  $userCode
-     * @param  string  $deviceName (optional)
-     *
-     * @return array
-     */
-    public function verifySoftwareTokenMFA(string $userCode, string $deviceName=null) {
-        try {
-            //Get Access Token
-            $accessToken = $this->cognito->getToken();
-            if (!empty($accessToken)) {
-                $response = $this->client->verifySoftwareTokenMFA($userCode, $accessToken, null, $deviceName);
-                if (!empty($response)) {
-                    $payload = [
-                        'Status' => $response->get('Status')
-                    ];
-                    return $payload;
-                } //End if
-            } else {
-                return null;
-            } //End if
-        } catch(Exception $e) {
-            if ($e instanceof CognitoIdentityProviderException) {
-                return response()->json(['error' => ['code' => $e->getAwsErrorCode(), 'message' => $e->getAwsErrorMessage()]], 400);
-            } //End if
-            throw $e;
-        } //Try-catch ends
-    } //Function ends
-
 
     /**
      * Attempt MFA based Authentication
