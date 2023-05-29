@@ -2,7 +2,9 @@
 The library currently provides only the MFA for the Software Token. The SMS based TOPT is still under development and not implemented.
 
 ## **Configurations**
+The package provides a trait that you can add to your controller to make the MFA methods running.
 
+- Ellaisys\Cognito\Auth\RegisterMFA
 
 ## **Features**
 - [Login (MFA Enabled)](#login)
@@ -19,8 +21,6 @@ The login shall require two steps for implementation of the overall authenticati
 The first step API is common for the MFA enabled / disabled implementation.
 
 ```php
-    
-    ...
 
     public function actionLogin(Request $request)
     {
@@ -66,6 +66,30 @@ The first step for the web application is same for MFA enabled / disabled implem
 ```
 
 ### **Activate MFA**
+The activate process allows the user to configure the MFA. In case of a Software Token MFA setting on the mobile device, a key or the scan code will make it easy to consume the MFA using any of the authenticator applications (i.e. Google Authentictor OR Microsoft Authenticator).
+
+#### API based Approach
+The function should look like this, calling the activateMFA method in the trait that you added above in configuration.
+
+```php
+
+    public function actionActivate()
+    {
+		try
+		{
+            return $this->activateMFA('api');
+        } catch(Exception $e) {
+			throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+```
+The response that you will get for this API is something like this
+
+```json
+
+
+```
 
 ### **Verify MFA**
 
