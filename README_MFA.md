@@ -68,8 +68,8 @@ The first step for the web application is same for MFA enabled / disabled implem
 ### **Activate MFA**
 The activate process allows the user to configure the MFA. In case of a Software Token MFA setting on the mobile device, a key or the scan code will make it easy to consume the MFA using any of the authenticator applications (i.e. Google Authentictor OR Microsoft Authenticator).
 
-#### API based Approach
-The function should look like this, calling the activateMFA method in the trait that you added above in configuration.
+#### Web and API based Approach
+The function call looks as shown below. Just reference the the method activateMFA, with the guard name as a parameter, in the trait that you added above in configuration. This shall activate the Software MFA token.
 
 ```php
 
@@ -77,19 +77,26 @@ The function should look like this, calling the activateMFA method in the trait 
     {
 		try
 		{
-            return $this->activateMFA('api');
+            return $this->activateMFA('api'); //Pass the guard name for web/api calls
         } catch(Exception $e) {
 			throw $e;
         } //Try-catch ends
     } //Function ends
 
 ```
-The response that you will get for this API is something like this
+The response that you will get for the API call would look this
 
 ```json
-
-
+    {
+        "SecretCode": "ESKPE46WBNOAB7QXXXXXXXXXXXXXXXXXXXPFIVJVJFEPDP2NNIA",
+        "SecretCodeQR": "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=otpauth://totp/ApplicationName (john@doe.com)?secret=ESKPE46WBNOAB7QXXXXXXXXXXXXXXXXXXXPFIVJVJFEPDP2NNIA&issuer=ApplicationName&choe=UTF-8",
+        "TotpUri": "otpauth://totp/ApplicationName (john@doe.com)?secret=ESKPE46WBNOAB7QXXXXXXXXXXXXXXXXXXXPFIVJVJFEPDP2NNIA&issuer=ApplicationName"
+    }
 ```
+
+and the web response, you can design a page like this to show the code for activating the Software MFA token.
+<img src="./assets/images/web_application_activate.png" width="50%" alt="EllaiSys AWS Cloud Capability"/>
+
 
 ### **Verify MFA**
 
