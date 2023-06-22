@@ -59,6 +59,7 @@ return [
     'cognito_user_fields'   => [
         'name' => 'name',
         'email' => 'email',
+        'phone_number' => 'phone',
     ],
 
     /*
@@ -69,10 +70,10 @@ return [
     | This option controls the default cognito when a new user is add to the
     | User Pool.
     |
-    | The options available are "DEFAULT", "EMAIL", "SMS"
+    | The options available are "NONE", "BOTH", "EMAIL", "SMS"
     |
     */
-    'add_user_delivery_mediums' => env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'DEFAULT'),
+    'add_user_delivery_mediums' => env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'),
 
 
     /*
@@ -87,6 +88,36 @@ return [
     |
     */
     'default_user_group' => env('AWS_COGNITO_DEFAULT_USER_GROUP', null),
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito MFA Setup and configurations
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the cognito MFA configuration for the assigned user.
+    | 
+    |
+    | MFA_NONE, MFA_ENABLED
+    |
+    */
+    'mfa_setup' => env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE'),
+    'force_mfa_code_route_name' => env('AWS_COGNITO_MFA_CODE_ROUTE_NAME', 'cognito.form.mfa.code'),
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Default User Group
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the default cognito user group assigned to a user
+    | when added to a User Pool.  Leave null if not assigning a group on
+    | registration.
+    |
+    | SMS_MFA, SOFTWARE_TOKEN_MFA
+    |
+    */
+    'mfa_type' => env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA'),
 
 
     /*

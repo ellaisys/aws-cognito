@@ -1,4 +1,4 @@
-<img src="https://cdn.ellaisys.com/aws-cognito/banner.png" width="100%" alt="EllaiSys AWS Cloud Capability"/>
+<img src="./assets/images/banner.png" width="100%" alt="EllaiSys AWS Cloud Capability"/>
 
 # Laravel Package to manage Web and API authentication with AWS Cognito
 AWS Cognito package using the AWS SDK for PHP
@@ -35,7 +35,8 @@ We decided to use it and contribute it to the community as a package, that encou
 - Support for Cognito Groups, including assigning a default group to a new user
 - Session (Web) now has AccessToken and RefreshToken as part of the claim object
 - [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
-- [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS **(NEW Feature)**](#signout-remove-access-token)
+- [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
+- [MFA Implementation for Session and Token Guards](./README_MFA.md) **(NEW Feature)**
 
 ## Compatability
 

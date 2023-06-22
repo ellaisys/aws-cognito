@@ -22,14 +22,20 @@ use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClaim;
 
+use Ellaisys\Cognito\Guards\Traits\BaseCognitoGuard;
+use Ellaisys\Cognito\Guards\Traits\CognitoMFA;
+
 use Exception;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoTokenGuard extends TokenGuard
 {
+
+    use BaseCognitoGuard, CognitoMFA;
 
     /**
      * Username key
@@ -90,44 +96,56 @@ class CognitoTokenGuard extends TokenGuard
      * @return bool
      * @throws InvalidUserModelException
      */
-    protected function hasValidCredentials($user, $credentials)
+    protected function hasValidCredentials($user, array $credentials, bool $remember = false)
     {
         /** @var Result $response */
         $result = $this->client->authenticate($credentials[$this->keyUsername], $credentials['password']);
        
+        //Result of type AWS Result
         if (!empty($result) && $result instanceof AwsResult) {
 
-            if (isset($result['ChallengeName']) && 
-                in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) 
-            {
-                //Check for forced action on challenge status
-                if (config('cognito.force_password_change_api')) {
-                    $this->claim = [
-                        'session_token' => $result['Session'],
-                        'username' => $credentials[$this->keyUsername],
-                        'status' => $result['ChallengeName']
-                    ];
-                } else {
-                    if (config('cognito.force_password_auto_update_api')) {
-                        //Force set password same as authenticated with challenge state
-                        $this->client->confirmPassword($credentials[$this->keyUsername], $credentials['password'], $result['Session']);
+            //Check in case of any challenge
+            if (isset($result['ChallengeName'])) {
+                switch ($result['ChallengeName']) {
+                    case 'SOFTWARE_TOKEN_MFA':
+                        $this->claim = [
+                            'status' => $result['ChallengeName'],
+                            'session' => $result['Session'],
+                            'username' => $credentials[$this->keyUsername],
+                            'user' => serialize($user)
+                        ];
+                        break;
+                    
+                    default:
+                        if (in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) {
+                            //Check for forced action on challenge status
+                            if (config('cognito.force_password_change_api')) {
+                                $this->claim = [
+                                    'session_token' => $result['Session'],
+                                    'username' => $credentials[$this->keyUsername],
+                                    'status' => $result['ChallengeName']
+                                ];
+                            } else {
+                                if (config('cognito.force_password_auto_update_api')) {
+                                    //Force set password same as authenticated with challenge state
+                                    $this->client->confirmPassword($credentials[$this->keyUsername], $credentials['password'], $result['Session']);
 
-                        //Get the result object again
-                        $result = $this->client->authenticate($credentials[$this->keyUsername], $credentials['password']);
-                        if (empty($result)) {
-                            return false;
+                                    //Get the result object again
+                                    $result = $this->client->authenticate($credentials[$this->keyUsername], $credentials['password']);
+                                    if (empty($result)) {
+                                        return false;
+                                    } //End if
+                                } else {
+                                    $this->claim = null;
+                                } //End if
+                            } //End if
                         } //End if
-                    } else {
-                        $this->claim = null;
-                    } //End if
-                } //End if
-            } //End if
-
-            //Create Claim for confirmed users
-            if (!isset($result['ChallengeName'])) {
+                        break;
+                } //End switch                
+            } else { //Create Claim for confirmed users
                 //Create claim token
-                $this->claim = new AwsCognitoClaim($result, $user, $credentials[$this->keyUsername]);
-            } //End if     
+                $this->claim = new AwsCognitoClaim($result, $user, $credentials[$this->keyUsername]);                
+            } //End if 
 
             return ($this->claim)?true:false;
         } else {
@@ -146,7 +164,7 @@ class CognitoTokenGuard extends TokenGuard
      * @throws
      * @return bool
      */
-    public function attempt(array $credentials = [], $remember = false)
+    public function attempt(array $credentials = [], bool $remember = false)
     {
         try {
             $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
@@ -219,13 +237,33 @@ class CognitoTokenGuard extends TokenGuard
 
                 //Set Token
                 $this->setToken();
+            } else {
+                $key = $this->claim['session'];
+
+                //Save the challenge data
+                $this->setChallengeData($key, $user);
             } //End if
 
             //Set user
             $this->setUser($user);
         } //End if
 
-        return $this->claim;
+        //Send claim object
+        $claim = $this->claim;
+        if ($claim && is_array($claim) && $claim['status']) {
+            switch ($claim['status']) {
+                case 'SOFTWARE_TOKEN_MFA':
+                    unset($claim['username']);
+                    unset($claim['user']);
+                    break;
+                
+                default:
+                    # code...
+                    break;
+            } //Switch ends
+        } //End if
+
+        return $claim;
     } //Fucntion ends
 
 
@@ -238,6 +276,29 @@ class CognitoTokenGuard extends TokenGuard
     {
         $this->cognito->setClaim($this->claim)->storeToken();
 
+        return $this;
+    } //Function ends
+
+
+    /**
+     * Get the challenged claim.
+     *
+     * @return $this
+     */
+    public function getChallengeData(string $key)
+    {
+        return $this->cognito->getChallengeData($key);
+    } //Function ends
+
+
+    /**
+     * Save the challenged claim.
+     *
+     * @return $this
+     */
+    public function setChallengeData(string $key, $user)
+    {
+        $this->cognito->setChallengeData($key, $this->claim);
         return $this;
     } //Function ends
 
@@ -334,5 +395,45 @@ class CognitoTokenGuard extends TokenGuard
         //Get user and return
         return $this->user = $this->provider->retrieveById($claim['sub']);
 	} //Function ends
+
+
+    /**
+	 * Get the user from the provider.
+	 * @return User
+	 */
+	public function getUser (string $identifier) {
+        return $this->provider->retrieveById($identifier);
+    } //Function ends
+
+
+    /**
+     * Attempt MFA based Authentication
+     */
+    public function attemptMFA(array $challenge = [], Authenticatable $user, bool $remember=false) {
+        try {
+            $response = $this->attemptBaseMFA($challenge, $user, $remember);
+            //Result of type AWS Result
+            if (!empty($response)) {
+
+                //Handle the response as Aws Cognito Claim
+                if ($response instanceof AwsCognitoClaim) {
+                    $this->claim = $response;
+                    return $this->login($user);                
+                } //End if
+
+                //Handle if the object is a Aws Cognito Result
+                if ($response instanceof AwsResult) {
+                    //Check in case of any challenge
+                    if (isset($response['ChallengeName'])) {
+
+                    } else {
+
+                    } //End if
+                } //End if
+            } //End if
+        } catch(Exception $e) {
+            throw $e;
+        } //Try-catch ends
+    } //Function ends
 
 } //Class ends

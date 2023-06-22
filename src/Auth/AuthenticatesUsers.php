@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
@@ -113,6 +114,98 @@ trait AuthenticatesUsers
         return $claim;
     } //Function ends
 
+    
+    /**
+     * Attempt to log the user into the application.
+     *
+     * @param  \Illuminate\Support\Collection  $request
+     * @param  \string  $guard (optional)
+     * @param  \bool  $isJsonResponse (optional)
+     *
+     * @return mixed
+     */
+    protected function attemptLoginMFA($request, string $guard='web', bool $isJsonResponse=false, string $paramName='mfa_code')
+    {
+        try {
+            if ($request instanceof Request) {
+                $req = $request;
+
+                //Validate request
+                $validator = Validator::make($request->all(), $this->rulesMFA());
+
+                if ($validator->fails()) {
+                    throw new ValidationException($validator);
+                } //End if
+
+                $request = collect($request->all());
+            } //End if
+
+            //Generate challenge array
+            $challenge = $request->only(['challenge_name', 'session', 'mfa_code'])->toArray();
+
+            //Fetch user details
+            $user = null;
+            switch ($guard) {
+                case 'web': //Web
+                    if (request()->session()->has($challenge['session'])) {
+                        //Get stored session
+                        $sessionToken = request()->session()->get($challenge['session']);
+                        $username = $sessionToken['username'];
+                        $challenge['username'] = $username;
+                        $user = unserialize($sessionToken['user']);        
+                    } else{
+                        throw new HttpException(400, 'ERROR_AWS_COGNITO_SESSION_MFA_CODE');
+                    } //End if
+                    break;
+                
+                case 'api': //API
+                    $challengeData = Auth::guard($guard)->getChallengeData($challenge['session']);
+                    $username = $challengeData['username'];
+                    $challenge['username'] = $username;
+                    $user = unserialize($challengeData['user']);
+                    break;
+                
+                default:
+                    $user = null;
+                    break;
+            } //End switch
+
+            //Authenticate User
+            $claim = Auth::guard($guard)->attemptMFA($challenge, $user);
+        } catch (NoLocalUserException $e) {
+            Log::error('AuthenticatesUsers:attemptLoginMFA:NoLocalUserException');
+
+            if (config('cognito.add_missing_local_user_sso')) {
+                $response = $this->createLocalUser($credentials, $keyPassword);
+
+                if ($response) {
+                    return $response;
+                } //End if
+            } //End if
+
+            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
+        } catch (CognitoIdentityProviderException $e) {
+            Log::error('AuthenticatesUsers:attemptLoginMFA:CognitoIdentityProviderException');
+            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);
+            
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:attemptLoginMFA:Exception');
+            Log::error($e);
+            switch ($e->getMessage()) {
+                case 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER':
+                    $paramName = 'mfa_code';
+                    break;
+                
+                default:
+                    $paramName = 'mfa_code';
+                    break;
+            } //Switch ends
+            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);
+        } //Try-catch ends
+
+        return $claim;
+    } //Function ends
+
 
     /**
      * Create a local user if one does not exist.
@@ -135,10 +228,10 @@ trait AuthenticatesUsers
      *
      * @param CognitoIdentityProviderException $exception
      */
-    private function sendFailedCognitoResponse(CognitoIdentityProviderException $exception, bool $isJsonResponse=false, string $paramUsername='email')
+    private function sendFailedCognitoResponse(CognitoIdentityProviderException $exception, bool $isJsonResponse=false, string $paramName='email')
     {
         throw ValidationException::withMessages([
-            $paramUsername => $exception->getAwsErrorMessage(),
+            $paramName => $exception->getAwsErrorMessage(),
         ]);
     } //Function ends
 
@@ -149,27 +242,48 @@ trait AuthenticatesUsers
      * @param  \Collection $request
      * @param  \Exception $exception
      */
-    private function sendFailedLoginResponse(Collection $request, Exception $exception=null, bool $isJsonResponse=false, string $paramUsername='email')
+    private function sendFailedLoginResponse($request, $exception=null, bool $isJsonResponse=false, string $paramName='email')
     {
+        $errorCode = 'cognito.validation.auth.failed';
         $message = 'FailedLoginResponse';
         if (!empty($exception)) {
-            $message = $exception->getMessage();
+            if ($exception instanceof CognitoIdentityProviderException) {
+                $errorCode = $exception->getAwsErrorCode();
+                $message = $exception->getAwsErrorMessage();
+            } else {
+                $message = $exception->getMessage();
+            } //End if
         } //End if
 
         if ($isJsonResponse) {
             return  response()->json([
-                'error' => 'cognito.validation.auth.failed',
+                'error' => $errorCode,
                 'message' => $message
             ], 400);
         } else {
             return redirect()
                 ->back()
                 ->withErrors([
-                    $paramUsername => $message,
+                    $paramName => $message,
                 ]);
         } //End if
 
         throw new HttpException(400, $message);
+    } //Function ends
+
+
+    /**
+     * Get the MFA authentication validation rules.
+     *
+     * @return array
+     */
+    protected function rulesMFA()
+    {
+        return [
+            'challenge_name'    => 'required',
+            'session'           => 'required',
+            'mfa_code'          => 'required|numeric|min:4',
+        ];
     } //Function ends
 
 } //Trait ends
