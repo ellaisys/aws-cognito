@@ -117,5 +117,51 @@ In order to complete the activation process, the verification is an essential st
 
 
 ### **Deactivate MFA**
+In order to deactivate the MFA for a user, this process can be called to deactivate the MFA. In most practical situations, you can skip this implementation. This uses the access token for deactivation.
+
+In order to enable/disable another user based on your RBAC implementation, you can use the [Enable/Diable Feature](#enabledisable-mfa)
+
+```php
+
+    public function actionDeactivateMFA()
+    {
+		try
+		{
+            return $this->deactivateMFA('api'); //Pass the guard name for web/api calls
+        } catch(Exception $e) {
+			throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+```
 
 ### **Enable/Disable MFA**
+This feature allows the admin user to enable/disable an user's mfa using an email address. The developer shall need to implement the RBAC to ensure that this feature is not misused.
+
+Below methods in the trait help to enable or disable the MFA returning the HTTP Success Code.
+
+```php
+
+    public function actionEnableMFA(Request $request, string $userEmail)
+    {
+		try
+		{
+            $return $this->enableMFA('web', $userEmail); //Pass the guard name for web/api calls
+        } catch(Exception $e) {
+			throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+
+    public function actionDisableMFA(Request $request, string $userEmail)
+    {
+		try
+		{
+            $return $this->disableMFA('web', $userEmail); //Pass the guard name for web/api calls
+        } catch(Exception $e) {
+			throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+```
+
