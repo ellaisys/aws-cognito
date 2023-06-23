@@ -707,7 +707,7 @@ class AwsCognitoClient
             //Set challenge response
             $challengeResponse=['USERNAME' => $username];
             switch ($challengeName) {
-                case 'SMS_MFA_CODE':
+                case 'SMS_MFA':
                     $challengeResponse = array_merge($challengeResponse, [
                         'SMS_MFA_CODE' => $challengeValue
                     ]);

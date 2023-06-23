@@ -115,6 +115,16 @@ class CognitoTokenGuard extends TokenGuard
                             'user' => serialize($user)
                         ];
                         break;
+
+                    case 'SMS_MFA':
+                        $this->claim = [
+                            'status' => $result['ChallengeName'],
+                            'session' => $result['Session'],
+                            'challenge_params' => $result['ChallengeParameters'],
+                            'username' => $credentials[$this->keyUsername],
+                            'user' => serialize($user)
+                        ];
+                        break;
                     
                     default:
                         if (in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) {
@@ -253,6 +263,7 @@ class CognitoTokenGuard extends TokenGuard
         if ($claim && is_array($claim) && $claim['status']) {
             switch ($claim['status']) {
                 case 'SOFTWARE_TOKEN_MFA':
+                case 'SMS_MFA':
                     unset($claim['username']);
                     unset($claim['user']);
                     break;
