@@ -141,6 +141,16 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                         ];
                         break;
 
+                    case 'SMS_MFA':
+                        $this->challengeData = [
+                            'status' => $result['ChallengeName'],
+                            'session_token' => $result['Session'],
+                            'challenge_params' => $result['ChallengeParameters'],
+                            'username' => $credentials[$this->keyUsername],
+                            'user' => serialize($user)
+                        ];
+                        break;
+
                     default:
                         if (in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) {
                             $this->challengeName = $result['ChallengeName'];
@@ -184,6 +194,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 if (!empty($this->challengeName)) {
                     switch ($this->challengeName) {
                         case 'SOFTWARE_TOKEN_MFA':
+                        case 'SMS_MFA':
                             //Get Session and store details
                             $session = $this->getSession();
                             $session->invalidate();
