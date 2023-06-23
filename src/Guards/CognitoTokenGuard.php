@@ -80,7 +80,7 @@ class CognitoTokenGuard extends TokenGuard
         AwsCognitoClient $client, 
         Request $request, 
         UserProvider $provider = null,
-        string $keyUsername = 'email'
+        string $keyUsername
     ) {
         $this->cognito = $cognito;
         $this->client = $client;

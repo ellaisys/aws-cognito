@@ -77,8 +77,11 @@ trait AuthenticatesUsers
     protected function attemptLogin(Collection $request, string $guard='web', string $paramUsername='email', string $paramPassword='password', bool $isJsonResponse=false)
     {
         try {
+            //Get the configuration fields
+            $userFields = config('cognito.cognito_user_fields');
+
             //Get key fields
-            $keyUsername = 'email';
+            $keyUsername = $userFields['email'];
             $keyPassword = 'password';
             $rememberMe = $request->has('remember')?$request['remember']:false;
 
