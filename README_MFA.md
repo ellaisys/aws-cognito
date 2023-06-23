@@ -85,8 +85,7 @@ The function call looks as shown below. Just reference the the method activateMF
 
     public function actionActivate()
     {
-		try
-		{
+	try {
             return $this->activateMFA('api'); //Pass the guard name for web/api calls
         } catch(Exception $e) {
 			throw $e;
@@ -109,15 +108,14 @@ and the web response, you can design a page like this to show the code for activ
 <img src="./assets/images/web_application_activate.png" width="50%" alt="cognito mfa activate for web"/>
 
 ### **Verify MFA (Software Token Only)**
-In order to complete the activation process, the verification is an essential step. As part of this verification process, you need to enter the code (available in the authenticator application) while submitting the request. Depending upon the web or api controller, the impementation needs to be updated. The response will be HTTP Status Code 200.
+In order to complete the activation process, the verification is an essential step. As part of this verification process, you need to enter the code (available in the authenticator application) while submitting the request. The implementation needs to be updated depending on the web or API controller. The response will be HTTP Status Code 200.
 
 ```php
 
     public function actionVerify(string $code)
     {
-		try
-		{
-            return $this->verifyMFA('api', $code); //Pass the guard name for web/api calls and the MFA code from device
+	try {
+            return $this->verifyMFA('api', $code); //Pass the guard name for web/api calls and the MFA code from the device
         } catch(Exception $e) {
 			throw $e;
         } //Try-catch ends
@@ -135,8 +133,7 @@ In order to enable/disable another user based on your RBAC implementation, you c
 
     public function actionDeactivateMFA()
     {
-		try
-		{
+	try {
             return $this->deactivateMFA('api'); //Pass the guard name for web/api calls
         } catch(Exception $e) {
 			throw $e;
@@ -146,7 +143,7 @@ In order to enable/disable another user based on your RBAC implementation, you c
 ```
 
 ### **Enable/Disable MFA**
-This feature allows the admin user to enable/disable an user's mfa (both Software Token and SMS) using an email address. The developer shall need to implement the RBAC to ensure that this feature is not misused.
+This feature allows the admin user to enable/disable a user's MFA (both Software Token and SMS) using an email address. The developer must implement the RBAC to ensure this feature is not misused.
 
 Below methods in the trait help to enable or disable the MFA returning the HTTP Success Code.
 
@@ -154,8 +151,7 @@ Below methods in the trait help to enable or disable the MFA returning the HTTP 
 
     public function actionEnableMFA(Request $request, string $userEmail)
     {
-		try
-		{
+	try {
             $return $this->enableMFA('web', $userEmail); //Pass the guard name for web/api calls
         } catch(Exception $e) {
 			throw $e;
@@ -165,8 +161,7 @@ Below methods in the trait help to enable or disable the MFA returning the HTTP 
 
     public function actionDisableMFA(Request $request, string $userEmail)
     {
-		try
-		{
+	try {
             $return $this->disableMFA('web', $userEmail); //Pass the guard name for web/api calls
         } catch(Exception $e) {
 			throw $e;
