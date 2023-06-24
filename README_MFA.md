@@ -7,7 +7,9 @@ The package provides a trait that you can add to your controller to make the MFA
 
 Also, configure below keys into the .env file to change the default setting. 
  - The **AWS_COGNITO_MFA_SETUP** should be set to MFA_ENABLED to enable the MFA feature. The default value is MFA_NONE resulting into disabled MFA functionality. 
- - The **AWS_COGNITO_MFA_TYPE** can have values SOFTWARE_TOKEN_MFA (default) for the Software Token and SMS_MFA for the SMS based TOTP. The configuration to send out the SMS needs to be carried out in AWS and costs additional as per the AWS SNS pricing standards.
+ - The **AWS_COGNITO_MFA_TYPE** can have values SOFTWARE_TOKEN_MFA (default) for the Software Token and SMS_MFA for the SMS based TOTP.
+
+   The provider configuration to send out the SMS needs to be carried out in AWS and costs additional as per the AWS SNS pricing. For more details refer this [AWS link](https://aws.amazon.com/sns/sms-pricing/)
 
 ```php
 
