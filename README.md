@@ -1,6 +1,6 @@
 <img src="./assets/images/banner.png" width="100%" alt="EllaiSys AWS Cloud Capability"/>
 
-# Laravel Package to manage Web and API authentication with AWS Cognito
+# Laravel Package to manage Web and API authentication with AWS Cognito and MFA
 AWS Cognito package using the AWS SDK for PHP
 
 ![Latest Version on Packagist](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square)
