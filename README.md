@@ -3,12 +3,14 @@
 # Laravel AWS Cognito Package for Web and API authentication with MFA Feature
 AWS Cognito package using the AWS SDK for PHP
 
-![Latest Version on Packagist](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square)
-![Release Date](https://img.shields.io/github/release-date/ellaisys/aws-cognito?style=flat-square)
-![Total Downloads](https://img.shields.io/packagist/dt/ellaisys/aws-cognito?style=flat-square)
-![](https://img.shields.io/github/stars/ellaisys/aws-cognito?style=flat-square)
-![](https://img.shields.io/github/forks/ellaisys/aws-cognito?style=flat-square)
-![APM](https://img.shields.io/packagist/l/ellaisys/aws-cognito?style=flat-square)
+![Release Version](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Version)
+![Release Date](https://img.shields.io/github/release-date/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Date)
+![Total Downloads](https://img.shields.io/packagist/dt/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Downloads)
+
+![Github Stars](https://img.shields.io/github/stars/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Stars)
+![Github Forks](https://img.shields.io/github/forks/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Forks)
+![GitHub Contributors](https://img.shields.io/github/contributors-anon/ellaisys/aws-cognito?style=flat&logo=github&logoColor=whitesmoke&label=Contributors)
+![APM](https://img.shields.io/packagist/l/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=License)
 
 This package provides a simple way to use AWS Cognito authentication in Laravel for Web and API Auth Drivers.
 The idea of this package, and some of the code, is based on the package from Pod-Point which you can find here: [Pod-Point/laravel-cognito-auth](https://github.com/Pod-Point/laravel-cognito-auth), [black-bits/laravel-cognito-auth](https://github.com/black-bits/laravel-cognito-auth) and [tymondesigns/jwt-auth](https://github.com/tymondesigns/jwt-auth).
@@ -605,6 +607,17 @@ This project exists thanks to all the people who contribute.
 
 - [EllaiSys Team](https://github.com/ellaisys)
 - [GitHub Contributors](https://github.com/ellaisys/aws-cognito/graphs/contributors)
+
+Click on these badges to see how you might be able to help:
+
+<div align="center" markdown="1">
+
+[![GitHub repo Issues](https://img.shields.io/github/issues/ellaisys/aws-cognito?style=flat&logo=github&logoColor=red&label=Issues)](https://github.com/ellaisys/aws-cognito/issues)&#160;
+[![GitHub repo Good Issues for newbies](https://img.shields.io/github/issues/ellaisys/aws-cognito/good%20first%20issue?style=flat&logo=github&logoColor=green&label=Good%20First%20issues)](https://github.com/ellaisys/aws-cognito/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)&#160;
+[![GitHub Help Wanted issues](https://img.shields.io/github/issues/ellaisys/aws-cognito/help%20wanted?style=flat&logo=github&logoColor=b545d1&label=%22Help%20Wanted%22%20issues)](https://github.com/ellaisys/aws-cognito/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)    
+[![GitHub repo PRs](https://img.shields.io/github/issues-pr/ellaisys/aws-cognito?style=flat&logo=github&logoColor=orange&label=PRs)](https://github.com/ellaisys/aws-cognito/pulls)&#160;
+[![GitHub repo Merged PRs](https://img.shields.io/github/issues-search/ellaisys/aws-cognito?style=flat&logo=github&logoColor=green&label=Merged%20PRs&query=is%3Amerged)](https://github.com/ellaisys/aws-cognito/pulls?q=is%3Apr+is%3Amerged)&#160;
+[![GitHub Help Wanted PRs](https://img.shields.io/github/issues-pr/ellaisys/aws-cognito/help%20wanted?style=flat&logo=github&logoColor=b545d1&label=%22Help%20Wanted%22%20PRs)](https://github.com/ellaisys/aws-cognito/pulls?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
 
 ## Support us
 
