@@ -1,6 +1,6 @@
-<img src="./assets/images/banner.png" width="100%" alt="EllaiSys AWS Cloud Capability"/>
+<img src="./assets/images/banner.png" width="100%" alt="Laravel AWS Cognito Package for Web and API authentication with MFA Feature"/>
 
-# Laravel Package to manage Web and API authentication with AWS Cognito and MFA
+# Laravel AWS Cognito Package for Web and API authentication with MFA Feature
 AWS Cognito package using the AWS SDK for PHP
 
 ![Latest Version on Packagist](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square)
@@ -29,7 +29,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - Reset User Password
 - Confirm Sign Up
 - Easy API Token handling (uses the cache driver)
-- DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)
+- [DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)](#storing-web-sessions-or-api-tokens-in-dynamodb-useful-for-multiservercontainer-implementation)
 - Easy configuration of Token Expiry (Manage using the cognito console, no code or configurations needed)
 - Support for App Client without Secret
 - Support for Cognito Groups, including assigning a default group to a new user
