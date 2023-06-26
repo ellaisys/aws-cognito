@@ -40,7 +40,7 @@
             }
         },
         "branch-alias": {
-            "dev-master": "latest"
+            "dev-master": "latest-dev"
         }
     }
 }
