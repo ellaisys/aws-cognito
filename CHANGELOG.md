@@ -1,3 +1,16 @@
+Release 30 (tag v1.1.3)
+ - Fix composer alias to 1.0-dev
+
+Release 29 (tag v1.1.2)
+ - Fix composer alias 
+ - Doc: Update Readme
+ 
+ Release 28 (tag v1.1.1)
+ - Feature: MFA implementation with Software Token and SMS
+ 
+ Release 27 (tag v1.1.0)
+ - Feature: MFA implementation with Software Token
+
 Release 26 (tag v1.0.11)
  - Feature: Forced signout with RefreshToken revoked.
 
