@@ -3,14 +3,14 @@
 # Laravel AWS Cognito Package for Web and API authentication with MFA Feature
 AWS Cognito package using the AWS SDK for PHP
 
-![Release Version](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Version)
-![Release Date](https://img.shields.io/github/release-date/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Date)
-![Total Downloads](https://img.shields.io/packagist/dt/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Downloads)
+[![Release Version](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Version)](https://packagist.org/packages/ellaisys/aws-cognito#v1.1.3)&#160;
+[![Release Date](https://img.shields.io/github/release-date/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Date)](https://packagist.org/packages/ellaisys/aws-cognito)&#160;
+[![Total Downloads](https://img.shields.io/packagist/dt/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Downloads)](https://packagist.org/packages/ellaisys/aws-cognito)&#160;
 
-![Github Stars](https://img.shields.io/github/stars/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Stars)
-![Github Forks](https://img.shields.io/github/forks/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Forks)
-![GitHub Contributors](https://img.shields.io/github/contributors-anon/ellaisys/aws-cognito?style=flat&logo=github&logoColor=whitesmoke&label=Contributors)
-![APM](https://img.shields.io/packagist/l/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=License)
+![Github Stars](https://img.shields.io/github/stars/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Stars)&#160;
+![Github Forks](https://img.shields.io/github/forks/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Forks)&#160;
+[![GitHub Contributors](https://img.shields.io/github/contributors-anon/ellaisys/aws-cognito?style=flat&logo=github&logoColor=whitesmoke&label=Contributors)](CONTRIBUTING.md)&#160;
+[![APM](https://img.shields.io/packagist/l/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=License)](LICENSE.md)
 
 This package provides a simple way to use AWS Cognito authentication in Laravel for Web and API Auth Drivers.
 The idea of this package, and some of the code, is based on the package from Pod-Point which you can find here: [Pod-Point/laravel-cognito-auth](https://github.com/Pod-Point/laravel-cognito-auth), [black-bits/laravel-cognito-auth](https://github.com/black-bits/laravel-cognito-auth) and [tymondesigns/jwt-auth](https://github.com/tymondesigns/jwt-auth).
@@ -44,15 +44,16 @@ We decided to use it and contribute it to the community as a package, that encou
 
 |PHP Version|Support|
 |-|-|
-|7.4|Yes|
-|8.0|Yes|
-|8.1|Yes|
+|7.4|Yes:white_check_mark:|
+|8.0|Yes:white_check_mark:|
+|8.1|Yes:white_check_mark:|
 
 |Laravel Version|Support|
 |-|-|
-|7.x|Yes|
-|8.x|Yes|
-|9.x|Yes|
+|7.x|Yes:white_check_mark:|
+|8.x|Yes:white_check_mark:|
+|9.x|Yes:white_check_mark:|
+|10.x|Not tested|
 
 ## Installation
 
