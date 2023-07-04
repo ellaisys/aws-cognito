@@ -269,7 +269,7 @@ class AwsCognitoClient
             throw $e;
         } //Try-catch ends
 
-        return (bool)$response['UserConfirmed'];
+        return $response;
     } //Function ends
 
 
