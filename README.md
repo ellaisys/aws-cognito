@@ -47,6 +47,7 @@ We decided to use it and contribute it to the community as a package, that encou
 |7.4|Yes:white_check_mark:|
 |8.0|Yes:white_check_mark:|
 |8.1|Yes:white_check_mark:|
+|8.24|Yes:white_check_mark:|
 
 |Laravel Version|Support|
 |-|-|
