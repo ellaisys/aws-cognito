@@ -466,7 +466,6 @@ class AwsCognitoClient
         } //End if
 
         try {
-            Log::info($payload);
             $this->client->adminCreateUser($payload);
 
             //Add user to the group
