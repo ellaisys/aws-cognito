@@ -436,9 +436,7 @@ class CognitoTokenGuard extends TokenGuard
                 if ($response instanceof AwsResult) {
                     //Check in case of any challenge
                     if (isset($response['ChallengeName'])) {
-
-                    } else {
-
+                        //TODO: Handle challenge in MFA login
                     } //End if
                 } //End if
             } //End if
