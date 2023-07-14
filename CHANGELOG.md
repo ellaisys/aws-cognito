@@ -1,3 +1,6 @@
+Release 31 (tag v1.1.4)
+ - Minor updates to code document and removal of log statement
+
 Release 30 (tag v1.1.3)
  - Fix composer alias to 1.0-dev
 
