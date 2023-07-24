@@ -131,7 +131,7 @@ class CognitoTokenGuard extends TokenGuard
                             //Check for forced action on challenge status
                             if (config('cognito.force_password_change_api')) {
                                 $this->claim = [
-                                    'session_token' => $result['Session'],
+                                    'session' => $result['Session'],
                                     'username' => $credentials[$this->keyUsername],
                                     'status' => $result['ChallengeName']
                                 ];
