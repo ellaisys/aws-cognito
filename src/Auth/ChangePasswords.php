@@ -39,16 +39,16 @@ trait ChangePasswords
      */
     public function reset($request, string $paramUsername='email', string $passwordOld='password', string $passwordNew='new_password')
     {
-        if ($request instanceof Request) {
-            //Validate request
-            $validator = Validator::make($request->all(), $this->rules());
+        // if ($request instanceof Request) {
+        //     //Validate request
+        //     $validator = Validator::make($request->all(), $this->rules());
 
-            if ($validator->fails()) {
-                throw new ValidationException($validator);
-            } //End if
+        //     if ($validator->fails()) {
+        //         throw new ValidationException($validator);
+        //     } //End if
 
-            $request = collect($request->all());
-        } //End if
+        //     $request = collect($request->all());
+        // } //End if
 
         //Create AWS Cognito Client
         $client = app()->make(AwsCognitoClient::class);

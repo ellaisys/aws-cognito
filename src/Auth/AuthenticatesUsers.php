@@ -81,18 +81,18 @@ trait AuthenticatesUsers
             $userFields = config('cognito.cognito_user_fields');
 
             //Get key fields
-            $keyUsername = $userFields['email'];
+            $keyUsername = $paramUsername;
             $keyPassword = 'password';
             $rememberMe = $request->has('remember')?$request['remember']:false;
 
             //Generate credentials array
             $credentials = [
-                $keyUsername => $request[$paramUsername],
+                $keyUsername => $request['username'],
                 $keyPassword => $request[$paramPassword]
             ];
 
             //Authenticate User
-            $claim = Auth::guard($guard)->attempt($credentials, $rememberMe);
+            $claim = Auth::guard($guard)->attempt($credentials, $rememberMe, $keyUsername);
 
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:NoLocalUserException');
