@@ -1,3 +1,7 @@
+Release 32 (tag v1.1.5)
+ - Fix: Issue #67
+ - Minor updates to code document and removal of log statement
+
 Release 31 (tag v1.1.4)
  - Minor updates to code document and removal of log statement
 
