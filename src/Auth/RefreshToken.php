@@ -62,7 +62,7 @@ trait RefreshToken
 
             if ($request instanceof Request) {
                 //Validate request
-                $validator = Validator::make($request->all(), $this->rules());
+                $validator = Validator::make($request->all(), [ $paramRefreshToken => 'required' ]);
 
                 if ($validator->fails()) {
                     throw new ValidationException($validator);
@@ -107,19 +107,6 @@ trait RefreshToken
             } //End if
             throw $e;
         } //Try-catch ends
-    } //Function ends
-
-
-    /**
-     * Get the password reset validation rules.
-     *
-     * @return array
-     */
-    protected function rules()
-    {
-        return [
-            'refresh_token'    => 'required'
-        ];
     } //Function ends
 
 } //Trait ends
