@@ -44,7 +44,6 @@ trait RegistersUsers
 
         //Create credentials object
         $collection = collect($data);
-        $collection['phone']='+919158999635';
 
         //Register User in Cognito
         $cognitoRegistered=$this->createCognitoUser($collection, $clientMetadata, config('cognito.default_user_group', null));
