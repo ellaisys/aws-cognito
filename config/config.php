@@ -58,8 +58,16 @@ return [
     */
     'cognito_user_fields'   => [
         'name' => 'name',
-        'email' => 'email',
+        'given_name' => null,
+        'middle_name' => null,
+        'family_name' => null,
+        'nickname' => null,
+        'preferred_username' => null,
+        'email' => 'email', //Do Not set this parameter to null
         'phone_number' => 'phone',
+        'gender' => null,
+        'birthdate' => null,
+        'locale' => null
     ],
 
     /*
@@ -237,4 +245,15 @@ return [
     |
     */
     'new_user_message_action' => env('AWS_COGNITO_NEW_USER_MESSAGE_ACTION', null),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allow new user to set the password and have verified
+    |--------------------------------------------------------------------------
+    |
+    | This option enables the user to set the password and have that verified 
+    | during the to invitation for the new user. The default value is set to true.
+    |
+    */
+    'force_new_user_password' => env('AWS_COGNITO_FORCE_NEW_USER_PASSWORD', true),
 ];
