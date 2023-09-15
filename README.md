@@ -38,7 +38,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - Session (Web) now has AccessToken and RefreshToken as part of the claim object
 - [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
-- [MFA Implementation for Session and Token Guards](./README_MFA.md) **(NEW Feature)**
+- [MFA Implementation for Session and Token Guards](./README_MFA.md)
 
 ## Compatability
 
@@ -266,7 +266,7 @@ We have made is very easy for anyone to use the default behaviour.
 
 ```
 
-5. You don't need to turn off Cognito to send you emails. We rather propose the use of AWS Cognito or AWS SMS mailers, such that use credentials are always secure.
+5. You don't need to turn off Cognito to send you emails. We rather propose the use of AWS Cognito or AWS SMS mailers, such that user credentials are always secure.
 
 6. In case you want to suppress the mails to be sent to the new users, you can configure the parameter given below to skip welcome mails to new user registration. Default configuration shall send the welcome email.
 
@@ -276,11 +276,11 @@ We have made is very easy for anyone to use the default behaviour.
 
 ```
 
-7. The configuration given below allows the new user's email address to be auto marked as verified. The default configuration
+7. The configuration given below allows the new user's email address to be auto marked as verified.
 
 ```php
 
-    AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=false
+    AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is false.
 
 ```
 
@@ -289,6 +289,14 @@ We have made is very easy for anyone to use the default behaviour.
 ```php
 
     AWS_COGNITO_DEFAULT_USER_GROUP="Customers"
+
+```
+
+9. To enable custom password or user defined password, the below configuration if set to **true** will force the user to set the password during registration, else cognito will generate a random password and send over email and/or SMS based on the configurations.
+
+```php
+
+    AWS_COGNITO_FORCE_NEW_USER_PASSWORD=true //optional - default value is false.  
 
 ```
 

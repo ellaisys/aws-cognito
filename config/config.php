@@ -232,7 +232,7 @@ return [
     | the to invitation for the new user. The default value is set to true.
     |
     */
-    'force_new_user_email_verified' => env('AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED', true),
+    'force_new_user_email_verified' => env('AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -255,5 +255,5 @@ return [
     | during the to invitation for the new user. The default value is set to true.
     |
     */
-    'force_new_user_password' => env('AWS_COGNITO_FORCE_NEW_USER_PASSWORD', true),
+    'force_new_user_password' => env('AWS_COGNITO_FORCE_NEW_USER_PASSWORD', false),
 ];

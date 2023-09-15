@@ -23,6 +23,7 @@ use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait RegistersUsers
 {
@@ -37,36 +38,51 @@ trait RegistersUsers
     {
         $cognitoRegistered=false;
         $user = [];
-        
-        //Validate request
-        $validator = Validator::make($request->all(), $this->rulesRegisterUser());
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        } //End if
+        try {
+            //Validate request
+            $validator = Validator::make($request->all(), $this->rulesRegisterUser());
 
-        //Create data to save
-        $data = $request->all();
-
-        //Create credentials object
-        $collection = collect($data);
-
-        //Register User in Cognito
-        $cognitoRegistered=$this->createCognitoUser($collection, $clientMetadata, config('cognito.default_user_group', null));
-        if ($cognitoRegistered==true) {
-            //Remove the password
-            if(!empty($data['password'])) {
-                unset($data['password']);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
             } //End if
 
-            //Create user in local store
-            $user = $this->create($data);
-        } //End if
+            //Create data to save
+            $data = $request->all();
 
-        // Return with user data
-        return $request->wantsJson()
-            ? new JsonResponse($user, 201)
-            : redirect($this->redirectPath());
+            //Create credentials object
+            $collection = collect($data);
+
+            //Register User in Cognito
+            $cognitoRegistered=$this->createCognitoUser($collection, $clientMetadata, config('cognito.default_user_group', null));            
+            if ($cognitoRegistered) {
+                //Remove the password
+                if(!empty($data['password'])) {
+                    unset($data['password']);
+                } //End if
+
+                //Add cognito data to user data
+                $cognitoUser = $cognitoRegistered['User'];
+                if ($cognitoUser) {
+                    $cognitoAttributes = $cognitoUser['Attributes'];
+                    if ($cognitoAttributes && is_array($cognitoAttributes) && count($cognitoAttributes)>0) {
+                        foreach ($cognitoAttributes as $cognitoAttribute) {
+                            $data[$cognitoAttribute['Name']] = $cognitoAttribute['Value'];
+                        } //End foreach
+                    } //End if                     
+                } //End if
+
+                //Create user in local store
+                $user = $this->create($data);
+            } //End if
+
+            // Return with user data
+            return $request->wantsJson()
+                ? new JsonResponse($user, 201)
+                : redirect($this->redirectPath());
+        } catch (Exception $e) {
+            throw $e;
+        } //End try 
     } //Function ends
 
 
@@ -145,32 +161,41 @@ trait RegistersUsers
     {
         $rules=[];
 
-        //Get the registeration fields
-        $userFields = config('cognito.cognito_user_fields');
-        foreach ($userFields as $key => $value) {
-            if ($value!=null) {
-                switch ($key) {
-                    case 'email':
-                        $rules = array_merge($rules, [ $value => 'required|email']);
-                        break;
+        try {        
+            //Get the registeration fields
+            $userFields = config('cognito.cognito_user_fields');
+            foreach ($userFields as $key => $value) {
+                if ($value!=null) {
+                    switch ($key) {
+                        case 'email':
+                            $rules = array_merge($rules, [ $value => 'required|email']);
+                            break;
 
-                    case 'phone_number':
-                        $rules = array_merge($rules, [ $value => 'required']);
-                        break;
-                    
-                    default:
-                        $rules = array_merge($rules, [ $value => 'required']);
-                        break;
-                } //End switch
+                        case 'phone_number':
+                            $rules = array_merge($rules, [ $value => 'required']);
+                            break;
+                        
+                        default:
+                            $rules = array_merge($rules, [ $value => 'required']);
+                            break;
+                    } //End switch
+                } //End if
+            } //Loop ends
+
+            //Check the new user password config
+            if (config('cognito.force_new_user_password', true)) {
+                $rules = array_merge($rules, [ 'password' => 'required|confirmed|min:8']);
             } //End if
-        } //Loop ends
 
-        //Check the new user password config
-        if (config('cognito.force_new_user_password', true)) {
-            $rules = array_merge($rules, [ 'password' => 'required|confirmed|min:8']);
-        } //End if
+            //Check the MFA setup config
+            if (config('cognito.mfa_setup')=="MFA_ENABLED" && empty($userFields['phone_number'])) {
+                throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING');
+            } //End if
 
-        return $rules;
+            return $rules;
+        } catch (Exception $e) {
+            throw $e;
+        } //End try
     } //Function ends
 
 } //Trait ends
