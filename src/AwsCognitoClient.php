@@ -456,17 +456,21 @@ class AwsCognitoClient
         } //End If
 
         //Set Delivery Mediums
-        if ((config('cognito.add_user_delivery_mediums')!="NONE") || (config('cognito.mfa_setup')=="MFA_ENABLED")) {
+        if ((config('cognito.add_user_delivery_mediums')!="NONE")) {
             if (config('cognito.add_user_delivery_mediums')=="BOTH") {
                 $payload['DesiredDeliveryMediums'] = ['EMAIL', 'SMS'];
             } else {
-                $defaultDeliveryMedium = (config('cognito.mfa_setup')=="MFA_ENABLED")?"SMS":config('cognito.add_user_delivery_mediums', "EMAIL");
+                $defaultDeliveryMedium = config('cognito.add_user_delivery_mediums', "EMAIL");
                 $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
             } //End if
         } //End if
+        if (config('cognito.mfa_setup')=="MFA_ENABLED") {
+            $defaultDeliveryMedium = 'SMS';
+            $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
+        } //End if
 
         try {
-            $this->client->adminCreateUser($payload);
+            $response = $this->client->adminCreateUser($payload);
 
             //Add user to the group
             if (!empty($groupname)) {
@@ -480,7 +484,7 @@ class AwsCognitoClient
             throw $e;
         } //Try-catch ends
 
-        return true;
+        return $response;
     } //Function ends
 
 

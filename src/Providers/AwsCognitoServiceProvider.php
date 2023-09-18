@@ -44,6 +44,9 @@ class AwsCognitoServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        //Register resources
+        $this->configure();
+
         //Register Alias
         $this->registerAliases();
     } //Function ends
@@ -51,17 +54,13 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        //Configuration path
-        $path = realpath(__DIR__.'/../../config/config.php');
+        //Register publishing
+        $this->registerPublishing();
 
-        //Publish config
-        $this->publishes([
-            $path => config_path('cognito.php'),
-        ], 'config');
+        //Register migrations
+        $this->registerMigrations();
 
-        //Register configuration
-        $this->mergeConfigFrom($path, 'cognito');
-
+        //Register resources
         $this->registerPolicies();
 
         //Register facades
@@ -77,6 +76,30 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
 
     /**
+     * Register the package's publishable resources.
+     *
+     * @return void
+     */
+    protected function registerPublishing()
+    {
+        if ($this->app->runningInConsole()) {
+            //Publish config
+            $this->publishes([
+                __DIR__.'/../../config/cognito.php' => $this->app->configPath('cognito.php'),
+            ], 'cognito-config');
+
+            $this->publishes([
+                __DIR__.'/../../database/migrations' => $this->app->databasePath('migrations'),
+            ], 'cognito-migrations');
+
+            // $this->publishes([
+            //     __DIR__.'/../../resources/views' => $this->app->resourcePath('views/vendor/cognito'),
+            // ], 'cognito-views');
+        }
+    } //Function ends
+
+
+    /**
      * Bind some aliases.
      *
      * @return void
@@ -85,6 +108,19 @@ class AwsCognitoServiceProvider extends ServiceProvider
     {
         $this->app->alias('ellaisys.aws.cognito', AwsCognito::class);
     }
+
+    
+    /**
+     * Setup the configuration for Cognito.
+     *
+     * @return void
+     */
+    protected function configure()
+    {
+        $this->mergeConfigFrom(
+            __DIR__.'/../../config/cognito.php', 'cognito'
+        );
+    } //Function ends
 
 
     /**
@@ -213,6 +249,30 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
             return $guard;
         });
+    } //Function ends
+
+
+    /**
+     * Register the package resources.
+     *
+     * @return void
+     */
+    protected function registerResources()
+    {
+        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'cognito');
+    } //Function ends
+
+
+    /**
+     * Register the package migrations.
+     *
+     * @return void
+     */
+    protected function registerMigrations()
+    {
+        if (AwsCognito::$runsMigrations && $this->app->runningInConsole()) {
+            $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
+        } //End if
     } //Function ends
     
 } //Class ends

@@ -18,6 +18,9 @@
     },
     "prefer-stable": true,
     "minimum-stability": "stable",
+    "config": {
+        "sort-packages": true
+    },
     "require": {
         "php": "^7.0|^8.0",
         "guzzlehttp/guzzle": "^6.0|^7.0",
