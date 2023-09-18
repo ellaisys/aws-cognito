@@ -64,7 +64,7 @@ You can install the package via composer.
 composer require ellaisys/aws-cognito
 ```
 
-#### Laravel 5.4 and before
+### Laravel 5.4 and before
 Using a version prior to Laravel 5.5 you need to manually register the service provider.
 
 ```php
@@ -76,7 +76,7 @@ Using a version prior to Laravel 5.5 you need to manually register the service p
     ];
 ```
 
-Next you can publish the config and the view.
+### Configuration File: Next you can publish the config.
 
 ```bash
     php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider"
@@ -96,6 +96,33 @@ to look the following:
         ],
     ],
 ```
+
+### Database Migrations
+The AWS Cognito service provider registers its own database migration directory, so remember to migrate your database after installing the package. The AWS Cognito migrations will add a few columns to your **users** table:
+
+```bash
+    php artisan migrate
+```
+
+If you need to overwrite the migrations that ship with AWS Cognito, you can publish them using the vendor:publish Artisan command:
+
+```bash
+    php artisan vendor:publish --tag="cognito-migrations"
+```
+
+If you would like to prevent AWS Cognito's migrations from running entirely, you may use the ignoreMigrations method provided by AWS Cognito. Typically, this method should be called in the register method of your AppServiceProvider:
+```php
+    use Ellaisys\Cognito\AwsCognito;
+    
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        AwsCognito::ignoreMigrations();
+    }
+```
+
 
 ## Cognito User Pool
 
@@ -143,7 +170,6 @@ For more details on how to find AWS_COGNITO_CLIENT_ID, AWS_COGNITO_CLIENT_SECRET
 If you are already working on an existing project and want to integrate Cognito you have to [import a user csv file to your Cognito Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-using-import-tool.html).
 
 ## Usage
-
 Our package is providing you 6 traits you can just add to your Auth Controllers to get our package running.
 
 - Ellaisys\Cognito\Auth\AuthenticatesUsers

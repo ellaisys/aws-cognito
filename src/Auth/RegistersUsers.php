@@ -184,7 +184,7 @@ trait RegistersUsers
 
             //Check the new user password config
             if (config('cognito.force_new_user_password', true)) {
-                $rules = array_merge($rules, [ 'password' => 'required|confirmed|min:8']);
+                $rules = array_merge($rules, [ 'password' => 'required|confirmed|min:6|max:64']);
             } //End if
 
             //Check the MFA setup config

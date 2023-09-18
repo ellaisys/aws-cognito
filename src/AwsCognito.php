@@ -27,6 +27,16 @@ use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 
 class AwsCognito
 {
+
+    
+    /**
+     * Indicates if AWSCognito migrations will be run.
+     *
+     * @var bool
+     */
+    public static $runsMigrations = true;
+
+
     /**
      * The authentication provider.
      *
@@ -80,6 +90,19 @@ class AwsCognito
         $this->manager = $manager;
         $this->parser = $parser;
     }
+
+
+    /**
+     * Configure AWS Cognito to not register its migrations.
+     *
+     * @return static
+     */
+    public static function ignoreMigrations()
+    {
+        static::$runsMigrations = false;
+
+        return new static;
+    } //Function ends
 
 
     /**
