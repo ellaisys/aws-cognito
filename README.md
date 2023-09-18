@@ -20,7 +20,7 @@ The idea of this package, and some of the code, is based on the package from Pod
 We decided to use it and contribute it to the community as a package, that encourages standarised use and a RAD tool for authentication using AWS Cognito.
 
 ## Features
-- [Registration and Confirmation E-Mail (Sign Up)](#registering-users)
+- [Registration and Confirmation E-Mail (Sign Up)](#registering-users) **Updated** (#9 feature added)
 - Forced password change at first login (configurable)
 - [Login (Sign In)](#user-authentication)
 - Remember Me Cookie
@@ -97,7 +97,7 @@ to look the following:
     ],
 ```
 
-### Database Migrations
+### Database Migrations **New Feature**
 The AWS Cognito service provider registers its own database migration directory, so remember to migrate your database after installing the package. The AWS Cognito migrations will add a few columns to your **users** table:
 
 ```bash
