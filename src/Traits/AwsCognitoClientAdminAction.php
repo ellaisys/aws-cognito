@@ -136,4 +136,30 @@ trait AwsCognitoClientAdminAction
         return true;
     } //Function ends
 
+
+    /**
+     * Gets configuration information and metadata of the specified user pool.
+     *
+     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#describeuserpool
+     *
+     * @return mixed
+     */
+    public function describeUserPool()
+    {
+        try {
+            return $this->client->describeUserPool([
+                'UserPoolId' => $this->poolId
+            ]);
+        } catch (CognitoIdentityProviderException $e) {
+            if ($e->getAwsErrorCode() === self::COGNITO_NOT_AUTHORIZED_ERROR) {
+                return true;
+            } //End if
+
+            throw $e;
+        } catch (Exception $e) {
+            throw $e;
+        } //Try-catch ends
+        return true;
+    } //Function ends
+
 } //Trait ends
