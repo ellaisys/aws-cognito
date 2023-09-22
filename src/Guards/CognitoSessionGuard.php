@@ -36,6 +36,7 @@ use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
+use Ellaisys\Cognito\Exceptions\DBConnectionException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
@@ -185,7 +186,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
 
             //Check if the user exists in local data store
-            if (!($user instanceof Authenticatable)) {
+            if (empty($user) && !($user instanceof Authenticatable)) {
                 throw new NoLocalUserException();
             } //End if
 
@@ -298,9 +299,16 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             Log::error('CognitoSessionGuard:attempt:Exception:'.$e->getMessage());
 
             //Fire failed attempt
-            $this->fireFailedEvent($user, $credentials);
+            if (!empty($user)) {
+                $this->fireFailedEvent($user, $credentials);
+            } //End if
 
-            return false;
+            //Find SQL Exception
+            if (strpos($e->getMessage(), 'SQLSTATE') !== false) {
+                throw new DBConnectionException();
+            } //End if
+
+            throw $e;
         } //Try-catch ends
     } //Function ends
 

@@ -5,18 +5,18 @@ namespace Ellaisys\Cognito\Exceptions;
 use Exception;
 use Throwable;
 
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use PDOException;
 
-class AwsCognitoException extends Exception
+class DBConnectionException extends PDOException
 {
     /**
      * Report the exception.
      *
      * @return void
      */
-    public function report($message="AWS Cognito Error", $code=null, Throwable $previous=null)
+    public function report($message="Database Connection Error", $code=null, Throwable $previous=null)
     {
-        throw new HttpException(400, $message, $previous, [], $code);
+        parent::report($message, [], $code, $previous);
     }
 
 

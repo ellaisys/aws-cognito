@@ -80,13 +80,15 @@ trait AuthenticatesUsers
         try {
             //Get the password policy
             $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
-            $passwordPolicy = 'required|string|regex:'.$passwordPolicy;
 
             //Validate request
             $validator = Validator::make($request->only([$paramPassword])->toArray(), [
-                $paramPassword => $passwordPolicy
+                $paramPassword => 'required|regex:'.$passwordPolicy['regex']
+            ], [
+                'regex' => 'Must contain atleast ' . $passwordPolicy['message']
             ]);
             if ($validator->fails()) {
+                Log::info($validator->errors());
                 throw new ValidationException($validator);
             } //End if
 
@@ -266,6 +268,8 @@ trait AuthenticatesUsers
             if ($exception instanceof CognitoIdentityProviderException) {
                 $errorCode = $exception->getAwsErrorCode();
                 $message = $exception->getAwsErrorMessage();
+            } else if ($exception instanceof ValidationException) {
+                throw $exception;
             } else {
                 $message = $exception->getMessage();
             } //End if

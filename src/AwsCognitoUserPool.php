@@ -82,33 +82,39 @@ class AwsCognitoUserPool
 
         if ($regex) {
             $regexString = '/^';
+            $messageText = '';
             foreach ($passwordPolicy as $key => $value) {
                 switch ($key) {
                     case 'MinimumLength':
                         $minValue = $value;
+                        $messageText .= 'minimum length of ' . $value . ', ';
                         break;
                     
                     case 'RequireUppercase':
                         if ($value) {
                             $regexString .= '(?=.*[A-Z])';
+                            $messageText .= 'one uppercase letter, ';
                         } //If ends
                         break;
 
                     case 'RequireLowercase':
                         if ($value) {
                             $regexString .= '(?=.*[a-z])';
+                            $messageText .= 'one lowercase letter, ';
                         } //If ends
                         break;
 
                     case 'RequireNumbers':
                         if ($value) {
                             $regexString .= '(?=.*\d)';
+                            $messageText .= 'one number, ';
                         } //If ends
                         break;
 
                     case 'RequireSymbols':
                         if ($value) {
                             $regexString .= '(?=.*[!@#$%^&*])';
+                            $messageText .= 'one special character, ';
                         } //If ends
                         break;
                     
@@ -119,7 +125,7 @@ class AwsCognitoUserPool
             } //Foreach ends
             $regexString .= '([^\s]){' . $minValue . ',}';
             $regexString .= '$/';
-            return $regexString;
+            return ['regex' => $regexString, 'message' => $messageText];
         } else {
             return $passwordPolicy;
         } //If ends

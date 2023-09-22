@@ -7,14 +7,14 @@ use Throwable;
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class AwsCognitoException extends Exception
+class InvalidUserException extends Exception
 {
     /**
      * Report the exception.
      *
      * @return void
      */
-    public function report($message="AWS Cognito Error", $code=null, Throwable $previous=null)
+    public function report($message="Invalid User Error", $code=null, Throwable $previous=null)
     {
         throw new HttpException(400, $message, $previous, [], $code);
     }
