@@ -52,12 +52,13 @@ trait RegistersUsers
         $user = [];
 
         try {
+
             //Get the password policy
             $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
             $validator = Validator::make($request->all(), $this->rulesRegisterUser(), [
-                'regex' => $this->passwordPolicy['message'],
+                'regex' => 'Must contain atleast '.$this->passwordPolicy['message'],
             ]);
             if ($validator->fails()) {
                 throw new ValidationException($validator);
@@ -93,8 +94,8 @@ trait RegistersUsers
             } //End if
 
             // Return with user data
-            return $request->wantsJson()
-                ? new JsonResponse($user, 201)
+            return ($request->expectsJson() || $request->isJson())
+                ? new JsonResponse($user, 200)
                 : redirect($this->redirectPath());
         } catch (Exception $e) {
             throw $e;

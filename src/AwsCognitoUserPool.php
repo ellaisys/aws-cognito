@@ -123,7 +123,7 @@ class AwsCognitoUserPool
                         break;
                 } //Switch ends
             } //Foreach ends
-            $regexString .= '([^\s]){' . $minValue . ',}';
+            $regexString .= '([^\s]){' . $minValue . ',99}';
             $regexString .= '$/';
             return ['regex' => $regexString, 'message' => $messageText];
         } else {
