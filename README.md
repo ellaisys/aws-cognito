@@ -39,6 +39,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
 - [MFA Implementation for Session and Token Guards](./README_MFA.md)
+- [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration) **New**
 
 ## Compatability
 
@@ -616,6 +617,10 @@ The library now supports where the AWS configuration of App Client with the Clie
    AWS_COGNITO_CLIENT_SECRET_ALLOW=false
 
 ```
+
+## Password Validation based of Cognito Configuration
+
+This library fetches the password policy from the cognito pool configurations. The laravel request validations are done based on the regular expression that is created based on this policy. This validations are performed during the Sign Up (Registation), Sign In (Login), Reset and Change password based flows. The validation messages for the password are also dynamic in nature and change based on the configurations. 
 
 ## Changelog
 
