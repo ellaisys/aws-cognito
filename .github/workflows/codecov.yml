@@ -1,4 +1,9 @@
-- name: Upload coverage reports to Codecov
+name: Codecov Report
+
+on:
+  push:
+    branches: [ master ]
+
   uses: codecov/codecov-action@v3
   env:
     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
