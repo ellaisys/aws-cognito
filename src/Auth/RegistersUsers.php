@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\AwsCognitoUserPool;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -27,6 +28,17 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait RegistersUsers
 {
+    /**
+     * private variable for password policy
+     */
+    private $passwordPolicy = null;
+
+    /**
+     * Passed params
+     */
+    private $paramUsername = 'email';
+    private $paramPassword = 'password';
+
 
     /**
      * Handle a registration request for the application.
@@ -40,9 +52,14 @@ trait RegistersUsers
         $user = [];
 
         try {
-            //Validate request
-            $validator = Validator::make($request->all(), $this->rulesRegisterUser());
 
+            //Get the password policy
+            $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
+
+            //Validate request
+            $validator = Validator::make($request->all(), $this->rulesRegisterUser(), [
+                'regex' => 'Must contain atleast '.$this->passwordPolicy['message'],
+            ]);
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
@@ -57,8 +74,8 @@ trait RegistersUsers
             $cognitoRegistered=$this->createCognitoUser($collection, $clientMetadata, config('cognito.default_user_group', null));            
             if ($cognitoRegistered) {
                 //Remove the password
-                if(!empty($data['password'])) {
-                    unset($data['password']);
+                if(!empty($data[$this->paramPassword])) {
+                    unset($data[$this->paramPassword]);
                 } //End if
 
                 //Add cognito data to user data
@@ -77,8 +94,8 @@ trait RegistersUsers
             } //End if
 
             // Return with user data
-            return $request->wantsJson()
-                ? new JsonResponse($user, 201)
+            return ($request->expectsJson() || $request->isJson())
+                ? new JsonResponse($user, 200)
                 : redirect($this->redirectPath());
         } catch (Exception $e) {
             throw $e;
@@ -141,7 +158,7 @@ trait RegistersUsers
         //Password parameter
         $password = null;
         if (config('cognito.force_new_user_password', true)) {
-            $password = $request->has('password')?$request['password']:null;
+            $password = $request->has($this->paramPassword)?$request[$this->paramPassword]:null;
         }// End if            
 
         return app()->make(AwsCognitoClient::class)->inviteUser(
@@ -161,7 +178,7 @@ trait RegistersUsers
     {
         $rules=[];
 
-        try {        
+        try {
             //Get the registeration fields
             $userFields = config('cognito.cognito_user_fields');
             foreach ($userFields as $key => $value) {
@@ -184,7 +201,7 @@ trait RegistersUsers
 
             //Check the new user password config
             if (config('cognito.force_new_user_password', true)) {
-                $rules = array_merge($rules, [ 'password' => 'required|confirmed|min:6|max:64']);
+                $rules = array_merge($rules, [ $this->paramPassword => 'required|confirmed|regex:'.$this->passwordPolicy['regex']]);
             } //End if
 
             //Check the MFA setup config

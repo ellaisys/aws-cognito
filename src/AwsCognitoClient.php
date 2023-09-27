@@ -19,8 +19,10 @@ use Ellaisys\Cognito\Traits\AwsCognitoClientMFAAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientAdminAction;
 
 use Execption;
+use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
+use Aws\CognitoIdentityProvider\Exception\InvalidPasswordException;
 use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException ;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
@@ -263,7 +265,7 @@ class AwsCognitoClient
             $response = $this->client->signUp($payload);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
-                return false;
+                throw new InvalidUserException('ERROR_COGNITO_USER_EXISTS', $e);
             } //End if
 
             throw $e;
@@ -478,7 +480,7 @@ class AwsCognitoClient
             } //End if
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
-                return false;
+                throw new InvalidUserException('ERROR_COGNITO_USER_EXISTS', $e);
             } //End if
 
             throw $e;

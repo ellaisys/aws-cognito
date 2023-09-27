@@ -14,6 +14,7 @@ namespace Ellaisys\Cognito\Providers;
 use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoManager;
+use Ellaisys\Cognito\AwsCognitoUserPool;
 use Ellaisys\Cognito\Guards\CognitoSessionGuard;
 use Ellaisys\Cognito\Guards\CognitoTokenGuard;
 
@@ -191,13 +192,20 @@ class AwsCognitoServiceProvider extends ServiceProvider
                 $aws_config['credentials'] = Arr::only($credentials, ['key', 'secret', 'token']);
             } //End if
 
-            return new AwsCognitoClient(
+            //Instancite the AWS Cognito Client
+            $client = new AwsCognitoClient(
                 new CognitoIdentityProviderClient($aws_config),
                 config('cognito.app_client_id'),
                 config('cognito.app_client_secret'),
                 config('cognito.user_pool_id'),
                 config('cognito.app_client_secret_allow', true)
             );
+
+            return $client;
+        });
+
+        $this->app->singleton(AwsCognitoUserPool::class, function (Application $app) {
+            return new AwsCognitoUserPool($app[AwsCognitoClient::class]);
         });
     } //Function ends
 

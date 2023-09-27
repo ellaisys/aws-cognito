@@ -18,14 +18,29 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\AwsCognitoUserPool;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
+use Ellaisys\Cognito\Exceptions\NoTokenException;
+use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 
 trait ChangePasswords
 {
+    /**
+     * private variable for password policy
+     */
+    private $passwordPolicy = null;
+
+    /**
+     * Passed params
+     */
+    private $paramUsername = 'email';
+    private $paramPasswordOld = 'password';
+    private $paramPasswordNew = 'new_password';
+    
 
     /**
      * Change the given user's password.
@@ -39,42 +54,59 @@ trait ChangePasswords
      */
     public function reset($request, string $paramUsername='email', string $passwordOld='password', string $passwordNew='new_password')
     {
-        if ($request instanceof Request) {
-            //Validate request
-            $validator = Validator::make($request->all(), $this->rules());
+        try {
+            //Assign params
+            $this->paramUsername = $paramUsername;
+            $this->paramPasswordOld = $passwordOld;
+            $this->paramPasswordNew = $passwordNew;
 
+            //Transform to collection
+            if ($request instanceof Request) {
+                $request = collect($request->all());
+            } //End if
+
+            //Get the password policy
+            $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
+
+            //Validate request
+            $validator = Validator::make($request->all(), $this->rules(), [
+                'regex' => 'Must contain atleast '.$this->passwordPolicy['message'],
+            ]);
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
 
-            $request = collect($request->all());
-        } //End if
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
 
-        //Create AWS Cognito Client
-        $client = app()->make(AwsCognitoClient::class);
+            //Get User Data
+            $user = $client->getUser($request[$paramUsername]);
 
-        //Get User Data
-        $user = $client->getUser($request[$paramUsername]);
-
-        if (empty($user)) {
-            $response = response()->json(['error' => 'cognito.validation.reset_required.invalid_email'], 400);
-        } else {
-            if ($user['UserStatus'] == AwsCognitoClient::FORCE_CHANGE_PASSWORD) {
-                $response = $this->forceNewPassword($client, $request, $paramUsername, $passwordOld, $passwordNew);
-            } else if ($user['UserStatus'] == AwsCognitoClient::RESET_REQUIRED_PASSWORD) {
-                $response = response()->json(['error' => 'cognito.validation.reset_required.invalid_request'], 400);
-            } else {
-                $response = $this->changePassword($client, $request, $paramUsername, $passwordOld, $passwordNew);
+            if (empty($user)) {
+                throw new InvalidUserException('cognito.validation.reset_required.invalid_user');
             } //End if
-        } //End if
 
-        return $response;
+            //Action based on User Status
+            switch ($user['UserStatus']) {
+                case AwsCognitoClient::FORCE_CHANGE_PASSWORD:
+                    $response = $this->forceNewPassword($client, $request, $paramUsername, $passwordOld, $passwordNew);
+                    break;
 
-        // return $response == Password::PASSWORD_RESET
-        //     ? $this->sendResetResponse($request, $response)
-        //     : $this->sendResetFailedResponse($request, $response);
+                case AwsCognitoClient::RESET_REQUIRED_PASSWORD:
+                    throw new AwsCognitoException('cognito.validation.reset_required.invalid_request');
+                    break;
+
+                default:
+                    $response = $this->changePassword($client, $request, $paramUsername, $passwordOld, $passwordNew);
+                    break;
+            } //End switch
+
+            return $response;
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            throw $e;
+        } //Try Catch ends
     } //Function ends
-
 
 
     /**
@@ -97,7 +129,6 @@ trait ChangePasswords
     } //Function ends
 
 
-
     /**
      * If a user is being forced to set a new password for the first time follow that flow instead.
      *
@@ -112,9 +143,14 @@ trait ChangePasswords
     private function changePassword(AwsCognitoClient $client, $request, string $paramUsername, string $passwordOld, string $passwordNew)
     {
         //Authenticate user
-        $login = $client->authenticate($request[$paramUsername], $request[$passwordOld]);
+        $cognitoUser = $client->authenticate($request[$paramUsername], $request[$passwordOld]);
+        $accessToken = $cognitoUser['AuthenticationResult']['AccessToken'];
 
-        return $client->changePassword($login['AuthenticationResult']['AccessToken'], $request[$passwordOld], $request[$passwordNew]);
+        if (empty($accessToken)) {
+            throw new NoTokenException('cognito.validation.reset_required.no_token');
+        } //End if
+
+        return $client->changePassword($accessToken, $request[$passwordOld], $request[$passwordNew]);
     } //Function ends
 
 
@@ -129,9 +165,11 @@ trait ChangePasswords
      */
     public function showChangePasswordForm(Request $request, $token = null)
     {
-        return view('vendor.black-bits.laravel-cognito-auth.reset-password')->with(
-            ['email' => $request->email]
-        );
+        return view('vendor.ellaisys.aws-cognito.reset-password')
+            ->with([
+                'token' => $token,
+                $this->paramUsername => $request->email
+            ]);
     } //Function ends
 
 
@@ -142,11 +180,17 @@ trait ChangePasswords
      */
     protected function rules()
     {
-        return [
-            'email'    => 'required|email',
-            'password'  => 'string|min:8',
-            'new_password' => 'required|confirmed|min:8',
-        ];
+        try {
+            $rules = [
+                $this->paramUsername => 'required|email',
+                $this->paramPasswordOld => 'required|regex:'.$this->passwordPolicy['regex'],
+                $this->paramPasswordNew => 'required|confirmed|regex:'.$this->passwordPolicy['regex'],
+            ];
+
+            return $rules;
+        } catch (Exception $e) {
+            throw $e;
+        } //End try
     } //Function ends
 
 } //Trait ends

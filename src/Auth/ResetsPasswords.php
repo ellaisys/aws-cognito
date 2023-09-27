@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\AwsCognitoUserPool;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -29,30 +30,53 @@ trait ResetsPasswords
 {
 
     /**
+     * private variable for password policy
+     */
+    private $passwordPolicy = null;
+
+    /**
+     * Passed params
+     */
+    private $paramToken = 'token';
+    private $paramCode = 'code';
+    private $paramUsername = 'email';
+    private $paramPassword = 'password';
+
+
+    /**
      * Reset the given user's password.
      *
      * @param  \Illuminate\Http\Request|Illuminate\Support\Collection  $request
      * @param  string  $paramUsername (optional)
      * @param  string  $paramToken (optional)
-     * @param  string  $passwordNew (optional)
+     * @param  string  $paramPassword (optional)
      * 
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function reset(Request $request, string $paramUsername='email', string $paramToken='token', string $passwordNew='password')
+    public function reset(Request $request, string $paramUsername='email', string $paramToken='token', string $paramPassword='password')
     {
         $response = '';
         try {
+            //Assign params
+            $this->paramUsername = $paramUsername;
+            $this->paramToken = $paramToken;
+            $this->paramPassword = $paramPassword;
+
             if ($request instanceof Request) {
                 $req = $request;
-
-                //Validate request
-                $validator = Validator::make($request->all(), $this->rules());
-
-                if ($validator->fails()) {
-                    throw new ValidationException($validator);
-                } //End if
-
                 $request = collect($request->all());
+            } //End if
+
+            //Get the password policy
+            $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
+
+            //Validate request
+            $validator = Validator::make($request->all(), $this->rules(), [
+                'regex' => $this->passwordPolicy['message'],
+            ]);
+
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
             } //End if
 
             //Create AWS Cognito Client
@@ -64,7 +88,7 @@ trait ResetsPasswords
             //Check user status and change password
             if (($user['UserStatus'] == AwsCognitoClient::USER_STATUS_CONFIRMED) ||
                 ($user['UserStatus'] == AwsCognitoClient::RESET_REQUIRED_PASSWORD)) {
-                $response = $client->resetPassword($request[$paramToken], $request[$paramUsername], $request[$passwordNew]);
+                $response = $client->resetPassword($request[$paramToken], $request[$paramUsername], $request[$paramPassword]);
             } else {
                 $response = false;
             } //End if
@@ -156,10 +180,10 @@ trait ResetsPasswords
     protected function rules()
     {
         return [
-            'token'    => 'required_without:code',
-            'code'     => 'required_without:token',
-            'email'    => 'required|email',
-            'password' => 'required|confirmed|min:8',
+            $this->paramToken       => 'required_without:'.$this->paramCode,
+            $this->paramCode        => 'required_without:'.$this->paramToken,
+            $this->paramUsername    => 'required|email',
+            $this->paramPassword    => 'required|confirmed|regex:'.$this->passwordPolicy['regex'],
         ];
     } //Function ends
 

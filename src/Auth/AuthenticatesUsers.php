@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\AwsCognitoUserPool;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -77,6 +78,20 @@ trait AuthenticatesUsers
     protected function attemptLogin(Collection $request, string $guard='web', string $paramUsername='email', string $paramPassword='password', bool $isJsonResponse=false)
     {
         try {
+            //Get the password policy
+            $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
+
+            //Validate request
+            $validator = Validator::make($request->only([$paramPassword])->toArray(), [
+                $paramPassword => 'required|regex:'.$passwordPolicy['regex']
+            ], [
+                'regex' => 'Must contain atleast ' . $passwordPolicy['message']
+            ]);
+            if ($validator->fails()) {
+                Log::info($validator->errors());
+                throw new ValidationException($validator);
+            } //End if
+
             //Get the configuration fields
             $userFields = config('cognito.cognito_user_fields');
 
@@ -253,6 +268,8 @@ trait AuthenticatesUsers
             if ($exception instanceof CognitoIdentityProviderException) {
                 $errorCode = $exception->getAwsErrorCode();
                 $message = $exception->getAwsErrorMessage();
+            } else if ($exception instanceof ValidationException) {
+                throw $exception;
             } else {
                 $message = $exception->getMessage();
             } //End if
