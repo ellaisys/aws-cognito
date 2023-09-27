@@ -97,8 +97,9 @@ to look the following:
         ],
     ],
 ```
-
-### Database Migrations **New Feature**
+>[!IMPORTANT]
+>This is a new feature that is released in V1.2.0
+### Database Migrations
 The AWS Cognito service provider registers its own database migration directory, so remember to migrate your database after installing the package. The AWS Cognito migrations will add a few columns to your **users** table:
 
 ```bash
