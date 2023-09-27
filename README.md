@@ -659,6 +659,7 @@ Click on these badges to see how you might be able to help:
 [![GitHub repo PRs](https://img.shields.io/github/issues-pr/ellaisys/aws-cognito?style=flat&logo=github&logoColor=orange&label=PRs)](https://github.com/ellaisys/aws-cognito/pulls)&#160;
 [![GitHub repo Merged PRs](https://img.shields.io/github/issues-search/ellaisys/aws-cognito?style=flat&logo=github&logoColor=green&label=Merged%20PRs&query=is%3Amerged)](https://github.com/ellaisys/aws-cognito/pulls?q=is%3Apr+is%3Amerged)&#160;
 [![GitHub Help Wanted PRs](https://img.shields.io/github/issues-pr/ellaisys/aws-cognito/help%20wanted?style=flat&logo=github&logoColor=b545d1&label=%22Help%20Wanted%22%20PRs)](https://github.com/ellaisys/aws-cognito/pulls?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
+</div>
 
 ## Support us
 

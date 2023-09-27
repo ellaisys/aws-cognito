@@ -1,3 +1,11 @@
+Release 34 (tag v1.2.0)
+ - Feat: Add sub (cognito uuid) column to user table, and fill during registration.
+ - Feat: Provision for user defined passwords.
+ - Feat: Password validation based on Cognito Configuration
+
+Release 33 (tag v1.1.6)
+ - Fix: Issue #74
+
 Release 32 (tag v1.1.5)
  - Fix: Issue #67
  - Minor updates to code document and removal of log statement
