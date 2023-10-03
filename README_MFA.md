@@ -69,10 +69,24 @@ In case the MFA is enabled and activated, then the response will be as shown bel
 ```
 
 #### Web Application Approach
-The first step for the web application is same for MFA enabled / disabled implementation.
+The first step for the web application is same for MFA enabled / disabled implementation. However now you can use the provided blade components to accept the SMS TOTP or Software Token code.
 
-```php
+```html
+    @extends('layouts.app')
 
+    @section('content')
+        <div class="container">
+            @if (!((request()->has('status')) && (request()->has('session_token'))))
+            <div class="row justify-content-center">
+                <!-- Write your login page here -->
+            </div>
+            @endif
+
+            <!-- Below is the blade component view -->
+            <x-cognito::mfa.code />
+
+        </div>
+    @endsection
 ```
 
 ### **Activate MFA (Software Token Only)**

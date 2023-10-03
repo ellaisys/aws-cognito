@@ -47,6 +47,36 @@ return [
     */
     'app_client_secret_allow' => env('AWS_COGNITO_CLIENT_SECRET_ALLOW', true),
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | AWS Cognito Path
+    |--------------------------------------------------------------------------
+    |
+    | This is the base URI path where the package views, such as the MFA
+    | verification screen, activation screen, etc will be available from. 
+    | You're free to tweak this path according to your preferences and 
+    | application design.
+    |
+    */
+
+    'path' => env('AWS_COGNITO_PATH', ''),
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | AWS Cognito Home Route Name
+    |--------------------------------------------------------------------------
+    |
+    | This is the home route name where the page redirects post successful 
+    | authentication. This will work with and without the MFA enabled using
+    | the AWS Cognito based authentication.
+    |
+    */
+
+    'redirect_to_route_name' => env('AWS_COGNITO_HOME_ROUTE_NAME', 'home'),
+
+
     /*
     |--------------------------------------------------------------------------
     | Cognito Fields & DB Mapping
@@ -110,7 +140,7 @@ return [
     |
     */
     'mfa_setup' => env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE'),
-    'force_mfa_code_route_name' => env('AWS_COGNITO_MFA_CODE_ROUTE_NAME', 'cognito.form.mfa.code'),
+    'force_mfa_code_route_name' => env('AWS_COGNITO_MFA_CODE_ROUTE_NAME', 'login'),
 
 
     /*
@@ -242,6 +272,8 @@ return [
     | This option enables the new user message action. You can set the value to
     | SUPPRESS in order to stop the invitation mails from being sent. The default
     | value is set to null.
+    |
+    | Possible values: "RESEND", "SUPPRESS"
     |
     */
     'new_user_message_action' => env('AWS_COGNITO_NEW_USER_MESSAGE_ACTION', null),

@@ -27,6 +27,12 @@ use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 
 class AwsCognito
 {
+    /**
+     * Indicates if AWSCognito routes will be run.
+     *
+     * @var bool
+     */
+    public static $registersRoutes = true;
 
     
     /**
@@ -90,6 +96,19 @@ class AwsCognito
         $this->manager = $manager;
         $this->parser = $parser;
     }
+
+
+    /**
+     * Configure AWS Cognito to not register its routes.
+     *
+     * @return static
+     */
+    public static function ignoreRoutes()
+    {
+        static::$registersRoutes = false;
+
+        return new static;
+    } //Function ends
 
 
     /**

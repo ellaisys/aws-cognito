@@ -8,7 +8,7 @@
     "authors": [
         {
             "name": "EllaiSys",
-            "email": "support@ellaisys.com",
+            "email": "ellaisys@gmail.com",
             "role": "owner",
             "homepage": "https://ellaisys.github.io/"
         }
@@ -32,7 +32,10 @@
     "autoload": {
         "psr-4": {
           "Ellaisys\\Cognito\\": "src/"
-        }
+        },
+        "files": [
+            "resources/views"
+        ]
     },
     "extra": {
         "laravel": {

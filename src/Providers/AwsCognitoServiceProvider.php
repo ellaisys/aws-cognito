@@ -28,6 +28,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
@@ -54,12 +56,18 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
 
     public function boot()
-    {
+    {  
         //Register publishing
         $this->registerPublishing();
 
+        //Register routes
+        $this->registerRoutes();
+
         //Register migrations
         $this->registerMigrations();
+
+        //Register resources\
+        $this->registerResources();
 
         //Register resources
         $this->registerPolicies();
@@ -73,6 +81,9 @@ class AwsCognitoServiceProvider extends ServiceProvider
         //Set Guards
         $this->extendWebAuthGuard();
         $this->extendApiAuthGuard();
+
+        //Set Blade Components
+        $this->registerBladeComponents();
     } //Function ends
 
 
@@ -93,10 +104,34 @@ class AwsCognitoServiceProvider extends ServiceProvider
                 __DIR__.'/../../database/migrations' => $this->app->databasePath('migrations'),
             ], 'cognito-migrations');
 
-            // $this->publishes([
-            //     __DIR__.'/../../resources/views' => $this->app->resourcePath('views/vendor/cognito'),
-            // ], 'cognito-views');
-        }
+            $this->publishes([
+                __DIR__.'/../../resources/views' => $this->app->resourcePath('views/vendor/cognito'),
+            ], 'cognito-views');
+        } //End if
+    } //Function ends
+
+
+    /**
+     * Register the package's routes.
+     *
+     * @return void
+     */
+    protected function registerRoutes()
+    {
+        if ($this->app->routesAreCached()) {
+            return;
+        } //End if
+
+        if (AwsCognito::$registersRoutes) {
+            Route::group([
+                'prefix' => config('cognito.path', ''),
+                'namespace' => 'Ellaisys\Cognito\Http\Controllers',
+                'middleware' => ['web'],
+                'as' => 'cognito.',
+            ], function () {
+                $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
+            });
+        } //End if
     } //Function ends
 
 
@@ -281,6 +316,15 @@ class AwsCognitoServiceProvider extends ServiceProvider
         if (AwsCognito::$runsMigrations && $this->app->runningInConsole()) {
             $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
         } //End if
+    } //Function ends
+
+
+    /**
+     * Register the package blade components.
+     */
+    protected function registerBladeComponents()
+    {
+        //Provision to register blade components and directives
     } //Function ends
     
 } //Class ends
