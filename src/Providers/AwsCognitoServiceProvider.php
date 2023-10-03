@@ -84,6 +84,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
         //Set Blade Components
         $this->registerBladeComponents();
+
+        //Route::mixin();
     } //Function ends
 
 
@@ -123,6 +125,14 @@ class AwsCognitoServiceProvider extends ServiceProvider
         } //End if
 
         if (AwsCognito::$registersRoutes) {
+            Route::group([
+                'prefix' => 'api',
+                'namespace' => 'Ellaisys\Cognito\Http\Controllers\Api',
+                'middleware' => ['api'],
+            ], function () {
+                $this->loadRoutesFrom(__DIR__.'/../../routes/api.php');
+            });
+
             Route::group([
                 'prefix' => config('cognito.path', ''),
                 'namespace' => 'Ellaisys\Cognito\Http\Controllers',
