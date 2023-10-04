@@ -24,6 +24,7 @@ use Ellaisys\Cognito\AwsCognitoClaim;
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
@@ -88,7 +89,7 @@ trait RegisterMFA
 
             //Get Authenticated user
             $authUser = Auth::guard($guard)->user();
-            if (empty($authUser)) { throw new HttpException(400, 'EXCEPTION_INVALID_USER'); }
+            if (empty($authUser)) { throw new InvalidUserException(); }
 
             //Token Object
             $objToken = Auth::guard($guard)->cognito()->getToken();
@@ -160,18 +161,15 @@ trait RegisterMFA
 
             //Get Authenticated user
             $authUser = Auth::guard($guard)->user();
-            if (empty($authUser)) { throw new HttpException(400, 'EXCEPTION_INVALID_USER'); }
+            if (empty($authUser)) { throw new InvalidUserException(); }
            
             //Use username for the MFA configurations
-            if (!empty($username)) {
-                return $client->setUserMFAPreferenceByAdmin($username, $isEnable);
-            } else {
-                return response()->json(['error' => 'cognito.validation.invalid_username'], 400);
-            } //End if
+            return $client->setUserMFAPreferenceByAdmin($username, $isEnable);
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                return response()->json(['error' => ['code' => $e->getAwsErrorCode(), 'message' => $e->getAwsErrorMessage()]], 400);
+                throw new AwsCognitoException($e->getAwsErrorMessage(), $e->getAwsErrorCode(), $e);
             } //End if
+
             throw $e;
         } //Try-catch ends
     } //Function ends

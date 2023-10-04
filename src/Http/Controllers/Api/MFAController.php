@@ -23,7 +23,7 @@ use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class ApiMFAController extends Controller
+class MFAController extends Controller
 {
     use AuthenticatesUsers;
     use RegisterMFA;
@@ -84,9 +84,19 @@ class ApiMFAController extends Controller
     {
 		try
 		{
-            return $this->enableMFA('api', $request[$paramUsername])->toArray();
+            $respose = $this->enableMFA('api', $request[$paramUsername]);
+            if (isset($respose['@metadata']['statusCode']) && $respose['@metadata']['statusCode']==200) {
+                return response()->json([
+                    'message' => 'MFA enabled successfully',
+                    'status' => 'success',
+                    'code' => $respose['@metadata']['statusCode'],
+                    'data' => null
+                ], 200);
+            } else {
+                throw new HttpException(400, 'Error enabling the MFA.');
+            } //End if
         } catch(Exception $e) {
-			$message = 'Error activating the MFA.';
+			$message = 'Error enabling the MFA.';
 			if ($e instanceof ValidationException) {
                 $message = $e->errors();
             } else if ($e instanceof CognitoIdentityProviderException) {
@@ -109,9 +119,19 @@ class ApiMFAController extends Controller
     {
 		try
 		{
-            return $this->disableMFA('api', $request[$paramUsername])->toArray();
+            $respose = $this->disableMFA('api', $request[$paramUsername]);
+            if (isset($respose['@metadata']['statusCode']) && $respose['@metadata']['statusCode']==200) {
+                return response()->json([
+                    'message' => 'MFA disabled successfully',
+                    'status' => 'success',
+                    'code' => $respose['@metadata']['statusCode'],
+                    'data' => null
+                ], 200);
+            } else {
+                throw new HttpException(400, 'Error disabling the MFA.');
+            } //End if
         } catch(Exception $e) {
-			$message = 'Error activating the MFA.';
+			$message = 'Error disabling the MFA.';
 			if ($e instanceof ValidationException) {
                 $message = $e->errors();
             } else if ($e instanceof CognitoIdentityProviderException) {

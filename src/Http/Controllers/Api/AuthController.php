@@ -11,7 +11,6 @@ use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\Auth\AuthenticatesUsers;
 use Ellaisys\Cognito\Auth\ChangePasswords;
 use Ellaisys\Cognito\Auth\RegistersUsers;
-//use Ellaisys\Cognito\Auth\RegisterMFA;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -27,7 +26,7 @@ use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class ApiAuthController extends Controller
+class AuthController extends Controller
 {
     use AuthenticatesUsers;
     use ChangePasswords;
@@ -48,17 +47,23 @@ class ApiAuthController extends Controller
      */
     public function actionLogin(Request $request)
     {
-        //Create credentials object
-        $collection = collect($request->all());
+        try {
+            //Create credentials object
+            $collection = collect($request->all());
 
-        if ($claim = $this->attemptLogin($collection, 'api', 'username', 'password', true)) {
+            if ($claim = $this->attemptLogin($collection, 'api', 'username', 'password', true)) {
 
-            if ($claim instanceof AwsCognitoClaim) {
-                return $claim->getData();
+                if ($claim instanceof AwsCognitoClaim) {
+                    return $claim->getData();
+                } else {
+                    return $claim;
+                } //End if
             } else {
-                return $claim;
+                return response()->json(['message' => 'Invalid credentials'], 400);
             } //End if
-        }
+        } catch (Exception $e) {
+            return $e;
+        } //End try-catch
     } //Function ends
 
 

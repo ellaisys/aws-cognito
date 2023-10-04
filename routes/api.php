@@ -3,8 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-use Ellaisys\Cognito\Http\Controllers\Api\ApiAuthController;
-use Ellaisys\Cognito\Http\Controllers\Api\ApiMFAController;
+use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
+use Ellaisys\Cognito\Http\Controllers\Api\MFAController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,12 +22,12 @@ use Ellaisys\Cognito\Http\Controllers\Api\ApiMFAController;
 // });
 
 Route::group(['prefix' => 'user'], function () {
-    Route::post('register', [ApiAuthController::class, 'actionRegister']);
+    Route::post('register', [AuthController::class, 'actionRegister']);
 
     //Route group login
     Route::group(['prefix' => 'login'], function() {
-        Route::put('/', [ApiAuthController::class, 'actionLogin']);
-        Route::put('/mfa', [ApiMFAController::class, 'actionValidateMFA']);
+        Route::post('/', [AuthController::class, 'actionLogin']);
+        Route::post('/mfa', [MFAController::class, 'actionValidateMFA']);
     });
 
     //Authenticated routes
@@ -36,12 +36,12 @@ Route::group(['prefix' => 'user'], function () {
 
         //Route group logout
         Route::group(['prefix' => 'logout'], function() {
-            Route::put('/', [ApiAuthController::class, 'actionLogout']);
-            Route::put('/forced', [ApiAuthController::class, 'actionLogoutForced']);
+            Route::put('/', [AuthController::class, 'actionLogout']);
+            Route::put('/forced', [AuthController::class, 'actionLogoutForced']);
         });        
 
         //Route group for MFA
-        Route::group(['controller' => ApiMFAController::class, 'prefix' => 'mfa'], function() {
+        Route::group(['controller' => MFAController::class, 'prefix' => 'mfa'], function() {
             Route::post('/enable', 'actionApiEnableMFA');
             Route::post('/disable', 'actionApiDisableMFA');
             Route::get('/activate', 'actionApiActivateMFA');
