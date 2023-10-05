@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
 use Ellaisys\Cognito\Http\Controllers\Api\MFAController;
+use Ellaisys\Cognito\Http\Controllers\Api\ResetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,7 +51,7 @@ Route::group(['prefix' => 'user'], function () {
         });
 
         //Route for refresh token
-        //Route::post('refresh-token', [ResetController::class, 'actionRefreshToken']);
+        Route::post('refresh-token', [ResetController::class, 'actionRefreshToken']);
     });
 });
 

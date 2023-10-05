@@ -30,24 +30,6 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 trait RefreshToken
 {
     /**
-     * The AwsCognito instance.
-     *
-     * @var \Ellaisys\Cognito\AwsCognito
-     */
-    protected $cognito;
-
-
-    /**
-     * RespondsMFAChallenge constructor.
-     *
-     * @param AwsCognito $cognito
-     */
-    public function __construct(AwsCognito $cognito) {
-        $this->cognito = $cognito;
-    }
-
-
-    /**
      * Generate a new token.
      *
      * @param  \Illuminate\Http\Request|Illuminate\Support\Collection  $request
@@ -59,15 +41,15 @@ trait RefreshToken
     public function refresh(Request $request, string $paramUsername='email', string $paramRefreshToken='refresh_token')
     {
         try {
+            //Validate request
+            $validator = Validator::make($request->all(), $this->rules());
 
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
+            //Convert request to collection
             if ($request instanceof Request) {
-                //Validate request
-                $validator = Validator::make($request->all(), $this->rules());
-
-                if ($validator->fails()) {
-                    throw new ValidationException($validator);
-                } //End if
-
                 $request = collect($request->all());
             } //End if
 
@@ -91,7 +73,11 @@ trait RefreshToken
                 $claim = new AwsCognitoClaim($response, $authUser, 'email');
                 if ($claim && $claim instanceof AwsCognitoClaim) { 
                     //Store the token
-                    $this->cognito->setClaim($claim)->storeToken();
+                    $cognito = app()->make('ellaisys.aws.cognito');
+                    if (empty($cognito)) {
+                        throw new HttpException(400, 'ERROR_COGNITO_TOKEN_STORE');
+                    } //End if
+                    $cognito->setClaim($claim)->storeToken();
 
                     //Return the response object
                     return $claim->getData();    
@@ -99,11 +85,11 @@ trait RefreshToken
                     return false;            
                 } //End if
             } else {
-                return response()->json(['error' => 'cognito.validation.invalid_username'], 400);
+                throw new HttpException(400, 'ERROR_COGNITO_USER_NOT_FOUND');
             } //End if
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                return response()->json(['error' => $e->getAwsErrorCode()], 400);
+                throw new AwsCognitoException($e->getAwsErrorMessage(), $e->getAwsErrorCode(), $e);
             } //End if
             throw $e;
         } //Try-catch ends
