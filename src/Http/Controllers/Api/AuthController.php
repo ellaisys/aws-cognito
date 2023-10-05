@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <support@ellaisys.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Ellaisys\Cognito\Http\Controllers\Api;
 
 use Auth;
@@ -31,6 +40,16 @@ class AuthController extends Controller
     use AuthenticatesUsers;
     use ChangePasswords;
     use RegistersUsers;
+
+    
+    /**
+     * Constructor.
+     *
+     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
     
 
     /**
@@ -51,19 +70,17 @@ class AuthController extends Controller
             //Create credentials object
             $collection = collect($request->all());
 
-            if ($claim = $this->attemptLogin($collection, 'api', 'username', 'password', true)) {
-
-                if ($claim instanceof AwsCognitoClaim) {
-                    return $claim->getData();
-                } else {
-                    return $claim;
-                } //End if
+            //Validate request and get credentials
+            $claim = $this->attemptLogin($collection, 'api', 'username', 'password', true);
+            if ($claim instanceof AwsCognitoClaim) {
+                return $this->response->success($claim->getData());
             } else {
-                return response()->json(['message' => 'Invalid credentials'], 400);
+                return $this->response->success($claim);
             } //End if
         } catch (Exception $e) {
             return $e;
         } //End try-catch
+        
     } //Function ends
 
 
@@ -77,9 +94,11 @@ class AuthController extends Controller
     {
         try {
             auth()->guard('api')->logout($forced);
-            return response()->json(['message' => 'Successfully logged out']);
+
+            //Send response data
+            return $this->response->success([], 200, 'Successfully logged out');
         } catch (Exception $e) {
-            return response()->json(['message' => 'Unable to logout user.'], 500);
+            throw new HttpException(400, 'Error logging out.');
         } //End try-catch
     } //Function ends
     public function actionLogoutForced(Request $request)

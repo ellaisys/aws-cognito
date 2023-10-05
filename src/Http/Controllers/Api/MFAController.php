@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <support@ellaisys.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Ellaisys\Cognito\Http\Controllers\Api;
 
 use Auth;
@@ -27,6 +36,16 @@ class MFAController extends Controller
 {
     use AuthenticatesUsers;
     use RegisterMFA;
+
+
+    /**
+     * Constructor.
+     *
+     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
 
 
 	/**
@@ -86,12 +105,7 @@ class MFAController extends Controller
 		{
             $respose = $this->enableMFA('api', $request[$paramUsername]);
             if (isset($respose['@metadata']['statusCode']) && $respose['@metadata']['statusCode']==200) {
-                return response()->json([
-                    'message' => 'MFA enabled successfully',
-                    'status' => 'success',
-                    'code' => $respose['@metadata']['statusCode'],
-                    'data' => null
-                ], 200);
+                return $this->response->success([], 200, 'MFA enabled successfully');
             } else {
                 throw new HttpException(400, 'Error enabling the MFA.');
             } //End if
@@ -121,12 +135,7 @@ class MFAController extends Controller
 		{
             $respose = $this->disableMFA('api', $request[$paramUsername]);
             if (isset($respose['@metadata']['statusCode']) && $respose['@metadata']['statusCode']==200) {
-                return response()->json([
-                    'message' => 'MFA disabled successfully',
-                    'status' => 'success',
-                    'code' => $respose['@metadata']['statusCode'],
-                    'data' => null
-                ], 200);
+                return $this->response->success([], 200, 'MFA disabled successfully');
             } else {
                 throw new HttpException(400, 'Error disabling the MFA.');
             } //End if
@@ -182,9 +191,9 @@ class MFAController extends Controller
             $claim = $this->attemptLoginMFA($request, 'api', true);
 
             if ($claim instanceof AwsCognitoClaim) {
-                return $claim->getData();
+                return $this->response->success($claim->getData());
             } else {
-                return $claim;
+                return $this->response->success($claim);
             } //End if
 
         } catch (Exception $e) {
