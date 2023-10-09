@@ -20,6 +20,7 @@ use Ellaisys\Cognito\AwsCognitoClaim;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\NoTokenException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -57,7 +58,7 @@ trait CognitoMFA
                 throw new HttpException(400, 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER');
             } //End if
         } catch(CognitoIdentityProviderException $e) {
-            throw $e;
+            throw new AwsCognitoException('ERROR_AWS_COGNITO_MFA_CODE', $e);
         } catch(Exception $e) {
             throw $e;
         } //Try-catch ends
@@ -77,7 +78,9 @@ trait CognitoMFA
             $accessToken = $this->cognito->getToken();
             if (!empty($accessToken)) {
                 $response = $this->client->associateSoftwareTokenMFA($accessToken);
-                if (!empty($response)) {
+                if ($response && ($response instanceof AwsResult) && 
+                    isset($response['@metadata']['statusCode']) && $response['@metadata']['statusCode']==200) {
+
                     //Build payload
                     $secretCode = $response->get('SecretCode');
                     $username = $this->user()[$userParamToAddToQR];
@@ -89,10 +92,14 @@ trait CognitoMFA
                         'TotpUri' => $uriTotp
                     ];
                     return $payload;
+                } else {
+                    throw new HttpException(400, 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER');
                 } //End if
             } else {
-                return null;
+                throw new NoTokenException('ERROR_AWS_COGNITO_NO_TOKEN');
             } //End if
+        } catch(CognitoIdentityProviderException $e) {
+            throw new AwsCognitoException($e->getAwsErrorMessage(), $e);
         } catch(Exception $e) {
             throw $e;
         } //Try-catch ends
@@ -125,7 +132,7 @@ trait CognitoMFA
             } //End if
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                throw new HttpException(400, $e->getAwsErrorMessage(), $e);
+                throw new AwsCognitoException($e->getAwsErrorMessage(), $e);
             } //End if
             throw $e;
         } //Try-catch ends

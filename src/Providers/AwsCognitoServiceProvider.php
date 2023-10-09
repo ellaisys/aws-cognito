@@ -34,6 +34,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 
+use Ellaisys\Cognito\Exceptions\Handler as AwsCognitoExceptionHandler;
+
 /**
  * Class AwsCognitoServiceProvider.
  */
@@ -52,6 +54,9 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
         //Register Alias
         $this->registerAliases();
+
+        //Register Cognito Exception Handler
+        $this->registerCognitoExceptionHandler();
     } //Function ends
 
 
@@ -153,6 +158,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function registerAliases()
     {
         $this->app->alias('ellaisys.aws.cognito', AwsCognito::class);
+        $this->app->alias('ellaisys.aws.cognito.exception', AwsCognitoExceptionHandler::class);
     }
 
     
@@ -335,6 +341,21 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function registerBladeComponents()
     {
         //Provision to register blade components and directives
+    } //Function ends
+
+
+    /**
+     * Register the package exception handler.
+     *
+     * @return void
+     */
+    protected function registerCognitoExceptionHandler()
+    {
+        $this->app->singleton('ellaisys.aws.cognito.exception', function (Application $app) {
+            return new AwsCognitoExceptionHandler(
+                $app['config']['cognito']['exceptions']
+            );
+        });
     } //Function ends
     
 } //Class ends

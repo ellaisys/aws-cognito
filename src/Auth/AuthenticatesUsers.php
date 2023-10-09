@@ -88,7 +88,6 @@ trait AuthenticatesUsers
                 'regex' => 'Must contain atleast ' . $passwordPolicy['message']
             ]);
             if ($validator->fails()) {
-                Log::info($validator->errors());
                 throw new ValidationException($validator);
             } //End if
 
@@ -145,16 +144,15 @@ trait AuthenticatesUsers
     protected function attemptLoginMFA($request, string $guard='web', bool $isJsonResponse=false, string $paramName='mfa_code')
     {
         try {
+            //Validate request
+            $validator = Validator::make($request->all(), $this->rulesMFA());
+
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
             if ($request instanceof Request) {
                 $req = $request;
-
-                //Validate request
-                $validator = Validator::make($request->all(), $this->rulesMFA());
-
-                if ($validator->fails()) {
-                    throw new ValidationException($validator);
-                } //End if
-
                 $request = collect($request->all());
             } //End if
 
@@ -202,23 +200,23 @@ trait AuthenticatesUsers
             } //End if
 
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('AuthenticatesUsers:attemptLoginMFA:CognitoIdentityProviderException');
-            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);
-            
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:Exception');
-            Log::error($e);
-            switch ($e->getMessage()) {
-                case 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER':
-                    $paramName = 'mfa_code';
-                    break;
-                
-                default:
-                    $paramName = 'mfa_code';
-                    break;
-            } //Switch ends
-            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);
+            if ($isJsonResponse) {
+                throw $e;
+            } else {
+                Log::error($e);
+                switch ($e->getMessage()) {
+                    case 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER':
+                        $paramName = 'mfa_code';
+                        break;
+                    
+                    default:
+                        $paramName = 'mfa_code';
+                        break;
+                } //Switch ends
+                return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);                
+            } //End if
         } //Try-catch ends
 
         return $claim;
@@ -275,18 +273,11 @@ trait AuthenticatesUsers
             } //End if
         } //End if
 
-        if ($isJsonResponse) {
-            return  response()->json([
-                'error' => $errorCode,
-                'message' => $message
-            ], 400);
-        } else {
-            return redirect()
-                ->back()
-                ->withErrors([
-                    $paramName => $message,
-                ]);
-        } //End if
+        return redirect()
+            ->back()
+            ->withErrors([
+                $paramName => $message,
+            ]);
 
         throw new HttpException(400, $message);
     } //Function ends

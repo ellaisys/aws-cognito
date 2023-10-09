@@ -14,7 +14,7 @@ namespace Ellaisys\Cognito\Services;
 use Illuminate\Http\Response;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-use Mockery\Exception;
+use Exception;
 
 
 /**
@@ -106,7 +106,7 @@ class JsonResponseService
             return (new JsonResource(collect($resource)))->additional($merged);
         }
 
-        throw new Exception('Invalid type of resource.');
+        throw new Exception('Resource must be an array or an instance of JsonResource');
     } //Function end
 
 } //Class end

@@ -102,14 +102,16 @@ trait RegisterMFA
             if (!empty($accessToken)) {
                 $response = $client->setUserMFAPreference($accessToken, $isEnable);
                 if (empty($response)) {
-                    throw new HttpException(400);
+                    throw new AwsCognitoException('EXCEPTION_COGNITO_MFA_PREFERENCE');
                 } //End if
+
+                return $response;
             } else {
-                throw new HttpException(400, 'EXCEPTION_INVALID_USERNAME_OR_TOKEN');
+                throw new AwsCognitoException('EXCEPTION_INVALID_USERNAME_OR_TOKEN');
             } //End if
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                throw new HttpException(400, $e->getAwsErrorMessage(), $e);
+                throw new AwsCognitoException('EXCEPTION_COGNITO', $e);
             } //End if
             throw $e;
         } //Try-catch ends
@@ -167,7 +169,7 @@ trait RegisterMFA
             return $client->setUserMFAPreferenceByAdmin($username, $isEnable);
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                throw new AwsCognitoException($e->getAwsErrorMessage(), $e->getAwsErrorCode(), $e);
+                throw new AwsCognitoException($e->getAwsErrorMessage(), $e);
             } //End if
 
             throw $e;

@@ -89,7 +89,7 @@ trait RefreshToken
             } //End if
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                throw new AwsCognitoException($e->getAwsErrorMessage(), $e->getAwsErrorCode(), $e);
+                throw new AwsCognitoException($e->getAwsErrorMessage(), $e);
             } //End if
             throw $e;
         } //Try-catch ends
