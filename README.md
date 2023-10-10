@@ -98,7 +98,8 @@ to look the following:
     ],
 ```
 >[!IMPORTANT]
->This is a new feature that is released in V1.2.0
+>This is a new feature that is released in V1.2.0 and shall work with Laravel 8.37 (with anonymous migration support). For verions below Laravel 8.37, this feature is disabled. You will need to update the **users** table manually by updating your users table.
+
 ### Database Migrations
 The AWS Cognito service provider registers its own database migration directory, so remember to migrate your database after installing the package. The AWS Cognito migrations will add a few columns to your **users** table:
 
