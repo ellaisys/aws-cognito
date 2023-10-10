@@ -1,3 +1,6 @@
+Release 35 (tag v1.2.1)
+ - Fix: Issue #81 (Anonymous migrations issue in laravel)
+
 Release 34 (tag v1.2.0)
  - Feat: Add sub (cognito uuid) column to user table, and fill during registration.
  - Feat: Provision for user defined passwords.
