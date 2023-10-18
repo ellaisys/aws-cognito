@@ -114,6 +114,17 @@ class AwsCognitoServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../../resources/views' => $this->app->resourcePath('views/vendor/cognito'),
             ], 'cognito-views');
+
+            //Publish Controllers
+            $this->publishes([
+                __DIR__.'/../../src/Http/Controllers/Api/AuthController.php' => app_path('Http/Controllers/Api/AuthController.php'),
+                __DIR__.'/../../src/Http/Controllers/Api/MFAController.php' => app_path('Http/Controllers/Api/MFAController.php'),
+                __DIR__.'/../../src/Http/Controllers/Api/RefreshTokenController.php' => app_path('Http/Controllers/Api/RefreshTokenController.php'),
+                __DIR__.'/../../src/Http/Controllers/Api/RegisterController.php' => app_path('Http/Controllers/Api/RegisterController.php'),
+                __DIR__.'/../../src/Http/Controllers/Api/UserController.php' => app_path('Http/Controllers/Api/UserController.php'),
+                __DIR__.'/../../src/Http/Controllers/Auth/LoginController.php' => app_path('Http/Controllers/Auth/LoginController.php'),
+            ], 'cognito-controllers');
+
         } //End if
     } //Function ends
 

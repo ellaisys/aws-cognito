@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Request;
 
 use Ellaisys\Cognito\AwsCognitoClaim;
-use Ellaisys\Cognito\Auth\RefreshToken;
+use Ellaisys\Cognito\Auth\RegistersUsers;
 
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\Validator;
@@ -29,9 +29,9 @@ use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 
-class ResetController extends Controller
+class RegisterController extends Controller
 {
-    use RefreshToken;
+    use RegistersUsers;
 
 
     /**
@@ -40,29 +40,32 @@ class ResetController extends Controller
      */
     public function __construct()
     {
+        //All the API's of this controller are public
+        $this->middleware('guest');
+
         parent::__construct();
     }
-
+    
 
     /**
-     * Action to refresh the token
+     * Action to register the a new user
      * 
-     * @param Request $request
-     * 
-     * @return \Illuminate\Http\JsonResponse
+     * @param  \Illuminate\Http\Request  $request
      */
-    public function actionRefreshToken(Request $request)
+    public function actionRegister(Request $request)
     {
         try {
-            //Call the refresh token API
-            $response = $this->refresh($request);
+            //Create credentials object
+            $collection = collect($request->all());
 
-            //Return the response
-            return $this->response->success($response);
-
+            //Validate request and get registration data
+            $user = $this->register($request);
+            if ($user) {
+                return $this->response->success($user);
+            } //End if
         } catch (Exception $e) {
-            return $e;
-        }
+            throw $e;
+        } //End try-catch
     } //Function ends
 
 } //Class ends

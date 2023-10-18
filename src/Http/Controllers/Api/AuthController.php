@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Log;
 use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\Auth\AuthenticatesUsers;
 use Ellaisys\Cognito\Auth\ChangePasswords;
-use Ellaisys\Cognito\Auth\RegistersUsers;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -39,7 +38,6 @@ class AuthController extends Controller
 {
     use AuthenticatesUsers;
     use ChangePasswords;
-    use RegistersUsers;
 
     
     /**
@@ -50,19 +48,14 @@ class AuthController extends Controller
     {
         parent::__construct();
     }
-    
-
-    /**
-     * Action to register the user
-     */
-    public function actionRegister(Request $request)
-    {
-        return $this->register($request);
-    } //Function ends
 
 
     /**
      * Login action for the API based approach.
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * 
+     * @return \Illuminate\Http\Response
      */
     public function actionLogin(Request $request)
     {
@@ -104,27 +97,6 @@ class AuthController extends Controller
     public function actionLogoutForced(Request $request)
     {
         return $this->actionLogout($request, true);
-    } //Function ends
-
-
-    /**
-     * Attempt to log the user into the application.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return bool
-     */
-    protected function getRemoteUser()
-    {
-        try {
-            $user =  auth()->guard('api')->user();
-            $response = auth()->guard()->getRemoteUserData($user['email']);
-        } catch (NoLocalUserException $e) {
-            $response = $this->createLocalUser($credentials);
-        } catch (Exception $e) {
-            return $e;
-        }
-
-        return $response;
     } //Function ends
 
 

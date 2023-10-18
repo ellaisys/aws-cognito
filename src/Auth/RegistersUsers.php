@@ -23,7 +23,6 @@ use Ellaisys\Cognito\AwsCognitoUserPool;
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait RegistersUsers
@@ -57,8 +56,8 @@ trait RegistersUsers
             $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
-            $validator = Validator::make($request->all(), $this->rulesRegisterUser(), [
-                'regex' => 'Must contain atleast '.$this->passwordPolicy['message'],
+            $validator = Validator::make($request->all(), $this->rules(), [
+                $this->paramPassword.'.regex' => 'Must contain atleast '.$this->passwordPolicy['message']
             ]);
             if ($validator->fails()) {
                 throw new ValidationException($validator);
@@ -86,17 +85,21 @@ trait RegistersUsers
                         foreach ($cognitoAttributes as $cognitoAttribute) {
                             $data[$cognitoAttribute['Name']] = $cognitoAttribute['Value'];
                         } //End foreach
-                    } //End if                     
+                    } //End if    
+                    
+                    //Create user in local store
+                    if (class_exists(App\User::class)) {
+                        $user = App\User::create($data);
+                    } elseif (class_exists(App\Models\User::class)) {
+                        $user = App\Models\User::create($data);
+                    } elseif (class_exists(config('auth.providers.users.model'))) { 
+                        $user = config('auth.providers.users.model')::create($data);
+                    } //End if
                 } //End if
-
-                //Create user in local store
-                $user = $this->create($data);
             } //End if
 
             // Return with user data
-            return ($request->expectsJson() || $request->isJson())
-                ? new JsonResponse($user, 200)
-                : redirect($this->redirectPath());
+            return $user;
         } catch (Exception $e) {
             throw $e;
         } //End try 
@@ -125,47 +128,57 @@ trait RegistersUsers
      * Handle a registration request for the application.
      *
      * @param  \Illuminate\Support\Collection  $request
+     * @param  array  $clientMetadata
+     * @param  string  $groupname
+     * 
      * @return \Illuminate\Http\Response
+     * 
      * @throws InvalidUserFieldException
      */
     public function createCognitoUser(Collection $request, array $clientMetadata=null, string $groupname=null)
     {
-        //Initialize Cognito Attribute array
-        $attributes = [];
+        try {
+            //Initialize Cognito Attribute array
+            $attributes = [];
 
-        //Get the configuration for new user invitation message action.
-        $messageAction = config('cognito.new_user_message_action', null);
+            //Get the configuration for new user invitation message action.
+            $messageAction = config('cognito.new_user_message_action', null);
 
-        //Get the registeration fields
-        $userFields = config('cognito.cognito_user_fields');
+            //Get the registeration fields
+            $userFields = config('cognito.cognito_user_fields');
 
-        //Iterate the fields
-        foreach ($userFields as $key => $userField) {
-            if ($userField!=null) {
-                if ($request->has($userField)) {
-                    $attributes[$key] = $request->get($userField);
-                } else {
-                    Log::error('RegistersUsers:createCognitoUser:InvalidUserFieldException');
-                    Log::error("The configured user field {$userField} is not provided in the request.");
-                    throw new InvalidUserFieldException("The configured user field {$userField} is not provided in the request.");
+            //Iterate the fields
+            foreach ($userFields as $key => $userField) {
+                if ($userField!=null) {
+                    if ($request->has($userField)) {
+                        $attributes[$key] = $request->get($userField);
+                    } else {
+                        Log::error('RegistersUsers:createCognitoUser:InvalidUserFieldException');
+                        Log::error("The configured user field {$userField} is not provided in the request.");
+                        throw new InvalidUserFieldException("The configured user field {$userField} is not provided in the request.");
+                    } //End if
                 } //End if
-            } //End if
-        } //Loop ends
+            } //Loop ends
 
-        //Register the user in Cognito
-        $userKey = $request->has('username')?'username':'email';
+            //Register the user in Cognito
+            $userKey = $request->has('username')?'username':'email';
 
-        //Password parameter
-        $password = null;
-        if (config('cognito.force_new_user_password', true)) {
-            $password = $request->has($this->paramPassword)?$request[$this->paramPassword]:null;
-        }// End if            
+            //Password parameter
+            $password = null;
+            if (config('cognito.force_new_user_password', true)) {
+                $password = $request->has($this->paramPassword)?$request[$this->paramPassword]:null;
+            }// End if            
 
-        return app()->make(AwsCognitoClient::class)->inviteUser(
-            $request[$userKey], $password, $attributes,
-            $clientMetadata, $messageAction,
-            $groupname
-        );
+            return app()->make(AwsCognitoClient::class)->inviteUser(
+                $request[$userKey], $password, $attributes,
+                $clientMetadata, $messageAction,
+                $groupname
+            );
+        } catch (Exception $e) {
+            throw $e;
+        } //End try
+
+
     } //Function ends
 
 
@@ -174,7 +187,7 @@ trait RegistersUsers
      *
      * @return array
      */
-    protected function rulesRegisterUser()
+    public function rules()
     {
         $rules=[];
 

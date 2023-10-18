@@ -3,9 +3,11 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
 use Ellaisys\Cognito\Http\Controllers\Api\MFAController;
-use Ellaisys\Cognito\Http\Controllers\Api\ResetController;
+use Ellaisys\Cognito\Http\Controllers\Api\RegisterController;
+use Ellaisys\Cognito\Http\Controllers\Api\RefreshTokenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,7 +25,7 @@ use Ellaisys\Cognito\Http\Controllers\Api\ResetController;
 // });
 
 Route::group(['prefix' => 'user'], function () {
-    Route::post('register', [AuthController::class, 'actionRegister']);
+    Route::post('/register', [RegisterController::class, 'actionRegister']);
 
     //Route group login
     Route::group(['prefix' => 'login'], function() {
@@ -33,7 +35,7 @@ Route::group(['prefix' => 'user'], function () {
 
     //Authenticated routes
     Route::group(['middleware' => 'aws-cognito'], function() {
-        //Route::get('profile', [AuthController::class, 'getRemoteUser']);
+        Route::get('profile', [UserController::class, 'actionGetRemoteUser']);
 
         //Route group logout
         Route::group(['prefix' => 'logout'], function() {
@@ -51,7 +53,7 @@ Route::group(['prefix' => 'user'], function () {
         });
 
         //Route for refresh token
-        Route::post('refresh-token', [ResetController::class, 'actionRefreshToken']);
+        Route::post('/refresh-token', [RefreshTokenController::class, 'actionRefreshToken']);
     });
 });
 

@@ -162,4 +162,24 @@ trait AwsCognitoClientAdminAction
         return true;
     } //Function ends
 
+
+    /**
+     * Get user details.
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminGetUser.html
+     *
+     * @param string $username
+     * @return mixed
+     */
+    public function getUser($username)
+    {
+        try {
+            return $this->client->adminGetUser([
+                'Username' => $username,
+                'UserPoolId' => $this->poolId,
+            ]);
+        } catch (CognitoIdentityProviderException $e) {
+            return false;
+        } //Try-catch ends
+    } //Function ends
+
 } //Trait ends

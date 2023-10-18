@@ -29,8 +29,16 @@ class JsonResponseService
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function success($resource = [], $code = Response::HTTP_OK, string $message='success')
+    public function success($resource, $code = Response::HTTP_OK, string $message='success')
     {
+        //Modify if the resource is not an array
+        if (!is_array($resource)) {
+            //convert model to array
+            if (is_object($resource) && method_exists($resource, 'toArray')) {
+                $resource = $resource->toArray();
+            } //End if
+        } //End if
+
         return $this->putAdditionalMeta($resource, 'success', null, $message)
             ->response()
             ->setStatusCode($code);
