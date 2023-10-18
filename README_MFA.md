@@ -26,6 +26,28 @@ Also, configure below keys into the .env file to change the default setting.
 - [Enable MFA](#enabledisable-mfa)
 - [Disable MFA](#enabledisable-mfa)
 
+# **API Routes**
+>[!IMPORTANT]
+>We are releasign the API predefined routes as a new feature from V1.3.0.
+> php artisan vendor:publish --tag=cognito-controllers
+
+The API routes that are wired via the API Controller, making it easy for users to implement. The validations are built in and API response format is standardized.
+
+```php
+    POST      api/user/refresh-token ........... Ellaisys\Cognito\Http\Controllers\Api\RefreshTokenController@actionRefreshToken
+    POST      api/user/register ..................... Ellaisys\Cognito\Http\Controllers\Api\AuthController@actionRegister
+    POST      api/user/login ........................... Ellaisys\Cognito\Http\Controllers\Api\AuthController@actionLogin
+    POST      api/user/login/mfa .................. Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionValidateMFA
+    PUT       api/user/logout ......................... Ellaisys\Cognito\Http\Controllers\Api\AuthController@actionLogout
+    PUT       api/user/logout/forced ............ Ellaisys\Cognito\Http\Controllers\Api\AuthController@actionLogoutForced
+
+    GET|HEAD  api/user/mfa/activate ............ Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionApiActivateMFA
+    POST      api/user/mfa/activate/{code} ....... Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionApiVerifyMFA
+    POST      api/user/mfa/deactivate ........ Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionApiDeactivateMFA
+    POST      api/user/mfa/disable .............. Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionApiDisableMFA
+    POST      api/user/mfa/enable ................ Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionApiEnableMFA
+```
+
 ### **Login**
 The login shall require two steps for implementation of the overall authentication using the MFA approach. The first step shall generate the challenge, identified as a session token. The second step involves the OTP/TOTP code against that session token.
 
