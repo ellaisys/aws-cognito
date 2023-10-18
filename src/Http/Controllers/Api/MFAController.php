@@ -44,6 +44,9 @@ class MFAController extends Controller
      */
     public function __construct()
     {
+        //Mandate authentication for all the API's of this controller except the MFA login action
+        $this->middleware('aws-cognito:api', ['except' => ['actionValidateMFA']]);
+
         parent::__construct();
     }
 
