@@ -47,7 +47,6 @@ return [
     */
     'app_client_secret_allow' => env('AWS_COGNITO_CLIENT_SECRET_ALLOW', true),
 
-
     /*
     |--------------------------------------------------------------------------
     | AWS Cognito Path
@@ -59,9 +58,21 @@ return [
     | application design.
     |
     */
-
     'path' => env('AWS_COGNITO_PATH', ''),
 
+    /*
+    |--------------------------------------------------------------------------
+    | API Prefix Path
+    |--------------------------------------------------------------------------
+    |
+    | This is the API Prefix for the endpoint. You can change is such that it
+    | does not cause any conflict with your existing API endpoints or as per
+    | your application design.
+    |
+    | The default value is set to 'cognito'.
+    |
+    */
+    'api_prefix' => env('AWS_COGNITO_API_PREFIX', 'cognito'),
 
     /*
     |--------------------------------------------------------------------------
@@ -72,10 +83,10 @@ return [
     | authentication. This will work with and without the MFA enabled using
     | the AWS Cognito based authentication.
     |
+    | The default value is set to 'home'.
+    |
     */
-
     'redirect_to_route_name' => env('AWS_COGNITO_HOME_ROUTE_NAME', 'home'),
-
 
     /*
     |--------------------------------------------------------------------------
@@ -113,7 +124,6 @@ return [
     */
     'add_user_delivery_mediums' => env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'),
 
-
     /*
     |--------------------------------------------------------------------------
     | Cognito Default User Group
@@ -126,7 +136,6 @@ return [
     |
     */
     'default_user_group' => env('AWS_COGNITO_DEFAULT_USER_GROUP', null),
-
 
     /*
     |--------------------------------------------------------------------------
@@ -142,7 +151,6 @@ return [
     'mfa_setup' => env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE'),
     'force_mfa_code_route_name' => env('AWS_COGNITO_MFA_CODE_ROUTE_NAME', 'login'),
 
-
     /*
     |--------------------------------------------------------------------------
     | Cognito Default User Group
@@ -156,7 +164,6 @@ return [
     |
     */
     'mfa_type' => env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA'),
-
 
     /*
     |--------------------------------------------------------------------------

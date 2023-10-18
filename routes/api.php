@@ -24,7 +24,7 @@ use Ellaisys\Cognito\Http\Controllers\Api\RefreshTokenController;
 //     return $request->user();
 // });
 
-Route::group(['prefix' => 'user'], function () {
+Route::group(['prefix' => config('cognito.api_prefix', '')], function () {
     Route::post('/register', [RegisterController::class, 'actionRegister']);
 
     //Route group login

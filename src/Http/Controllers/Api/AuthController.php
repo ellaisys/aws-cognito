@@ -46,6 +46,9 @@ class AuthController extends Controller
      */
     public function __construct()
     {
+        //Mandate authentication for all the API's of this controller except the login action
+        $this->middleware('aws-cognito:api', ['except' => ['actionLogin']]);
+        
         parent::__construct();
     }
 
