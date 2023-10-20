@@ -53,4 +53,4 @@ interface StorageContract
      * @return void
      */
     public function flush();
-}
+} //Class ends

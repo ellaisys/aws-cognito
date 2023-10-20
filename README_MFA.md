@@ -209,4 +209,3 @@ Below methods in the trait help to enable or disable the MFA returning the HTTP 
     } //Function ends
 
 ```
-

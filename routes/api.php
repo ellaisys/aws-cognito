@@ -56,5 +56,3 @@ Route::group(['prefix' => config('cognito.api_prefix', '')], function () {
         Route::post('/refresh-token', [RefreshTokenController::class, 'actionRefreshToken']);
     });
 });
-
-

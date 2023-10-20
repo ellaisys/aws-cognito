@@ -60,3 +60,4 @@ Release 20 (tag v1.0.5):
 
 Release 19 (tag v1.0.4): 
  - Feature: Forgot password RESEND option
+ 
