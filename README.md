@@ -149,7 +149,7 @@ You also need a new **IAM Role** with the following Access Rights:
 
 From this IAM User you must use the **AWS_ACCESS_KEY_ID** and **AWS_SECRET_ACCESS_KEY** in the laravel environment file.
 
-### Cognito API configuration
+### Cognito configuration
 
 Add the following fields to your `.env` file and set the values according to your AWS settings:
 
@@ -166,6 +166,9 @@ Add the following fields to your `.env` file and set the values according to you
     AWS_COGNITO_VERSION="latest" //optional - default value is 'latest'
 
 ```
+>[!IMPORTANT]
+>To sync the web session timeout with the cognito access token ttl value, set the **SESSION_LIFETIME** parameter in the .env file. This value is in minutes with the default value being 120 mins i.e. 2 hours. This will ensure that the laravel session times out at the same time as the access token.
+
 For more details on how to find AWS_COGNITO_CLIENT_ID, AWS_COGNITO_CLIENT_SECRET and AWS_COGNITO_USER_POOL_ID for your application, please refer [COGNITOCONFIG File](COGNITOCONFIG.md)
 
 ### Importing existing users into the Cognito Pool
