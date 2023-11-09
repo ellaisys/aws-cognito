@@ -151,18 +151,16 @@ class CognitoTokenGuard extends TokenGuard
                             } //End if
                         } //End if
                         break;
-                } //End switch                
+                } //End switch
             } else { //Create Claim for confirmed users
                 //Create claim token
                 $this->claim = new AwsCognitoClaim($result, $user, $credentials[$this->keyUsername]);                
-            } //End if 
+            } //End if
 
             return ($this->claim)?true:false;
         } else {
             return false;
         } //End if
-
-        return false;
     } //Function ends
 
 
@@ -429,7 +427,7 @@ class CognitoTokenGuard extends TokenGuard
                 //Handle the response as Aws Cognito Claim
                 if ($response instanceof AwsCognitoClaim) {
                     $this->claim = $response;
-                    return $this->login($user);                
+                    return $this->login($user);
                 } //End if
 
                 //Handle if the object is a Aws Cognito Result

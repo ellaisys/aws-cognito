@@ -75,7 +75,9 @@ trait AuthenticatesUsers
      *
      * @return mixed
      */
-    protected function attemptLogin(Collection $request, string $guard='web', string $paramUsername='email', string $paramPassword='password', bool $isJsonResponse=false)
+    protected function attemptLogin(
+        Collection $request, string $guard='web', string $paramUsername='email',
+        string $paramPassword='password', bool $isJsonResponse=false)
     {
         try {
             //Get the password policy

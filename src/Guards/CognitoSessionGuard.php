@@ -157,7 +157,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                             $this->challengeName = $result['ChallengeName'];
                         } //End if
                         break;
-                } //End switch                
+                } //End switch
             } //End if
 
             return ($user instanceof Authenticatable);

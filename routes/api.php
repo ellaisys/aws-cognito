@@ -20,10 +20,6 @@ use Ellaisys\Cognito\Http\Controllers\Api\RefreshTokenController;
 |
 */
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
-
 Route::group(['prefix' => config('cognito.api_prefix', '')], function () {
     Route::post('/register', [RegisterController::class, 'actionRegister']);
 
@@ -41,7 +37,7 @@ Route::group(['prefix' => config('cognito.api_prefix', '')], function () {
         Route::group(['prefix' => 'logout'], function() {
             Route::put('/', [AuthController::class, 'actionLogout']);
             Route::put('/forced', [AuthController::class, 'actionLogoutForced']);
-        });        
+        });
 
         //Route group for MFA
         Route::group(['controller' => MFAController::class, 'prefix' => 'mfa'], function() {
