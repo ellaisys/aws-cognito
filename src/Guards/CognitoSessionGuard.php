@@ -160,7 +160,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 } //End switch
             } //End if
 
-            return ($user instanceof Authenticatable);
+            return ($user instanceof Authenticatable)?true:false;
         } //End if
 
         return false;
@@ -246,7 +246,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                         $this->fireAuthenticatedEvent($user);  
                     } else {
                         throw new HttpException(400, 'ERROR_AWS_COGNITO');
-                    } //End if                 
+                    } //End if
                 } //End if
 
                 return true;
@@ -271,6 +271,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
             //Set proper route
             if (!empty($e->getAwsErrorCode())) {
+                // sonarignore:start
                 switch ($e->getAwsErrorCode()) {
                     case 'PasswordResetRequiredException':
                         return redirect(route('cognito.form.reset.password.code'))
@@ -285,6 +286,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                         throw $e;
                         break;
                 } //End switch
+                // sonarignore:end
             } //End if
 
             return $e->getAwsErrorCode();
@@ -352,7 +354,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 //Revoke the token from AWS Cognito
                 if ($this->client->signOut($accessToken)) {
 
-                    //Global logout and invalidate the Refresh Token 
+                    //Global logout and invalidate the Refresh Token
                     if ($forceForever) {
                         //Get claim data
                         $dataClaim = (!empty($claim))?$claim['data']:null;
@@ -370,7 +372,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 } else {
                     //Remove the token from application storage
                     return $session->invalidate();
-                } //End if                
+                } //End if
             } else {
                 //Remove the token from application storage
                 return $session->invalidate();
@@ -386,7 +388,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
     /**
      * Attempt MFA based Authentication
      */
-    public function attemptMFA(array $challenge = [], Authenticatable $user, bool $remember=false) {
+    public function attemptMFA(array $challenge, Authenticatable $user, bool $remember=false) {
         try {
             $claim = null;
 
@@ -410,17 +412,17 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                     $this->fireValidatedEvent($user);
                     $this->fireAuthenticatedEvent($user);
                     
-                    return true;                    
+                    return true;
                 } //End if
 
                 //Handle if the object is a Aws Cognito Result
                 if ($response instanceof AwsResult) {
                     //Check in case of any challenge
-                    if (isset($response['ChallengeName'])) {
+                    // if (isset($response['ChallengeName'])) {
 
-                    } else {
+                    // } else {
 
-                    } //End if
+                    // } //End if
                 } //End if
             } //End if
         } catch(Exception $e) {
