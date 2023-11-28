@@ -177,7 +177,7 @@ return [
     'delete_user'                   => env('AWS_COGNITO_DELETE_USER', false),
 
     // Package configurations
-    'sso_user_model'        => env('AWS_COGNITO_USER_MODEL', 'App\User'),
+    'sso_user_model'        => env('AWS_COGNITO_USER_MODEL', 'App\Models\User'),
 
     /*
     |--------------------------------------------------------------------------
