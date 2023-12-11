@@ -511,17 +511,9 @@ You can use this trait for API to generate new token
             ]);
             
             try {
-                if ($claim = $this->refresh($request, 'email', 'refresh_token')) {
-                    if ($claim instanceof AwsCognitoClaim) {
-                        return $claim->getData();
-                    } else {
-                        if ($claim->getData()->error == 'cognito.validation.invalid_username') {
-                            return response()->json(['status' => 'error', 'message' => $claim->getData()], 400);
-                        } //End if
-                    } //End if
-                } //End if
-            } catch (CognitoIdentityProviderException $exception) {
-                return response()->json(['status' => 'error', 'message' => 'Invalid refresh token.'], 400);
+                return $this->refresh($request, 'email', 'refresh_token');
+            } catch (Exception $e) {
+                return $e;
             }
 
         } //Function ends
