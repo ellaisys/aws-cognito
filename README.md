@@ -45,16 +45,16 @@ We decided to use it and contribute it to the community as a package, that encou
 
 |PHP Version|Support|
 |-|-|
-|7.4|Yes:white_check_mark:|
-|8.0|Yes:white_check_mark:|
-|8.1|Yes:white_check_mark:|
-|8.24|Yes:white_check_mark:|
+|7.4|Yes :heavy_check_mark:|
+|8.0|Yes :heavy_check_mark:|
+|8.1|Yes :heavy_check_mark:|
+|8.24|Yes :heavy_check_mark:|
 
 |Laravel Version|Support|
 |-|-|
-|7.x|Yes:white_check_mark:|
-|8.x|Yes:white_check_mark:|
-|9.x|Yes:white_check_mark:|
+|7.x|Yes :heavy_check_mark:|
+|8.x|Yes :heavy_check_mark:|
+|9.x|Yes :heavy_check_mark:|
 |10.x|Not tested|
 
 ## Installation
