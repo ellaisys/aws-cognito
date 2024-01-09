@@ -66,7 +66,7 @@ class AwsCognitoUserPool
 
 
     /**
-     * Get Password Policy.
+     * Get a Password Policy.
      */
     public function getPasswordPolicy(bool $regex = false)
     {
@@ -113,7 +113,7 @@ class AwsCognitoUserPool
 
                     case 'RequireSymbols':
                         if ($value) {
-                            $regexString .= '(?=.*[!@#$%^&*])';
+                            $regexString .= '(?=.*[!@#$%^&*])'; //(?=.*[\^$*.\[\]{}\(\)?\-\"!@#%&\/,><\':;|_~`])
                             $messageText .= 'one special character, ';
                         } //If ends
                         break;
