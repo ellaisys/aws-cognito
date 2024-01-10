@@ -36,6 +36,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - Support for App Client without Secret
 - Support for Cognito Groups, including assigning a default group to a new user
 - Session (Web) now has AccessToken and RefreshToken as part of the claim object
+- [Refresh Token API](#refresh-token)
 - [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
 - [MFA Implementation for Session and Token Guards](./README_MFA.md)
