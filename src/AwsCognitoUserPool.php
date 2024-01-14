@@ -113,7 +113,8 @@ class AwsCognitoUserPool
 
                     case 'RequireSymbols':
                         if ($value) {
-                            $regexString .= '(?=.*[!@#$%^&*])'; //(?=.*[\^$*.\[\]{}\(\)?\-\"!@#%&\/,><\':;|_~`])
+                            //Generate the regex for special characters
+                            $regexString .= '(?=.*[\^$*.\[\]{}\(\)?\-\"!@#%&\/,><\':;_~`])'; //Missing pipe character
                             $messageText .= 'one special character, ';
                         } //If ends
                         break;
