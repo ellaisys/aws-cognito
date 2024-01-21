@@ -617,7 +617,12 @@ The library now supports where the AWS configuration of App Client with the Clie
 
 ## Password Validation based of Cognito Configuration
 
-This library fetches the password policy from the cognito pool configurations. The laravel request validations are done based on the regular expression that is created based on this policy. This validations are performed during the Sign Up (Registation), Sign In (Login), Reset and Change password based flows. The validation messages for the password are also dynamic in nature and change based on the configurations. 
+This library fetches the password policy from the cognito pool configurations. The laravel request validations are done based on the regular expression that is created based on this policy. This validations are performed during the Sign Up (Registation), Sign In (Login), Reset and Change password based flows. The validation messages for the password are also dynamic in nature and change based on the configurations.
+
+>[!IMPORTANT]
+>In case of special characters, we are supporting all except the pipe character **|** for now.
+
+We are working on making sure that pipe character is handled soon.
 
 ## Changelog
 
