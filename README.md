@@ -46,16 +46,16 @@ We decided to use it and contribute it to the community as a package, that encou
 
 |PHP Version|Support|
 |-|-|
-|7.4|Yes:white_check_mark:|
-|8.0|Yes:white_check_mark:|
-|8.1|Yes:white_check_mark:|
-|8.24|Yes:white_check_mark:|
+|7.4|Yes :heavy_check_mark:|
+|8.0|Yes :heavy_check_mark:|
+|8.1|Yes :heavy_check_mark:|
+|8.24|Yes :heavy_check_mark:|
 
 |Laravel Version|Support|
 |-|-|
-|7.x|Yes:white_check_mark:|
-|8.x|Yes:white_check_mark:|
-|9.x|Yes:white_check_mark:|
+|7.x|Yes :heavy_check_mark:|
+|8.x|Yes :heavy_check_mark:|
+|9.x|Yes :heavy_check_mark:|
 |10.x|Not tested|
 
 ## Installation
@@ -618,7 +618,12 @@ The library now supports where the AWS configuration of App Client with the Clie
 
 ## Password Validation based of Cognito Configuration
 
-This library fetches the password policy from the cognito pool configurations. The laravel request validations are done based on the regular expression that is created based on this policy. This validations are performed during the Sign Up (Registation), Sign In (Login), Reset and Change password based flows. The validation messages for the password are also dynamic in nature and change based on the configurations. 
+This library fetches the password policy from the cognito pool configurations. The laravel request validations are done based on the regular expression that is created based on this policy. This validations are performed during the Sign Up (Registation), Sign In (Login), Reset and Change password based flows. The validation messages for the password are also dynamic in nature and change based on the configurations.
+
+>[!IMPORTANT]
+>In case of special characters, we are supporting all except the pipe character **|** for now.
+
+We are working on making sure that pipe character is handled soon.
 
 ## Changelog
 
