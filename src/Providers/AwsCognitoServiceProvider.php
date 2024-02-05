@@ -250,7 +250,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
                 $client = $app->make(AwsCognitoClient::class),
                 $app['request'],
                 Auth::createUserProvider($config['provider']),
-                config('cognito_user_fields.email', 'email')
+                config('cognito.cognito_user_fields.email', 'email')
             );
 
             $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
