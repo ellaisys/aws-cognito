@@ -54,6 +54,9 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         try {
+            //Return object
+            $returnValue = null;
+
             //Convert request to collection
             $collection = collect($request->all());
 
@@ -62,9 +65,9 @@ class LoginController extends Controller
                 if ($response===true) {
                     $request->session()->regenerate();
 
-                    return redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
-                } else if ($response===false) {
-                    return redirect()
+                    $returnValue = redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
+                } elseif ($response===false) {
+                    $returnValue = redirect()
                         ->back()
                         ->withInput($request->only('username', 'remember'))
                         ->withErrors([
@@ -75,9 +78,11 @@ class LoginController extends Controller
                     //
                     //$this->sendFailedLoginResponse($collection, null);
                 } else {
-                    return $response;
+                    $returnValue = $response;
                 } //End if
             } //End if
+
+            return $returnValue;
         } catch(Exception $e) {
             Log::error($e->getMessage());
 
@@ -99,6 +104,9 @@ class LoginController extends Controller
     {
         try
         {
+            //Return object
+            $returnValue = null;
+
             //Create credentials object
             $collection = collect($request->all());
 
@@ -106,17 +114,19 @@ class LoginController extends Controller
             $response = $this->attemptLoginMFA($request);
             if ($response===true) {
                 $request->session()->regenerate();
-                return redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
-            } else if ($response===false) {
-                return redirect()
+                $returnValue = redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
+            } elseif ($response===false) {
+                $returnValue = redirect()
                     ->back()
                     ->withInput($request->only('username', 'remember'))
                     ->withErrors([
                         'username' => 'Incorrect username and/or password !!',
                     ]);
             } else {
-                return $response;
+                $returnValue = $response;
             } //End if
+
+            return $returnValue;
         } catch (Exception $e) {
             Log::error($e->getMessage());
             $response = $this->sendFailedLoginResponse($collection, $e);

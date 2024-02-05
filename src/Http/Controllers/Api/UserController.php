@@ -46,9 +46,9 @@ class UserController extends Controller
 
     /**
      * Action to refresh the token
-     * 
+     *
      * @param Request $request
-     * 
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function actionGetRemoteUser(Request $request)
@@ -59,15 +59,21 @@ class UserController extends Controller
 
             //Call the details of the user from AWS Cognito
             $response = auth()->guard()->getRemoteUserData($user['email']);
-            if (isset($response['@metadata']['statusCode']) && $response['@metadata']['statusCode']==200) {
-                $data = $response->toArray();
-                unset($data['@metadata']);
+            if ($response) {
+                $responseMetadata = $response['@metadata'];
+                if ($responseMetadata
+                    && isset($responseMetadata['statusCode'])
+                    && $responseMetadata['statusCode']==200)
+                {
+                    $data = $response->toArray();
+                    unset($data['@metadata']);
 
-                return $this->response->success($data);
-            } else {
-                throw new HttpException(400, 'Error fetching user details from AWS Cognito.');
+                    return $this->response->success($data);
+                } else {
+                    throw new HttpException(400, 'Error fetching user details from AWS Cognito.');
+                } //End if
             } //End if
-
+            
         } catch (Exception $e) {
             return $e;
         }

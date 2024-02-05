@@ -49,9 +49,9 @@ class RefreshTokenController extends Controller
 
     /**
      * Action to refresh the token
-     * 
+     *
      * @param Request $request
-     * 
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function actionRefreshToken(Request $request)

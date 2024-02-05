@@ -49,7 +49,7 @@ class RegisterController extends Controller
 
     /**
      * Action to register the a new user
-     * 
+     *
      * @param  \Illuminate\Http\Request  $request
      */
     public function actionRegister(Request $request)
