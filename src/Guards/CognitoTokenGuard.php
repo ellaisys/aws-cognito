@@ -142,6 +142,10 @@ class CognitoTokenGuard extends TokenGuard
 
                                     //Get the result object again
                                     $result = $this->client->authenticate($credentials[$this->keyUsername], $credentials['password']);
+
+                                    //Create claim token
+                                    $this->claim = new AwsCognitoClaim($result, $user, $credentials[$this->keyUsername]);
+
                                     if (empty($result)) {
                                         return false;
                                     } //End if
