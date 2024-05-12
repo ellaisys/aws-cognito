@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito\Validators;
 
+use Ellaisys\Cognito\Services\AwsCognitoJwksService;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 
 class AwsCognitoTokenValidator
@@ -36,6 +37,10 @@ class AwsCognitoTokenValidator
      */
     protected function validateStructure($token)
     {
+        $js = app()->make(AwsCognitoJwksService::class);
+        $keys = $js->getJwks();
+
+
         $parts = explode('.', $token);
 
         if (count($parts) !== 3) {
