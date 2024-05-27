@@ -24,6 +24,7 @@
     "require": {
         "php": "^7.0|^8.0",
         "guzzlehttp/guzzle": "^6.0|^7.0",
+        "firebase/php-jwt": "^6.0",
         "aws/aws-sdk-php": ">=3.0"
     },
     "require-dev": {
