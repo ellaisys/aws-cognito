@@ -136,7 +136,7 @@ return [
     | This option controls the SSO settings into the application.
     |
     */
-    'add_missing_local_user_sso'    => env('AWS_COGNITO_ADD_LOCAL_USER', false),
+    'add_missing_local_user'    => env('AWS_COGNITO_ADD_LOCAL_USER', false),
     'delete_user'                   => env('AWS_COGNITO_DELETE_USER', false),
 
     // Package configurations
