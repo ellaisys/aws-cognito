@@ -6,8 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 use Symfony\Component\Console\Output\ConsoleOutput;
 
-use Exception;
-
 return new class extends Migration
 {
     /**
@@ -25,7 +23,7 @@ return new class extends Migration
                 $output->writeln('The users table has the sub column. Skipping adding sub column.');
             } //End if
         } else {
-            throw new Exception('Laravel version is not supported. Works only with Laravel 8.37 or higher.');
+            throw new \RuntimeException('Laravel version is not supported. Works only with Laravel 8.37 or higher.');
         } //End if
     }
 
