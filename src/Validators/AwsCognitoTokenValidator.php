@@ -63,6 +63,9 @@ class AwsCognitoTokenValidator
                 $jwksService = app()->make(AwsCognitoJwksService::class);
                 $jwksKeys = $jwksService->getJwks();
 
+                //Allow 10 seconds leeway to account for clock skew
+                JWT::$leeway = 10;
+
                 //Decode the token
                 $decodedToken = JWT::decode($token, $jwksKeys);
             } else {
