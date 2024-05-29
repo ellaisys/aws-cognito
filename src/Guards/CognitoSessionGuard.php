@@ -316,13 +316,13 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
 
     /**
-     * Logout the user, thus invalidating the token.
+     * Logout the user, thus invalidating the session.
      *
      * @param  bool  $forceForever
      *
      * @return void
      */
-    public function logout($forceForever = false)
+    public function logout(bool $forceForever = false)
     {
         $this->invalidate($forceForever);
         $this->user = null;
@@ -338,6 +338,9 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     public function invalidate($forceForever = false)
     {
+        //Return Value
+        $returnValue = null;
+
         try {
             //Get authentication token from session
             $session = $this->getSession();
@@ -368,20 +371,22 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                     } //End if
 
                     //Remove the token from application storage
-                    return $session->invalidate();
+                    $returnValue = $session->invalidate();
                 } else {
                     //Remove the token from application storage
-                    return $session->invalidate();
+                    $returnValue = $session->invalidate();
                 } //End if
             } else {
                 //Remove the token from application storage
-                return $session->invalidate();
+                $returnValue = $session->invalidate();
             } //End if
         } catch (Exception $e) {
             if ($forceForever) { return $session->invalidate(); }
             
             throw $e;
         } //try-catch ends
+
+        return $returnValue;
     } //Function ends
 
 
