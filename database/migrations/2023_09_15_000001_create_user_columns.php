@@ -17,13 +17,13 @@ return new class extends Migration
             if (!Schema::hasColumn('users', 'sub')) {
                 Schema::table('users', function (Blueprint $table) {
                     $table->string('sub')->nullable()->index();
-                });                
+                });
             } else {
                 $output = new ConsoleOutput();
                 $output->writeln('The users table has the sub column. Skipping adding sub column.');
             } //End if
         } else {
-            throw new \Exception('Laravel version is not supported. Works only with Laravel 8.37 or higher.');
+            throw new \RuntimeException('Laravel version is not supported. Works only with Laravel 8.37 or higher.');
         } //End if
     }
 

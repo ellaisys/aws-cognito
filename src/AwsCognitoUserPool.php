@@ -53,7 +53,7 @@ class AwsCognitoUserPool
     public function getDataUserPool()
     {
         if(empty($this->dataUserPool)) {
-            $response = $client->describeUserPool();
+            $response = $this->client->describeUserPool();
             $this->dataUserPool = $response->get('UserPool');
         } //If ends
         Log::info($this->dataUserPool);
@@ -81,55 +81,66 @@ class AwsCognitoUserPool
         $passwordPolicy = $this->dataUserPool['Policies']['PasswordPolicy'];
 
         if ($regex) {
-            $regexString = '/^';
-            $messageText = '';
-            foreach ($passwordPolicy as $key => $value) {
-                switch ($key) {
-                    case 'MinimumLength':
-                        $minValue = $value;
-                        $messageText .= 'minimum length of ' . $value . ', ';
-                        break;
-                    
-                    case 'RequireUppercase':
-                        if ($value) {
-                            $regexString .= '(?=.*[A-Z])';
-                            $messageText .= 'one uppercase letter, ';
-                        } //If ends
-                        break;
-
-                    case 'RequireLowercase':
-                        if ($value) {
-                            $regexString .= '(?=.*[a-z])';
-                            $messageText .= 'one lowercase letter, ';
-                        } //If ends
-                        break;
-
-                    case 'RequireNumbers':
-                        if ($value) {
-                            $regexString .= '(?=.*\d)';
-                            $messageText .= 'one number, ';
-                        } //If ends
-                        break;
-
-                    case 'RequireSymbols':
-                        if ($value) {
-                            //Generate the regex for special characters
-                            $regexString .= '(?=.*[\^$*.\[\]{}\(\)?\-\"!@#%&\/,><\':;_~`])'; //Missing pipe character
-                            $messageText .= 'one special character, ';
-                        } //If ends
-                        break;
-                    
-                    default:
-                        # code...
-                        break;
-                } //Switch ends
-            } //Foreach ends
-            $regexString .= '([^\s]){' . $minValue . ',99}';
-            $regexString .= '$/';
-            return ['regex' => $regexString, 'message' => $messageText];
+            return $this->processPolicy($passwordPolicy);
         } else {
             return $passwordPolicy;
         } //If ends
+    } //Function ends
+
+    /**
+     * Process Password Policy.
+     *
+     * @param array $passwordPolicy
+     *
+     * @return array
+     */
+    private function processPolicy($passwordPolicy) {
+        $regexString = '/^';
+        $messageText = '';
+        foreach ($passwordPolicy as $key => $value) {
+            switch ($key) {
+                case 'MinimumLength':
+                    $minValue = $value;
+                    $messageText .= 'minimum length of ' . $value . ', ';
+                    break;
+                
+                case 'RequireUppercase':
+                    if ($value) {
+                        $regexString .= '(?=.*[A-Z])';
+                        $messageText .= 'one uppercase letter, ';
+                    } //If ends
+                    break;
+
+                case 'RequireLowercase':
+                    if ($value) {
+                        $regexString .= '(?=.*[a-z])';
+                        $messageText .= 'one lowercase letter, ';
+                    } //If ends
+                    break;
+
+                case 'RequireNumbers':
+                    if ($value) {
+                        $regexString .= '(?=.*\d)';
+                        $messageText .= 'one number, ';
+                    } //If ends
+                    break;
+
+                case 'RequireSymbols':
+                    if ($value) {
+                        //Generate the regex for special characters
+                        $regexString .= '(?=.*[\^$*.\[\]{}\(\)?\-\"!@#%&\/,><\':;_~`])'; //Missing pipe character
+                        $messageText .= 'one special character, ';
+                    } //If ends
+                    break;
+                
+                default:
+                    # code...
+                    break;
+            } //Switch ends
+        } //Foreach ends
+        $regexString .= '([^\s]){' . $minValue . ',99}';
+        $regexString .= '$/';
+        return ['regex' => $regexString, 'message' => $messageText];
     } //Function ends
 
 
