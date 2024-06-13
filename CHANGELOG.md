@@ -1,3 +1,8 @@
+Release 39 (tag v1.2.5)
+ - Fix: AWS JWT Token validation timeout
+ - Fix: Non declared variable references
+ - Fix: Sonar cloud code compliance
+
 Release 38 (tag v1.2.4)
  - Feat: AWS JWT Token validation
 
