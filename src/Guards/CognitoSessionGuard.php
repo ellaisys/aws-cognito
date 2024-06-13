@@ -47,8 +47,8 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
     /**
      * Username key
-     * 
-     * @var  \string  
+     *
+     * @var  \string
      */
     protected $keyUsername;
 
@@ -65,6 +65,14 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      * @var \Ellaisys\Cognito\AwsCognito
      */
     protected $cognito;
+    
+
+    /**
+     * The AwsCognito Claim token
+     * 
+     * @var \Ellaisys\Cognito\AwsCognitoClaim|null
+     */
+    protected $claim;
 
 
     /**
@@ -80,19 +88,19 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
 
     /**
-     * @var Challenge Data based on 
+     * @var Challenge Data based on the challenge
      */
     protected $challengeData;
 
 
     /**
      * CognitoSessionGuard constructor.
-     * 
+     *
      * @param string $name
      * @param AwsCognitoClient $client
      * @param UserProvider $provider
      * @param Session $session
-     * @param null|Request $request
+     * @param Request $request
 
      */
     public function __construct(
@@ -101,7 +109,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         AwsCognitoClient $client,
         UserProvider $provider,
         Session $session,
-        ?Request $request = null,
+        Request $request,
         string $keyUsername = 'email'
     ) {
         $this->cognito = $cognito;
@@ -180,7 +188,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
     {
         try {
             //Fire event for authenticating
-            $this->fireAttemptEvent($credentials, $remember);
+            $this->fireAttemptEvent($credentials, $credentials['remember']);
 
             //Get user from presisting store
             $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);

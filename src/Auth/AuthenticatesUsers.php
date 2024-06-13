@@ -92,30 +92,11 @@ trait AuthenticatesUsers
                 throw new ValidationException($validator);
             } //End if
 
-            //Get the configuration fields
-            $userFields = config('cognito.cognito_user_fields');
-
-            //Get key fields
-            $keyUsername = $userFields['email'];
-            $keyPassword = 'password';
-            $rememberMe = $request->has('remember')?$request['remember']:false;
-
-            //Generate credentials array
-            $credentials = [
-                $keyUsername => $request[$paramUsername],
-                $keyPassword => $request[$paramPassword]
-            ];
-
             //Authenticate User
-            $claim = Auth::guard($guard)->attempt($credentials, $rememberMe);
+            $claim = Auth::guard($guard)->attempt($request, $paramUsername, $paramPassword);
 
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:NoLocalUserException');
-            $user = $this->createLocalUser($credentials, $keyPassword);
-            if ($user) {
-                return $user;
-            } //End if
-
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
         } catch (CognitoIdentityProviderException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:CognitoIdentityProviderException');
