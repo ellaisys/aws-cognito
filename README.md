@@ -23,6 +23,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Registration and Confirmation E-Mail (Sign Up)](#registering-users) **Updated** (#9 feature added)
 - Forced password change at first login (configurable)
 - [Login (Sign In)](#user-authentication)
+- Token Validation for all Session and Token Guard Requests **New**  
 - Remember Me Cookie
 - Single Sign On
 - Forgot Password (Resend - configurable)
@@ -40,7 +41,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
 - [MFA Implementation for Session and Token Guards](./README_MFA.md)
-- [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration) **New**
+- [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
 
 ## Compatability
 
@@ -198,7 +199,7 @@ With our package and AWS Cognito we provide you a simple way to use Single Sign-
 For configuration options take a look at the config [cognito.php](/config/cognito.php).
 
 
-When you want SSO enabled and a user tries to login into your application, the package checks if the user exists in your AWS Cognito pool. If the user exists, he will be created automatically in your database provided the `add_missing_local_user_sso` is to `true`, and is logged in simultaneously.
+When you want SSO enabled and a user tries to login into your application, the package checks if the user exists in your AWS Cognito pool. If the user exists, he will be created automatically in your database provided the `add_missing_local_user` is to `true`, and is logged in simultaneously.
 
 That's what we use the fields `sso_user_model` and `cognito_user_fields` for. In `sso_user_model` you define the class of your user model. In most cases this will simply be _App\Models\User_.
 
@@ -336,6 +337,9 @@ We have made is very easy for anyone to use the default behaviour.
 ## User Authentication
 
 We have provided you with a useful trait that make the authentication very simple (with Web or API routes). You don't have to worry about any additional code to manage sessions and token (for API).
+
+> [!NOTE]
+> The Access Token is now validated with the AWS Cognito certificate. If the certificate is incorrect or expired, it will throw am exception.
 
 The trait takes in some additional parameters, refer below the function signature of the trait. Note that the function takes the object of **Illuminate\Support\Collection** instead of **Illuminate\Http\Request**. This will allow you to use this function in any tier of the code.
 

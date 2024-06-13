@@ -21,7 +21,7 @@ class AwsCognitoToken
      */
     private $token;
 
-
+    
     /**
      * Create a new JSON Web Token.
      *
@@ -54,6 +54,17 @@ class AwsCognitoToken
     public function __toString()
     {
         return $this->get();
+    } //Function ends
+
+
+    /**
+     * Get the decoded token.
+     *
+     * @return mixed
+     */
+    public function decode()
+    {
+        return (new AwsCognitoTokenValidator)->decode($this->token);
     } //Function ends
 
 } //Class ends

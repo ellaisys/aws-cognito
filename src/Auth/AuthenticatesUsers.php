@@ -112,13 +112,9 @@ trait AuthenticatesUsers
 
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:NoLocalUserException');
-
-            if (config('cognito.add_missing_local_user_sso')) {
-                $response = $this->createLocalUser($credentials, $keyPassword);
-
-                if ($response) {
-                    return $response;
-                } //End if
+            $user = $this->createLocalUser($credentials, $keyPassword);
+            if ($user) {
+                return $user;
             } //End if
 
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
@@ -154,7 +150,13 @@ trait AuthenticatesUsers
             } //End if
 
             if ($request instanceof Request) {
-                $req = $request;
+                //Validate request
+                $validator = Validator::make($request->all(), $this->rulesMFA());
+
+                if ($validator->fails()) {
+                    throw new ValidationException($validator);
+                } //End if
+
                 $request = collect($request->all());
             } //End if
 
@@ -170,7 +172,7 @@ trait AuthenticatesUsers
                         $sessionToken = request()->session()->get($challenge['session']);
                         $username = $sessionToken['username'];
                         $challenge['username'] = $username;
-                        $user = unserialize($sessionToken['user']);        
+                        $user = unserialize($sessionToken['user']);
                     } else{
                         throw new HttpException(400, 'ERROR_AWS_COGNITO_SESSION_MFA_CODE');
                     } //End if
@@ -193,12 +195,9 @@ trait AuthenticatesUsers
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:NoLocalUserException');
 
-            if (config('cognito.add_missing_local_user_sso')) {
-                $response = $this->createLocalUser($credentials, $keyPassword);
-
-                if ($response) {
-                    return $response;
-                } //End if
+            $response = $this->createLocalUser($user->toArray());
+            if ($response) {
+                return $response;
             } //End if
 
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
@@ -231,11 +230,21 @@ trait AuthenticatesUsers
      * @param  array  $credentials
      * @return mixed
      */
-    protected function createLocalUser($credentials, string $keyPassword='password')
+    protected function createLocalUser(array $dataUser, string $keyPassword='password')
     {
-        $userModel = config('cognito.sso_user_model');
-        unset($credentials[$keyPassword]);
-        $user = $userModel::create($credentials);
+        $user = null;
+        if (config('cognito.add_missing_local_user')) {
+            //Get user model from configuration
+            $userModel = config('cognito.sso_user_model');
+
+            //Remove password from credentials if exists
+            if (array_key_exists($keyPassword, $dataUser)) {
+                unset($dataUser[$keyPassword]);
+            } //End if
+            
+            //Create user
+            $user = $userModel::create($dataUser);
+        } //End if
 
         return $user;
     } //Function ends
@@ -268,7 +277,7 @@ trait AuthenticatesUsers
             if ($exception instanceof CognitoIdentityProviderException) {
                 $errorCode = $exception->getAwsErrorCode();
                 $message = $exception->getAwsErrorMessage();
-            } else if ($exception instanceof ValidationException) {
+            } elseif ($exception instanceof ValidationException) {
                 throw $exception;
             } else {
                 $message = $exception->getMessage();

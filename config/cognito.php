@@ -173,7 +173,7 @@ return [
     | This option controls the SSO settings into the application.
     |
     */
-    'add_missing_local_user_sso'    => env('AWS_COGNITO_ADD_LOCAL_USER', false),
+    'add_missing_local_user'    => env('AWS_COGNITO_ADD_LOCAL_USER', false),
     'delete_user'                   => env('AWS_COGNITO_DELETE_USER', false),
 
     // Package configurations
@@ -295,4 +295,20 @@ return [
     |
     */
     'force_new_user_password' => env('AWS_COGNITO_FORCE_NEW_USER_PASSWORD', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allow new user configure the MFA QR Library
+    |--------------------------------------------------------------------------
+    |
+    | This option enables the user to set the MFA QR code library to be used
+    | during the to invitation for the new user. The default value is set
+    | currently to https://quickchart.io/qr. The TOPT URL will be appended to
+    | the end of the this library URL
+    |
+    | For configuration & customizations of QuickChart
+    | Refer https://quickchart.io/documentation/qr-codes/ for more details.
+    |
+    */
+    'mfa_qr_library' => env('AWS_COGNITO_MFA_QR_LIBRARY', 'https://quickchart.io/qr?size=200&text='),
 ];

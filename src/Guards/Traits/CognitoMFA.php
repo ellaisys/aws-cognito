@@ -88,7 +88,7 @@ trait CognitoMFA
                     $uriTotp = 'otpauth://totp/'.$appName.' ('.$username.')?secret='.$secretCode.'&issuer='.config('app.name');
                     $payload = [
                         'SecretCode' => $secretCode,
-                        'SecretCodeQR' => 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl='.$uriTotp.'&choe=UTF-8',
+                        'SecretCodeQR' => config('cognito.mfa_qr_library').$uriTotp,
                         'TotpUri' => $uriTotp
                     ];
                     return $payload;

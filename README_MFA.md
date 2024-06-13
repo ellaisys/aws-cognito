@@ -142,10 +142,12 @@ The response that you will get for the API call would look this
         "TotpUri": "otpauth://totp/ApplicationName (john@doe.com)?secret=ESKPE46WBNOAB7QXXXXXXXXXXXXXXXXXXXPFIVJVJFEPDP2NNIA&issuer=ApplicationName"
     }
 ```
-
 and the web response, you can design a page like this to show the code for activating the Software MFA token.
 
 <img src="./assets/images/web_application_activate.png" width="50%" alt="cognito mfa activate for web"/>
+
+>[!IMPORTANT]
+>In case you want to change the QR Generator library, you can change the value in the configuration file with the key **mfa_qr_library**. Alternately, you can set the string in the environment file identified by **AWS_COGNITO_MFA_QR_LIBRARY**. 
 
 ### **Verify MFA (Software Token Only)**
 In order to complete the activation process, the verification is an essential step. As part of this verification process, you need to enter the code (available in the authenticator application) while submitting the request. The implementation needs to be updated depending on the web or API controller. The response will be HTTP Status Code 200.

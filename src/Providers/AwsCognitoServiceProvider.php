@@ -17,6 +17,7 @@ use Ellaisys\Cognito\AwsCognitoManager;
 use Ellaisys\Cognito\AwsCognitoUserPool;
 use Ellaisys\Cognito\Guards\CognitoSessionGuard;
 use Ellaisys\Cognito\Guards\CognitoTokenGuard;
+use Ellaisys\Cognito\Services\AwsCognitoJwksService;
 
 use Ellaisys\Cognito\Http\Parser\Parser;
 use Ellaisys\Cognito\Http\Parser\AuthHeaders;
@@ -214,23 +215,31 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
         //Storage Provider
         $this->app->singleton('ellaisys.aws.cognito.provider.storage', function (Application $app) {
-            return (new StorageProvider(
+            return new StorageProvider(
                 config('cognito.storage_provider')
-            ));
+            );
         });
 
         //Aws Cognito Manager
         $this->app->singleton('ellaisys.aws.cognito.manager', function (Application $app) {
-            return (new AwsCognitoManager(
+            return new AwsCognitoManager(
                 $app['ellaisys.aws.cognito.provider.storage']
-            ));
+            );
         });
 
         $this->app->singleton('ellaisys.aws.cognito', function (Application $app, array $config) {
-            return (new AwsCognito(
+            return new AwsCognito(
                 $app['ellaisys.aws.cognito.manager'],
                 $app['ellaisys.aws.cognito.parser']
-            ));
+            );
+        });
+
+        //JWKS Service
+        $this->app->singleton(AwsCognitoJwksService::class, function () {
+            return new AwsCognitoJwksService(
+                config('cognito.region'),
+                config('cognito.user_pool_id')
+            );
         });
     } //Function ends
 

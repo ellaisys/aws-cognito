@@ -1,3 +1,17 @@
+Release 39 (tag v1.2.5)
+ - Fix: AWS JWT Token validation timeout
+ - Fix: Non declared variable references
+ - Fix: Sonar cloud code compliance
+
+Release 38 (tag v1.2.4)
+ - Feat: AWS JWT Token validation
+
+Release 37 (tag v1.2.3)
+ - Fix: Update the QR library for MFA. The Google Fonts library was depricated.
+
+Release 36 (tag v1.2.2)
+ - Fix: Password validation for special characters
+
 Release 35 (tag v1.2.1)
  - Fix: Issue #81 (Anonymous migrations issue in laravel)
 
