@@ -95,6 +95,12 @@ trait BaseCognitoGuard
      */
     protected function hasValidAWSCredentials(Collection $credentials) {
         try {
+            //Reset global variables
+            $this->challengeName = null;
+            $this->challengeData = null;
+            $this->claim = null;
+            $this->awsResult = null;
+
             //Authenticate the user with AWS Cognito
             $result = $this->client->authenticate($credentials['email'], $credentials['password']);
 
@@ -103,15 +109,6 @@ trait BaseCognitoGuard
                 //Set value into class param
                 $this->awsResult = $result;
 
-                // //Handle Local User Object
-                // if (empty($user)) {
-                //     if (config('cognito.add_missing_local_user')) {
-                //         $user = $this->createLocalUser($result['UserAttributes']);
-                //     } else {
-                //         throw new NoLocalUserException();
-                //     } //End if
-                // } //End if
-    
                 //Check in case of any challenge
                 if (isset($result['ChallengeName'])) {
                     $this->challengeName = $result['ChallengeName'];
@@ -139,9 +136,6 @@ trait BaseCognitoGuard
 
         //Return value
         $returnValue = null;
-
-        //Set challenge into class param
-        $this->challengeName = $result['ChallengeName'];
         
         switch ($result['ChallengeName']) {
             case 'SOFTWARE_TOKEN_MFA':
@@ -160,6 +154,15 @@ trait BaseCognitoGuard
                     'challenge_params' => $result['ChallengeParameters'],
                     'username' => $username,
                     'user' => serialize($this->user)
+                ];
+                break;
+
+            case 'SELECT_MFA_TYPE':
+                $returnValue = [
+                    'status' => $result['ChallengeName'],
+                    'session_token' => $result['Session'],
+                    'challenge_params' => $result['ChallengeParameters'],
+                    'username' => $username
                 ];
                 break;
 

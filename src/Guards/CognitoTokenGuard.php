@@ -127,16 +127,22 @@ class CognitoTokenGuard extends TokenGuard
 
             //Check if the payload has valid AWS credentials
             $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito));
-            if ($responseCognito && $this->claim) {
-                $credentials = collect([
-                    config('cognito.user_subject_uuid') => $this->claim->getSub()
-                ]);
+            if ($responseCognito) {
+                if ($this->claim) {
+                    $credentials = collect([
+                        config('cognito.user_subject_uuid') => $this->claim->getSub()
+                    ]);
 
-                //Check if the user exists
-                $this->lastAttempted = $user = $this->hasValidLocalCredentials($credentials);
+                    //Check if the user exists
+                    $this->lastAttempted = $user = $this->hasValidLocalCredentials($credentials);
 
-                //Login the user into the token guard
-                $returnValue = $this->login($user);
+                    //Login the user into the token guard
+                    $returnValue = $this->login($user);
+                } elseif ($this->challengeName) {
+                    $returnValue = $this->challengeData;
+                } else {
+                    throw new InvalidUserException('Invalid AWS Cognito Credentials');
+                } //End if
             } else {
                 throw new InvalidUserException('Invalid AWS Cognito Credentials');
             } //End if
