@@ -14,6 +14,7 @@ namespace Ellaisys\Cognito\Guards\Traits;
 use Aws\Result as AwsResult;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 use Ellaisys\Cognito\AwsCognito;
@@ -123,6 +124,7 @@ trait BaseCognitoGuard
     
             return $result;
         } catch (Exception $e) {
+            Log::error($e->getMessage());
             throw $e;
         } //End try-catch
 
@@ -232,6 +234,7 @@ trait BaseCognitoGuard
                 });
             } //End if
         } catch (Exception $e) {
+            Log::error($e->getMessage());
             throw $e;
         } //End try-catch
 
@@ -271,6 +274,7 @@ trait BaseCognitoGuard
     
             return $user;
         } catch (NoLocalUserException | Exception $e) {
+            Log::error($e->getMessage());
             throw $e;
         } //End try-catch
     } //Function ends
@@ -319,6 +323,7 @@ trait BaseCognitoGuard
             } //End if
 
         } catch (Exception $e) {
+            Log::error($e->getMessage());
             throw $e;
         } //End try-catch
 

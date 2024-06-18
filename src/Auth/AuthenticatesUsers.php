@@ -75,9 +75,16 @@ trait AuthenticatesUsers
      *
      * @return mixed
      */
-    protected function attemptLogin(Collection $request, string $guard='web', string $paramUsername='email', string $paramPassword='password', bool $isJsonResponse=false)
+    protected function attemptLogin(Request|Collection $request, string $guard='web', string $paramUsername='email', string $paramPassword='password', bool $isJsonResponse=false)
     {
         try {
+            $returnValue = null;
+
+            //Convert request to collection
+            if ($request instanceof Request) {
+                $request = collect($request->all());
+            } //End if
+
             //Get the password policy
             $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
@@ -93,8 +100,7 @@ trait AuthenticatesUsers
             } //End if
 
             //Authenticate User
-            $claim = Auth::guard($guard)->attempt($request, $paramUsername, $paramPassword);
-
+            $returnValue = Auth::guard($guard)->attempt($request->toArray(), false, $paramUsername, $paramPassword);
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:NoLocalUserException');
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
@@ -106,7 +112,7 @@ trait AuthenticatesUsers
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
         } //Try-catch ends
 
-        return $claim;
+        return $returnValue;
     } //Function ends
 
     

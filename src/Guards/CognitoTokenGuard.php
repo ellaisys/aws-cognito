@@ -118,10 +118,13 @@ class CognitoTokenGuard extends TokenGuard
      * @throws
      * @return bool
      */
-    public function attempt(Collection $request, string $paramUsername='email', string $paramPassword='password', bool $remember = false)
+    public function attempt(array $request = [], $remember = false, string $paramUsername='email', string $paramPassword='password')
     {
         $returnValue = null;
         try {
+            //convert to collection
+            $request = collect($request);
+
             //Build the payload
             $payloadCognito = $this->buildCognitoPayload($request, $paramUsername, $paramPassword);
 
