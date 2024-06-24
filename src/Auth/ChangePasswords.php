@@ -69,7 +69,7 @@ trait ChangePasswords
             $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
-            $validator = Validator::make($request->all(), $this->rules(), [
+            $validator = Validator::make($request->all(), $this->rulesChangePassword(), [
                 'regex' => 'Must contain atleast '.$this->passwordPolicy['message'],
             ]);
             if ($validator->fails()) {
@@ -178,16 +178,14 @@ trait ChangePasswords
      *
      * @return array
      */
-    protected function rules()
+    protected function rulesChangePassword()
     {
         try {
-            $rules = [
+            return [
                 $this->paramUsername => 'required|email',
                 $this->paramPasswordOld => 'required|regex:'.$this->passwordPolicy['regex'],
                 $this->paramPasswordNew => 'required|confirmed|regex:'.$this->passwordPolicy['regex'],
             ];
-
-            return $rules;
         } catch (Exception $e) {
             throw $e;
         } //End try
