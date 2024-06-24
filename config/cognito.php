@@ -96,6 +96,12 @@ return [
     | This option controls the default cognito fields that shall be needed to be
     | updated. The array value is a mapping with DB model or Request data.
     |
+    | DO NOT change the parameters on the left side of the array. They map to
+    | the AWS Cognito User Pool fields.
+    |
+    | The right side of the array is the DB model field, and you can set the
+    | value to null if you do not want to update the field.
+    |
     */
     'cognito_user_fields'   => [
         'name' => 'name',
@@ -105,11 +111,25 @@ return [
         'nickname' => null,
         'preferred_username' => null,
         'email' => 'email', //Do Not set this parameter to null
-        'phone_number' => 'phone',
+        'phone_number' => null,
         'gender' => null,
         'birthdate' => null,
         'locale' => null
     ],
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Subject UUID
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the default cognito subject UUID that shall be needed
+    | to be updated. The value has a mapping with DB model for identification of
+    | the local user.
+    |
+    */
+    'user_subject_uuid' => env('AWS_COGNITO_USER_SUBJECT_UUID', 'sub'),
+
 
     /*
     |--------------------------------------------------------------------------
@@ -143,7 +163,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | This option controls the cognito MFA configuration for the assigned user.
-    | 
+    |
     |
     | MFA_NONE, MFA_ENABLED
     |
@@ -174,7 +194,7 @@ return [
     |
     */
     'add_missing_local_user'    => env('AWS_COGNITO_ADD_LOCAL_USER', false),
-    'delete_user'                   => env('AWS_COGNITO_DELETE_USER', false),
+    'delete_user'               => env('AWS_COGNITO_DELETE_USER', false),
 
     // Package configurations
     'sso_user_model'        => env('AWS_COGNITO_USER_MODEL', 'App\Models\User'),

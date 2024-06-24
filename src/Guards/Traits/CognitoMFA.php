@@ -35,39 +35,51 @@ trait CognitoMFA
     /**
      * Attempt MFA based Authentication
      */
-    public function attemptBaseMFA(array $challenge = [], Authenticatable $user, bool $remember=false) {
+    public function attemptBaseMFA(array $challenge = [], bool $remember=false) {
         try {
-            $claim = null;
+            //Reset global variables
+            $this->challengeName = null;
+            $this->challengeData = null;
+            $this->claim = null;
+            $this->awsResult = null;
 
             $challengeName = $challenge['challenge_name'];
             $session = $challenge['session'];
             $challengeValue = $challenge['mfa_code'];
             $username = $challenge['username'];
 
+            //Attempt MFA Challenge
             $result = $this->client->authMFAChallenge($challengeName, $session, $challengeValue, $username);
-            //Result of type AWS Result
+
+            //Check if the result is an instance of AwsResult
             if (!empty($result) && $result instanceof AwsResult) {
+                //Set value into class param
+                $this->awsResult = $result;
+
                 //Check in case of any challenge
-                if (isset($result['ChallengeName'])) { 
-                    return $result;
-                } else {
+                if (isset($result['ChallengeName'])) {
+                    $this->challengeName = $result['ChallengeName'];
+                    $this->challengeData = $this->handleCognitoChallenge($result, $username);
+                } elseif (isset($result['AuthenticationResult'])) {
                     //Create claim token
-                    return new AwsCognitoClaim($result, $user, $username);
+                    $this->claim = new AwsCognitoClaim($result, null);
+                } else {
+                    throw new HttpException(400, 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER');
                 } //End if
-            } else {
-                throw new HttpException(400, 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER');
             } //End if
         } catch(CognitoIdentityProviderException $e) {
             throw new AwsCognitoException('ERROR_AWS_COGNITO_MFA_CODE', $e);
         } catch(Exception $e) {
             throw $e;
         } //Try-catch ends
+            
+        return $result;
     } //Function ends
 
 
     /**
      * Associate the MFA Software Token
-     * 
+     *
      * @param  string $appName (optional)
      *
      * @return array
