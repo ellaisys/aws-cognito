@@ -151,7 +151,6 @@ trait AuthenticatesUsers
                         $sessionToken = request()->session()->get($challenge['session']);
                         $username = $sessionToken['username'];
                         $challenge['username'] = $username;
-                        $user = unserialize($sessionToken['user']);
                     } else{
                         throw new HttpException(400, 'ERROR_AWS_COGNITO_SESSION_MFA_CODE');
                     } //End if
@@ -161,7 +160,6 @@ trait AuthenticatesUsers
                     $challengeData = Auth::guard($guard)->getChallengeData($challenge['session']);
                     $username = $challengeData['username'];
                     $challenge['username'] = $username;
-                    $user = unserialize($challengeData['user']);
                     break;
                 
                 default:
@@ -170,7 +168,7 @@ trait AuthenticatesUsers
             } //End switch
 
             //Authenticate User
-            $claim = Auth::guard($guard)->attemptMFA($challenge, $user);
+            $claim = Auth::guard($guard)->attemptMFA($challenge);
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:NoLocalUserException');
 

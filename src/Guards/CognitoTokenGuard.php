@@ -142,6 +142,12 @@ class CognitoTokenGuard extends TokenGuard
                     //Login the user into the token guard
                     $returnValue = $this->login($user);
                 } elseif ($this->challengeName) {
+                    //Get the key
+                    $key = $this->challengeData['session_token'];
+
+                    //Save the challenge data
+                    $this->setChallengeData($key);
+
                     $returnValue = $this->challengeData;
                 } else {
                     throw new InvalidUserException('Invalid AWS Cognito Credentials');
@@ -201,7 +207,7 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @return claim
      */
-    private function login($user)
+    private function login(Authenticatable $user)
     {
         if (!empty($this->claim)) {
 
@@ -212,11 +218,6 @@ class CognitoTokenGuard extends TokenGuard
 
                 //Set Token
                 $this->setToken();
-            } else {
-                $key = $this->claim['session'];
-
-                //Save the challenge data
-                $this->setChallengeData($key, $user);
             } //End if
 
             //Set user
@@ -272,9 +273,9 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @return $this
      */
-    public function setChallengeData(string $key, $user)
+    public function setChallengeData(string $key)
     {
-        $this->cognito->setChallengeData($key, $this->claim);
+        $this->cognito->setChallengeData($key, $this->challengeData);
         return $this;
     } //Function ends
 
@@ -384,30 +385,60 @@ class CognitoTokenGuard extends TokenGuard
 
     /**
      * Attempt MFA based Authentication
+     *
+     * @param  array  $challenge
+     * @param  bool   $remember
+     *
+     * @throws
+     *
+     * @return bool
      */
-    public function attemptMFA(array $challenge=[], Authenticatable $user=null, bool $remember=false) {
+    public function attemptMFA(array $challenge=[], bool $remember=false) {
+        $returnValue = null;
         try {
-            $response = $this->attemptBaseMFA($challenge, $user, $remember);
-            //Result of type AWS Result
-            if (!empty($response)) {
+            $responseCognito = $this->attemptBaseMFA($challenge, $remember);
+            if ($responseCognito) {
+                if ($this->claim) {
+                    $credentials = collect([
+                        config('cognito.user_subject_uuid') => $this->claim->getSub()
+                    ]);
 
-                //Handle the response as Aws Cognito Claim
-                if ($response instanceof AwsCognitoClaim) {
-                    $this->claim = $response;
-                    return $this->login($user);
-                } //End if
+                    //Check if the user exists
+                    $this->lastAttempted = $user = $this->hasValidLocalCredentials($credentials);
 
-                //Handle if the object is a Aws Cognito Result
-                if ($response instanceof AwsResult) {
-                    //Check in case of any challenge
-                    if (isset($response['ChallengeName'])) {
-                        //TODO: Handle challenge in MFA login
-                    } //End if
+                    //Login the user into the token guard
+                    $returnValue = $this->login($user);
+                } elseif ($this->challengeName) {
+                    $returnValue = $this->challengeData;
+                } else {
+                    throw new InvalidUserException('Invalid AWS Cognito Credentials');
                 } //End if
+            } else {
+                throw new InvalidUserException('Invalid AWS Cognito Credentials');
             } //End if
+
+            // //Result of type AWS Result
+            // if (!empty($response)) {
+
+            //     //Handle the response as Aws Cognito Claim
+            //     if ($response instanceof AwsCognitoClaim) {
+            //         $this->claim = $response;
+            //         return $this->login($user);
+            //     } //End if
+
+            //     //Handle if the object is a Aws Cognito Result
+            //     if ($response instanceof AwsResult) {
+            //         //Check in case of any challenge
+            //         if (isset($response['ChallengeName'])) {
+            //             //TODO: Handle challenge in MFA login
+            //         } //End if
+            //     } //End if
+            // } //End if
         } catch(Exception $e) {
             throw $e;
         } //Try-catch ends
+
+        return $returnValue;
     } //Function ends
 
 } //Class ends

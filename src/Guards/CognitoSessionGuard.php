@@ -389,46 +389,33 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
     /**
      * Attempt MFA based Authentication
      */
-    public function attemptMFA(array $challenge, Authenticatable $user, bool $remember=false) {
+    public function attemptMFA(array $challenge=[], bool $remember=false) {
+        $returnValue = false;
         try {
-            $claim = null;
-
-            $response = $this->attemptBaseMFA($challenge, $user, $remember);
-            //Result of type AWS Result
-            if (!empty($response)) {
-
-                //Handle the response as Aws Cognito Claim
-                if ($response instanceof AwsCognitoClaim) {
-                    $claim = $response;
-
-                    //Get Session and store details
-                    $session = $this->getSession();
-                    $session->forget($challenge['session']);
-                    $session->put('claim', json_decode(json_encode($claim), true));
-
+            //Login with MFA Challenge
+            $responseCognito = $this->attemptBaseMFA($challenge, $remember);
+            if ($responseCognito && (!empty($this->claim))) {
+                //Process the claim
+                if ($user = $this->processAWSClaim()) {
                     //Login user into the session
                     $this->login($user, $remember);
 
                     //Fire successful attempt
-                    $this->fireValidatedEvent($user);
-                    $this->fireAuthenticatedEvent($user);
-                    
-                    return true;
+                    $this->fireLoginEvent($user, true);
+
+                    $returnValue = true;
                 } //End if
-
-                //Handle if the object is a Aws Cognito Result
-                if ($response instanceof AwsResult) {
-                    //Check in case of any challenge
-                    // if (isset($response['ChallengeName'])) {
-
-                    // } else {
-
-                    // } //End if
-                } //End if
+            } elseif ($responseCognito && $this->challengeName) {
+                //Handle the challenge
+                $returnValue = $this->handleAWSChallenge();
+            } else {
+                throw new HttpException(400, 'ERROR_AWS_COGNITO');
             } //End if
         } catch(Exception $e) {
             throw $e;
         } //Try-catch ends
+
+        return $returnValue;
     } //Function ends
 
 } //Class ends

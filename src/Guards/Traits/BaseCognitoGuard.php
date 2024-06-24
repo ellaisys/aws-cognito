@@ -127,7 +127,6 @@ trait BaseCognitoGuard
             Log::error($e->getMessage());
             throw $e;
         } //End try-catch
-
     } //Function ends
 
 
@@ -144,21 +143,11 @@ trait BaseCognitoGuard
                 $returnValue = [
                     'status' => $result['ChallengeName'],
                     'session_token' => $result['Session'],
-                    'username' => $username,
-                    'user' => serialize($this->user)
+                    'username' => $username
                 ];
                 break;
 
             case 'SMS_MFA':
-                $returnValue = [
-                    'status' => $result['ChallengeName'],
-                    'session_token' => $result['Session'],
-                    'challenge_params' => $result['ChallengeParameters'],
-                    'username' => $username,
-                    'user' => serialize($this->user)
-                ];
-                break;
-
             case 'SELECT_MFA_TYPE':
                 $returnValue = [
                     'status' => $result['ChallengeName'],
