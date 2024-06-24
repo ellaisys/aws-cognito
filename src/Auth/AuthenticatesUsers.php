@@ -76,10 +76,17 @@ trait AuthenticatesUsers
      * @return mixed
      */
     protected function attemptLogin(
-        Collection $request, string $guard='web', string $paramUsername='email',
+        Request|Collection $request, string $guard='web', string $paramUsername='email',
         string $paramPassword='password', bool $isJsonResponse=false)
     {
         try {
+            $returnValue = null;
+
+            //Convert request to collection
+            if ($request instanceof Request) {
+                $request = collect($request->all());
+            } //End if
+
             //Get the password policy
             $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
@@ -93,30 +100,10 @@ trait AuthenticatesUsers
                 throw new ValidationException($validator);
             } //End if
 
-            //Get the configuration fields
-            $userFields = config('cognito.cognito_user_fields');
-
-            //Get key fields
-            $keyUsername = $userFields['email'];
-            $keyPassword = 'password';
-            $rememberMe = $request->has('remember')?$request['remember']:false;
-
-            //Generate credentials array
-            $credentials = [
-                $keyUsername => $request[$paramUsername],
-                $keyPassword => $request[$paramPassword]
-            ];
-
             //Authenticate User
-            $claim = Auth::guard($guard)->attempt($credentials, $rememberMe);
-
+            $returnValue = Auth::guard($guard)->attempt($request->toArray(), false, $paramUsername, $paramPassword);
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:NoLocalUserException');
-            $user = $this->createLocalUser($credentials, $keyPassword);
-            if ($user) {
-                return $user;
-            } //End if
-
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
         } catch (CognitoIdentityProviderException $e) {
             Log::error('AuthenticatesUsers:attemptLogin:CognitoIdentityProviderException');
@@ -126,7 +113,7 @@ trait AuthenticatesUsers
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
         } //Try-catch ends
 
-        return $claim;
+        return $returnValue;
     } //Function ends
 
     
@@ -172,7 +159,6 @@ trait AuthenticatesUsers
                         $sessionToken = request()->session()->get($challenge['session']);
                         $username = $sessionToken['username'];
                         $challenge['username'] = $username;
-                        $user = unserialize($sessionToken['user']);
                     } else{
                         throw new HttpException(400, 'ERROR_AWS_COGNITO_SESSION_MFA_CODE');
                     } //End if
@@ -182,7 +168,6 @@ trait AuthenticatesUsers
                     $challengeData = Auth::guard($guard)->getChallengeData($challenge['session']);
                     $username = $challengeData['username'];
                     $challenge['username'] = $username;
-                    $user = unserialize($challengeData['user']);
                     break;
                 
                 default:
@@ -191,7 +176,7 @@ trait AuthenticatesUsers
             } //End switch
 
             //Authenticate User
-            $claim = Auth::guard($guard)->attemptMFA($challenge, $user);
+            $claim = Auth::guard($guard)->attemptMFA($challenge);
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:NoLocalUserException');
 

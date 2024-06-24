@@ -56,7 +56,7 @@ trait RegistersUsers
             $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
-            $validator = Validator::make($request->all(), $this->rules(), [
+            $validator = Validator::make($request->all(), $this->rulesRegisterUser(), [
                 $this->paramPassword.'.regex' => 'Must contain atleast '.$this->passwordPolicy['message']
             ]);
             if ($validator->fails()) {
@@ -187,7 +187,7 @@ trait RegistersUsers
      *
      * @return array
      */
-    public function rules()
+    public function rulesRegisterUser()
     {
         $rules=[];
 

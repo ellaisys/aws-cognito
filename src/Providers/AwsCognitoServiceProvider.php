@@ -227,7 +227,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->singleton('ellaisys.aws.cognito', function (Application $app, array $config) {
+        $this->app->singleton('ellaisys.aws.cognito', function (Application $app) {
             return new AwsCognito(
                 $app['ellaisys.aws.cognito.manager'],
                 $app['ellaisys.aws.cognito.parser']
@@ -251,7 +251,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
      */
     protected function registerCognitoProvider()
     {
-        $this->app->singleton(AwsCognitoClient::class, function (Application $app) {
+        $this->app->singleton(AwsCognitoClient::class, function () {
             $aws_config = [
                 'region'      => config('cognito.region'),
                 'version'     => config('cognito.version')
@@ -264,15 +264,13 @@ class AwsCognitoServiceProvider extends ServiceProvider
             } //End if
 
             //Instancite the AWS Cognito Client
-            $client = new AwsCognitoClient(
+            return new AwsCognitoClient(
                 new CognitoIdentityProviderClient($aws_config),
                 config('cognito.app_client_id'),
                 config('cognito.app_client_secret'),
                 config('cognito.user_pool_id'),
                 config('cognito.app_client_secret_allow', true)
             );
-
-            return $client;
         });
 
         $this->app->singleton(AwsCognitoUserPool::class, function (Application $app) {
@@ -292,7 +290,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
             $guard = new CognitoSessionGuard(
                 $name,
                 $app['ellaisys.aws.cognito'],
-                $client = $app->make(AwsCognitoClient::class),
+                $app->make(AwsCognitoClient::class),
                 $app['auth']->createUserProvider($config['provider']),
                 $app['session.store'],
                 $app['request']
@@ -318,7 +316,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
             $guard = new CognitoTokenGuard(
                 $app['ellaisys.aws.cognito'],
-                $client = $app->make(AwsCognitoClient::class),
+                $app->make(AwsCognitoClient::class),
                 $app['request'],
                 Auth::createUserProvider($config['provider']),
                 config('cognito.cognito_user_fields.email', 'email')
