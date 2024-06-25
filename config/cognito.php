@@ -83,8 +83,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | This option controls the default cognito subject UUID that shall be needed
-    | to be updated. The value has a mapping with DB model for identification of
-    | the local user.
+    | to be updated based on your local DB schema. This value is the attribute
+    | in the local DB Model that maps with Cognito user subject UUID.
     |
     */
     'user_subject_uuid' => env('AWS_COGNITO_USER_SUBJECT_UUID', 'sub'),
