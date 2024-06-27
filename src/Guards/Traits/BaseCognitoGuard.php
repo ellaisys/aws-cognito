@@ -230,7 +230,7 @@ trait BaseCognitoGuard
                     //Fetch user data from cognito
                     $userRemote = $this->getRemoteUserData($this->claim->getUsername());
                     if (empty($userRemote)) {
-                        throw new Exception('User not found in AWS Cognito');
+                        throw new InvalidUserException();
                     } //End if
 
                     //Create user object from cognito data
@@ -246,7 +246,7 @@ trait BaseCognitoGuard
             } //End if
     
             return $user;
-        } catch (NoLocalUserException | Exception $e) {
+        } catch (InvalidUserException | NoLocalUserException | Exception $e) {
             Log::debug('BaseCognitoGuard:setLocalUserData:Exception');
             throw $e;
         } //End try-catch
