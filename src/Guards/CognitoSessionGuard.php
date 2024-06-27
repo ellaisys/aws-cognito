@@ -163,7 +163,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 //Handle the challenge
                 $returnValue = $this->handleAWSChallenge();
             } else {
-                throw new HttpException(400, 'ERROR_AWS_COGNITO');
+                throw new AwsCognitoException('ERROR_AWS_COGNITO');
             } //End if
         } catch (CognitoIdentityProviderException $e) {
             Log::error('CognitoSessionGuard:attempt:CognitoIdentityProviderException:'.$e->getAwsErrorCode());
