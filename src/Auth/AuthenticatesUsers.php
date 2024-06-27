@@ -53,7 +53,7 @@ trait AuthenticatesUsers
                     foreach ($groups as $key => &$value) {
                         unset($value['UserPoolId']);
                         unset($value['RoleArn']);
-                    } //Loop ends                    
+                    } //Loop ends
                 } //End if
             } //End if
         } catch(Exception $e) {
@@ -95,7 +95,7 @@ trait AuthenticatesUsers
                 'regex' => 'Must contain atleast ' . $passwordPolicy['message']
             ]);
             if ($validator->fails()) {
-                Log::info($validator->errors());
+                Log::error($validator->errors());
                 throw new ValidationException($validator);
             } //End if
 
