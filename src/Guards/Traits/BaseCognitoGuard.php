@@ -70,7 +70,7 @@ trait BaseCognitoGuard
                 throw new Exception('User not found in AWS Cognito');
             }
 
-
+            //Check if the user is not empty
             if (config('cognito.add_missing_local_user', false)) {
                     //Create user object from AWS Cognito
                     $user = [];
@@ -82,6 +82,7 @@ trait BaseCognitoGuard
             } //End if
                         
         } catch (Exception $e) {
+            Log::debug('BaseCognitoGuard:setLocalUserData:Exception:');
             throw new NoLocalUserException();
         } //End try-catch
 
@@ -263,7 +264,7 @@ trait BaseCognitoGuard
     
             return $user;
         } catch (NoLocalUserException | Exception $e) {
-            Log::error($e->getMessage());
+            Log::debug('BaseCognitoGuard:setLocalUserData:Exception');
             throw $e;
         } //End try-catch
     } //Function ends

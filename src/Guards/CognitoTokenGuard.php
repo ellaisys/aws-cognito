@@ -156,7 +156,7 @@ class CognitoTokenGuard extends TokenGuard
                 throw new InvalidUserException('Invalid AWS Cognito Credentials');
             } //End if
         } catch (NoLocalUserException $e) {
-            Log::error('CognitoTokenGuard:attempt:NoLocalUserException:');
+            Log::error('CognitoTokenGuard:attempt:NoLocalUserException:'.$e->getMessage());
             throw $e;
         } catch (CognitoIdentityProviderException $e) {
             Log::error('CognitoTokenGuard:attempt:CognitoIdentityProviderException:'.$e->getAwsErrorCode());

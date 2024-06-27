@@ -5,31 +5,12 @@ namespace Ellaisys\Cognito\Exceptions;
 use Throwable;
 
 use Exception;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class NoLocalUserException extends Exception
+class NoLocalUserException extends HttpException
 {
-    /**
-     * Report the exception.
-     *
-     * @return void
-     */
-    public function report()
+    public function __construct(string $message = 'User does not exist locally.', Throwable $previous = null, int $code = 0, array $headers = [])
     {
-        throw new ModelNotFoundException();
+        parent::__construct(401, $message, $previous, $headers, $code);
     }
-
-
-    /**
-     * Render the exception into an HTTP response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $exception
-     * @return \Illuminate\Http\Response
-     */
-    public function render($request, Throwable $exception)
-    {
-        return parent::render($request, $exception);
-    }
-    
 } //Class ends
