@@ -13,6 +13,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
+use Aws\CognitoIdentityProvider\Exception\InvalidPasswordException;
+use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException ;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 /**
  * WS Cognito Client for AWS Admin Users
@@ -79,7 +83,7 @@ trait AwsCognitoClientAdminAction
 
 
     /**
-     * Signs out a user from all devices. It also invalidates all refresh tokens that Amazon Cognito has 
+     * Signs out a user from all devices. It also invalidates all refresh tokens that Amazon Cognito has
      * issued to a user. The user's current access and ID tokens remain valid until they expire.
      *
      * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#adminuserglobalsignout

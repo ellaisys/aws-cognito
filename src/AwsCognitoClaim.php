@@ -53,14 +53,19 @@ class AwsCognitoClaim
 
 
     /**
+     * @var object
+     */
+    public $tokenDecode;
+
+
+    /**
      * Create a new JSON Web Token.
      *
      * @param  string  $token
      *
      * @return void
      */
-    public function __construct(AwsResult $result, Authenticatable $user=null, string $username)
-    {
+    public function __construct(AwsResult $result, Authenticatable $user=null) {
         try {
             $authResult = $result['AuthenticationResult'];
             if (!is_array($authResult)) {
@@ -72,9 +77,13 @@ class AwsCognitoClaim
 
             $this->token = (string) (new AwsCognitoTokenValidator)->check($token);
             $this->data = $authResult;
-            $this->username = $username;
+
+            //Decode the token
+            $decodedToken = (array) (new AwsCognitoTokenValidator)->decode($token);
+            $this->username = $decodedToken['username'];
             $this->user = $user;
-            $this->sub = $user['id'];
+            $this->sub = $decodedToken['sub'];
+            $this->tokenDecode = $decodedToken;
 
         } catch(Exception $e) {
             throw $e;
@@ -87,7 +96,7 @@ class AwsCognitoClaim
      *
      * @return string
      */
-    public function getToken()
+    public function getToken(): string
     {
         return $this->token;
     } //Function ends
@@ -116,6 +125,27 @@ class AwsCognitoClaim
 
 
     /**
+     * Set the User.
+     *
+     */
+    public function setUser(Authenticatable $user)
+    {
+        $this->user = $user;
+    } //Function ends
+
+    
+    /**
+     * Get the Username.
+     *
+     * @return \string
+     */
+    public function getUsername(): string
+    {
+        return $this->username;
+    } //Function ends
+
+
+    /**
      * Get the Sub Data.
      *
      * @return mixed
@@ -123,6 +153,17 @@ class AwsCognitoClaim
     public function getSub()
     {
         return $this->sub;
+    } //Function ends
+
+
+    /**
+     * Get the Decoded Token Data.
+     *
+     * @return mixed
+     */
+    public function getDecodeToken()
+    {
+        return $this->tokenDecode;
     } //Function ends
 
 
