@@ -15,8 +15,8 @@
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Code') }}</label>
 
                             <div class="col-md-6">
-                                <input type="text" id="mfa_code" name="mfa_code" 
-                                    class="form-control @error('mfa_code') is-invalid @enderror" 
+                                <input type="text" id="mfa_code" name="mfa_code"
+                                    class="form-control @error('mfa_code') is-invalid @enderror"
                                     value="" minlength="4"
                                     autocomplete="email" required autofocus />
 

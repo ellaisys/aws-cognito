@@ -53,8 +53,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | This is the base URI path where the package views, such as the MFA
-    | verification screen, activation screen, etc will be available from. 
-    | You're free to tweak this path according to your preferences and 
+    | verification screen, activation screen, etc will be available from.
+    | You're free to tweak this path according to your preferences and
     | application design.
     |
     */
@@ -79,7 +79,7 @@ return [
     | AWS Cognito Home Route Name
     |--------------------------------------------------------------------------
     |
-    | This is the home route name where the page redirects post successful 
+    | This is the home route name where the page redirects post successful
     | authentication. This will work with and without the MFA enabled using
     | the AWS Cognito based authentication.
     |
@@ -310,7 +310,7 @@ return [
     | Allow new user to set the password and have verified
     |--------------------------------------------------------------------------
     |
-    | This option enables the user to set the password and have that verified 
+    | This option enables the user to set the password and have that verified
     | during the to invitation for the new user. The default value is set to true.
     |
     */

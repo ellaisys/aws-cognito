@@ -30,13 +30,13 @@
                             class="form-control" placeholder="Enter the code"
                             pattern="[0-9]{6}" autocomplete="off" maxlength="6"
                             oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
-                            tabindex="1" autofocus required />
+                            tabindex="-2" autofocus required />
                     </div>
                     <div class="flex-fill form-group mt-1 w-50">
                         <input type="text" name="device_name" id="device_name"
                             class="form-control" placeholder="Enter the device name"
                             value="My Phone" autocomplete="off"
-                            tabindex="2" required />
+                            tabindex="-1" required />
                     </div>
                 </div>
 
