@@ -22,7 +22,10 @@ use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClientInterface;
 use Ellaisys\Cognito\AwsCognitoClientManager;
+
+use Exception;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
+use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Validators\AwsCognitoTokenValidator;
 
 /**
@@ -67,10 +70,10 @@ trait BaseCognitoGuard
                 //Get user from presisting store
                 $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
             } else {
-                throw new Exception('User not found in AWS Cognito');
-            }
+                throw new InvalidUserException('User not found in AWS Cognito');
+            } //End if
 
-
+            //Check if the user is not empty
             if (config('cognito.add_missing_local_user', false)) {
                     //Create user object from AWS Cognito
                     $user = [];
@@ -81,8 +84,9 @@ trait BaseCognitoGuard
                 return null;
             } //End if
                         
-        } catch (Exception $e) {
-            throw new NoLocalUserException();
+        } catch (InvalidUserException | Exception $e) {
+            Log::debug('BaseCognitoGuard:setLocalUserData:Exception:');
+            throw $e;
         } //End try-catch
 
         return $this->client->getUser($username);
@@ -95,38 +99,33 @@ trait BaseCognitoGuard
      * @return \Ellaisys\Cognito\AwsCognitoClient
      */
     protected function hasValidAWSCredentials(Collection $credentials) {
-        try {
-            //Reset global variables
-            $this->challengeName = null;
-            $this->challengeData = null;
-            $this->claim = null;
-            $this->awsResult = null;
+        //Reset global variables
+        $this->challengeName = null;
+        $this->challengeData = null;
+        $this->claim = null;
+        $this->awsResult = null;
 
-            //Authenticate the user with AWS Cognito
-            $result = $this->client->authenticate($credentials['email'], $credentials['password']);
+        //Authenticate the user with AWS Cognito
+        $result = $this->client->authenticate($credentials['email'], $credentials['password']);
 
-            //Check if the result is an instance of AwsResult
-            if (!empty($result) && $result instanceof AwsResult) {
-                //Set value into class param
-                $this->awsResult = $result;
+        //Check if the result is an instance of AwsResult
+        if (!empty($result) && $result instanceof AwsResult) {
+            //Set value into class param
+            $this->awsResult = $result;
 
-                //Check in case of any challenge
-                if (isset($result['ChallengeName'])) {
-                    $this->challengeName = $result['ChallengeName'];
-                    $this->challengeData = $this->handleCognitoChallenge($result, $credentials['email']);
-                } elseif (isset($result['AuthenticationResult'])) {
-                    //Create claim token
-                    $this->claim = new AwsCognitoClaim($result, null);
-                } else {
-                    $result = null;
-                } //End if
+            //Check in case of any challenge
+            if (isset($result['ChallengeName'])) {
+                $this->challengeName = $result['ChallengeName'];
+                $this->challengeData = $this->handleCognitoChallenge($result, $credentials['email']);
+            } elseif (isset($result['AuthenticationResult'])) {
+                //Create claim token
+                $this->claim = new AwsCognitoClaim($result, null);
+            } else {
+                $result = null;
             } //End if
-    
-            return $result;
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            throw $e;
-        } //End try-catch
+        } //End if
+
+        return $result;
     } //Function ends
 
 
@@ -180,52 +179,37 @@ trait BaseCognitoGuard
     {
         $payload = [];
 
-        try {
-            //Check if the request is an instance of Collection
-            if (!($request instanceof Collection)) {
-                throw new Exception('Request must be an instance of Collection');
-            } //End if
+        //Get key fields
+        if ($isCredential) {
+            $rememberMe = $request->has('remember')?$request['remember']:false;
+            $payload = array_merge($payload, ['remember' => $rememberMe]);
+        } //End if
+        
+        //Get the configuration fields
+        $userFields = array_filter(config('cognito.cognito_user_fields'), function($value) {
+            return !empty($value);
+        });
 
-            //Check if the request is empty
-            if ($request->isEmpty()) {
-                throw new Exception('Request must not be empty');
-            } //End if
-
-            //Get key fields
-            if ($isCredential) {
-                $rememberMe = $request->has('remember')?$request['remember']:false;
-                $payload = array_merge($payload, ['remember' => $rememberMe]);
-            } //End if
-            
-            //Get the configuration fields
-            $userFields = array_filter(config('cognito.cognito_user_fields'), function($value) {
-                return !empty($value);
+        if ($userFields) {
+            //Iterate all the keys in the request
+            $request->each(function($value, $key) use ($userFields, $paramUsername, $paramPassword, &$payload, $isCredential) {
+                switch ($key) {
+                    case $paramUsername:
+                        $payload = array_merge($payload, ['email' => $value]);
+                        break;
+                    
+                    case $paramPassword:
+                        $payload = array_merge($payload, ['password' => $value]);
+                        break;
+                    
+                    default:
+                        if ($isCredential && array_key_exists($key, $userFields)) {
+                            $payload = array_merge($payload, [$key => $value]);
+                        }
+                        break;
+                } //Switch ends
             });
-
-            if ($userFields) {
-                //Iterate all the keys in the request
-                $request->each(function($value, $key) use ($userFields, $paramUsername, $paramPassword, &$payload, $isCredential) {
-                    switch ($key) {
-                        case $paramUsername:
-                            $payload = array_merge($payload, ['email' => $value]);
-                            break;
-                        
-                        case $paramPassword:
-                            $payload = array_merge($payload, ['password' => $value]);
-                            break;
-                        
-                        default:
-                            if ($isCredential && array_key_exists($key, $userFields)) {
-                                $payload = array_merge($payload, [$key => $value]);
-                            }
-                            break;
-                    } //Switch ends
-                });
-            } //End if
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            throw $e;
-        } //End try-catch
+        } //End if
 
         return collect($payload);
     } //Function ends
@@ -246,7 +230,7 @@ trait BaseCognitoGuard
                     //Fetch user data from cognito
                     $userRemote = $this->getRemoteUserData($this->claim->getUsername());
                     if (empty($userRemote)) {
-                        throw new Exception('User not found in AWS Cognito');
+                        throw new InvalidUserException();
                     } //End if
 
                     //Create user object from cognito data
@@ -262,8 +246,8 @@ trait BaseCognitoGuard
             } //End if
     
             return $user;
-        } catch (NoLocalUserException | Exception $e) {
-            Log::error($e->getMessage());
+        } catch (InvalidUserException | NoLocalUserException | Exception $e) {
+            Log::debug('BaseCognitoGuard:setLocalUserData:Exception');
             throw $e;
         } //End try-catch
     } //Function ends
@@ -282,16 +266,6 @@ trait BaseCognitoGuard
         $payload = [];
 
         try {
-            //Check if the request is an instance of Collection
-            if (!($request instanceof Collection)) {
-                throw new Exception('Request must be an instance of Collection');
-            } //End if
-
-            //Check if the request is empty
-            if ($request->isEmpty()) {
-                throw new Exception('Request must not be empty');
-            } //End if
-           
             //Get the configuration fields
             $userFields = array_filter(config('cognito.cognito_user_fields'), function($value) {
                 return !empty($value);

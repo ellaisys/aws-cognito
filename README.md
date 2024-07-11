@@ -12,6 +12,11 @@ AWS Cognito package using the AWS SDK for PHP
 [![GitHub Contributors](https://img.shields.io/github/contributors-anon/ellaisys/aws-cognito?style=flat&logo=github&logoColor=whitesmoke&label=Contributors)](CONTRIBUTING.md)&#160;
 [![APM](https://img.shields.io/packagist/l/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=License)](LICENSE.md)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
+
+
 This package provides a simple way to use AWS Cognito authentication in Laravel for Web and API Auth Drivers.
 The idea of this package, and some of the code, is based on the package from Pod-Point which you can find here: [Pod-Point/laravel-cognito-auth](https://github.com/Pod-Point/laravel-cognito-auth), [black-bits/laravel-cognito-auth](https://github.com/black-bits/laravel-cognito-auth) and [tymondesigns/jwt-auth](https://github.com/tymondesigns/jwt-auth).
 
@@ -20,12 +25,12 @@ The idea of this package, and some of the code, is based on the package from Pod
 We decided to use it and contribute it to the community as a package, that encourages standarised use and a RAD tool for authentication using AWS Cognito.
 
 ## Features
-- [Registration and Confirmation E-Mail (Sign Up)](#registering-users) **Updated** (#9 feature added)
+- [Registration and Confirmation E-Mail (Sign Up)](#registering-users)
 - Forced password change at first login (configurable)
 - [Login (Sign In)](#user-authentication)
-- Token Validation for all Session and Token Guard Requests **New**  
+- Token Validation for all Session and Token Guard Requests
 - Remember Me Cookie
-- Single Sign On
+- Single Sign On **Updated** (Fix: Issue #86)
 - Forgot Password (Resend - configurable)
 - User Deletion
 - Edit User Attributes
@@ -42,6 +47,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
 - [MFA Implementation for Session and Token Guards](./README_MFA.md)
 - [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
+- [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid) **NEW**
 
 ## Compatability
 
@@ -197,7 +203,6 @@ At the current state you need to have those 4 form fields defined in here. Those
 
 With our package and AWS Cognito we provide you a simple way to use Single Sign-Ons.
 For configuration options take a look at the config [cognito.php](/config/cognito.php).
-
 
 When you want SSO enabled and a user tries to login into your application, the package checks if the user exists in your AWS Cognito pool. If the user exists, he will be created automatically in your database provided the `add_missing_local_user` is to `true`, and is logged in simultaneously.
 
@@ -626,6 +631,20 @@ This library fetches the password policy from the cognito pool configurations. T
 
 >[!IMPORTANT]
 >In case of special characters, we are supporting all except the pipe character **|** for now.
+
+## Mapping Cognito User using Subject UUID
+
+The library maps the Cognito user subject UUID with the local repository. Everytime a new user is created in cognito, the sub UUID is mapped with the local user table with an user specified column name.
+
+The column in the local BD is identified with the config parameter `user_subject_uuid` with the default value set to `sub`.
+
+However, to customize the column name in the local DB user table, you may do that with below setting fields to your `.env` file
+
+```php
+
+    AWS_COGNITO_USER_SUBJECT_UUID="sub"
+    
+```
 
 We are working on making sure that pipe character is handled soon.
 

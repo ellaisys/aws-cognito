@@ -53,7 +53,7 @@ trait AuthenticatesUsers
                     foreach ($groups as $key => &$value) {
                         unset($value['UserPoolId']);
                         unset($value['RoleArn']);
-                    } //Loop ends                    
+                    } //Loop ends
                 } //End if
             } //End if
         } catch(Exception $e) {
@@ -97,20 +97,31 @@ trait AuthenticatesUsers
                 'regex' => 'Must contain atleast ' . $passwordPolicy['message']
             ]);
             if ($validator->fails()) {
+                Log::error($validator->errors());
                 throw new ValidationException($validator);
             } //End if
 
             //Authenticate User
             $returnValue = Auth::guard($guard)->attempt($request->toArray(), false, $paramUsername, $paramPassword);
-        } catch (NoLocalUserException $e) {
-            Log::error('AuthenticatesUsers:attemptLogin:NoLocalUserException');
-            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('AuthenticatesUsers:attemptLogin:CognitoIdentityProviderException');
-            return $this->sendFailedCognitoResponse($e, $isJsonResponse, $paramUsername);
-        } catch (Exception $e) {
-            Log::error('AuthenticatesUsers:attemptLogin:Exception');
-            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
+        } catch (NoLocalUserException | CognitoIdentityProviderException | Exception $e) {
+            $exceptionClass = basename(str_replace('\\', DIRECTORY_SEPARATOR, get_class($e)));
+            $exceptionCode = $e->getCode();
+            $exceptionMessage = $e->getMessage().':(code:'.$exceptionCode.', line:'.$e->getLine().')';
+            if ($e instanceof CognitoIdentityProviderException) {
+                $exceptionCode = $e->getAwsErrorCode();
+                $exceptionMessage = $e->getAwsErrorMessage().':'.$exceptionCode;
+            } //End if
+            Log::error('AuthenticatesUsers:attemptLogin:'.$exceptionClass.':'.$exceptionMessage);
+
+            if ($e instanceof ValidationException) {
+                throw $e;
+            } //End if
+
+            if ($e instanceof CognitoIdentityProviderException) {
+                $this->sendFailedCognitoResponse($e, $isJsonResponse, $paramUsername);
+            }
+
+            $returnValue = $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
         } //Try-catch ends
 
         return $returnValue;
@@ -151,7 +162,6 @@ trait AuthenticatesUsers
             $challenge = $request->only(['challenge_name', 'session', 'mfa_code'])->toArray();
 
             //Fetch user details
-            $user = null;
             switch ($guard) {
                 case 'web': //Web
                     if (request()->session()->has($challenge['session'])) {
@@ -171,7 +181,6 @@ trait AuthenticatesUsers
                     break;
                 
                 default:
-                    $user = null;
                     break;
             } //End switch
 
@@ -179,13 +188,10 @@ trait AuthenticatesUsers
             $claim = Auth::guard($guard)->attemptMFA($challenge);
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:NoLocalUserException');
-
-            $response = $this->createLocalUser($user->toArray());
-            if ($response) {
-                return $response;
-            } //End if
-
             return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
+        } catch (CognitoIdentityProviderException $e) {
+            Log::error('AuthenticatesUsers:attemptLoginMFA:CognitoIdentityProviderException');
+            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:Exception');
             if ($isJsonResponse) {
@@ -210,32 +216,6 @@ trait AuthenticatesUsers
 
 
     /**
-     * Create a local user if one does not exist.
-     *
-     * @param  array  $credentials
-     * @return mixed
-     */
-    protected function createLocalUser(array $dataUser, string $keyPassword='password')
-    {
-        $user = null;
-        if (config('cognito.add_missing_local_user')) {
-            //Get user model from configuration
-            $userModel = config('cognito.sso_user_model');
-
-            //Remove password from credentials if exists
-            if (array_key_exists($keyPassword, $dataUser)) {
-                unset($dataUser[$keyPassword]);
-            } //End if
-            
-            //Create user
-            $user = $userModel::create($dataUser);
-        } //End if
-
-        return $user;
-    } //Function ends
-
-
-    /**
      * Handle Failed Cognito Exception
      *
      * @param CognitoIdentityProviderException $exception
@@ -256,26 +236,34 @@ trait AuthenticatesUsers
      */
     private function sendFailedLoginResponse($request, $exception=null, bool $isJsonResponse=false, string $paramName='email')
     {
-        $errorCode = 'cognito.validation.auth.failed';
+        $errorCode = 400;
+        $errorMessageCode = 'cognito.validation.auth.failed';
         $message = 'FailedLoginResponse';
         if (!empty($exception)) {
             if ($exception instanceof CognitoIdentityProviderException) {
-                $errorCode = $exception->getAwsErrorCode();
+                $errorMessageCode = $exception->getAwsErrorCode();
                 $message = $exception->getAwsErrorMessage();
             } elseif ($exception instanceof ValidationException) {
                 throw $exception;
             } else {
+                $errorCode = $exception->getStatusCode();
                 $message = $exception->getMessage();
             } //End if
         } //End if
 
-        return redirect()
-            ->back()
-            ->withErrors([
-                $paramName => $message,
-            ]);
-
-        throw new HttpException(400, $message);
+        if ($isJsonResponse) {
+            return  response()->json([
+                'error' => $errorMessageCode,
+                'message' => $message
+            ], $errorCode);
+        } else {
+            return redirect()
+                ->back()
+                ->withErrors([
+                    'error' => $errorMessageCode,
+                    $paramName => $message,
+                ]);
+        } //End if
     } //Function ends
 
 

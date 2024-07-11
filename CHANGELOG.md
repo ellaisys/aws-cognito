@@ -1,3 +1,8 @@
+Release 40 (tag v1.3.0)
+ - Feat: Issue #50, Architecture change to map the local and cognito users with sub (SubjectId)
+ - Fix: Issue #86, SSO enabled the user is now created for both guards
+ - Fix: Code optimization 
+
 Release 39 (tag v1.2.5)
  - Fix: AWS JWT Token validation timeout
  - Fix: Non declared variable references

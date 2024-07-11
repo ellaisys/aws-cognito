@@ -150,13 +150,13 @@ class CognitoTokenGuard extends TokenGuard
 
                     $returnValue = $this->challengeData;
                 } else {
-                    throw new InvalidUserException('Invalid AWS Cognito Credentials');
+                    throw new AwsCognitoException();
                 } //End if
             } else {
-                throw new InvalidUserException('Invalid AWS Cognito Credentials');
+                throw new InvalidUserException();
             } //End if
         } catch (NoLocalUserException $e) {
-            Log::error('CognitoTokenGuard:attempt:NoLocalUserException:');
+            Log::error('CognitoTokenGuard:attempt:NoLocalUserException:'.$e->getMessage());
             throw $e;
         } catch (CognitoIdentityProviderException $e) {
             Log::error('CognitoTokenGuard:attempt:CognitoIdentityProviderException:'.$e->getAwsErrorCode());
@@ -188,7 +188,7 @@ class CognitoTokenGuard extends TokenGuard
             } //End if
 
             return $returnValue;
-        } catch (AwsCognitoException $e) {
+        } catch (AwsCognitoException | InvalidUserException $e) {
             Log::error('CognitoTokenGuard:attempt:AwsCognitoException:'. $e->getMessage());
             throw $e;
         } catch (Exception $e) {
@@ -411,30 +411,12 @@ class CognitoTokenGuard extends TokenGuard
                 } elseif ($this->challengeName) {
                     $returnValue = $this->challengeData;
                 } else {
-                    throw new InvalidUserException('Invalid AWS Cognito Credentials');
+                    throw new AwsCognitoException();
                 } //End if
             } else {
-                throw new InvalidUserException('Invalid AWS Cognito Credentials');
+                throw new InvalidUserException();
             } //End if
-
-            // //Result of type AWS Result
-            // if (!empty($response)) {
-
-            //     //Handle the response as Aws Cognito Claim
-            //     if ($response instanceof AwsCognitoClaim) {
-            //         $this->claim = $response;
-            //         return $this->login($user);
-            //     } //End if
-
-            //     //Handle if the object is a Aws Cognito Result
-            //     if ($response instanceof AwsResult) {
-            //         //Check in case of any challenge
-            //         if (isset($response['ChallengeName'])) {
-            //             //TODO: Handle challenge in MFA login
-            //         } //End if
-            //     } //End if
-            // } //End if
-        } catch(Exception $e) {
+        } catch(AwsCognitoException | InvalidUserException | Exception $e) {
             throw $e;
         } //Try-catch ends
 
