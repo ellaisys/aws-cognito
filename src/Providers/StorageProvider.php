@@ -13,6 +13,7 @@ namespace Ellaisys\Cognito\Providers;
 
 use Illuminate\Support\Facades\Cache;
 use Psr\SimpleCache\CacheInterface as PsrCacheInterface;
+use BadMethodCallException;
 
 class StorageProvider
 {
@@ -71,7 +72,7 @@ class StorageProvider
     {
         // If the laravel version is 5.8 or higher then convert minutes to seconds.
         if ($this->laravelVersion !== null
-            && is_int($minutes)
+            && is_int($duration)
             && version_compare($this->laravelVersion, '5.8', '<')
         ) {
             $duration = ($duration/60);
