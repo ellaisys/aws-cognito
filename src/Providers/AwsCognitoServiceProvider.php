@@ -214,6 +214,10 @@ class AwsCognitoServiceProvider extends ServiceProvider
         $this->app->singleton(AwsCognitoUserPool::class, function (Application $app) {
             return new AwsCognitoUserPool($app[AwsCognitoClient::class]);
         });
+
+        $this->app->singleton(Auth::provider('custom', function(Application $app, array $config) {
+            return new CustomProvider();
+          }));
     } //Function ends
 
 
