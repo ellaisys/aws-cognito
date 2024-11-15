@@ -32,6 +32,8 @@ return [
     'app_client_id'     => env('AWS_COGNITO_CLIENT_ID'),
     'app_client_secret' => env('AWS_COGNITO_CLIENT_SECRET'),
     'user_pool_id'      => env('AWS_COGNITO_USER_POOL_ID'),
+    'scheme'            => env('AWS_COGNITO_SCHEME', 'https'),
+    'endpoint'          => env('AWS_COGNITO_ENDPOINT'),
     'region'            => env('AWS_COGNITO_REGION', 'us-east-1'),
     'version'           => env('AWS_COGNITO_VERSION', 'latest'),
 
