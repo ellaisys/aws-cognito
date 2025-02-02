@@ -23,7 +23,6 @@ use Ellaisys\Cognito\AwsCognitoClaim;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
@@ -56,9 +55,10 @@ trait RefreshToken
      *
      * @return mixed
      */
-    public function refresh(Request $request, string $paramUsername='email', string $paramRefreshToken='refresh_token')
+    public function refresh(Request $request, string $paramUsername='email', string $paramRefreshToken='refresh_token', string $authGuard = 'api', mixed $user = null)
     {
         try {
+            $userSubId = null;
 
             if ($request instanceof Request) {
                 //Validate request
@@ -74,24 +74,32 @@ trait RefreshToken
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
-            //Get Authenticated user
-            $authUser  = Auth::guard('api')->user();
+            if($user === null) {
+                //Get Authenticated user
+                $authUser = Auth::guard($authGuard)->user();
 
-            //Get User Data
-            $user = $client->getUser($authUser[$paramUsername]);
+                //Get User Data
+                if($user = $client->getUser($authUser[$paramUsername])) {
+                    $userSubId = $user['Username'];
+                }
+            } else {
+                $userSubId = $user?->{config('cognito.user_subject_uuid')};
+            }
 
             //Use username from AWS to refresh token, not email from login!
-            if (!empty($user['Username'])) {
-                $response = $client->refreshToken($user['Username'], $request[$paramRefreshToken]);
+            if (!empty($userSubId)) {
+                $response = $client->refreshToken($userSubId, $request[$paramRefreshToken]);
                 if (empty($response) || empty($response['AuthenticationResult'])) {
                     throw new HttpException(400);
                 } //End if
 
                 //Authenticate User
-                $claim = new AwsCognitoClaim($response, $authUser, 'email');
+                $claim = new AwsCognitoClaim($response, $authUser ?? $user, 'email');
                 if ($claim && $claim instanceof AwsCognitoClaim) { 
                     //Store the token
                     $this->cognito->setClaim($claim)->storeToken();
+                    //Revoke old refresh token
+                    $client->revokeToken($request[$paramRefreshToken]);
 
                     //Return the response object
                     return $claim->getData();    

@@ -38,7 +38,7 @@ use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
  */
 class AwsCognitoServiceProvider extends ServiceProvider
 {
-    
+
     /**
      * Register the application services.
      *
@@ -87,11 +87,11 @@ class AwsCognitoServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             //Publish config
             $this->publishes([
-                __DIR__.'/../../config/cognito.php' => $this->app->configPath('cognito.php'),
+                __DIR__ . '/../../config/cognito.php' => $this->app->configPath('cognito.php'),
             ], 'cognito-config');
 
             $this->publishes([
-                __DIR__.'/../../database/migrations' => $this->app->databasePath('migrations'),
+                __DIR__ . '/../../database/migrations' => $this->app->databasePath('migrations'),
             ], 'cognito-migrations');
 
             // $this->publishes([
@@ -111,7 +111,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
         $this->app->alias('ellaisys.aws.cognito', AwsCognito::class);
     }
 
-    
+
     /**
      * Setup the configuration for Cognito.
      *
@@ -120,7 +120,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function configure()
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../../config/cognito.php', 'cognito'
+            __DIR__ . '/../../config/cognito.php',
+            'cognito'
         );
     } //Function ends
 
@@ -191,13 +192,15 @@ class AwsCognitoServiceProvider extends ServiceProvider
     {
         $this->app->singleton(AwsCognitoClient::class, function () {
             $aws_config = [
-                'region'      => config('cognito.region'),
-                'version'     => config('cognito.version')
+                'region' => config('cognito.region'),
+                'version' => config('cognito.version'),
+                'endpoint' => config('cognito.endpoint'),
+                'scheme' => config('cognito.scheme')
             ];
 
             //Set AWS Credentials
             $credentials = config('cognito.credentials');
-            if (! empty($credentials['key']) && ! empty($credentials['secret'])) {
+            if (!empty($credentials['key']) && !empty($credentials['secret'])) {
                 $aws_config['credentials'] = Arr::only($credentials, ['key', 'secret', 'token']);
             } //End if
 
@@ -274,7 +277,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
      */
     protected function registerResources()
     {
-        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'cognito');
+        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cognito');
     } //Function ends
 
 
@@ -286,8 +289,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function registerMigrations()
     {
         if (AwsCognito::$runsMigrations && $this->app->runningInConsole()) {
-            $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
+            $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
         } //End if
     } //Function ends
-    
+
 } //Class ends
