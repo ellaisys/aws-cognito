@@ -158,7 +158,12 @@ trait BaseCognitoGuard
 
             default:
                 if (in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) {
-                    $returnValue = $result['ChallengeName'];
+                    $returnValue = [
+                        'status' => $result['ChallengeName'],
+                        'session_token' => isset($result['Session']) ? $result['Session'] : null,
+                        'challenge_params' => isset($result['ChallengeParameters']) ? $result['ChallengeParameters'] : null,
+                        'username' => $username
+                    ];
                 } //End if
                 break;
         } //End switch
