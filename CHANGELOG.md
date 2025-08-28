@@ -1,3 +1,6 @@
+Release 41 (tag v1.3.1)
+ - Fix: Issue #114, Crash in CognitoTokenGuard for NEW_PASSWORD_REQUIRED challenge
+ 
 Release 40 (tag v1.3.0)
  - Feat: Issue #50, Architecture change to map the local and cognito users with sub (SubjectId)
  - Fix: Issue #86, SSO enabled the user is now created for both guards
