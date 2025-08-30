@@ -630,12 +630,13 @@ This library fetches the password policy from the cognito pool configurations. T
 
 >[!IMPORTANT]
 >In case of special characters, we are supporting all except the pipe character **|** for now.
+>We are working on making sure that pipe character is handled soon.
 
 ## Mapping Cognito User using Subject UUID
 
 The library maps the Cognito user subject UUID with the local repository. Everytime a new user is created in cognito, the sub UUID is mapped with the local user table with an user specified column name.
 
-The column in the local BD is identified with the config parameter `user_subject_uuid` with the default value set to `sub`.
+The column name in the local database is identified as `sub`. This can be changed and managed with the config parameter `user_subject_uuid`. The default value of the config is set to `sub`. 
 
 However, to customize the column name in the local DB user table, you may do that with below setting fields to your `.env` file
 
@@ -644,8 +645,55 @@ However, to customize the column name in the local DB user table, you may do tha
     AWS_COGNITO_USER_SUBJECT_UUID="sub"
     
 ```
+>[!IMPORTANT]
+>Please make sure to set the $primaryKey attribute in the User Model so that the data is retirived without any error. Sample code of user model is shared.
 
-We are working on making sure that pipe character is handled soon.
+```php
+
+    class User extends Authenticatable
+    {
+        ...
+
+        /**
+         * The primary key for the model.
+         *
+         * @var string
+         */
+        protected $primaryKey = null;
+
+
+        /**
+         * The attributes that are mass assignable.
+         *
+         * @var array<int, string>
+         */
+        protected $fillable = [
+            'name',
+            'email',
+            'password',
+            'sub'
+        ];
+
+        ...
+
+        /**
+         * Create a new user instance.
+         *
+         * @param  array  $attributes
+         * @return void
+         */
+        public function __construct(array $attributes = [])
+        {
+            parent::__construct($attributes);
+
+            $this->primaryKey = config('cognito.user_subject_uuid', 'id');
+        }
+
+        ...
+
+    }
+
+```
 
 ## Changelog
 
