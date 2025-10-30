@@ -1,3 +1,9 @@
+Release 42 (tag v1.4.0)
+ - Feat: Support for Laravel 11 and Laravel 12
+ - Feat: Add registration type (invite, register) flow
+ - Fix: Issue [#109](https://github.com/ellaisys/aws-cognito/issues/109)
+ - Fix: Issue [#110](https://github.com/ellaisys/aws-cognito/issues/110)
+
 Release 41 (tag v1.3.1)
  - Fix: Issue #114, Crash in CognitoTokenGuard for NEW_PASSWORD_REQUIRED challenge
  
