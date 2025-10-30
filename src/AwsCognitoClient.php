@@ -240,12 +240,14 @@ class AwsCognitoClient
      * @param $username
      * @param $password
      * @param array $attributes
+     * @param array $clientMetadata (optional)
+     * @return bool $groupname (optional)
      *
      * @return bool
      */
-    public function register($username, $password, array $attributes = [])
+    public function register($username, $password, array $attributes = [],
+        array $clientMetadata=null, string $groupname=null)
     {
-
         try {
             //Build payload
             $payload = [
@@ -260,6 +262,11 @@ class AwsCognitoClient
                 $payload = array_merge($payload, [
                     'SecretHash' => $this->cognitoSecretHash($username)
                 ]);
+            } //End if
+
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
             } //End if
 
             $response = $this->client->signUp($payload);
@@ -422,8 +429,8 @@ class AwsCognitoClient
      * @return bool $groupname (optional)
      */
     public function inviteUser(string $username, string $password=null, array $attributes = [],
-                               array $clientMetadata=null, string $messageAction=null,
-                               string $groupname=null)
+        array $clientMetadata=null, string $messageAction=null,
+        string $groupname=null)
     {
         //Validate phone for MFA
         if (config('cognito.mfa_setup')=="MFA_ENABLED") {
@@ -431,8 +438,8 @@ class AwsCognitoClient
         } //End if        
         
         //Force validate email
-        if ($attributes['email'] && config('cognito.force_new_user_email_verified', false)) {
-            $attributes['email_verified'] = 'true';
+        if ($attributes['email']) {
+            $attributes['email_verified'] = config('cognito.force_new_user_email_verified', false)? 'true' : 'false';
         } //End if
 
         //Generate payload
@@ -453,7 +460,7 @@ class AwsCognitoClient
         } //End if
 
         //Set Message Action
-        if (!empty($messageAction)) {
+        if (!empty($messageAction) && in_array($messageAction, ['RESEND', 'SUPPRESS'])) {
             $payload['MessageAction'] = $messageAction;
         } //End If
 

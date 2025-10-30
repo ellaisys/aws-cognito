@@ -13,9 +13,11 @@ namespace Ellaisys\Cognito\Auth;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Application;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoUserPool;
@@ -29,6 +31,11 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 trait RegistersUsers
 {
     /**
+     * Private variable for Registration Type
+     */
+    private $registrationType = 'register';
+
+    /**
      * private variable for password policy
      */
     private $passwordPolicy = null;
@@ -41,17 +48,35 @@ trait RegistersUsers
 
 
     /**
+     * Handle a registration invite for the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
+    public function invite(Request $request, array $clientMetadata=null)
+    {
+        $this->registrationType = 'invite';
+        return $this->register($request, $clientMetadata, true);
+    } //Function ends
+
+
+    /**
      * Handle a registration request for the application.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function register(Request $request, array $clientMetadata=null)
+    public function register(Request $request, array $clientMetadata=null, 
+        bool $ignoreConfigRegistrationType=false)
     {
         $cognitoRegistered=false;
         $user = [];
 
         try {
+            //Set the registration type
+            if (!$ignoreConfigRegistrationType) {
+                $this->registrationType = config('cognito.registration_type', 'register');
+            } //End if
 
             //Get the password policy
             $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
@@ -159,13 +184,38 @@ trait RegistersUsers
         $password = null;
         if (config('cognito.force_new_user_password', true)) {
             $password = $request->has($this->paramPassword)?$request[$this->paramPassword]:null;
-        }// End if            
+        }// End if
 
-        return app()->make(AwsCognitoClient::class)->inviteUser(
-            $request[$userKey], $password, $attributes,
-            $clientMetadata, $messageAction,
-            $groupname
-        );
+        switch ($this->registrationType) {
+            case 'invite':
+                //Invite User
+                return app()->make(AwsCognitoClient::class)->inviteUser(
+                    $request[$userKey], $password, $attributes,
+                    $clientMetadata, $messageAction,
+                    $groupname
+                );                
+                break;
+
+            case 'register':
+            default:
+                //Password is required for register
+                if (empty($password)) {
+                    //Laravel versions prior to 10 do not have Str::password method
+                    if (version_compare(Application::VERSION, '10.0.0', '<')) {
+                        $password = Str::random(10).'1A!';
+                    } else {
+                        $password = Str::password(12);
+                    } //End if
+                } //End if
+
+                //Register User
+                return app()->make(AwsCognitoClient::class)->register(
+                    $request[$userKey], $password, $attributes,
+                    $clientMetadata, $groupname
+                );
+                break;
+        } //End switch
+
     } //Function ends
 
 

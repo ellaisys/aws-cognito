@@ -340,6 +340,13 @@ We have made is very easy for anyone to use the default behaviour.
 
 ```
 
+10. The registration process now allows two types of request, 'invite' and 'register'. The register is self registration and an verification email is sent to the user. The invite is sent from the admin and contains the temporary cedentials. The RegistersUsers Trait allows two methods invite and register respectively. The default method called in the trait is set to **invite**. You can change the behaviour of the register method by setting following configuration.
+
+```php
+
+    AWS_COGNITO_REGISTRATION_TYPE="register" //optional - the default type is invite
+```
+
 ## User Authentication
 
 We have provided you with a useful trait that make the authentication very simple (with Web or API routes). You don't have to worry about any additional code to manage sessions and token (for API).
