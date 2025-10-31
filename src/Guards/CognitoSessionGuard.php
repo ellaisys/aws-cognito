@@ -257,10 +257,13 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
             case AwsCognitoClient::NEW_PASSWORD_CHALLENGE:
             case AwsCognitoClient::RESET_REQUIRED_PASSWORD:
-                $this->login($user, $remember);
-
                 if (config('cognito.force_password_change_web', false)) {
-                    $returnValue =  redirect(route(config('cognito.force_redirect_route_name')))
+                    $returnValue =  redirect(route(config('cognito.force_redirect_route_name'), [
+                        'challenge_name' => $this->challengeName,
+                        'session_token' => $this->challengeData['session_token'],
+                        'status' => $this->challengeData['status'],
+                        'email' => $this->challengeData['username'],
+                    ]))
                         ->with('success', true)
                         ->with('force', true)
                         ->with('messaage', $this->challengeName);

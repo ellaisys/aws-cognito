@@ -85,7 +85,7 @@ trait BaseCognitoGuard
             } //End if
                         
         } catch (InvalidUserException | Exception $e) {
-            Log::debug('BaseCognitoGuard:setLocalUserData:Exception:');
+            Log::error('BaseCognitoGuard:setLocalUserData:Exception:');
             throw $e;
         } //End try-catch
 
@@ -252,7 +252,7 @@ trait BaseCognitoGuard
     
             return $user;
         } catch (InvalidUserException | NoLocalUserException | Exception $e) {
-            Log::debug('BaseCognitoGuard:setLocalUserData:Exception');
+            Log::error('BaseCognitoGuard:setLocalUserData:Exception');
             throw $e;
         } //End try-catch
     } //Function ends

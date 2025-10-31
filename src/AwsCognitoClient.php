@@ -509,7 +509,10 @@ class AwsCognitoClient
     public function confirmPassword($username, $password, $session)
     {
         try {
-            $this->adminRespondToAuthChallenge('NEW_PASSWORD_REQUIRED', $session, $password, $username);
+            $response = $this->adminRespondToAuthChallenge(
+                AwsCognitoClient::NEW_PASSWORD_CHALLENGE,
+                $session, $password, $username
+            );
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::CODE_MISMATCH || $e->getAwsErrorCode() === self::EXPIRED_CODE) {
                 return Password::INVALID_TOKEN;
@@ -704,7 +707,9 @@ class AwsCognitoClient
      *  
      * @return \Aws\Result
      */
-    protected function adminRespondToAuthChallenge(string $challengeName, string $session, string $challengeValue, string $username)
+    protected function adminRespondToAuthChallenge(
+        string $challengeName, string $session, 
+        string $challengeValue, string $username)
     {
         try {
 
