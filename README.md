@@ -46,7 +46,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
 - [MFA Implementation for Session and Token Guards](./README_MFA.md)
 - [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
-- [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid) **NEW**
+- [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
 
 ## Compatability
 
@@ -62,7 +62,9 @@ We decided to use it and contribute it to the community as a package, that encou
 |7.x|Yes :heavy_check_mark:|
 |8.x|Yes :heavy_check_mark:|
 |9.x|Yes :heavy_check_mark:|
-|10.x|Not tested|
+|10.x|Yes :heavy_check_mark:|
+|11.x|Yes :heavy_check_mark:|
+|12.x|Yes :heavy_check_mark:|
 
 ## Installation
 
@@ -336,6 +338,13 @@ We have made is very easy for anyone to use the default behaviour.
 
     AWS_COGNITO_FORCE_NEW_USER_PASSWORD=true //optional - default value is false.  
 
+```
+
+10. The registration process now allows two types of request, 'invite' and 'register'. The register is self registration and an verification email is sent to the user. The invite is sent from the admin and contains the temporary cedentials. The RegistersUsers Trait allows two methods invite and register respectively. The default method called in the trait is set to **invite**. You can change the behaviour of the register method by setting following configuration.
+
+```php
+
+    AWS_COGNITO_REGISTRATION_TYPE="register" //optional - the default type is invite
 ```
 
 ## User Authentication

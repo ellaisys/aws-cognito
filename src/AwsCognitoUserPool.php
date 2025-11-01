@@ -56,7 +56,6 @@ class AwsCognitoUserPool
             $response = $this->client->describeUserPool();
             $this->dataUserPool = $response->get('UserPool');
         } //If ends
-        Log::info($this->dataUserPool);
         return $this->dataUserPool;
     } //Function ends
     public function setDataUserPool($dataUserPool)

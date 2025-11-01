@@ -27,8 +27,6 @@ use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 
 class AwsCognito
 {
-
-    
     /**
      * Indicates if AWSCognito migrations will be run.
      *
@@ -97,11 +95,11 @@ class AwsCognito
      *
      * @return static
      */
-    public static function ignoreMigrations()
+    public static function ignoreMigrations(): void
     {
         static::$runsMigrations = false;
 
-        return new static;
+        return;
     } //Function ends
 
 
