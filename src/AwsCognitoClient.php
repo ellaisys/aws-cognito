@@ -509,7 +509,7 @@ class AwsCognitoClient
     public function confirmPassword($username, $password, $session)
     {
         try {
-            $response = $this->adminRespondToAuthChallenge(
+            $this->adminRespondToAuthChallenge(
                 AwsCognitoClient::NEW_PASSWORD_CHALLENGE,
                 $session, $password, $username
             );
@@ -717,7 +717,7 @@ class AwsCognitoClient
      * @return \Aws\Result
      */
     protected function adminRespondToAuthChallenge(
-        string $challengeName, string $session, 
+        string $challengeName, string $session,
         string $challengeValue, string $username)
     {
         try {

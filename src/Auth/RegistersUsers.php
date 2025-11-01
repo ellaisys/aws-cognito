@@ -66,7 +66,7 @@ trait RegistersUsers
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function register(Request $request, array $clientMetadata=null, 
+    public function register(Request $request, array $clientMetadata=null,
         bool $ignoreConfigRegistrationType=false)
     {
         $cognitoRegistered=false;
@@ -193,7 +193,7 @@ trait RegistersUsers
                     $request[$userKey], $password, $attributes,
                     $clientMetadata, $messageAction,
                     $groupname
-                );                
+                );
                 break;
 
             case 'register':

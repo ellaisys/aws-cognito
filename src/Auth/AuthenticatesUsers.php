@@ -75,8 +75,8 @@ trait AuthenticatesUsers
      *
      * @return mixed
      */
-    protected function attemptLogin(Request|Collection $request, 
-        string $guard='web', string $paramUsername='email', 
+    protected function attemptLogin(Request|Collection $request,
+        string $guard='web', string $paramUsername='email',
         string $paramPassword='password', bool $isJsonResponse=false)
     {
         try {
@@ -138,8 +138,8 @@ trait AuthenticatesUsers
      *
      * @return mixed
      */
-    protected function attemptLoginMFA(Request|Collection $request, 
-        string $guard='web', bool $isJsonResponse=false, 
+    protected function attemptLoginMFA(Request|Collection $request,
+        string $guard='web', bool $isJsonResponse=false,
         string $paramName='mfa_code')
     {
         try {
@@ -216,7 +216,7 @@ trait AuthenticatesUsers
      * @param CognitoIdentityProviderException $exception
      */
     private function sendFailedCognitoResponse(
-        CognitoIdentityProviderException $exception, 
+        CognitoIdentityProviderException $exception,
         bool $isJsonResponse=false, string $paramName='email')
     {
         throw ValidationException::withMessages([
@@ -232,7 +232,7 @@ trait AuthenticatesUsers
      * @param  \Exception $exception
      */
     private function sendFailedLoginResponse(
-        Request|Collection $request, $exception=null, 
+        Request|Collection $request, $exception=null,
         bool $isJsonResponse=false, string $paramName='email')
     {
         $errorCode = 400;

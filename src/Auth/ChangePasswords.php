@@ -52,8 +52,8 @@ trait ChangePasswords
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function reset(Request $request, 
-        string $paramUsername='email', 
+    public function reset(Request $request,
+        string $paramUsername='email',
         string $passwordOld='password', string $passwordNew='new_password')
     {
         try {
@@ -123,7 +123,7 @@ trait ChangePasswords
      * @return string
      */
     private function forceNewPassword(
-        AwsCognitoClient $client, $request, string $paramUsername, 
+        AwsCognitoClient $client, $request, string $paramUsername,
         string $passwordOld, string $passwordNew)
     {
         //Authenticate user
@@ -159,7 +159,9 @@ trait ChangePasswords
      *
      * @return string
      */
-    private function changePassword(AwsCognitoClient $client, $request, string $paramUsername, string $passwordOld, string $passwordNew)
+    private function changePassword(AwsCognitoClient $client,
+        $request, string $paramUsername, string $passwordOld,
+        string $passwordNew)
     {
         //Authenticate user
         $cognitoUser = $client->authenticate($request[$paramUsername], $request[$passwordOld]);
