@@ -686,11 +686,20 @@ class AwsCognitoClient
      */
     public function setUserAttributes($username, array $attributes)
     {
-        $this->client->AdminUpdateUserAttributes([
-            'Username' => $username,
-            'UserPoolId' => $this->poolId,
-            'UserAttributes' => $this->formatAttributes($attributes),
-        ]);
+        try {
+
+            //Build payload
+            $payload = [
+                'Username' => $username,
+                'UserPoolId' => $this->poolId,
+                'UserAttributes' => $this->formatAttributes($attributes),
+            ];
+
+            //Execute the payload
+            $this->client->AdminUpdateUserAttributes($payload);
+        } catch (CognitoIdentityProviderException $e) {
+            throw $e;
+        } //End try
 
         return true;
     } //Function ends

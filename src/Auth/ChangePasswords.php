@@ -129,7 +129,22 @@ trait ChangePasswords
         //Authenticate user
         $login = $client->authenticate($request[$paramUsername], $request[$passwordOld]);
 
-        return $client->confirmPassword($request[$paramUsername], $request[$passwordNew], $login->get('Session'));
+        //Confirm new password for the user
+        $response = $client->confirmPassword($request[$paramUsername], $request[$passwordNew], $login->get('Session'));
+        if ($response === Password::PASSWORD_RESET) {
+            //Update the user attributes
+            $responseAttributesUpdate = $client->setUserAttributes($request[$paramUsername], [
+                'email_verified' => 'true',
+            ]);
+
+            if ($responseAttributesUpdate) {
+                return $response;
+            } else {
+                throw new AwsCognitoException('cognito.validation.reset_required.attribute_update_failed');
+            } //End if
+        } else {
+            throw new AwsCognitoException('cognito.validation.reset_required.invalid_request');
+        } //End if
     } //Function ends
 
 
