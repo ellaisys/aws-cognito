@@ -85,7 +85,7 @@ trait BaseCognitoGuard
             } //End if
                         
         } catch (InvalidUserException | Exception $e) {
-            Log::debug('BaseCognitoGuard:setLocalUserData:Exception:');
+            Log::error('BaseCognitoGuard:setLocalUserData:Exception:');
             throw $e;
         } //End try-catch
 
@@ -158,7 +158,12 @@ trait BaseCognitoGuard
 
             default:
                 if (in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) {
-                    $returnValue = $result['ChallengeName'];
+                    $returnValue = [
+                        'status' => $result['ChallengeName'],
+                        'session_token' => isset($result['Session']) ? $result['Session'] : null,
+                        'challenge_params' => isset($result['ChallengeParameters']) ? $result['ChallengeParameters'] : null,
+                        'username' => $username
+                    ];
                 } //End if
                 break;
         } //End switch
@@ -247,7 +252,7 @@ trait BaseCognitoGuard
     
             return $user;
         } catch (InvalidUserException | NoLocalUserException | Exception $e) {
-            Log::debug('BaseCognitoGuard:setLocalUserData:Exception');
+            Log::error('BaseCognitoGuard:setLocalUserData:Exception');
             throw $e;
         } //End try-catch
     } //Function ends

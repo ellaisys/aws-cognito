@@ -42,6 +42,9 @@ use Ellaisys\Cognito\Exceptions\Handler as AwsCognitoExceptionHandler;
  */
 class AwsCognitoServiceProvider extends ServiceProvider
 {
+
+    //Laravel version
+    protected $laravelVersion;
     
     /**
      * Register the application services.
@@ -50,6 +53,9 @@ class AwsCognitoServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        //Set Laravel Version
+        $this->setLaravelVersion();
+
         //Register resources
         $this->configure();
 
@@ -92,6 +98,23 @@ class AwsCognitoServiceProvider extends ServiceProvider
         $this->registerBladeComponents();
 
         //Route::mixin();
+    } //Function ends
+
+
+    /**
+     * Getter and Setter for Laravel Version
+     *
+     * @return string
+     */
+    public function getLaravelVersion(): string
+    {
+        return $this->laravelVersion;
+    } //Function ends
+    public function setLaravelVersion(): void
+    {
+        $laravelVersion = Application::VERSION;
+        Log::debug('Laravel Version: '.$laravelVersion);
+        $this->laravelVersion = $laravelVersion;
     } //Function ends
 
 
@@ -200,11 +223,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
                 $app['request'],
                 [
                     new AuthHeaders,
-                    new ClaimSession,
-                    // new QueryString,
-                    // new InputSource,
-                    // new RouteParams,
-                    // new Cookies($this->config('decrypt_cookies')),
+                    new ClaimSession
                 ]
             );
 

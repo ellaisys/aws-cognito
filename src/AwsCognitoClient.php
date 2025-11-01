@@ -241,12 +241,14 @@ class AwsCognitoClient
      * @param $username
      * @param $password
      * @param array $attributes
+     * @param array $clientMetadata (optional)
+     * @return bool $groupname (optional)
      *
      * @return bool
      */
-    public function register($username, $password, array $attributes = [])
+    public function register($username, $password, array $attributes = [],
+        array $clientMetadata=null, string $groupname=null)
     {
-
         try {
             //Build payload
             $payload = [
@@ -261,6 +263,11 @@ class AwsCognitoClient
                 $payload = array_merge($payload, [
                     'SecretHash' => $this->cognitoSecretHash($username)
                 ]);
+            } //End if
+
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
             } //End if
 
             $response = $this->client->signUp($payload);
@@ -423,8 +430,8 @@ class AwsCognitoClient
      * @return bool $groupname (optional)
      */
     public function inviteUser(string $username, string $password=null, array $attributes = [],
-                               array $clientMetadata=null, string $messageAction=null,
-                               string $groupname=null)
+        array $clientMetadata=null, string $messageAction=null,
+        string $groupname=null)
     {
         //Validate phone for MFA
         if (config('cognito.mfa_setup')=="MFA_ENABLED") {
@@ -432,8 +439,8 @@ class AwsCognitoClient
         } //End if        
         
         //Force validate email
-        if ($attributes['email'] && config('cognito.force_new_user_email_verified', false)) {
-            $attributes['email_verified'] = 'true';
+        if ($attributes['email']) {
+            $attributes['email_verified'] = config('cognito.force_new_user_email_verified', false)? 'true' : 'false';
         } //End if
 
         //Generate payload
@@ -454,7 +461,7 @@ class AwsCognitoClient
         } //End if
 
         //Set Message Action
-        if (!empty($messageAction)) {
+        if (!empty($messageAction) && in_array($messageAction, ['RESEND', 'SUPPRESS'])) {
             $payload['MessageAction'] = $messageAction;
         } //End If
 
@@ -503,7 +510,10 @@ class AwsCognitoClient
     public function confirmPassword($username, $password, $session)
     {
         try {
-            $this->adminRespondToAuthChallenge('NEW_PASSWORD_REQUIRED', $session, $password, $username);
+            $this->adminRespondToAuthChallenge(
+                AwsCognitoClient::NEW_PASSWORD_CHALLENGE,
+                $session, $password, $username
+            );
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::CODE_MISMATCH || $e->getAwsErrorCode() === self::EXPIRED_CODE) {
                 return Password::INVALID_TOKEN;
@@ -677,11 +687,20 @@ class AwsCognitoClient
      */
     public function setUserAttributes($username, array $attributes)
     {
-        $this->client->AdminUpdateUserAttributes([
-            'Username' => $username,
-            'UserPoolId' => $this->poolId,
-            'UserAttributes' => $this->formatAttributes($attributes),
-        ]);
+        try {
+
+            //Build payload
+            $payload = [
+                'Username' => $username,
+                'UserPoolId' => $this->poolId,
+                'UserAttributes' => $this->formatAttributes($attributes),
+            ];
+
+            //Execute the payload
+            $this->client->AdminUpdateUserAttributes($payload);
+        } catch (CognitoIdentityProviderException $e) {
+            throw $e;
+        } //End try
 
         return true;
     } //Function ends
@@ -698,7 +717,9 @@ class AwsCognitoClient
      *  
      * @return \Aws\Result
      */
-    protected function adminRespondToAuthChallenge(string $challengeName, string $session, string $challengeValue, string $username)
+    protected function adminRespondToAuthChallenge(
+        string $challengeName, string $session,
+        string $challengeValue, string $username)
     {
         try {
 

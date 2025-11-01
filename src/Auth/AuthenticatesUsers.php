@@ -75,8 +75,8 @@ trait AuthenticatesUsers
      *
      * @return mixed
      */
-    protected function attemptLogin(
-        Request|Collection $request, string $guard='web', string $paramUsername='email',
+    protected function attemptLogin(Request|Collection $request,
+        string $guard='web', string $paramUsername='email',
         string $paramPassword='password', bool $isJsonResponse=false)
     {
         try {
@@ -84,6 +84,7 @@ trait AuthenticatesUsers
 
             //Convert request to collection
             if ($request instanceof Request) {
+                $isJsonResponse = ($request->expectsJson() || $request->isJson());
                 $request = collect($request->all());
             } //End if
 
@@ -137,7 +138,9 @@ trait AuthenticatesUsers
      *
      * @return mixed
      */
-    protected function attemptLoginMFA($request, string $guard='web', bool $isJsonResponse=false, string $paramName='mfa_code')
+    protected function attemptLoginMFA(Request|Collection $request,
+        string $guard='web', bool $isJsonResponse=false,
+        string $paramName='mfa_code')
     {
         try {
             //Validate request
@@ -154,6 +157,9 @@ trait AuthenticatesUsers
                 if ($validator->fails()) {
                     throw new ValidationException($validator);
                 } //End if
+
+                //Set the response type
+                $isJsonResponse = ($request->expectsJson() || $request->isJson());
 
                 $request = collect($request->all());
             } //End if
@@ -220,7 +226,9 @@ trait AuthenticatesUsers
      *
      * @param CognitoIdentityProviderException $exception
      */
-    private function sendFailedCognitoResponse(CognitoIdentityProviderException $exception, bool $isJsonResponse=false, string $paramName='email')
+    private function sendFailedCognitoResponse(
+        CognitoIdentityProviderException $exception,
+        bool $isJsonResponse=false, string $paramName='email')
     {
         throw ValidationException::withMessages([
             $paramName => $exception->getAwsErrorMessage(),
@@ -234,7 +242,9 @@ trait AuthenticatesUsers
      * @param  \Collection $request
      * @param  \Exception $exception
      */
-    private function sendFailedLoginResponse($request, $exception=null, bool $isJsonResponse=false, string $paramName='email')
+    private function sendFailedLoginResponse(
+        Request|Collection $request, $exception=null,
+        bool $isJsonResponse=false, string $paramName='email')
     {
         $errorCode = 400;
         $errorMessageCode = 'cognito.validation.auth.failed';

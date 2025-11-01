@@ -103,11 +103,9 @@ class AwsCognito
      *
      * @return static
      */
-    public static function ignoreRoutes()
+    public static function ignoreRoutes(): void
     {
         static::$registersRoutes = false;
-
-        return new static;
     } //Function ends
 
 
@@ -116,11 +114,9 @@ class AwsCognito
      *
      * @return static
      */
-    public static function ignoreMigrations()
+    public static function ignoreMigrations(): void
     {
         static::$runsMigrations = false;
-
-        return new static;
     } //Function ends
 
 

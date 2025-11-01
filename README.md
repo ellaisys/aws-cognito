@@ -47,7 +47,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
 - [MFA Implementation for Session and Token Guards](./README_MFA.md)
 - [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
-- [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid) **NEW**
+- [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
 
 ## Compatability
 
@@ -63,7 +63,9 @@ We decided to use it and contribute it to the community as a package, that encou
 |7.x|Yes :heavy_check_mark:|
 |8.x|Yes :heavy_check_mark:|
 |9.x|Yes :heavy_check_mark:|
-|10.x|Not tested|
+|10.x|Yes :heavy_check_mark:|
+|11.x|Yes :heavy_check_mark:|
+|12.x|Yes :heavy_check_mark:|
 
 ## Installation
 
@@ -337,6 +339,13 @@ We have made is very easy for anyone to use the default behaviour.
 
     AWS_COGNITO_FORCE_NEW_USER_PASSWORD=true //optional - default value is false.  
 
+```
+
+10. The registration process now allows two types of request, 'invite' and 'register'. The register is self registration and an verification email is sent to the user. The invite is sent from the admin and contains the temporary cedentials. The RegistersUsers Trait allows two methods invite and register respectively. The default method called in the trait is set to **invite**. You can change the behaviour of the register method by setting following configuration.
+
+```php
+
+    AWS_COGNITO_REGISTRATION_TYPE="register" //optional - the default type is invite
 ```
 
 ## User Authentication
@@ -631,12 +640,13 @@ This library fetches the password policy from the cognito pool configurations. T
 
 >[!IMPORTANT]
 >In case of special characters, we are supporting all except the pipe character **|** for now.
+>We are working on making sure that pipe character is handled soon.
 
 ## Mapping Cognito User using Subject UUID
 
 The library maps the Cognito user subject UUID with the local repository. Everytime a new user is created in cognito, the sub UUID is mapped with the local user table with an user specified column name.
 
-The column in the local BD is identified with the config parameter `user_subject_uuid` with the default value set to `sub`.
+The column name in the local database is identified as `sub`. This can be changed and managed with the config parameter `user_subject_uuid`. The default value of the config is set to `sub`. 
 
 However, to customize the column name in the local DB user table, you may do that with below setting fields to your `.env` file
 
@@ -645,8 +655,55 @@ However, to customize the column name in the local DB user table, you may do tha
     AWS_COGNITO_USER_SUBJECT_UUID="sub"
     
 ```
+>[!IMPORTANT]
+>Please make sure to set the $primaryKey attribute in the User Model so that the data is retirived without any error. Sample code of user model is shared.
 
-We are working on making sure that pipe character is handled soon.
+```php
+
+    class User extends Authenticatable
+    {
+        ...
+
+        /**
+         * The primary key for the model.
+         *
+         * @var string
+         */
+        protected $primaryKey = null;
+
+
+        /**
+         * The attributes that are mass assignable.
+         *
+         * @var array<int, string>
+         */
+        protected $fillable = [
+            'name',
+            'email',
+            'password',
+            'sub'
+        ];
+
+        ...
+
+        /**
+         * Create a new user instance.
+         *
+         * @param  array  $attributes
+         * @return void
+         */
+        public function __construct(array $attributes = [])
+        {
+            parent::__construct($attributes);
+
+            $this->primaryKey = config('cognito.user_subject_uuid', 'id');
+        }
+
+        ...
+
+    }
+
+```
 
 ## Changelog
 
