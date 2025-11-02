@@ -378,6 +378,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function registerBladeComponents()
     {
         //Provision to register blade components and directives
+        Blade::componentNamespace('Ellaisys\\Cognito\\Views\\Components', 'cognito');
+
     } //Function ends
 
 

@@ -30,13 +30,13 @@ Route::group(['prefix' => config('cognito.api_prefix', '')], function () {
     });
 
     //Authenticated routes
-    Route::group(['middleware' => 'aws-cognito'], function() {
-        Route::get('profile', [UserController::class, 'actionGetRemoteUser']);
+    Route::group(['middleware' => 'auth'], function() {
+        Route::get('/profile', [UserController::class, 'actionGetRemoteUser']);
 
         //Route group logout
-        Route::group(['prefix' => 'logout'], function() {
-            Route::put('/', [AuthController::class, 'actionLogout']);
-            Route::put('/forced', [AuthController::class, 'actionLogoutForced']);
+        Route::group(['controller' => AuthController::class, 'prefix' => 'logout'], function() {
+            Route::put('/', 'actionLogout');
+            Route::put('/forced', 'actionLogoutForced');
         });
 
         //Route group for MFA
