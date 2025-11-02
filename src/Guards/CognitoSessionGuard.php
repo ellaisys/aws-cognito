@@ -131,7 +131,8 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      * @throws
      * @return bool
      */
-    public function attempt(array $credentials = [], $remember = false, string $paramUsername='email', string $paramPassword='password')
+    public function attempt(array $credentials = [], $remember = false,
+        string $paramUsername='email', string $paramPassword='password')
     {
         try {
             $returnValue = false;
@@ -271,9 +272,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 break;
             
             default:
-                if (in_array($this->challengeName, config('cognito.forced_challenge_names'))) {
-                    $this->challengeName = $result['ChallengeName'];
-                } //End if
+                //Do nothing
                 break;
         } //End switch
 

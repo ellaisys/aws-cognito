@@ -61,7 +61,7 @@ class AwsCognito
 
     /**
      * The AwsCognito Claim token
-     * 
+     *
      * @var \Ellaisys\Cognito\AwsCognitoClaim|null
      */
     protected $claim;
@@ -98,8 +98,6 @@ class AwsCognito
     public static function ignoreMigrations(): void
     {
         static::$runsMigrations = false;
-
-        return;
     } //Function ends
 
 
@@ -220,7 +218,7 @@ class AwsCognito
      *
      * @return \Ellaisys\Cognito\AwsCognito
      */
-    public function unsetToken($forceForever = false)
+    public function unsetToken(bool $forceForever = false)
     {
         $tokenKey = $this->token->get();
         $this->manager->release($tokenKey);

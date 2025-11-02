@@ -116,10 +116,6 @@ class AwsCognitoServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../../database/migrations' => $this->app->databasePath('migrations'),
             ], 'cognito-migrations');
-
-            // $this->publishes([
-            //     __DIR__.'/../../resources/views' => $this->app->resourcePath('views/vendor/cognito'),
-            // ], 'cognito-views');
         }
     } //Function ends
 

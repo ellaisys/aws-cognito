@@ -227,6 +227,7 @@ class AwsCognitoClient
 
             $response = $this->client->adminInitiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
+            Log::error('CognitoIdentityProvider:adminInitiateAuth:Exception');
             throw $exception;
         } //Try-catch ends
 
@@ -385,6 +386,7 @@ class AwsCognitoClient
             );
             return $groups;
         } catch (CognitoIdentityProviderException $e) {
+            Log::error('CognitoIdentityProvider:adminListGroupsForUser:Exception');
             throw $e;
         } //Try-catch ends
 
@@ -410,6 +412,7 @@ class AwsCognitoClient
                 'Username' => $username
             ]);
         } catch (CognitoIdentityProviderException $e) {
+            Log::error('CognitoIdentityProvider:adminAddUserToGroup:Exception');
             throw $e;
         } //Try-catch ends
 
@@ -435,7 +438,7 @@ class AwsCognitoClient
         //Validate phone for MFA
         if (config('cognito.mfa_setup')=="MFA_ENABLED") {
             if (empty($attributes['phone_number'])) { throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING'); }
-        } //End if        
+        } //End if
         
         //Force validate email
         if ($attributes['email']) {
@@ -636,7 +639,7 @@ class AwsCognitoClient
                 return 'validation.invalid_token';
             } //End if
 
-            if ($e->getAwsErrorCode() === 'NotAuthorizedException' AND $e->getAwsErrorMessage() === 'User cannot be confirmed. Current status is CONFIRMED') {
+            if ($e->getAwsErrorCode() === 'NotAuthorizedException' && $e->getAwsErrorMessage() === 'User cannot be confirmed. Current status is CONFIRMED') {
                 return 'validation.confirmed';
             } //End if
 
@@ -698,6 +701,7 @@ class AwsCognitoClient
             //Execute the payload
             $this->client->AdminUpdateUserAttributes($payload);
         } catch (CognitoIdentityProviderException $e) {
+            Log::error('CognitoIdentityProvider:adminUpdateUserAttributes:Exception');
             throw $e;
         } //End try
 
@@ -713,7 +717,7 @@ class AwsCognitoClient
      * @param string $session
      * @param string $challengeValue
      * @param string $username
-     *  
+     *
      * @return \Aws\Result
      */
     protected function adminRespondToAuthChallenge(
@@ -766,6 +770,7 @@ class AwsCognitoClient
             //Execute the payload
             $response = $this->client->adminRespondToAuthChallenge($payload);
         } catch (CognitoIdentityProviderException $e) {
+            Log::error('CognitoIdentityProvider:adminRespondToAuthChallenge:Exception');
             throw $e;
         } //Try-catch ends
 
@@ -837,6 +842,7 @@ class AwsCognitoClient
                 'AccessToken' => $token
             ]);
         } catch (CognitoIdentityProviderException $e) {
+            Log::error('CognitoIdentityProvider:getUserByAccessToken:Exception');
             throw $e;
         } //Try-catch ends
 
@@ -916,6 +922,7 @@ class AwsCognitoClient
             // Reuse same refreshToken
             $response['AuthenticationResult']['RefreshToken'] = $refreshToken;
         } catch (CognitoIdentityProviderException $e) {
+            Log::error('CognitoIdentityProvider:refreshToken:Exception');
             throw $e;
         } //Try-catch ends
 
@@ -940,6 +947,7 @@ class AwsCognitoClient
                 'Token'         => $refreshToken
             ]);
         } catch (Exception $e) {
+            Log::error('CognitoIdentityProvider:revokeToken:Exception');
             throw $e;
         } //Try-catch ends
         return true;
