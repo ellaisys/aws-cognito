@@ -47,7 +47,7 @@ class AwsCognitoManager
 
     /**
      * The AwsCognito Claim token
-     * 
+     *
      * @var \Ellaisys\Cognito\AwsCognitoClaim|null
      */
     protected $claim;
@@ -136,7 +136,7 @@ class AwsCognitoManager
 
     /**
      * Save challenge object
-     * 
+     *
      * @param  string  $key
      * @param  mixed  $data
      * @param  int  $durationInSecs

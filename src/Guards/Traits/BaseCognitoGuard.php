@@ -35,30 +35,30 @@ trait BaseCognitoGuard
 {
 
     /**
-	 * Get the AWS Cognito object
+     * Get the AWS Cognito object
      *
-	 * @return \Ellaisys\Cognito\AwsCognito
-	 */
+     * @return \Ellaisys\Cognito\AwsCognito
+     */
     public function cognito() {
         return $this->cognito;
     } //Function ends
 
 
     /**
-	 * Get the User Information from AWS Cognito
+     * Get the User Information from AWS Cognito
      *
-	 * @return  mixed
-	 */
+     * @return  mixed
+     */
     public function getRemoteUserData(string $username) {
         return $this->client->getUser($username);
     } //Function ends
 
 
     /**
-	 * Set the User Information into the local DB
+     * Set the User Information into the local DB
      *
-	 * @return  mixed
-	 */
+     * @return  mixed
+     */
     public function setLocalUserData(array $credentials) {
         try {
             //Get username key in the credentials

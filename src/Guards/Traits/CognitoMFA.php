@@ -67,9 +67,10 @@ trait CognitoMFA
                     throw new HttpException(400, 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER');
                 } //End if
             } //End if
-        } catch(CognitoIdentityProviderException $e) {
-            throw new AwsCognitoException('ERROR_AWS_COGNITO_MFA_CODE', $e);
-        } catch(Exception $e) {
+    
+            return $result;
+        } catch(CognitoIdentityProviderException | Exception $e) {
+            Log::error('CognitoMFA:attemptBaseMFA:Exception');
             throw $e;
         } //Try-catch ends
             
@@ -98,14 +99,11 @@ trait CognitoMFA
                     $username = $this->user()[$userParamToAddToQR];
                     $appName = (!empty($appName))?:config('app.name');
                     $uriTotp = 'otpauth://totp/'.$appName.' ('.$username.')?secret='.$secretCode.'&issuer='.config('app.name');
-                    $payload = [
+                    return [
                         'SecretCode' => $secretCode,
                         'SecretCodeQR' => config('cognito.mfa_qr_library').$uriTotp,
                         'TotpUri' => $uriTotp
                     ];
-                    return $payload;
-                } else {
-                    throw new HttpException(400, 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER');
                 } //End if
             } else {
                 throw new NoTokenException('ERROR_AWS_COGNITO_NO_TOKEN');
@@ -113,6 +111,7 @@ trait CognitoMFA
         } catch(CognitoIdentityProviderException $e) {
             throw new AwsCognitoException($e->getAwsErrorMessage(), $e);
         } catch(Exception $e) {
+            Log::error('CognitoMFA:associateSoftwareTokenMFA:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends
@@ -120,7 +119,7 @@ trait CognitoMFA
 
     /**
      * Verify the MFA Software Token
-     * 
+     *
      * @param  string  $guard
      * @param  string  $userCode
      * @param  string  $deviceName (optional)
@@ -134,10 +133,9 @@ trait CognitoMFA
             if (!empty($accessToken)) {
                 $response = $this->client->verifySoftwareTokenMFA($userCode, $accessToken, null, $deviceName);
                 if (!empty($response)) {
-                    $payload = [
+                    return [
                         'Status' => $response->get('Status')
                     ];
-                    return $payload;
                 } //End if
             } else {
                 return null;

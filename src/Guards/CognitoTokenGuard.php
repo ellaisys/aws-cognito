@@ -310,7 +310,7 @@ class CognitoTokenGuard extends TokenGuard
             //Revoke the token from AWS Cognito
             if ($this->client->signOut($accessToken)) {
 
-                //Global logout and invalidate the Refresh Token 
+                //Global logout and invalidate the Refresh Token
                 if ($forceForever) {
                     //Get claim data
                     $data = $this->cognito->getClaim();
@@ -327,6 +327,7 @@ class CognitoTokenGuard extends TokenGuard
                 return $this->cognito->unsetToken($forceForever);
             } //End if
         } catch (Exception $e) {
+            Log::error('CognitoTokenGuard:invalidate:Exception');
             throw $e;
         } //try-catch ends
     } //Function ends
@@ -341,19 +342,19 @@ class CognitoTokenGuard extends TokenGuard
 
         //Check if the user exists
         if (!is_null($this->user)) {
-			return $this->user;
-		} //End if
+            return $this->user;
+        } //End if
 
         //Retrieve token from request and authenticate
-		return $this->getTokenForRequest();
+        return $this->getTokenForRequest();
     } //Function ends
 
 
     /**
-	 * Get the token for the current request.
-	 * @return string
-	 */
-	public function getTokenForRequest () {
+     * Get the token for the current request.
+     * @return string
+     */
+    public function getTokenForRequest () {
         //Check for request having token
         if (! $this->cognito->parser()->setRequest($this->request)->hasToken()) {
             return null;
@@ -371,14 +372,14 @@ class CognitoTokenGuard extends TokenGuard
 
         //Get user and return
         return $this->user = $this->provider->retrieveById($claim['sub']);
-	} //Function ends
+    } //Function ends
 
 
     /**
-	 * Get the user from the provider.
-	 * @return User
-	 */
-	public function getUser (string $identifier) {
+     * Get the user from the provider.
+     * @return User
+     */
+    public function getUser (string $identifier) {
         return $this->provider->retrieveById($identifier);
     } //Function ends
 
@@ -417,6 +418,7 @@ class CognitoTokenGuard extends TokenGuard
                 throw new InvalidUserException();
             } //End if
         } catch(AwsCognitoException | InvalidUserException | Exception $e) {
+            Log::error('CognitoTokenGuard:attemptMFA:Exception');
             throw $e;
         } //Try-catch ends
 

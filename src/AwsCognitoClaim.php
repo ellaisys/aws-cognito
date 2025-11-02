@@ -86,6 +86,7 @@ class AwsCognitoClaim
             $this->tokenDecode = $decodedToken;
 
         } catch(Exception $e) {
+            Log::error('CognitoClaim:__construct:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends

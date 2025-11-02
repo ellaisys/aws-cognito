@@ -212,13 +212,13 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito Challenge Status Names for Forced Access.
+    | Cognito Challenge Status Names for Forced Password Change.
     |--------------------------------------------------------------------------
     |
     | This option controls the package action based on the Challenge Status
     | received from the AWS Cognito Authentication. If the challenge status
-    | is 'NEW_PASSWORD_CHALLENGE' and/or 'RESET_REQUIRED_PASSWORD', the
-    | configuration that follows below will execute.
+    | is 'NEW_PASSWORD_CHALLENGE' and/or 'RESET_REQUIRED_PASSWORD', this
+    | configuration will force the user to change their password.
     |
     */
     'forced_challenge_names' => [
@@ -228,7 +228,8 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Force Password Change by the User based on Cognito Status in Web Request (Session Guard)
+    | Force Password Change by the User based on Cognito Status in Web Request
+    | (Session Guard)
     |--------------------------------------------------------------------------
     |
     | This setting controls the action, in case the AWS Cognito authentication
