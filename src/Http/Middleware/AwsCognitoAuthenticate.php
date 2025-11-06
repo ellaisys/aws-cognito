@@ -42,7 +42,7 @@ class AwsCognitoAuthenticate extends BaseMiddleware
         try {
             $routeMiddleware = $request->route()->middleware();
             if (empty($routeMiddleware) || (($countRouteMiddleware=count($routeMiddleware))<1)) {
-                return response()->json(['error' => 'UNAUTHORIZED_REQUEST', 'exception' => null], 401);
+                throw new InvalidTokenException();
             } else {
                 ($countRouteMiddleware>0)?($guard = $routeMiddleware[0]):null;
                 ($countRouteMiddleware>1)?($middleware = $routeMiddleware[1]):null;
@@ -53,20 +53,8 @@ class AwsCognitoAuthenticate extends BaseMiddleware
 
             return $next($request);
         } catch (Exception $e) {
-            if ($e instanceof NoTokenException) {
-                return response()->json(['error' => 'UNAUTHORIZED_REQUEST', 'exception' => 'NoTokenException'], 401);             
-            } //End if
-
-            if ($e instanceof InvalidTokenException) {
-                return response()->json(['error' => 'UNAUTHORIZED_REQUEST', 'exception' => 'InvalidTokenException'], 401);
-            } //End if
-
-            //Raise error in case of generic error
-            if ($guard=='web') {
-                return redirect('/');
-            } else {
-                return response()->json(['error' => $e->getMessage()], 401);
-            } //End if
+            Log::error('AwsCognitoAuthenticate:handle:Exception');
+            throw $e;
         } //Try-catch ends
     } //Function ends
 

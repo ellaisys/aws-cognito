@@ -25,7 +25,7 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\Validator;
 
-use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
+use Ellaisys\Cognito\Http\Controllers\ApiBaseCognitoController as Controller;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -45,7 +45,7 @@ class MFAController extends Controller
     public function __construct()
     {
         //Mandate authentication for all the API's of this controller except the MFA login action
-        $this->middleware('aws-cognito:api', ['except' => ['actionValidateMFA']]);
+        $this->middleware('auth:api', ['except' => ['actionValidateMFA']]);
 
         parent::__construct();
     }

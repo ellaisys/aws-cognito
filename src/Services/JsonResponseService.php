@@ -13,6 +13,7 @@ namespace Ellaisys\Cognito\Services;
 
 use Illuminate\Http\Response;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Log;
 
 use Exception;
 
@@ -51,10 +52,10 @@ class JsonResponseService
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function fail($resource = [], $code = Response::HTTP_UNPROCESSABLE_ENTITY, string $message='fail')
+    public function fail($resource, $code = Response::HTTP_UNPROCESSABLE_ENTITY, string $message='fail')
     {
         $exception = null;
-        if ($resource instanceof \Exception) {
+        if ($resource instanceof Exception) {
             $exception = $resource;
             $resource = [];
         } //End if
@@ -101,7 +102,7 @@ class JsonResponseService
                     'message' => $e->getMessage()
                 ],
 
-            ], $meta);            
+            ], $meta);
         } //End if
 
         $merged = array_merge($resource->additional ?? [], $meta);
@@ -111,7 +112,10 @@ class JsonResponseService
         }
 
         if (is_array($resource)) {
-            return (new JsonResource(collect($resource)))->additional($merged);
+            return (
+                new JsonResource(
+                    collect($resource)
+                ))->additional($merged);
         }
 
         throw new Exception('Resource must be an array or an instance of JsonResource');

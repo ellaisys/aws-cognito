@@ -26,7 +26,11 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\Validator;
 
-use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
+use Ellaisys\Cognito\Events\Auth\PreAuthEvent;
+use Ellaisys\Cognito\Events\Auth\PostAuthSuccessEvent;
+use Ellaisys\Cognito\Events\Auth\PostAuthFailedEvent;
+
+use Ellaisys\Cognito\Http\Controllers\ApiBaseCognitoController as Controller;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -47,7 +51,7 @@ class AuthController extends Controller
     public function __construct()
     {
         //Mandate authentication for all the API's of this controller except the login action
-        $this->middleware('aws-cognito:api', ['except' => ['actionLogin']]);
+        $this->middleware('aws-cognito', ['except' => ['actionLogin']]);
         
         parent::__construct();
     }
@@ -55,25 +59,60 @@ class AuthController extends Controller
 
     /**
      * Login action for the API based approach.
-     * 
+     *
      * @param  \Illuminate\Http\Request  $request
-     * 
+     *
      * @return \Illuminate\Http\Response
      */
     public function actionLogin(Request $request)
     {
         try {
+            //Raise Pre Auth Event
+            event(new PreAuthEvent(
+                $request->except('password'),
+                $request->ip()
+            ));
+
             //Create credentials object
             $collection = collect($request->all());
 
+            //Check if request is json
+            $isJsonResponse = ($request->expectsJson() || $request->isJson());
+
             //Validate request and get credentials
-            $claim = $this->attemptLogin($collection, 'api', 'username', 'password', true);
+            $claim = $this->attemptLogin(
+                $collection, 'api',
+                'username', 'password', $isJsonResponse
+            );
             if ($claim instanceof AwsCognitoClaim) {
+                //Raise Post Auth Success Event
+                $user = Auth::guard('api')->user();
+                event(new PostAuthSuccessEvent(
+                    $user->toArray(),
+                    $request->except('password'),
+                    $request->ip()
+                ));
+
                 return $this->response->success($claim->getData());
             } else {
+                //Raise Post Auth Success Event
+                event(new PostAuthSuccessEvent(
+                    null,
+                    $claim->toArray(),
+                    $request->ip()
+                ));
+
                 return $this->response->success($claim);
             } //End if
         } catch (Exception $e) {
+            Log::error('AuthController:actionLogin:Exception');
+
+            //Rise Post Auth Failed Event
+            event(new PostAuthFailedEvent(
+                $request->except('password'),
+                $e, $request->ip()
+            ));
+
             return $e;
         } //End try-catch
         
@@ -89,10 +128,10 @@ class AuthController extends Controller
     public function actionLogout(Request $request, bool $forced = false)
     {
         try {
-            auth()->guard('api')->logout($forced);
+            Auth::guard('api')->logout($forced);
 
             //Send response data
-            return $this->response->success([], 200, 'Successfully logged out');
+            return $this->response->success([]);
         } catch (Exception $e) {
             throw new HttpException(400, 'Error logging out.');
         } //End try-catch
@@ -121,15 +160,15 @@ class AuthController extends Controller
             $validator->validate();
 
             // Get Current User
-            $userCurrent = auth()->guard('web')->user();
+            $userCurrent = auth()->guard('api')->user();
 
-            if ($this->reset($request)) {
-                return redirect(route('login'))->with('success', true);
-            } else {
-				return redirect()->back()
-					->with('status', 'error')
-					->with('message', 'Password updated failed');
-			} //End if
+            // if ($this->reset($request)) {
+            //     return redirect(route('login'))->with('success', true);
+            // } else {
+			// 	return redirect()->back()
+			// 		->with('status', 'error')
+			// 		->with('message', 'Password updated failed');
+			// } //End if
         } catch(Exception $e) {
 			$message = 'Error sending the reset mail.';
 			if ($e instanceof ValidationException) {
@@ -140,9 +179,9 @@ class AuthController extends Controller
                 //Do nothing
             } //End if
 
-			return redirect()->back()
-				->with('status', 'error')
-				->with('message', $message);
+			// return redirect()->back()
+			// 	->with('status', 'error')
+			// 	->with('message', $message);
         } //Try-catch ends
     } //Function ends
 

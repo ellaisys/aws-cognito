@@ -13,6 +13,7 @@ namespace Ellaisys\Cognito\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 
 use Ellaisys\Cognito\AwsCognito;
@@ -80,10 +81,11 @@ abstract class BaseMiddleware //extends Middleware
                 case 'web':
                     $user = $request->user();
                     if (!empty($user)) {
-
+                        Log::info('BaseMiddleware:authenticate', ['guard' => $guard, 'user' => $user]);
                     } //End if
                     break;
                 
+                case 'api':
                 default:
                     $this->checkForToken($request);
 
@@ -93,6 +95,7 @@ abstract class BaseMiddleware //extends Middleware
                     break;
             } //Switch ends
         } catch (Exception $e) {
+            Log::error('BaseMiddleware:authenticate:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends

@@ -12,6 +12,8 @@
 namespace Ellaisys\Cognito\Http\Parser;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class Parser
 {
@@ -91,11 +93,18 @@ class Parser
      */
     public function parseToken()
     {
-        foreach ($this->chain as $parser) {
-            if ($response = $parser->parse($this->request)) {
-                return $response;
-            } //End if
-        } //Loop ends
+        try {
+            $response = null;
+            foreach ($this->chain as $parser) {
+                if ($response = $parser->parse($this->request) && !empty($response)) {
+                    return $response;
+                } //End if
+            } //Loop ends
+            return null;
+        } catch (Exception $e) {
+            Log::error('Parser:parseToken:Exception');
+            return null;
+        } //Try-catch ends
     } //Function ends
 
 
@@ -104,9 +113,9 @@ class Parser
      *
      * @return bool
      */
-    public function hasToken()
+    public function hasToken(): bool
     {
-        return $this->parseToken() !== null;
+        return $this->parseToken() != null;
     } //Function ends
 
 

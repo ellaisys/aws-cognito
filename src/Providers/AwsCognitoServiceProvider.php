@@ -18,6 +18,7 @@ use Ellaisys\Cognito\AwsCognitoUserPool;
 use Ellaisys\Cognito\Guards\CognitoSessionGuard;
 use Ellaisys\Cognito\Guards\CognitoTokenGuard;
 use Ellaisys\Cognito\Services\AwsCognitoJwksService;
+use Ellaisys\Cognito\Services\JsonResponseService;
 
 use Ellaisys\Cognito\Http\Parser\Parser;
 use Ellaisys\Cognito\Http\Parser\AuthHeaders;
@@ -68,7 +69,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
 
     public function boot()
-    {  
+    {
         //Register publishing
         $this->registerPublishing();
 
@@ -141,6 +142,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
             //Publish Controllers
             $this->publishes([
+                __DIR__.'/../../src/Http/Controllers/BaseCognitoController.php' => app_path('Http/Controllers/BaseCognitoController.php'),
+                __DIR__.'/../../src/Http/Controllers/ApiBaseCognitoController.php' => app_path('Http/Controllers/ApiBaseCognitoController.php'),
                 __DIR__.'/../../src/Http/Controllers/Api/AuthController.php' => app_path('Http/Controllers/Api/AuthController.php'),
                 __DIR__.'/../../src/Http/Controllers/Api/MFAController.php' => app_path('Http/Controllers/Api/MFAController.php'),
                 __DIR__.'/../../src/Http/Controllers/Api/RefreshTokenController.php' => app_path('Http/Controllers/Api/RefreshTokenController.php'),
@@ -158,7 +161,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    protected function registerRoutes()
+    protected function registerRoutes(): void
     {
         if ($this->app->routesAreCached()) {
             return;
@@ -392,7 +395,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
     {
         $this->app->singleton('ellaisys.aws.cognito.exception', function (Application $app) {
             return new AwsCognitoExceptionHandler(
-                $app['config']['cognito']['exceptions']
+                $app->make(JsonResponseService::class),
+                config('cognito.exception.format')
             );
         });
     } //Function ends

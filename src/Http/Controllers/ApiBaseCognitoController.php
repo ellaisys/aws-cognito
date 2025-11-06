@@ -9,7 +9,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Routing\Controller as BaseController;
 
-class BaseCognitoController extends BaseController
+class ApiBaseCognitoController extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
@@ -20,7 +20,7 @@ class BaseCognitoController extends BaseController
 
 
     /**
-     * Default constructor.
+     * MainController constructor.
      */
     public function __construct()
     {

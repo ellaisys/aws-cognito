@@ -107,7 +107,6 @@ trait BaseCognitoGuard
 
         //Authenticate the user with AWS Cognito
         $result = $this->client->authenticate($credentials['email'], $credentials['password']);
-
         //Check if the result is an instance of AwsResult
         if (!empty($result) && $result instanceof AwsResult) {
             //Set value into class param

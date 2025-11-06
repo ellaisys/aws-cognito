@@ -20,7 +20,7 @@ use Ellaisys\Cognito\AwsCognitoClaim;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\Validator;
 
-use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
+use Ellaisys\Cognito\Http\Controllers\ApiBaseCognitoController as Controller;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -38,7 +38,7 @@ class UserController extends Controller
     public function __construct()
     {
         //Mandate authentication for all the API's of this controller
-        $this->middleware('aws-cognito:api');
+        $this->middleware('auth:api');
 
         parent::__construct();
     }

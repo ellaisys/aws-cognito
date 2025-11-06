@@ -155,44 +155,11 @@ class CognitoTokenGuard extends TokenGuard
             } else {
                 throw new InvalidUserException();
             } //End if
-        } catch (NoLocalUserException $e) {
-            Log::error('CognitoTokenGuard:attempt:NoLocalUserException:'.$e->getMessage());
-            throw $e;
         } catch (CognitoIdentityProviderException $e) {
             Log::error('CognitoTokenGuard:attempt:CognitoIdentityProviderException:'.$e->getAwsErrorCode());
-            $returnValue = $e->getAwsErrorCode();
-
-            //Set proper route
-            if (!empty($e->getAwsErrorCode())) {
-                $errorCode = 'CognitoIdentityProviderException';
-                switch ($e->getAwsErrorCode()) {
-                    case 'PasswordResetRequiredException':
-                        $errorCode = 'cognito.validation.auth.reset_password';
-                        break;
-
-                    case 'NotAuthorizedException':
-                        $errorCode = 'cognito.validation.auth.user_unauthorized';
-                        break;
-                    
-                    default:
-                        $errorCode = $e->getAwsErrorCode();
-                        break;
-                } //End switch
-
-                $returnValue =  response()->json([
-                    'error' => $errorCode,
-                    'message' => $e->getAwsErrorMessage(),
-                    'aws_error_code' => $e->getAwsErrorCode(),
-                    'aws_error_message' => $e->getAwsErrorMessage()
-                ], 400);
-            } //End if
-
-            return $returnValue;
-        } catch (AwsCognitoException | InvalidUserException $e) {
-            Log::error('CognitoTokenGuard:attempt:AwsCognitoException:'. $e->getMessage());
-            throw $e;
+            throw new AwsCognitoException('CognitoIdentityProviderException', 400, $e);
         } catch (Exception $e) {
-            Log::error('CognitoTokenGuard:attempt:Exception:'.$e->getMessage());
+            Log::error('CognitoTokenGuard:attempt:Exception:'. $e->getMessage());
             throw $e;
         } //Try-catch ends
 

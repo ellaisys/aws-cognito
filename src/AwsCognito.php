@@ -150,7 +150,6 @@ class AwsCognito
     {
         //Parse the token
         $token = $this->parser->parseToken();
-
         if (empty($token)) {
             throw new AwsCognitoException('The token could not be parsed from the request');
         } //End if

@@ -21,7 +21,7 @@ use Ellaisys\Cognito\Auth\RegistersUsers;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\Validator;
 
-use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
+use Ellaisys\Cognito\Http\Controllers\ApiBaseCognitoController as Controller;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -40,8 +40,11 @@ class RegisterController extends Controller
      */
     public function __construct()
     {
-        //All the API's of this controller are public
-        $this->middleware('guest');
+        /*
+        * Mandate authentication for all the API's of this controller
+        * except the register action
+        */
+        $this->middleware('auth:api', ['except' => ['actionRegister']]);
 
         parent::__construct();
     }
@@ -55,15 +58,33 @@ class RegisterController extends Controller
     public function actionRegister(Request $request)
     {
         try {
-            //Create credentials object
-            $collection = collect($request->all());
-
             //Validate request and get registration data
             $user = $this->register($request);
             if ($user) {
                 return $this->response->success($user);
             } //End if
         } catch (Exception $e) {
+            Log::error('RegisterController:actionRegister:Exception');
+            throw $e;
+        } //End try-catch
+    } //Function ends
+
+    
+    /**
+     * Action to invite the a new user
+     *
+     * @param  \Illuminate\Http\Request  $request
+     */
+    public function actionInvite(Request $request)
+    {
+        try {
+            //Validate request and get registration data
+            $user = $this->invite($request);
+            if ($user) {
+                return $this->response->success($user);
+            } //End if
+        } catch (Exception $e) {
+            Log::error('RegisterController:actionInvite:Exception');
             throw $e;
         } //End try-catch
     } //Function ends
