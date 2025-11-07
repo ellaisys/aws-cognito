@@ -64,8 +64,11 @@ We decided to use it and contribute it to the community as a package, that encou
 |8.x|Yes :heavy_check_mark:|
 |9.x|Yes :heavy_check_mark:|
 |10.x|Yes :heavy_check_mark:|
-|11.x|Yes :heavy_check_mark:|
+|[11.x](#laravel-110-and-above-updated)|Yes :heavy_check_mark:|
 |12.x|Yes :heavy_check_mark:|
+
+>[!IMPORTANT]
+>The middleware configurtion in Laravel 11.x and above shall need a configuration. Refer [### Laravel 11.0 and above **Updated**](#laravel-110-and-above-updated)
 
 ## Installation
 
@@ -79,7 +82,7 @@ composer require ellaisys/aws-cognito
 Using a version prior to Laravel 5.5 you need to manually register the service provider.
 
 ```php
-    // config/app.php
+    // bootstrap/app.php
     'providers' => [
         ...
         Ellaisys\Cognito\Providers\AwsCognitoServiceProvider::class,
@@ -232,8 +235,8 @@ We have made this configurable for the developers so that they can use it as per
 
 ```
 
-## Middleware configuration for API Routes
-In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware
+## Middleware configuration for API Routes **Updated**
+for Laravel 10 and before: In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware 
 
 ```php
 
@@ -241,6 +244,24 @@ In case you are using this library as API driver, you can register the middlewar
         ...
         'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
     ]
+
+```
+
+### Laravel 11.0 and above **Updated**
+With Laravel 11 and above the middleware congiguration is defined in the app.php in the bootstrap folder. Please configure as shown below
+
+```php
+    // bootstrap/app.php
+        ...
+        ->withMiddleware(function (Middleware $middleware): void {
+            ...
+            $middleware->alias([
+                ...
+                'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
+            ]);
+            ...
+        })
+        ...
 
 ```
 
