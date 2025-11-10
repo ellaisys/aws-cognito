@@ -62,7 +62,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | API Prefix Path
+    | Web Path Prefix
+    |--------------------------------------------------------------------------
+    |
+    | This is the Web Prefix for the endpoint. You can change is such that it
+    | does not cause any conflict with your existing web endpoints or as per
+    | your application design.
+    |
+    | The default value is set to 'cognito'.
+    |
+    */
+    'web_prefix' => env('AWS_COGNITO_WEB_PREFIX', 'cognito'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Path Prefix
     |--------------------------------------------------------------------------
     |
     | This is the API Prefix for the endpoint. You can change is such that it
@@ -81,7 +95,8 @@ return [
     |
     | This is the home route name where the page redirects post successful
     | authentication. This will work with and without the MFA enabled using
-    | the AWS Cognito based authentication.
+    | the AWS Cognito based authentication. This is applicable for web routes
+    | only.
     |
     | The default value is set to 'home'.
     |

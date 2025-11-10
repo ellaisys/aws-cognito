@@ -4,11 +4,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use Ellaisys\Cognito\Http\Controllers\Auth\LoginController;
+use Ellaisys\Cognito\Http\Controllers\Auth\RegisterController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
 use Ellaisys\Cognito\Http\Controllers\Api\MFAController;
-use Ellaisys\Cognito\Http\Controllers\Api\RegisterController;
 use Ellaisys\Cognito\Http\Controllers\Api\RefreshTokenController;
 
 /*
@@ -25,7 +25,7 @@ use Ellaisys\Cognito\Http\Controllers\Api\RefreshTokenController;
 Route::group(['prefix' => config('cognito.api_prefix', ''),
     'headers' => ['Accept' => 'application/json']], function () {
     //Route to register a new user
-    Route::post('/register', [RegisterController::class, 'actionRegister']);
+    Route::post('/register', [RegisterController::class, 'register']);
 
     //Route group login
     Route::group(['prefix' => 'login'], function() {
@@ -46,9 +46,9 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
         });
 
         //Route group logout
-        Route::group(['prefix' => 'logout'], function() {
-            Route::put('/', [LoginController::class, 'logout']);
-            Route::put('/forced', [LoginController::class, 'logoutForced']);
+        Route::group(['prefix' => 'logout', 'controller' => LoginController::class], function() {
+            Route::put('/', 'logout');
+            Route::put('/forced', 'logoutForced');
         });
 
         //Route group for MFA

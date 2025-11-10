@@ -16,7 +16,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Log;
 
 use Exception;
-
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 /**
  * Class JsonResponseService
@@ -30,7 +31,7 @@ class JsonResponseService
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function success($resource, $code = Response::HTTP_OK, string $message='success')
+    public function success($resource, $statusCode = Response::HTTP_OK, string $message='success')
     {
         //Modify if the resource is not an array
         if (!is_array($resource)) {
@@ -40,9 +41,12 @@ class JsonResponseService
             } //End if
         } //End if
 
-        return $this->putAdditionalMeta($resource, 'success', null, $message)
+        return $this->putAdditionalMeta(
+                $resource, 'success', null,
+                $statusCode, $message
+            )
             ->response()
-            ->setStatusCode($code);
+            ->setStatusCode($statusCode);
     } //Function end
 
 
@@ -52,17 +56,16 @@ class JsonResponseService
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function fail($resource, $code = Response::HTTP_UNPROCESSABLE_ENTITY, string $message='fail')
+    public function fail($exception, array $resource = [],
+        $statusCode = Response::HTTP_BAD_REQUEST,
+        string $message = null, string $errorKey = null)
     {
-        $exception = null;
-        if ($resource instanceof Exception) {
-            $exception = $resource;
-            $resource = [];
-        } //End if
-
-        return $this->putAdditionalMeta($resource, 'fail', $exception, $message)
+        return $this->putAdditionalMeta(
+                $resource, 'error', $exception,
+                $statusCode, $message, $errorKey
+            )
             ->response()
-            ->setStatusCode($code);
+            ->setStatusCode($statusCode);
     } //Function end
 
 
@@ -86,23 +89,34 @@ class JsonResponseService
      *
      * @return \Illuminate\Http\Resources\Json\JsonResource
      */
-    private function putAdditionalMeta($resource, $status, $e=null, string $message=null)
+    private function putAdditionalMeta($resource, $status, $e = null,
+        $statusCode = Response::HTTP_BAD_REQUEST,
+        string $message = null, string $errorKey = null)
     {
         $meta   = [
             'message'        => $message,
             'status'         => $status,
+            'error'          => null,
             'execution_time' => number_format(microtime(true) - LARAVEL_START, 4),
         ];
 
         //Add exception message
-        if (!empty($e)) {
-            $meta = array_merge([
-                'error' => [
-                    'code' => $e->getCode(),
-                    'message' => $e->getMessage()
-                ],
+        if ((!empty($e)) && ($e instanceof Exception)) {
+            $systemErrorCode = $e->getStatusCode();
+            $systemErrorMsg = $e->getMessage();
+            $parentError = $e->getPrevious();
+            if ($parentError instanceof CognitoIdentityProviderException) {
+                $systemErrorCode = $parentError->getAwsErrorCode();
+                $systemErrorMsg = $parentError->getAwsErrorMessage();
+            }
 
-            ], $meta);
+            $meta['error'] = [
+                'code' => $statusCode,
+                'message' => $message,
+                'key' => $errorKey,
+                'system_code' => $systemErrorCode,
+                'system_message' => $systemErrorMsg,
+            ];
         } //End if
 
         $merged = array_merge($resource->additional ?? [], $meta);

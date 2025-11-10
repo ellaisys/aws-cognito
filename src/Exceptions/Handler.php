@@ -5,10 +5,11 @@ namespace Ellaisys\Cognito\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
 use Throwable;
-use Response;
 use PDOException;
 use Psr\Log\LogLevel;
+
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\Services\JsonResponseService;
@@ -24,22 +25,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class Handler extends ExceptionHandler
 {
     /**
-     * @var \Illuminate\Contracts\Debug\ExceptionHandler
-     */
-    protected $parentHandler;
-
-
-    /**
      * @var array<string, mixed>
      */
     protected $format;
-
 
     /**
      * @var \Modules\Core\Services\JsonResponseService
      */
     protected $response;
-
 
     /**
      * A list of the exception types that are not reported.
@@ -50,7 +43,6 @@ class Handler extends ExceptionHandler
         //
     ];
 
-
     /**
      * A list of exception types with their corresponding custom log levels.
      *
@@ -59,7 +51,6 @@ class Handler extends ExceptionHandler
     protected $levels = [
         PDOException::class => LogLevel::CRITICAL,
     ];
-
 
     /**
      * A list of the inputs that are never flashed for validation exceptions.
@@ -72,22 +63,17 @@ class Handler extends ExceptionHandler
         'password_confirmation',
     ];
 
-
     /**
      * Default constructor.
      */
     public function __construct(
-        JsonResponseService $response, array $format)
+        JsonResponseService $response, $format)
     {
         $this->response = $response;
         $this->format = $format;
 
         parent::__construct(app());
     }
-
-
-
-
 
     /**
      * Register the exception handling callbacks for the application.
@@ -96,114 +82,97 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
-        //$this->handleExceptions();
-    } //Function ends
+        // Generic exception report
+        $this->reportable(function (Throwable $e) {
+            // You can log to an external service (Sentry, Bugsnag, etc.)
+            Log::error($e->getMessage());
+        });
 
-    
-    /**
-     * Render an exception into an HTTP response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $e
-     * @return \Symfony\Component\HttpFoundation\Response
-     *
-     * @throws \Throwable
-     */
-    public function render(Request $request, Throwable $e)
-    {
-        Log::error('Exception occurred', [
-            'request' => $request->all(),
-            'exception' => $e
-        ]);
-
-        $this->handleExceptions($e, $request);
-
-        return parent::render($request, $e);
+        // Handle API exceptions gracefully
+        $this->renderable(function (Throwable $e, $request) {
+            return $this->handleException($e, $request);
+        });
     } //Function ends
 
 
-    public function shouldReport(Throwable $e): bool
+    protected function handleException(Throwable $e, $request)
     {
-        // Avoid reporting certain exceptions
-        if (in_array(get_class($e), $this->dontReport, true)) {
-            return false;
+        $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR;
+        $errorMessage = 'Something went wrong. Please try again later.';
+        $errorKey = '';
+
+        if ($e instanceof ValidationException) {
+            $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY; //422
+            $errorMessage = 'Data validation error';
+        } elseif ($e instanceof ModelNotFoundException) {
+            $statusCode = Response::HTTP_BAD_REQUEST; //400
+            $errorMessage = 'Resource not found.';
+        } elseif ($e instanceof NotFoundHttpException) {
+            $statusCode = Response::HTTP_BAD_REQUEST; //400
+            $errorMessage = $e->getMessage();
+        } elseif ($e instanceof AwsCognitoException) {
+            $statusCode = Response::HTTP_BAD_REQUEST; //400
+            switch ($e->getMessage()) {
+                case AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED:
+                    $errorMessage = 'User authentication error';
+                    $errorKey = AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED;
+                    break;
+
+                case AwsCognitoException::COGNITO_AUTH_USER_RESET_PASS:
+                    $errorMessage = 'User password reset error';
+                    $errorKey = AwsCognitoException::COGNITO_AUTH_USER_RESET_PASS;
+                    break;
+
+                case AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS:
+                    $errorMessage = 'User already exists';
+                    $errorKey = AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS;
+                    break;
+                
+                default:
+                    $errorMessage = $e->getMessage();
+                    $errorKey = 'ERROR_COGNITO_DEFAULT';
+                    break;
+            } //End Switch
+        } elseif (($e instanceof AuthenticationException) ||
+            ($e instanceof InvalidUserException)) {
+            $statusCode = Response::HTTP_UNAUTHORIZED; //401
+            $errorMessage = 'Unauthenticated.';
+            $errorKey = $e->getMessage();
+        } elseif ($e instanceof AccessDeniedHttpException) {
+            $statusCode = Response::HTTP_FORBIDDEN; //403
+            $errorMessage = 'You do not have permission to perform this action.';
+        } elseif (config('app.debug')) {
+            // Show detailed info in debug mode
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => collect($e->getTrace())->take(3),
+            ], 500);
         }
 
-        return parent::shouldReport($e);
-    }
-
-
-    public function report(Throwable $e): void
-    {
-        Log::error('Reporting Exception', [
-            'exception' => $e
-        ]);
-        if ($this->shouldReport($e)) {
-            parent::report($e);
+        if ($request->isJson() || $request->wantsJson() || $request->expectsJson()) {
+            return $this->JsonResponseBuilder(
+                $e, $request, $statusCode,
+                $errorMessage, $errorKey
+            );
+        } else {
+            return redirect()->back()
+                ->withInput($request->input())
+                ->withErrors($e->errors());
         }
-    }
+    } //Function ends
 
-
-    protected function handleExceptions(Throwable $e, Request $request)
-    {
-        Log::error('Handling Exception', [
-            'exception' => $e
-        ]);
-
-        // Handle ValidationException
-        $this->reportable(function (ValidationException $e, Request $request) {
-            if ($request->isJson() || $request->wantsJson()) {
-                return $this->JsonResponseBuilder($e, $request, 422);
-            } else {
-                return redirect()->back()
-                    ->withInput($request->input())
-                    ->withErrors($e->errors());
-            } //End if
-        });
-
-        // Handle Exception
-        $this->reportable(function (InvalidUserException | AuthenticationException $e, Request $request) {
-            if ($request->isJson() || $request->wantsJson()) {
-                return $this->JsonResponseBuilder($e, $request, 401, 'Unauthenticated');
-            } else {
-                return redirect()->back()
-                    ->withInput($request->input())
-                    ->withErrors($e->getMessage());
-            } //End if
-        });
-
-        // Handle Exception
-        $this->reportable(function (AwsCognitoException $e, Request $request) {
-            if ($request->isJson() || $request->wantsJson()) {
-                return $this->JsonResponseBuilder($e, $request, 400);
-            } else {
-                return redirect()->back()
-                    ->withInput($request->input())
-                    ->withErrors($e->getMessage());
-            } //End if
-        });
-
-        $this->reportable(function (Throwable $e, Request $request) {
-            if ($e instanceof AuthenticationException) {
-                Log::error('AWS Cognito Exception', [
-                    'code' => $e->getCode(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
-
-                return $this->JsonResponseBuilder($e, $request, 400, 'Unauthenticated');
-            } //End if
-        });
-
-        parent::handleExceptions($e);
-    }
-
-    protected function JsonResponseBuilder(Throwable $e, Request $request, int $statusCode, string $message='An error occurred'): array
+    protected function JsonResponseBuilder(Throwable $e, $request,
+        $statusCode,
+        string $message='An error occurred',
+        string $errorKey = null): mixed
     {
         return $this->response->fail(
             $e,
+            [],
             $statusCode,
-            $message
+            $message,
+            $errorKey
         );
-    }
+    } //Function ends
 
 } //Class ends

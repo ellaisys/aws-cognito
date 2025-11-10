@@ -34,7 +34,13 @@ class AwsCognito
      */
     public static $registersRoutes = true;
 
-    
+    /**
+     * Indicates if AWSCognito views will be run.
+     *
+     * @var bool
+     */
+    public static $registersViews = true;
+
     /**
      * Indicates if AWSCognito migrations will be run.
      *

@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Ellaisys\Cognito\Http\Controllers\Auth;
 
 use Auth;
@@ -9,12 +18,15 @@ use Illuminate\Support\Facades\Log;
 use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
 
 use Ellaisys\Cognito\AwsCognitoClaim;
-use Ellaisys\Cognito\Auth\AuthenticatesUsers; //Added for AWS Cognito
+use Ellaisys\Cognito\Auth\AuthenticatesUsers;
 
 use Ellaisys\Cognito\Events\Auth\PreAuthEvent;
 use Ellaisys\Cognito\Events\Auth\PostAuthSuccessEvent;
 use Ellaisys\Cognito\Events\Auth\PostAuthFailedEvent;
 use Ellaisys\Cognito\Events\Auth\PreLogoutEvent;
+use Ellaisys\Cognito\Events\Auth\PostLogoutEvent;
+
+use Exception;
 
 class LoginController extends Controller
 {
@@ -145,7 +157,7 @@ class LoginController extends Controller
             ));
 
             if ($isJsonResponse) {
-                return $this->response->fail($e);
+                throw $e;
             } //End if
 
             return response()->back()
@@ -231,6 +243,12 @@ class LoginController extends Controller
 
             //Logout user
             Auth::guard($guard)->logout($forced);
+
+            //Raise Post Logout Event
+            event(new PostLogoutEvent(
+                $request->toArray(),
+                $request->ip()
+            ));
 
             //Send response data
             if ($isJsonResponse) {

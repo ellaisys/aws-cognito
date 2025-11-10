@@ -85,7 +85,7 @@ trait ChangePasswords
             $user = $client->getUser($request[$paramUsername]);
 
             if (empty($user)) {
-                throw new InvalidUserException('cognito.validation.reset_required.invalid_user');
+                throw new InvalidUserException(AwsCognitoException::COGNITO_USER_INVALID);
             } //End if
 
             //Action based on User Status
@@ -95,7 +95,7 @@ trait ChangePasswords
                     break;
 
                 case AwsCognitoClient::RESET_REQUIRED_PASSWORD:
-                    throw new AwsCognitoException('cognito.validation.reset_required.invalid_request');
+                    throw new AwsCognitoException(AwsCognitoException::COGNITO_RESET_PWD_REQ_INVALID);
                     break;
 
                 default:
@@ -140,10 +140,10 @@ trait ChangePasswords
             if ($responseAttributesUpdate) {
                 return $response;
             } else {
-                throw new AwsCognitoException('cognito.validation.reset_required.attribute_update_failed');
+                throw new AwsCognitoException(AwsCognitoException::COGNITO_RESET_PWD_FAILED);
             } //End if
         } else {
-            throw new AwsCognitoException('cognito.validation.reset_required.invalid_request');
+            throw new AwsCognitoException(AwsCognitoException::COGNITO_RESET_PWD_REQ_INVALID);
         } //End if
     } //Function ends
 

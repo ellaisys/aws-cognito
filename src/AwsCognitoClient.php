@@ -228,7 +228,7 @@ class AwsCognitoClient
 
             $response = $this->client->adminInitiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
-            Log::error('CognitoIdentityProvider:adminInitiateAuth:Exception');
+            Log::error('AwsCognitoClient:adminInitiateAuth:CognitoIdentityProviderException');
             throw $exception;
         } //Try-catch ends
 
@@ -274,7 +274,7 @@ class AwsCognitoClient
             $response = $this->client->signUp($payload);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
-                throw new InvalidUserException('ERROR_COGNITO_USER_EXISTS', $e);
+                throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS, $e);
             } //End if
 
             throw $e;
@@ -387,7 +387,7 @@ class AwsCognitoClient
             );
             return $groups;
         } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:adminListGroupsForUser:Exception');
+            Log::error('AwsCognitoClient:adminListGroupsForUser:CognitoIdentityProviderException');
             throw $e;
         } //Try-catch ends
 
@@ -413,7 +413,7 @@ class AwsCognitoClient
                 'Username' => $username
             ]);
         } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:adminAddUserToGroup:Exception');
+            Log::error('AwsCognitoClient:adminAddUserToGroup:CognitoIdentityProviderException');
             throw $e;
         } //Try-catch ends
 
@@ -491,7 +491,7 @@ class AwsCognitoClient
             } //End if
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
-                throw new InvalidUserException('ERROR_COGNITO_USER_EXISTS', $e);
+                throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS, $e);
             } //End if
 
             throw new AwsCognitoException($e->getAwsErrorMessage(), $e);
@@ -702,7 +702,7 @@ class AwsCognitoClient
             //Execute the payload
             $this->client->AdminUpdateUserAttributes($payload);
         } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:adminUpdateUserAttributes:Exception');
+            Log::error('AwsCognitoClient:setUserAttributes:CognitoIdentityProviderException');
             throw $e;
         } //End try
 
@@ -771,7 +771,7 @@ class AwsCognitoClient
             //Execute the payload
             $response = $this->client->adminRespondToAuthChallenge($payload);
         } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:adminRespondToAuthChallenge:Exception');
+            Log::error('AwsCognitoClient:adminRespondToAuthChallenge:Exception');
             throw $e;
         } //Try-catch ends
 
@@ -843,7 +843,7 @@ class AwsCognitoClient
                 'AccessToken' => $token
             ]);
         } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:getUserByAccessToken:Exception');
+            Log::error('AwsCognitoClient:getUserByAccessToken:Exception');
             throw $e;
         } //Try-catch ends
 
@@ -923,7 +923,7 @@ class AwsCognitoClient
             // Reuse same refreshToken
             $response['AuthenticationResult']['RefreshToken'] = $refreshToken;
         } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:refreshToken:Exception');
+            Log::error('AwsCognitoClient:refreshToken:Exception');
             throw $e;
         } //Try-catch ends
 
