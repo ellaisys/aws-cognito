@@ -80,8 +80,9 @@ abstract class BaseMiddleware //extends Middleware
             switch ($guard) {
                 case 'web':
                     $user = $request->user();
-                    if (!empty($user)) {
+                    if (empty($user)) {
                         Log::info('BaseMiddleware:authenticate', ['guard' => $guard, 'user' => $user]);
+                        throw new UnauthorizedHttpException('aws-cognito', 'User not found');
                     } //End if
                     break;
                 

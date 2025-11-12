@@ -8,7 +8,8 @@
                 <div class="card-header">{{ __('Login') }}</div>
 
                 <div class="card-body">
-                    
+                    <x-cognito::common.alert />
+                    <x-cognito::forms.login-form />
                 </div>
             </div>
         </div>

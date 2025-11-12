@@ -101,7 +101,7 @@ return [
     | The default value is set to 'home'.
     |
     */
-    'redirect_to_route_name' => env('AWS_COGNITO_HOME_ROUTE_NAME', 'home'),
+    'redirect_to_route_name' => env('AWS_COGNITO_HOME_ROUTE_NAME', 'cognito.home'),
 
     /*
     |--------------------------------------------------------------------------
@@ -358,4 +358,13 @@ return [
      |
      */
     'registration_type' => env('AWS_COGNITO_REGISTRATION_TYPE', 'invite'),
+
+    // 'routes' => [
+    //     'web' => [
+    //        'default_root_page' => env('', ''),
+    //        'login_page' => env('', 'cognito.form.login'),
+    //        'home_page' => env('', ''),
+
+    //     ]
+    // ]
 ];

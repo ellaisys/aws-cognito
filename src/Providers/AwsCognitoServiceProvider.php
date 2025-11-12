@@ -126,16 +126,16 @@ class AwsCognitoServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             //Publish config
             $this->publishes([
-                __DIR__.'/../../config/cognito.php' => $this->app->configPath('cognito.php'),
+                __DIR__ . '/../../config/cognito.php' => $this->app->configPath('cognito.php'),
             ], 'cognito-config');
 
             $this->publishes([
-                __DIR__.'/../../database/migrations' => $this->app->databasePath('migrations'),
+                __DIR__ . '/../../database/migrations' => $this->app->databasePath('migrations'),
             ], 'cognito-migrations');
 
             $this->publishes([
-                __DIR__.'/../../resources/views' => $this->app->resourcePath('views/vendor/cognito'),
-            ], 'cognito-views');
+                __DIR__ . '/../../resources/views' => $this->app->resourcePath('views/vendor/ellaisys/aws-cognito'),
+            ], 'views');
 
             //Publish Controllers
             $this->publishes([
@@ -347,7 +347,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function registerResources()
     {
         if (AwsCognito::$registersViews) {
-            $this->loadViewsFrom(__DIR__.'/../../resources/views', 'cognito');
+            $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cognito');
         }
     } //Function ends
 

@@ -21,6 +21,8 @@ use Illuminate\Auth\AuthenticationException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class Handler extends ExceptionHandler
 {
@@ -97,6 +99,8 @@ class Handler extends ExceptionHandler
 
     protected function handleException(Throwable $e, $request)
     {
+        $return = null;
+        $isRedirectToLogin = false;
         $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR;
         $errorMessage = 'Something went wrong. Please try again later.';
         $errorKey = '';
@@ -134,10 +138,12 @@ class Handler extends ExceptionHandler
                     break;
             } //End Switch
         } elseif (($e instanceof AuthenticationException) ||
+            ($e instanceof UnauthorizedHttpException) ||
             ($e instanceof InvalidUserException)) {
             $statusCode = Response::HTTP_UNAUTHORIZED; //401
             $errorMessage = 'Unauthenticated.';
             $errorKey = $e->getMessage();
+            $isRedirectToLogin = true;
         } elseif ($e instanceof AccessDeniedHttpException) {
             $statusCode = Response::HTTP_FORBIDDEN; //403
             $errorMessage = 'You do not have permission to perform this action.';
@@ -150,15 +156,28 @@ class Handler extends ExceptionHandler
         }
 
         if ($request->isJson() || $request->wantsJson() || $request->expectsJson()) {
-            return $this->JsonResponseBuilder(
+            $return = $this->JsonResponseBuilder(
                 $e, $request, $statusCode,
                 $errorMessage, $errorKey
             );
         } else {
-            return redirect()->back()
-                ->withInput($request->input())
-                ->withErrors($e->errors());
+            $systemErrorMsg = (!$isRedirectToLogin)?$e->getMessage():$errorMessage;
+            $parentError = $e->getPrevious();
+            if ($parentError instanceof CognitoIdentityProviderException) {
+                $systemErrorMsg = $parentError->getAwsErrorMessage();
+            }
+            $errors=($e instanceof ValidationException)?$e->errors():['error' => $systemErrorMsg];
+
+            if ($isRedirectToLogin) {
+                $return = redirect()->route('cognito.form.login')
+                    ->withErrors($errors);
+            } else {
+                $return = redirect()->back()
+                    ->withInput($request->input())
+                    ->withErrors($errors);
+            }
         }
+        return $return;
     } //Function ends
 
     protected function JsonResponseBuilder(Throwable $e, $request,

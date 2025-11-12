@@ -80,16 +80,13 @@ class LoginController extends Controller
         string $usernameField='username', string $passwordField='password')
     {
         try {
-            //Raise Pre Auth Event
-            event(new PreAuthEvent(
-                $request->except($passwordField),
-                $request->ip()
-            ));
-
             //Initialize parameters
             $returnValue = null;
             $guard = 'web';
             $isJsonResponse = false;
+
+            //Raise Pre Auth Event
+            $this->callPreAuthEvent($request, $passwordField);
 
             //Convert request to collection
             $collection = collect($request->all());
@@ -103,47 +100,38 @@ class LoginController extends Controller
             //Authenticate with Cognito Package Trait based on the guard
             if ($claim = $this->attemptLogin($collection, $guard,
                 $usernameField, $passwordField, $isJsonResponse, true)) {
-                
-                if ($claim instanceof AwsCognitoClaim) { // Success authentication
-                    //Raise Post Auth Success Event
-                    $user = Auth::guard($guard)->user();
-                    event(new PostAuthSuccessEvent(
-                        $user->toArray(),
-                        $request->except('password'),
-                        $request->ip()
-                    ));
 
-                    if ($isJsonResponse) {
+                if ($isJsonResponse) {
+                    if ($claim instanceof AwsCognitoClaim) { // Success authentication
+                        //Raise Post Auth Success Event
+                        $this->callPostAuthSuccessEvent($request, $guard);
+
                         $returnValue = $this->response->success($claim->getData());
-                    } else {
-                        $request->session()->regenerate();
-                        $returnValue = redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
+                    } else { // Challenge generated
+                        //Raise Post Auth Success Event
+                        $this->callPostAuthSuccessEvent($request, $null);
+
+                        $returnValue = $this->response->success([]);
                     } //End if
-                } else { // Challenge generated
-                    //Raise Post Auth Success Event
-                    event(new PostAuthSuccessEvent(
-                        [],
-                        $request->except('password'),
-                        $request->ip()
-                    ));
+                } else {
+                    if ($claim===true) {
+                        $request->session()->regenerate();
 
-                    $returnValue = $this->response->success([]);
-                } //End if
+                        //Raise Post Auth Success Event
+                        $this->callPostAuthSuccessEvent($request, $guard);
 
-                    // if ($response===true) {
-                    //     $request->session()->regenerate();
-
-                    //     $returnValue = redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
-                    // } elseif ($response===false) {
-                    //     $returnValue = redirect()
-                    //         ->back()
-                    //         ->withInput($request->only($usernameField, 'remember'))
-                    //         ->withErrors([
-                    //             $usernameField => 'Incorrect username and/or password !!',
-                    //         ]);
-                    // } else {
-                    //     $returnValue = $response;
-                    // } //End if
+                        $returnValue = redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
+                    } elseif ($claim===false) {
+                        $returnValue = redirect()
+                            ->back()
+                            ->withInput($request->only($usernameField, 'remember'))
+                            ->withErrors([
+                                $usernameField => 'Incorrect username and/or password !!',
+                            ]);
+                    } else {
+                        $returnValue = $claim;
+                    }
+                }
             } //End if
 
             return $returnValue;
@@ -151,10 +139,7 @@ class LoginController extends Controller
             Log::error('AuthController:actionLogin:Exception');
 
             //Rise Post Auth Failed Event
-            event(new PostAuthFailedEvent(
-                $request->except('password'),
-                $e, $request->ip()
-            ));
+            $this->callPostAuthErrorEvent($request, $e);
 
             if ($isJsonResponse) {
                 throw $e;
@@ -169,9 +154,9 @@ class LoginController extends Controller
 
     /**
      * Complete the MFA process proving the code sent to the user.
-     * 
+     *
      * @param \Illuminate\Http\Request $request
-     * 
+     *
      * @throws \HttpException
      */
     public function actionValidateMFACode(Request $request)
@@ -265,6 +250,36 @@ class LoginController extends Controller
     public function logoutForced(Request $request)
     {
         return $this->logout($request, true);
+    } //Function ends
+
+
+    private function callPreAuthEvent(Request $request, $passwordField): void
+    {
+        //Raise pre registration event
+        event(new PreAuthEvent(
+            $request->except($passwordField),
+            $request->ip()
+        ));
+    } //Function ends
+
+    private function callPostAuthSuccessEvent(Request $request, string $guard): void
+    {
+        //Raise Post Auth Success Event
+        $user = Auth::guard($guard)->user();
+        event(new PostAuthSuccessEvent(
+            $user->toArray(),
+            $request->except('password'),
+            $request->ip()
+        ));
+    } //Function ends
+
+    private function callPostAuthErrorEvent(Request $request, $e): void
+    {
+        //Rise Post Auth Failed Event
+        event(new PostAuthFailedEvent(
+            $request->except('password'),
+            $e, $request->ip()
+        ));
     } //Function ends
 
 } //Class ends
