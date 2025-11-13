@@ -5,7 +5,8 @@
                 <div class="card-header">{{ __('Token') }}: {{ request('status') }}</div>
 
                 <div class="card-body">
-                    <form method="POST" action="{{ route('cognito.form.mfa.code') }}">
+                    <x-cognito::common.alert />
+                    <form method="POST" action="{{ route('cognito.form.mfa.code.submit') }}">
                         @csrf
 
                         <input type="hidden" id="challenge_name" name="challenge_name" value="{{ request('status') }}">

@@ -11,7 +11,6 @@
 
 namespace Ellaisys\Cognito\Http\Middleware;
 
-use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 
@@ -33,7 +32,7 @@ class AwsCognitoAuthenticate extends BaseMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next, $guards=null)
+    public function handle(Request $request, \Closure $next, $guards=null)
     {
         $guard='';
         $middleware='';
@@ -49,7 +48,9 @@ class AwsCognitoAuthenticate extends BaseMiddleware
             } //End if
 
             //Authenticate the request
-            $this->authenticate($request, $guard);
+            if (in_array($middleware, ['aws-cognito'])) {
+                $this->authenticate($request, $guard);
+            } //End if
 
             return $next($request);
         } catch (Exception $e) {

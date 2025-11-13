@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-//use Illuminate\Foundation\Auth\SendsPasswordResetEmails; //Removed for AWS Cognito
-use Ellaisys\Cognito\Auth\SendsPasswordResetEmails; //Added for AWS
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
+use Ellaisys\Cognito\Auth\SendsPasswordResetEmails;
+
+use Exception;
 
 class ForgotPasswordController extends Controller
 {

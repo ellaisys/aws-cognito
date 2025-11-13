@@ -102,7 +102,7 @@ class JsonResponseService
 
         //Add exception message
         if ((!empty($e)) && ($e instanceof Exception)) {
-            $systemErrorCode = $e->getStatusCode();
+            $systemErrorCode = $e->getCode();
             $systemErrorMsg = $e->getMessage();
             $parentError = $e->getPrevious();
             if ($parentError instanceof CognitoIdentityProviderException) {

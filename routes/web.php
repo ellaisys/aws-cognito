@@ -5,10 +5,11 @@ use Illuminate\Support\Facades\Route;
 
 use Ellaisys\Cognito\Http\Controllers\Auth\LoginController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RegisterController;
+use Ellaisys\Cognito\Http\Controllers\Auth\MFAController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
-use Ellaisys\Cognito\Http\Controllers\Api\MFAController;
+
 use Ellaisys\Cognito\Http\Controllers\Api\RefreshTokenController;
 
 /*
@@ -30,8 +31,7 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
     Route::group(['prefix' => 'login'], function() {
         Route::get('/', function () { return view('cognito::auth.login'); })->name('form.login');
         Route::post('/', [LoginController::class, 'login'])->name('form.login.submit');
-        Route::get('/mfa', function () { return view('cognito::auth.login_mfa_code'); })->name('form.mfa.code');
-        Route::post('/mfa', [MFAController::class, 'actionValidateMFA'])->name('form.mfa.code.submit');
+        Route::post('/mfa', [LoginController::class, 'validateMFA'])->name('form.mfa.code.submit');
     });
 
     //Authenticated routes
@@ -46,6 +46,12 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
 
         Route::group(['prefix' => 'user'], function() {
             Route::get('/changepassword', function () { return view('cognito::auth.change'); })->name('form.change.password');
+
+            Route::group(['prefix' => 'mfa', 'controller' => MFAController::class], function() {
+                Route::get('/activate', 'activate')->name('form.user.mfa.activate');
+                Route::post('/verify', 'verify')->name('action.user.mfa.activate');
+                Route::get('/deactivate', 'deactivate')->name('action.user.mfa.deactivate');
+            });
         });
     });
 

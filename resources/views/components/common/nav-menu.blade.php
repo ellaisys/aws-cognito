@@ -7,8 +7,8 @@
 
     <div class="dropdown-divider"></div>
 
-    @if (Route::has('cognito.action.mfa.activate'))
-    <a class="dropdown-item" href="{{ route('cognito.action.mfa.activate') }}"
+    @if (Route::has('cognito.form.user.mfa.activate'))
+    <a class="dropdown-item" href="{{ route('cognito.form.user.mfa.activate') }}"
         data-toggle="modal" data-target="#modalMFAActivate">
         {{ __('Activate MFA') }}
     </a>

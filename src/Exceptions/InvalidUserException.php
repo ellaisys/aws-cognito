@@ -5,6 +5,8 @@ namespace Ellaisys\Cognito\Exceptions;
 use Exception;
 use Throwable;
 
+use Illuminate\Support\Facades\Log;
+
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class InvalidUserException extends HttpException

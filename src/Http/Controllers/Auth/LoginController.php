@@ -30,7 +30,6 @@ use Exception;
 
 class LoginController extends Controller
 {
-
     /*
     |--------------------------------------------------------------------------
     | Login Controller
@@ -44,14 +43,12 @@ class LoginController extends Controller
 
     use AuthenticatesUsers;
 
-
     /**
      * Where to redirect users after login.
      *
      * @var string
      */
     public $redirectTo = 'home';
-
 
     /**
      * Create a new controller instance.
@@ -64,7 +61,6 @@ class LoginController extends Controller
 
         parent::__construct();
     }
-
 
     /**
      * Authenticate User
@@ -81,7 +77,6 @@ class LoginController extends Controller
     {
         try {
             //Initialize parameters
-            $returnValue = null;
             $guard = 'web';
             $isJsonResponse = false;
 
@@ -92,49 +87,17 @@ class LoginController extends Controller
             $collection = collect($request->all());
 
             //Check if request is json
-            if ($request->expectsJson() || $request->isJson()) {
+            if ($this->isJson($request)) {
                 $isJsonResponse = true;
                 $guard = 'api';
             } //End if
 
             //Authenticate with Cognito Package Trait based on the guard
-            if ($claim = $this->attemptLogin($collection, $guard,
-                $usernameField, $passwordField, $isJsonResponse, true)) {
+            $claim = $this->attemptLogin($collection, $guard,
+                $usernameField, $passwordField, $isJsonResponse, true);
 
-                if ($isJsonResponse) {
-                    if ($claim instanceof AwsCognitoClaim) { // Success authentication
-                        //Raise Post Auth Success Event
-                        $this->callPostAuthSuccessEvent($request, $guard);
-
-                        $returnValue = $this->response->success($claim->getData());
-                    } else { // Challenge generated
-                        //Raise Post Auth Success Event
-                        $this->callPostAuthSuccessEvent($request, $null);
-
-                        $returnValue = $this->response->success([]);
-                    } //End if
-                } else {
-                    if ($claim===true) {
-                        $request->session()->regenerate();
-
-                        //Raise Post Auth Success Event
-                        $this->callPostAuthSuccessEvent($request, $guard);
-
-                        $returnValue = redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
-                    } elseif ($claim===false) {
-                        $returnValue = redirect()
-                            ->back()
-                            ->withInput($request->only($usernameField, 'remember'))
-                            ->withErrors([
-                                $usernameField => 'Incorrect username and/or password !!',
-                            ]);
-                    } else {
-                        $returnValue = $claim;
-                    }
-                }
-            } //End if
-
-            return $returnValue;
+            //Process the claim response
+            return $this->processClaimResponse($request, $claim, $guard, $isJsonResponse);
         } catch(Exception $e) {
             Log::error('AuthController:actionLogin:Exception');
 
@@ -151,7 +114,6 @@ class LoginController extends Controller
         } //Try-catch ends
     } //Function ends
 
-
     /**
      * Complete the MFA process proving the code sent to the user.
      *
@@ -159,46 +121,40 @@ class LoginController extends Controller
      *
      * @throws \HttpException
      */
-    public function actionValidateMFACode(Request $request)
+    public function validateMFA(Request $request)
     {
         try
         {
-            //Return object
-            $returnValue = null;
+            //Initialize parameters
+            $guard = 'web';
+            $isJsonResponse = false;
 
-            //Create credentials object
-            $collection = collect($request->all());
-
-            //Authenticate the user request
-            $response = $this->attemptLoginMFA($request);
-            if ($response===true) {
-                $request->session()->regenerate();
-                $returnValue = redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
-            } elseif ($response===false) {
-                $returnValue = redirect()
-                    ->back()
-                    ->withInput($request->only('username', 'remember'))
-                    ->withErrors([
-                        'username' => 'Incorrect username and/or password !!',
-                    ]);
-            } else {
-                $returnValue = $response;
+            //Check if request is json
+            if ($this->isJson($request)) {
+                $isJsonResponse = true;
+                $guard = 'api';
             } //End if
 
-            return $returnValue;
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            $response = $this->sendFailedLoginResponse($collection, $e);
+            //Authenticate the user request
+            $claim = $this->attemptLoginMFA($request, $guard, true);
 
-            return $response
-                ->back()
-                ->withInput($request->only('username', 'remember'))
-                ->withErrors([
-                    'error' => $e->getMessage(),
-                ]);
+            //Process the claim response
+            return $this->processClaimResponse($request, $claim, $guard, $isJsonResponse);
+        } catch (Exception $e) {
+            Log::error('AuthController:validateMFA:Exception');
+
+            //Rise Post Auth Failed Event
+            $this->callPostAuthErrorEvent($request, $e);
+
+            if ($isJsonResponse) {
+                throw $e;
+            } //End if
+
+            return response()->back()
+                ->withInput($request)
+                ->withErrors(['error' => $e->getMessage()]);
         } //try-catch ends
     } //Function ends
-
 
     /**
      * Logout action for the API based approach.
@@ -252,6 +208,55 @@ class LoginController extends Controller
         return $this->logout($request, true);
     } //Function ends
 
+    private function processClaimResponse(Request $request, $claim,
+        string $guard, bool $isJsonResponse): mixed
+    {
+        try
+        {
+            //Initialize parameters
+            $returnValue = null;
+
+            //Authenticate with Cognito Package Trait based on the guard
+            if (!empty($claim)) {
+                if ($isJsonResponse) {
+                    if ($claim instanceof AwsCognitoClaim) { // Success authentication
+                        //Raise Post Auth Success Event
+                        $this->callPostAuthSuccessEvent($request, $guard);
+
+                        $returnValue = $this->response->success($claim->getData());
+                    } else { // Challenge generated
+                        //Raise Post Auth Success Event
+                        $this->callPostAuthSuccessEvent($request, $null);
+
+                        $returnValue = $this->response->success([]);
+                    } //End if
+                } else {
+                    if ($claim===true) {
+                        $request->session()->regenerate();
+
+                        //Raise Post Auth Success Event
+                        $this->callPostAuthSuccessEvent($request, $guard);
+
+                        $returnValue = redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
+                    } elseif ($claim===false) {
+                        $returnValue = redirect()
+                            ->back()
+                            ->withInput($request->only($usernameField, 'remember'))
+                            ->withErrors([
+                                $usernameField => 'Incorrect username and/or password !!',
+                            ]);
+                    } else {
+                        $returnValue = $claim;
+                    }
+                }
+            } //End if
+
+            return $returnValue;
+        } catch(Exception $e) {
+            Log::error('AuthController:processClaimResponse:Exception');
+            throw $e;
+        }
+    } //Function ends
 
     private function callPreAuthEvent(Request $request, $passwordField): void
     {

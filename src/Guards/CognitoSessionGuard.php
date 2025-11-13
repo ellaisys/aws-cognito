@@ -53,12 +53,15 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     protected $keyUsername;
 
-
     /**
      * @var AwsCognitoClient
      */
     protected $client;
 
+    /**
+     * @var Request Session
+     */
+    protected $session;
 
     /**
      * The AwsCognito instance.
@@ -67,7 +70,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     protected $cognito;
     
-
     /**
      * The AwsCognito Claim token
      *
@@ -75,12 +77,10 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     protected $claim;
 
-
     /**
      * @var Authentication Challenge
      */
     protected $challengeName;
-
 
     /**
      * @var AwsResult
@@ -115,12 +115,12 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
     ) {
         $this->cognito = $cognito;
         $this->client = $client;
+        $this->session = $session;
         $this->awsResult = null;
         $this->keyUsername = $keyUsername;
 
         parent::__construct($name, $provider, $session, $request);
     }
-
 
     /**
      * Attempt to authenticate an existing user using the credentials

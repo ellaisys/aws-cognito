@@ -5,10 +5,11 @@ use Illuminate\Support\Facades\Route;
 
 use Ellaisys\Cognito\Http\Controllers\Auth\LoginController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RegisterController;
+use Ellaisys\Cognito\Http\Controllers\Auth\MFAController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
-use Ellaisys\Cognito\Http\Controllers\Api\MFAController;
+
 use Ellaisys\Cognito\Http\Controllers\Api\RefreshTokenController;
 
 /*
@@ -34,7 +35,7 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
     });
 
     //Authenticated routes
-    Route::group(['middleware' => ['aws-cognito:api']], function() {
+    Route::group(['middleware' => ['aws-cognito']], function() {
 
         //Route group user
         Route::group(['prefix' => 'user'], function() {
@@ -43,6 +44,13 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
 
             //Route to invite a new user
             Route::post('/invite', [RegisterController::class, 'actionInvite']);
+
+            //Route group for MFA
+            Route::group(['prefix' => 'mfa', 'controller' => MFAController::class], function() {
+                Route::get('/activate', 'activate');
+                Route::post('/activate/{code}', 'verify');
+                Route::post('/deactivate', 'deactivate');
+            });
         });
 
         //Route group logout
@@ -52,12 +60,9 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
         });
 
         //Route group for MFA
-        Route::group(['controller' => MFAController::class, 'prefix' => 'mfa'], function() {
-            Route::post('/enable', 'actionApiEnableMFA');
-            Route::post('/disable', 'actionApiDisableMFA');
-            Route::get('/activate', 'actionApiActivateMFA');
-            Route::post('/activate/{code}', 'actionApiVerifyMFA');
-            Route::post('/deactivate', 'actionApiDeactivateMFA');
+        Route::group(['prefix' => 'mfa', 'controller' => MFAController::class], function() {
+            Route::post('/enable', 'enable');
+            Route::post('/disable', 'disable');
         });
 
         //Route for refresh token

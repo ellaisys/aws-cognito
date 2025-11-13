@@ -18,8 +18,10 @@ use Ellaisys\Cognito\Contracts\ExceptionContract;
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\AuthenticationException;
+use Ellaisys\Cognito\Exceptions\NoTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
@@ -111,7 +113,8 @@ class Handler extends ExceptionHandler
         } elseif ($e instanceof ModelNotFoundException) {
             $statusCode = Response::HTTP_BAD_REQUEST; //400
             $errorMessage = 'Resource not found.';
-        } elseif ($e instanceof NotFoundHttpException) {
+        } elseif (($e instanceof NotFoundHttpException) ||
+            ($e instanceof HttpException)) {
             $statusCode = Response::HTTP_BAD_REQUEST; //400
             $errorMessage = $e->getMessage();
         } elseif ($e instanceof AwsCognitoException) {
@@ -144,6 +147,10 @@ class Handler extends ExceptionHandler
             $errorMessage = 'Unauthenticated.';
             $errorKey = $e->getMessage();
             $isRedirectToLogin = true;
+        } elseif ($e instanceof NoTokenException) {
+            $statusCode = Response::HTTP_UNAUTHORIZED; //401
+            $errorMessage = 'Unauthenticated.';
+            $errorKey = $e->getMessage();
         } elseif ($e instanceof AccessDeniedHttpException) {
             $statusCode = Response::HTTP_FORBIDDEN; //403
             $errorMessage = 'You do not have permission to perform this action.';

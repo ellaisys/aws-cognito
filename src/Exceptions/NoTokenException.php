@@ -2,35 +2,20 @@
 
 namespace Ellaisys\Cognito\Exceptions;
 
+use Exception;
 use Throwable;
 
-use Exception;
-use Illuminate\Auth\AuthenticationException;
+use Illuminate\Support\Facades\Log;
 
-class NoTokenException extends Exception
+use Symfony\Component\HttpKernel\Exception\HttpException;
+
+class NoTokenException extends HttpException
 {
 
-    /**
-     * Report the exception.
-     *
-     * @return void
-     */
-    public function report($message = 'Authentication token not provided')
+    public function __construct(string $message = 'Authentication token not provided',
+        Throwable $previous = null, int $code = 0, array $headers = [])
     {
-        throw new AuthenticationException($message);
-    }
-
-
-    /**
-     * Render the exception into an HTTP response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $exception
-     * @return \Illuminate\Http\Response
-     */
-    public function render($request, Throwable $exception)
-    {
-        return parent::render($request, $exception);
+        parent::__construct(401, $message, $previous, $headers, $code);
     }
     
 } //Class ends

@@ -36,7 +36,6 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoTokenGuard extends TokenGuard
 {
-
     use BaseCognitoGuard, CognitoMFA;
 
     /**
@@ -46,12 +45,10 @@ class CognitoTokenGuard extends TokenGuard
      */
     protected $keyUsername;
 
-
     /**
      * @var  \AwsCognitoClient
      */
     protected $client;
-
 
     /**
      * The AwsCognito instance.
@@ -60,7 +57,6 @@ class CognitoTokenGuard extends TokenGuard
      */
     protected $cognito;
 
-
     /**
      * The AwsCognito Claim token
      *
@@ -68,24 +64,20 @@ class CognitoTokenGuard extends TokenGuard
      */
     protected $claim;
     
-
     /**
      * @var Authentication Challenge
      */
     protected $challengeName;
-
 
     /**
      * @var AwsResult
      */
     protected $awsResult;
 
-
     /**
      * @var Challenge Data based on the challenge
      */
     protected $challengeData;
-
 
     /**
      * CognitoTokenGuard constructor.
@@ -109,7 +101,6 @@ class CognitoTokenGuard extends TokenGuard
         parent::__construct($provider, $request);
     }
 
-
     /**
      * Attempt to authenticate a user using the given credentials.
      *
@@ -118,7 +109,8 @@ class CognitoTokenGuard extends TokenGuard
      * @throws
      * @return bool
      */
-    public function attempt(array $request = [], $remember = false, string $paramUsername='email', string $paramPassword='password')
+    public function attempt(array $request = [], $remember = false,
+        string $paramUsername='email', string $paramPassword='password')
     {
         $returnValue = null;
         try {
@@ -166,7 +158,6 @@ class CognitoTokenGuard extends TokenGuard
         return $returnValue;
     } //Function ends
 
-
     /**
      * Create a token for a user.
      *
@@ -210,7 +201,6 @@ class CognitoTokenGuard extends TokenGuard
         return $claim;
     } //Fucntion ends
 
-
     /**
      * Set the token.
      *
@@ -223,7 +213,6 @@ class CognitoTokenGuard extends TokenGuard
         return $this;
     } //Function ends
 
-
     /**
      * Get the challenged claim.
      *
@@ -233,7 +222,6 @@ class CognitoTokenGuard extends TokenGuard
     {
         return $this->cognito->getChallengeData($key);
     } //Function ends
-
 
     /**
      * Save the challenged claim.
@@ -245,7 +233,6 @@ class CognitoTokenGuard extends TokenGuard
         $this->cognito->setChallengeData($key, $this->challengeData);
         return $this;
     } //Function ends
-
 
     /**
      * Logout the user, thus invalidating the token.
@@ -259,7 +246,6 @@ class CognitoTokenGuard extends TokenGuard
         $this->invalidate($forceForever);
         $this->user = null;
     } //Function ends
-
 
     /**
      * Invalidate the token.
@@ -299,13 +285,13 @@ class CognitoTokenGuard extends TokenGuard
         } //try-catch ends
     } //Function ends
 
-
     /**
      * Get the authenticated user.
      *
      * @return \Illuminate\Contracts\Auth\Authenticatable
      */
-    public function user() {
+    public function user()
+    {
 
         //Check if the user exists
         if (!is_null($this->user)) {
@@ -316,12 +302,12 @@ class CognitoTokenGuard extends TokenGuard
         return $this->getTokenForRequest();
     } //Function ends
 
-
     /**
      * Get the token for the current request.
      * @return string
      */
-    public function getTokenForRequest () {
+    public function getTokenForRequest ()
+    {
         //Check for request having token
         if (! $this->cognito->parser()->setRequest($this->request)->hasToken()) {
             return null;
@@ -337,19 +323,23 @@ class CognitoTokenGuard extends TokenGuard
             return null;
         } //End if
 
-        //Get user and return
-        return $this->user = $this->provider->retrieveById($claim['sub']);
-    } //Function ends
+        //Get model from the Token Provider and user details
+        $user = ($this->provider->getModel())::where(
+            config('cognito.user_subject_uuid', 'sub'), $claim['sub']
+            )->first();
 
+        //Get user and return
+        return $this->user = $user;
+    } //Function ends
 
     /**
      * Get the user from the provider.
      * @return User
      */
-    public function getUser (string $identifier) {
+    public function getUser (string $identifier)
+    {
         return $this->provider->retrieveById($identifier);
     } //Function ends
-
 
     /**
      * Attempt MFA based Authentication
@@ -361,7 +351,8 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @return bool
      */
-    public function attemptMFA(array $challenge=[], bool $remember=false) {
+    public function attemptMFA(array $challenge=[], bool $remember=false)
+    {
         $returnValue = null;
         try {
             $responseCognito = $this->attemptBaseMFA($challenge, $remember);

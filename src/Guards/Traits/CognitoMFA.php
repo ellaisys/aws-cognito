@@ -88,10 +88,11 @@ trait CognitoMFA
     public function associateSoftwareTokenMFA(string $appName=null, string $userParamToAddToQR='email') {
         try {
             //Get Access Token
+            //$claim = $this->session->has('claim')?$this->session->get('claim'):null;
             $accessToken = $this->cognito->getToken();
             if (!empty($accessToken)) {
                 $response = $this->client->associateSoftwareTokenMFA($accessToken);
-                if ($response && ($response instanceof AwsResult) && 
+                if ($response && ($response instanceof AwsResult) &&
                     isset($response['@metadata']['statusCode']) && $response['@metadata']['statusCode']==200) {
 
                     //Build payload
@@ -109,7 +110,8 @@ trait CognitoMFA
                 throw new NoTokenException('ERROR_AWS_COGNITO_NO_TOKEN');
             } //End if
         } catch(CognitoIdentityProviderException $e) {
-            throw new AwsCognitoException($e->getAwsErrorMessage(), $e);
+            Log::error('CognitoMFA:associateSoftwareTokenMFA:CognitoIdentityProviderException');
+            throw new AwsCognitoException($e->getAwsErrorMessage(), 400, $e);
         } catch(Exception $e) {
             Log::error('CognitoMFA:associateSoftwareTokenMFA:Exception');
             throw $e;

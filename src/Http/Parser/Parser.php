@@ -96,14 +96,15 @@ class Parser
         try {
             $response = null;
             foreach ($this->chain as $parser) {
-                if ($response = $parser->parse($this->request) && !empty($response)) {
+                $response = $parser->parse($this->request);
+                if (!empty($response)) {
                     return $response;
                 } //End if
             } //Loop ends
-            return null;
+            return $response;
         } catch (Exception $e) {
             Log::error('Parser:parseToken:Exception');
-            return null;
+            return $response;
         } //Try-catch ends
     } //Function ends
 
@@ -115,7 +116,8 @@ class Parser
      */
     public function hasToken(): bool
     {
-        return $this->parseToken() != null;
+        $response = $this->parseToken();
+        return $response != null;
     } //Function ends
 
 

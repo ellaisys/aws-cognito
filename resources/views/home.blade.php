@@ -4,7 +4,7 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
+            <div class="card mb-2">
                 <div class="card-header">{{ __('Dashboard') }}</div>
 
                 <div class="card-body">
@@ -24,14 +24,12 @@
                     <h2><strong>Session Parameters:</strong></h2>
                     @if ($sessionData = session()->all())
                         <table class="table table-bordered table-striped">
-                            <th>
                                 <thead class="dark">
                                     <tr>
                                         <td style="width: 30%;">Key</td>
                                         <td>Value</td>
                                     </tr>
                                 </thead>
-                            </th>
                             <tbody>
                             @foreach($sessionData as $key=>$value)
                                 <tr>
@@ -44,6 +42,8 @@
                     @endif
                 </div>
             </div>
+
+            <x-cognito::mfa.activate-form />
         </div>
     </div>
 </div>

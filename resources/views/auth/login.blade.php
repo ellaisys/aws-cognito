@@ -14,5 +14,7 @@
             </div>
         </div>
     </div>
+
+    <x-cognito::mfa.code-form />
 </div>
 @endsection
