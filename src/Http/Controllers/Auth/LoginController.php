@@ -165,19 +165,19 @@ class LoginController extends Controller
     public function logout(Request $request, bool $forced = false)
     {
         try {
+            //Initialize parameters
+            $returnValue = null;
+            $guard = 'web';
+            $isJsonResponse = false;
+
             //Raise Pre Logout Event
             event(new PreLogoutEvent(
                 $request->toArray(),
                 $request->ip()
             ));
 
-            //Initialize parameters
-            $returnValue = null;
-            $guard = 'web';
-            $isJsonResponse = false;
-
             //Check if request is json
-            if ($request->expectsJson() || $request->isJson()) {
+            if ($this->isJson($request)) {
                 $isJsonResponse = true;
                 $guard = 'api';
             } //End if
@@ -199,7 +199,8 @@ class LoginController extends Controller
                 $returnValue = redirect('/');
             } //End if
         } catch (Exception $e) {
-            throw new HttpException(400, 'Error logging out.');
+            Log::error('LoginController:logout:Exception');
+            throw $e;
         } //End try-catch
         return $returnValue;
     } //Function ends

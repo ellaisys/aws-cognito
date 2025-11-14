@@ -48,14 +48,12 @@ class AwsCognito
      */
     public static $runsMigrations = true;
 
-
     /**
      * The authentication provider.
      *
      * @var \Ellaisys\Cognito\Contracts\Providers\Auth
      */
     protected $auth;
-
 
     /**
      * Aws Cognito Manager
@@ -64,14 +62,12 @@ class AwsCognito
      */
     protected $manager;
 
-
     /**
      * The HTTP parser.
      *
      * @var \Ellaisys\Cognito\Http\Parser\Parser
      */
     protected $parser;
-
 
     /**
      * The AwsCognito Claim token
@@ -80,7 +76,6 @@ class AwsCognito
      */
     protected $claim;
 
-
     /**
      * The AWS Cognito token.
      *
@@ -88,9 +83,8 @@ class AwsCognito
      */
     protected $token;
 
-
     /**
-     * JWT constructor.
+     * Default constructor.
      *
      * @param  \Ellaisys\Cognito\Manager  $manager
      * @param  \Ellaisys\Cognito\Http\Parser\Parser  $parser
@@ -103,7 +97,6 @@ class AwsCognito
         $this->parser = $parser;
     }
 
-
     /**
      * Configure AWS Cognito to not register its routes.
      *
@@ -114,6 +107,15 @@ class AwsCognito
         static::$registersRoutes = false;
     } //Function ends
 
+    /**
+     * Configure AWS Cognito to not register its views and components.
+     *
+     * @return static
+     */
+    public static function ignoreViews(): void
+    {
+        static::$registersViews = false;
+    } //Function ends
 
     /**
      * Configure AWS Cognito to not register its migrations.
@@ -124,7 +126,6 @@ class AwsCognito
     {
         static::$runsMigrations = false;
     } //Function ends
-
 
     /**
      * Get the token.
@@ -144,7 +145,6 @@ class AwsCognito
         return $this->token;
     } //Function ends
 
-
     /**
      * Parse the token from the request.
      *
@@ -163,7 +163,6 @@ class AwsCognito
         return $this->setToken($token);
     } //Function ends
 
-
     /**
      * Set the token.
      *
@@ -181,7 +180,6 @@ class AwsCognito
         return $this;
     } //Function ends
 
-
     /**
      * Get the token.
      *
@@ -191,7 +189,6 @@ class AwsCognito
     {
         return (!empty($this->claim))?$this->claim:null;
     } //Function ends
-
 
     /**
      * Set the claim.
@@ -208,7 +205,6 @@ class AwsCognito
         return $this;
     } //Function ends
 
-
     /**
      * Get the challenge data.
      *
@@ -220,7 +216,6 @@ class AwsCognito
     {
         return $this->manager->fetchData($key);
     } //Function ends
-
 
     /**
      * Set the challenge data.
@@ -236,7 +231,6 @@ class AwsCognito
         return $this->manager->storeData($key, $data, $durationInSecs);
     } //Function ends
 
-
     /**
      * Unset the current token.
      *
@@ -245,13 +239,12 @@ class AwsCognito
     public function unsetToken(bool $forceForever = false)
     {
         $tokenKey = $this->token->get();
-        $this->manager->release($tokenKey);
+        $this->manager->release($tokenKey, $forceForever);
         $this->claim = null;
         $this->token = null;
 
         return $this;
     } //Function ends
-
 
     /**
      * Set the request instance.
@@ -267,7 +260,6 @@ class AwsCognito
         return $this;
     } //Function ends
 
-
     /**
      * Get the Parser instance.
      *
@@ -277,7 +269,6 @@ class AwsCognito
     {
         return $this->parser;
     } //Function ends
-
 
     /**
      * Authenticate a user via a token.
@@ -296,7 +287,6 @@ class AwsCognito
         return $this; //->user();
     } //Function ends
 
-
     /**
      * Alias for authenticate().
      *
@@ -307,10 +297,9 @@ class AwsCognito
         return $this->authenticate();
     } //Function ends
 
-
     /**
      * Get the authenticated user.
-     * 
+     *
      * @throws InvalidTokenException
      *
      * @return \Illuminate\Contracts\Auth\Authenticatable
@@ -324,7 +313,6 @@ class AwsCognito
 
         return $this->claim->getUser();
     } //Function ends
-
 
     /**
      * Persist token.

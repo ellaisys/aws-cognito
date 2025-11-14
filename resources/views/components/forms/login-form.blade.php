@@ -54,8 +54,8 @@
                 {{ __('Login') }}
             </button>
 
-            @if (Route::has('password.request'))
-                <a class="btn btn-link" href="{{ route('password.request') }}">
+            @if (Route::has('cognito.form.password.forgot'))
+                <a class="btn btn-link" href="{{ route('cognito.form.password.forgot') }}">
                     {{ __('Forgot Your Password?') }}
                 </a>
             @endif

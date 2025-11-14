@@ -24,7 +24,6 @@ class StorageProvider
      */
     protected $cache;
 
-
     /**
      * The used cache tag.
      *
@@ -32,18 +31,15 @@ class StorageProvider
      */
     protected $tag = 'ellaisys.aws.cognito';
 
-
     /**
      * @var bool
      */
     protected $supportsTags;
 
-
     /**
      * @var string|null
      */
     protected $laravelVersion;
-
 
     /**
      * Constructor.
@@ -57,7 +53,6 @@ class StorageProvider
         $this->cache = Cache::store($provider);
         $this->supportsTags = false;
     }
-
 
     /**
      * Add a new item into storage.
@@ -81,7 +76,6 @@ class StorageProvider
         $this->cache()->put($key, $value, $duration);
     }
 
-
     /**
      * Add a new item into storage forever.
      *
@@ -95,7 +89,6 @@ class StorageProvider
         $this->cache()->forever($key, $value);
     }
 
-
     /**
      * Check for an item in storage.
      *
@@ -107,7 +100,6 @@ class StorageProvider
     {
         return $this->cache()->has($key);
     }
-
 
     /**
      * Get an item from storage.
@@ -121,7 +113,6 @@ class StorageProvider
         return $this->cache()->get($key);
     }
 
-
     /**
      * Remove an item from storage.
      *
@@ -129,7 +120,7 @@ class StorageProvider
      *
      * @return bool
      */
-    public function destroy($key)
+    public function destroy($key, bool $forceForever = false)
     {
         if ($this->has($key)) {
             return $this->cache()->forget($key);
@@ -137,7 +128,6 @@ class StorageProvider
 
         return false;
     } //Function ends
-
 
     /**
      * Remove all items associated with the tag.
@@ -148,7 +138,6 @@ class StorageProvider
     {
         $this->cache()->flush();
     } //Function ends
-
 
     /**
      * Return the cache instance with tags attached.
@@ -168,7 +157,6 @@ class StorageProvider
         return $this->cache;
     } //Function ends
 
-
     /**
      * Set the laravel version.
      */
@@ -178,7 +166,6 @@ class StorageProvider
 
         return $this;
     } //Function ends
-
 
     /**
      * Detect as best we can whether tags are supported with this repository & store,

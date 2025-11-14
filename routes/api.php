@@ -6,11 +6,12 @@ use Illuminate\Support\Facades\Route;
 use Ellaisys\Cognito\Http\Controllers\Auth\LoginController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RegisterController;
 use Ellaisys\Cognito\Http\Controllers\Auth\MFAController;
+use Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController;
+use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
+use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
-
-use Ellaisys\Cognito\Http\Controllers\Api\RefreshTokenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +33,12 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
     Route::group(['prefix' => 'login'], function() {
         Route::post('/', [LoginController::class, 'login']);
         Route::post('/mfa', [MFAController::class, 'actionValidateMFA']);
+    });
+
+    //Forgot password routes
+    Route::group(['prefix' => 'password'], function() {
+        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLink']);
+        Route::post('/reset', [ResetPasswordController::class, 'reset']);
     });
 
     //Authenticated routes
@@ -66,6 +73,6 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
         });
 
         //Route for refresh token
-        Route::post('/refresh-token', [RefreshTokenController::class, 'actionRefreshToken']);
+        Route::post('/token/refresh', [RefreshTokenController::class, 'revalidate']);
     });
 });

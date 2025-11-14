@@ -28,7 +28,6 @@ use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 
 trait ResetsPasswords
 {
-
     /**
      * private variable for password policy
      */
@@ -42,7 +41,6 @@ trait ResetsPasswords
     private $paramUsername = 'email';
     private $paramPassword = 'password';
 
-
     /**
      * Reset the given user's password.
      *
@@ -50,10 +48,12 @@ trait ResetsPasswords
      * @param  string  $paramUsername (optional)
      * @param  string  $paramToken (optional)
      * @param  string  $paramPassword (optional)
-     * 
+     *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function reset(Request $request, string $paramUsername='email', string $paramToken='token', string $paramPassword='password')
+    public function reset(Request $request,
+        string $paramUsername='email', string $paramToken='token',
+        string $paramPassword='password')
     {
         $response = '';
         try {
@@ -100,7 +100,6 @@ trait ResetsPasswords
         return $this->sendResetResponse($req, $response);
     } //Function ends
 
-
     /**
      * Get the response for a successful password reset.
      *
@@ -117,7 +116,6 @@ trait ResetsPasswords
         return redirect($this->redirectPath())
             ->with('status', trans($response));
     } //Function ends
-
 
     /**
      * Get the response for a failed password reset.
@@ -139,7 +137,6 @@ trait ResetsPasswords
             ->withErrors(['email' => trans($response)]);
     } //Function ends
 
-
     /**
      * Get the post register / login redirect path.
      *
@@ -154,7 +151,6 @@ trait ResetsPasswords
         return property_exists($this, 'redirectTo') ? $this->redirectTo : '/home';
     } //Function ends
 
-
     /**
      * Display the password reset view for the given token.
      *
@@ -164,13 +160,15 @@ trait ResetsPasswords
      * @param  string|null  $token
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function showResetForm(Request $request, $token = null)
+    public function showResetForm(Request $request, string $token = null)
     {
-        return view('auth.passwords.reset')->with(
-            ['email' => $request->email]
+        return view('cognito.form.password.reset')->with(
+            [
+                'email' => $request->email,
+                'token' => $token
+            ]
         );
     } //Function ends
-
 
     /**
      * Get the password reset validation rules.

@@ -126,9 +126,9 @@ class AwsCognitoManager
      *
      * @return \AwsCognitoManager
      */
-    public function release(string $token)
+    public function release(string $token, bool $forceForever = false)
     {
-        $this->provider->destroy($token);
+        $this->provider->destroy($token, $forceForever);
 
         return $this;
     } //Function ends

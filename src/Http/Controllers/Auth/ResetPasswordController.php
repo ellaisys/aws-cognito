@@ -1,11 +1,23 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-use App\Http\Controllers\Controller;
+namespace Ellaisys\Cognito\Http\Controllers\Auth;
 
-//use Illuminate\Foundation\Auth\ResetsPasswords; //Removed for AWS Cognito
-use Ellaisys\Cognito\Auth\ResetsPasswords; //Added for AWS Cognito
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
+use Ellaisys\Cognito\Auth\ResetsPasswords;
+
+use Exception;
 
 class ResetPasswordController extends Controller
 {

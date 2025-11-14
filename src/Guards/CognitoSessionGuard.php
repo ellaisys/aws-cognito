@@ -292,7 +292,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             if (!empty($e->getAwsErrorCode())) {
                 switch ($e->getAwsErrorCode()) {
                     case 'PasswordResetRequiredException':
-                        return redirect(route('cognito.form.reset.password.code'))
+                        return redirect(route('cognito.form.password.reset.password.code'))
                             ->with('success', false)
                             ->with('force', true)
                             ->with('messaage', $e->getAwsErrorMessage())

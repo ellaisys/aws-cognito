@@ -6,11 +6,12 @@ use Illuminate\Support\Facades\Route;
 use Ellaisys\Cognito\Http\Controllers\Auth\LoginController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RegisterController;
 use Ellaisys\Cognito\Http\Controllers\Auth\MFAController;
+use Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController;
+use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
+use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
-
-use Ellaisys\Cognito\Http\Controllers\Api\RefreshTokenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,14 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
     Route::get('/register',  function () { return view('cognito::auth.register'); })->name('form.register');
     Route::post('/register', [RegisterController::class, 'register'])->name('form.register.submit');
 
+    //Forgot password
+    Route::group(['prefix' => 'password'], function() {
+        Route::get('/forgot',  function () { return view('cognito::auth.passwords.email'); })->name('form.password.forgot');
+        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLink'])->name('action.password.forgot');
+        Route::get('/reset',  function () { return view('cognito::auth.passwords.reset'); })->name('form.password.reset');
+        Route::post('/reset', [ResetPasswordController::class, 'reset'])->name('action.password.reset');
+    });
+
     //Route group login
     Route::group(['prefix' => 'login'], function() {
         Route::get('/', function () { return view('cognito::auth.login'); })->name('form.login');
@@ -37,6 +46,9 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
     //Authenticated routes
     Route::group(['middleware' => ['aws-cognito:web']], function() {
         Route::get('/home', function () { return view('cognito::home'); })->name('home');
+
+        //Route for refresh session
+        Route::post('/session/refresh', [RefreshTokenController::class, 'revalidate']);
 
         //Route group logout
         Route::group(['prefix' => 'logout', 'controller' => LoginController::class], function() {

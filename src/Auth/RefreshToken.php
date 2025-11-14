@@ -38,7 +38,10 @@ trait RefreshToken
      *
      * @return mixed
      */
-    public function refresh(Request $request, string $paramUsername='email', string $paramRefreshToken='refresh_token')
+    public function refresh(Request $request,
+        string $guard = 'api',
+        string $paramUsername='email',
+        string $paramRefreshToken='refresh_token')
     {
         try {
             //Validate request
@@ -57,7 +60,7 @@ trait RefreshToken
             $client = app()->make(AwsCognitoClient::class);
 
             //Get Authenticated user
-            $authUser  = Auth::guard('api')->user();
+            $authUser  = Auth::guard($guard)->user();
 
             //Get User Data
             $user = $client->getUser($authUser[$paramUsername]);
@@ -71,7 +74,7 @@ trait RefreshToken
 
                 //Authenticate User
                 $claim = new AwsCognitoClaim($response, $authUser, 'email');
-                if ($claim && $claim instanceof AwsCognitoClaim) { 
+                if ($claim && $claim instanceof AwsCognitoClaim) {
                     //Store the token
                     $cognito = app()->make('ellaisys.aws.cognito');
                     if (empty($cognito)) {
@@ -80,9 +83,9 @@ trait RefreshToken
                     $cognito->setClaim($claim)->storeToken();
 
                     //Return the response object
-                    return $claim->getData();    
+                    return $claim->getData();
                 } else {
-                    return false;            
+                    return false;
                 } //End if
             } else {
                 throw new HttpException(400, 'ERROR_COGNITO_USER_NOT_FOUND');
@@ -94,7 +97,6 @@ trait RefreshToken
             throw $e;
         } //Try-catch ends
     } //Function ends
-
 
     /**
      * Get the password reset validation rules.

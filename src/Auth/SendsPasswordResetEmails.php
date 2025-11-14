@@ -26,20 +26,24 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait SendsPasswordResetEmails
 {
-
     /**
      * Send a reset link to the given user.
      *
      * @param  \Illuminate\Support\Collection  $request
      * @param  \string  $usernameKey (optional)
-     * 
+     *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function sendResetLinkEmail(\Illuminate\Http\Request $request, string $usernameKey='email', bool $resetTypeCode=true, bool $isJsonResponse=false, array $attributes=null)
+    public function sendResetLinkEmail(Request $request,
+        string $usernameKey='email', bool $resetTypeCode=true,
+        bool $isJsonResponse=false, array $clientMetadata=null)
     {
-        try {        
+        try {
+            //Initialize variables
+            $returnValue = null;
+
             //Cognito reset link
-            $response = $this->sendCognitoResetLinkEmail($request[$usernameKey], $attributes);
+            $response = $this->sendCognitoResetLinkEmail($request[$usernameKey], $clientMetadata);
 
             //JSON Response
             if ($request->expectsJson() || $isJsonResponse) {
@@ -48,26 +52,28 @@ trait SendsPasswordResetEmails
 
             //Action Response
             if ($response && $response['response']) {
-                $routeCognito = Route::has('cognito.form.reset.password.code');
+                $isPasswordResetRoute = Route::has('cognito.form.password.reset');
 
-                if ($resetTypeCode && $routeCognito && $response['status'] != 'FORCE_CHANGE_PASSWORD') {
-                    return redirect(route('cognito.form.reset.password.code'))
+                if ($resetTypeCode && $isPasswordResetRoute &&
+                    ($response['status'] != 'FORCE_CHANGE_PASSWORD')) {
+                    $returnValue = redirect(route('cognito.form.password.reset'))
                         ->withInput($request->only($usernameKey))
                         ->with('success', true);
                 } else {
-                    return redirect('/')
+                    $returnValue = redirect('/')
                         ->with('success', true);
                 } //End if
             } else {
-                return redirect()->back()
+                $returnValue = redirect()->back()
                     ->withInput($request->only($usernameKey))
                     ->withErrors([$usernameKey => 'cognito.invalid_user']);
             } //End if
+            return $returnValue;
         } catch (Exception $e) {
+            Log::error('SendsPasswordResetEmails:sendResetLinkEmail:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends
-
 
     /**
      * Send a cognito reset link to the given user.
@@ -102,7 +108,11 @@ trait SendsPasswordResetEmails
                                 } //End if
                             } //Loop ends
 
-                            $response = app()->make(AwsCognitoClient::class)->inviteUser($username, null, $attributes, $clientMetadata, 'RESEND');
+                            $response = app()->make(AwsCognitoClient::class)
+                                ->inviteUser(
+                                    $username, null, $attributes,
+                                    $clientMetadata, 'RESEND'
+                                );
                             $returnValue = (empty($response) == false);
                         } else {
                             throw new HttpException(400, 'The forgot password resend is disabled.');
@@ -113,16 +123,21 @@ trait SendsPasswordResetEmails
                     case 'CONFIRMED';
                     default:
                         //Send AWS Cognito reset link
-                        $response = app()->make(AwsCognitoClient::class)->sendResetLink($username, $clientMetadata);
+                        $response = app()->make(AwsCognitoClient::class)
+                            ->sendResetLink($username, $clientMetadata);
                         $returnValue = ($response == Password::RESET_LINK_SENT);
                         break;
                 } //End switch
 
-                return [ 'status' => $user->get('UserStatus'), 'response' => $returnValue ];
+                return [
+                    'status' => $user->get('UserStatus'),
+                    'response' => $returnValue
+                ];
             } else {
                 throw new InvalidUserException('The user does not exist.');
             } //End if
         } catch (Exception $e) {
+            Log::error('SendsPasswordResetEmails:sendCognitoResetLinkEmail:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends

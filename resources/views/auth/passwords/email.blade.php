@@ -8,13 +8,8 @@
                 <div class="card-header">{{ __('Reset Password') }}</div>
 
                 <div class="card-body">
-                    @if (session('status'))
-                        <div class="alert alert-success" role="alert">
-                            {{ session('status') }}
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('password.email') }}">
+                    <x-cognito::common.alert />
+                    <form method="POST" action="{{ route('cognito.action.password.forgot') }}">
                         @csrf
 
                         <div class="row mb-3">
@@ -36,6 +31,12 @@
                                 <button type="submit" class="btn btn-primary">
                                     {{ __('Send Password Reset Link') }}
                                 </button>
+
+                                @if (Route::has('cognito.form.login'))
+                                    <a class="btn btn-link float-end" href="{{ route('cognito.form.login') }}">
+                                        {{ __('Cancel? Go To Login') }}
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </form>
