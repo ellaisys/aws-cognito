@@ -1,19 +1,24 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Ellaisys\Cognito\Http\Controllers\Auth;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
+use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
 use Ellaisys\Cognito\Auth\ChangePasswords as CognitoChangePasswords; //Added for AWS Cognito
 
 use Exception;
-use Illuminate\Validation\ValidationException;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
-use Ellaisys\Cognito\Exceptions\NoLocalUserException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class ChangePasswordController extends Controller
 {
@@ -39,13 +44,24 @@ class ChangePasswordController extends Controller
 
 	/**
 	 * Action to update the user password
-	 * 
+	 *
 	 * @param  \Illuminate\Http\Request  $request
 	 */
     public function actionChangePassword(Request $request)
     {
 		try
 		{
+            //Initialize parameters
+            $returnValue = null;
+            $guard = 'web';
+            $isJsonResponse = false;
+
+            //Check if request is json
+            if ($this->isJson($request)) {
+                $isJsonResponse = true;
+                $guard = 'api';
+            } //End if
+
             //Validate request
             $validator = Validator::make($request->all(), [
                 'email'    => 'required|email',
@@ -53,9 +69,6 @@ class ChangePasswordController extends Controller
                 'new_password' => 'required|confirmed',
             ]);
             $validator->validate();
-
-            // Get Current User
-            $userCurrent = auth()->guard('web')->user();
 
             //Check the password
             if ($this->reset($request)) {
@@ -70,20 +83,9 @@ class ChangePasswordController extends Controller
 					->with('message', 'Password updated failed');
 			} //End if
         } catch(Exception $e) {
-			$message = 'Error sending the reset mail.';
-			if ($e instanceof ValidationException) {
-                throw $e;
-            } else if ($e instanceof CognitoIdentityProviderException) {
-				$message = $e->getAwsErrorMessage();
-			} else {
-                //Do nothing
-            } //End if
-
-			return redirect()->back()
-                ->withInput($request->only('email'))
-				->with('status', 'error')
-				->withErrors('errors', $message);
-
+            Log::error('SendsPasswordResetEmails:sendResetLinkEmail:Exception');
+            throw $e;
         } //Try-catch ends
-    }
-}
+    } //Function ends
+
+} //Class ends

@@ -40,7 +40,6 @@ trait ChangePasswords
     private $paramUsername = 'email';
     private $paramPasswordOld = 'password';
     private $paramPasswordNew = 'new_password';
-    
 
     /**
      * Change the given user's password.
@@ -64,14 +63,14 @@ trait ChangePasswords
 
             //Transform to collection
             if ($request instanceof Request) {
-                $request = collect($request->all());
+                $payload = collect($request->all());
             } //End if
 
             //Get the password policy
             $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
-            $validator = Validator::make($request->all(), $this->rulesChangePassword(), [
+            $validator = Validator::make($payload->all(), $this->rulesChangePassword(), [
                 'regex' => 'Must contain atleast '.$this->passwordPolicy['message'],
             ]);
             if ($validator->fails()) {
@@ -82,7 +81,7 @@ trait ChangePasswords
             $client = app()->make(AwsCognitoClient::class);
 
             //Get User Data
-            $user = $client->getUser($request[$paramUsername]);
+            $user = $client->getUser($payload[$paramUsername]);
 
             if (empty($user)) {
                 throw new InvalidUserException(AwsCognitoException::COGNITO_USER_INVALID);
@@ -105,11 +104,10 @@ trait ChangePasswords
 
             return $response;
         } catch (Exception $e) {
-            Log::error($e->getMessage());
+            Log::error('ChangePasswords:reset:Exception');
             throw $e;
         } //Try Catch ends
     } //Function ends
-
 
     /**
      * If a user is being forced to set a new password for the first time follow that flow instead.
@@ -147,7 +145,6 @@ trait ChangePasswords
         } //End if
     } //Function ends
 
-
     /**
      * If a user is being forced to set a new password for the first time follow that flow instead.
      *
@@ -174,7 +171,6 @@ trait ChangePasswords
         return $client->changePassword($accessToken, $request[$passwordOld], $request[$passwordNew]);
     } //Function ends
 
-
     /**
      * Display the password reset view for the given token.
      *
@@ -192,7 +188,6 @@ trait ChangePasswords
                 $this->paramUsername => $request->email
             ]);
     } //Function ends
-
 
     /**
      * Get the password reset validation rules.
