@@ -30,6 +30,11 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 trait RefreshToken
 {
     /**
+     * Passed params
+     */
+    private $paramRefreshToken = 'refresh_token';
+
+    /**
      * Generate a new token.
      *
      * @param  \Illuminate\Http\Request|Illuminate\Support\Collection  $request
@@ -44,6 +49,9 @@ trait RefreshToken
         string $paramRefreshToken='refresh_token')
     {
         try {
+            //Assign params
+            $this->paramRefreshToken = $paramRefreshToken;
+
             //Validate request
             $validator = Validator::make($request->all(), $this->rules());
 
@@ -106,7 +114,7 @@ trait RefreshToken
     protected function rules()
     {
         return [
-            'refresh_token'    => 'required'
+            $this->paramRefreshToken => 'required'
         ];
     } //Function ends
 
