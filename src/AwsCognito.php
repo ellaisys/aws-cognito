@@ -22,7 +22,6 @@ use Ellaisys\Cognito\AwsCognitoManager;
 use Ellaisys\Cognito\Http\Parser\Parser;
 
 use Exception;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 
 class AwsCognito
@@ -137,7 +136,7 @@ class AwsCognito
         if ($this->token === null) {
             try {
                 $this->parseToken();
-            } catch (AwsCognitoException $e) {
+            } catch (InvalidTokenException $e) {
                 $this->token = null;
             } //try-catch ends
         } //End if
@@ -148,7 +147,7 @@ class AwsCognito
     /**
      * Parse the token from the request.
      *
-     * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
+     * @throws \Ellaisys\Cognito\Exceptions\InvalidTokenException
      *
      * @return \Ellaisys\Cognito\AwsCognito
      */
@@ -157,7 +156,7 @@ class AwsCognito
         //Parse the token
         $token = $this->parser->parseToken();
         if (empty($token)) {
-            throw new AwsCognitoException('The token could not be parsed from the request');
+            throw new InvalidTokenException('The token could not be parsed from the request');
         } //End if
 
         return $this->setToken($token);
@@ -174,7 +173,7 @@ class AwsCognito
     {
         $this->token = (new AwsCognitoToken($token));
         if (empty($this->token)) {
-            throw new AwsCognitoException('The token could not be validated.');
+            throw new InvalidTokenException('The token could not be validated.');
         } //End if
 
         return $this;

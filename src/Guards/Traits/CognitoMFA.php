@@ -111,7 +111,7 @@ trait CognitoMFA
             } //End if
         } catch(CognitoIdentityProviderException $e) {
             Log::error('CognitoMFA:associateSoftwareTokenMFA:CognitoIdentityProviderException');
-            throw new AwsCognitoException($e->getAwsErrorMessage(), 400, $e);
+            throw AwsCognitoException::create($e);
         } catch(Exception $e) {
             Log::error('CognitoMFA:associateSoftwareTokenMFA:Exception');
             throw $e;
@@ -144,7 +144,7 @@ trait CognitoMFA
             } //End if
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                throw new AwsCognitoException($e->getAwsErrorMessage(), $e);
+                throw AwsCognitoException::create($e);
             } //End if
             throw $e;
         } //Try-catch ends

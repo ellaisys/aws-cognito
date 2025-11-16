@@ -30,7 +30,6 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 trait RegisterMFA
 {
-
     /**
      * Activate the MFA for the authenticated user
      *
@@ -43,7 +42,6 @@ trait RegisterMFA
         return Auth::guard($guard)->associateSoftwareTokenMFA();
     } //Function ends
 
-
     /**
      * Verify the MFA for the authenticated user
      *
@@ -51,14 +49,14 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function verifyMFA(string $guard='web', string $userCode, string $deviceName='my device')
+    public function verifyMFA(string $guard='web',
+        string $userCode=null, string $deviceName='my device')
     {
         $response = Auth::guard($guard)->verifySoftwareTokenMFA($userCode, $deviceName);
         if (!empty($response) && ($response['Status']=='SUCCESS')) {
             return $this->toggleMFA($guard, true);
         } //End if
     } //Function ends
-
 
     /**
      * Deactivate the MFA for the authenticated user
@@ -72,10 +70,9 @@ trait RegisterMFA
         return $this->toggleMFA($guard, false);
     } //Function ends
 
-
     /**
      * Toggle the MFA for the authenticated user
-     * 
+     *
      * @param  string  $guard
      * @param  bool    $isEnable (optional)
      *
@@ -111,12 +108,11 @@ trait RegisterMFA
             } //End if
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                throw new AwsCognitoException('EXCEPTION_COGNITO', $e);
+                throw AwsCognitoException::create($e);
             } //End if
             throw $e;
         } //Try-catch ends
     } //Function ends
-
 
     /**
      * Enable the MFA for the mentioned user
@@ -126,11 +122,10 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function enableMFA(string $guard='web', string $username)
+    public function enableMFA(string $guard='web', string $username='email')
     {
         return $this->toggleAdminMFA($guard, $username, true);
     } //Function ends
-
 
     /**
      * Disable the MFA for the mentioned user
@@ -140,15 +135,14 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function disableMFA(string $guard='web', string $username)
+    public function disableMFA(string $guard='web', string $username='email')
     {
         return $this->toggleAdminMFA($guard, $username, false);
     } //Function ends
 
-
     /**
      * Toggle the MFA by the admin user
-     * 
+     *
      * @param  string  $guard
      * @param  string  $username
      * @param  bool    $isEnable (optional)
@@ -169,7 +163,7 @@ trait RegisterMFA
             return $client->setUserMFAPreferenceByAdmin($username, $isEnable);
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                throw new AwsCognitoException($e->getAwsErrorMessage(), $e);
+                throw AwsCognitoException::create($e);
             } //End if
 
             throw $e;

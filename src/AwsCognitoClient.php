@@ -494,7 +494,7 @@ class AwsCognitoClient
                 throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS, $e);
             } //End if
 
-            throw new AwsCognitoException($e->getAwsErrorMessage(), $e);
+            throw AwsCognitoException::create($e);
         } //Try-catch ends
 
         return $response;

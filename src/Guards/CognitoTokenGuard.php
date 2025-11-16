@@ -149,7 +149,7 @@ class CognitoTokenGuard extends TokenGuard
             } //End if
         } catch (CognitoIdentityProviderException $e) {
             Log::error('CognitoTokenGuard:attempt:CognitoIdentityProviderException:'.$e->getAwsErrorCode());
-            throw new AwsCognitoException('CognitoIdentityProviderException', 400, $e);
+            throw AwsCognitoException::create($e);
         } catch (Exception $e) {
             Log::error('CognitoTokenGuard:attempt:Exception:'. $e->getMessage());
             throw $e;

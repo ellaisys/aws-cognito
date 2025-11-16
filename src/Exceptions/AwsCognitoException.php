@@ -26,38 +26,49 @@ class AwsCognitoException extends HttpException
      * Create a new exception instance.
      *
      * @param  string  $message
-     * @param  int  $code
-     * @param  \Throwable  $previous
+     * @param  Throwable  $previous
      * @param  array  $headers
+     * @param  int  $code
      *
      * @return void
      */
     public function __construct(string $message="AWS Cognito Error",
-        int $code=0, Throwable $previous=null, array $headers=[])
+        Throwable $previous=null, array $headers=[], int $code=400)
     {
         if ($previous instanceof CognitoIdentityProviderException && (!empty($previous->getAwsErrorCode()))) {
-            //Set proper route
-            switch ($previous->getAwsErrorCode()) {
-                case 'PasswordResetRequiredException':
-                    $errorCode = self::COGNITO_AUTH_USER_RESET_PASS;
-                    break;
-
-                case 'NotAuthorizedException':
-                    $errorCode = self::COGNITO_AUTH_USER_UNAUTHORIZED;
-                    break;
-
-                case 'UsernameExistsException':
-                    $errorCode = self::COGNITO_AUTH_USERNAME_EXITS;
-                    break;
-                
-                default:
-                    $errorCode = $previous->getAwsErrorCode();
-                    break;
-            } //End switch
-            $message = $errorCode;
+            $message = $this->processAwsCognitoError($previous);
         } //End if
 
         parent::__construct(400, $message, $previous, $headers, $code);
     }
+
+    /**
+     * Static constructor / factory
+     */
+    public static function create(CognitoIdentityProviderException $e) {
+        return new self(self::processAwsCognitoError($e), $e);
+    }
+
+    private function processAwsCognitoError(CognitoIdentityProviderException $e) : string {
+        //Set proper route
+        switch ($e->getAwsErrorCode()) {
+            case 'PasswordResetRequiredException':
+                $errorCode = self::COGNITO_AUTH_USER_RESET_PASS;
+                break;
+
+            case 'NotAuthorizedException':
+                $errorCode = self::COGNITO_AUTH_USER_UNAUTHORIZED;
+                break;
+
+            case 'UsernameExistsException':
+                $errorCode = self::COGNITO_AUTH_USERNAME_EXITS;
+                break;
+            
+            default:
+                $errorCode = $e->getAwsErrorCode();
+                break;
+        } //End switch
+        return $errorCode;
+    } //Function ends
     
 } //Class ends
