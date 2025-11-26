@@ -64,7 +64,8 @@ trait ConfirmsPasswords
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function confirm(Request $request, string $guard='web',
+    public function confirm(
+        Request $request, string $guard='web',
         string $paramUsername='email',
         string $passwordOld='password', string $passwordNew='new_password')
     {
@@ -111,7 +112,10 @@ trait ConfirmsPasswords
             //Action based on User Status
             switch ($this->authData['UserStatus']) {
                 case AwsCognitoClient::FORCE_CHANGE_PASSWORD:
-                    $returnValue = $this->forceNewPassword($client, $request, $paramUsername, $passwordOld, $passwordNew);
+                    $returnValue = $this->forceNewPassword(
+                        $client, $guard, $request,
+                        $paramUsername, $passwordOld, $passwordNew
+                    );
                     break;
 
                 case AwsCognitoClient::RESET_REQUIRED_PASSWORD:
@@ -137,6 +141,51 @@ trait ConfirmsPasswords
     } //Function ends
 
     /**
+     * If a user is being forced to set a new password for the first time follow that flow instead.
+     *
+     * @param  \Ellaisys\Cognito\AwsCognitoClient  $client
+     * @param  \Illuminate\Support\Collection  $request
+     * @param  string  $paramUsername
+     * @param  string  $passwordOld
+     * @param  string  $passwordNew
+     *
+     * @return string
+     */
+    private function forceNewPassword(
+        AwsCognitoClient $client, string $guard,
+        Collection $payload, string $paramUsername,
+        string $passwordOld, string $passwordNew)
+    {
+        //Authenticate user
+        $login = $client->authenticate(
+            $payload[$paramUsername],
+            $payload[$passwordOld]
+        );
+
+        //Confirm new password for the user
+        $response = $client->confirmPassword(
+            $payload[$paramUsername],
+            $payload[$passwordNew],
+            $login->get('Session')
+        );
+        if ($response === Password::PASSWORD_RESET) {
+            //Update the user attributes
+            $responseAttributesUpdate = $client->setUserAttributes(
+                $payload[$paramUsername], [
+                'email_verified' => 'true',
+            ]);
+
+            if ($responseAttributesUpdate) {
+                return $response;
+            } else {
+                throw new AwsCognitoException(AwsCognitoException::COGNITO_RESET_PWD_FAILED);
+            } //End if
+        } else {
+            throw new AwsCognitoException(AwsCognitoException::COGNITO_RESET_PWD_REQ_INVALID);
+        } //End if
+    } //Function ends
+
+    /**
      * Method to change the password for the currently signed-in user.
      *
      * @param  \Ellaisys\Cognito\AwsCognitoClient  $client
@@ -147,7 +196,8 @@ trait ConfirmsPasswords
      *
      * @return string
      */
-    private function changePassword(AwsCognitoClient $client, string $guard,
+    private function changePassword(
+        AwsCognitoClient $client, string $guard,
         Collection $payload, string $passwordOld, string $passwordNew)
     {
         try
