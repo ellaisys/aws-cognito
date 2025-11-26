@@ -104,13 +104,7 @@ class LoginController extends Controller
             //Rise Post Auth Failed Event
             $this->callPostAuthErrorEvent($request, $e);
 
-            if ($isJsonResponse) {
-                throw $e;
-            } //End if
-
-            return response()->back()
-                ->withInput($request)
-                ->withErrors(['error' => $e->getMessage()]);
+            throw $e;
         } //Try-catch ends
     } //Function ends
 

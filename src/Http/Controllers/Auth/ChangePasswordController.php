@@ -70,18 +70,22 @@ class ChangePasswordController extends Controller
             ]);
             $validator->validate();
 
+            //Change password
+            $response = $this->reset($request, $guard);
+
             //Check the password
-            if ($this->reset($request)) {
+            if ($isJsonResponse) {
+                $returnValue = $this->response->success($response);
+            } else {
                 //Logout on success
                 auth()->guard()->logout(true);
                 $request->session()->invalidate();
 
-                return redirect(route('login'))->with('success', true);
-            } else {
-				return redirect()->back()
-					->with('status', 'error')
-					->with('message', 'Password updated failed');
+                $returnValue = redirect(route('login'))
+                    ->with('success', true);
 			} //End if
+
+            return $returnValue;
         } catch(Exception $e) {
             Log::error('SendsPasswordResetEmails:sendResetLinkEmail:Exception');
             throw $e;

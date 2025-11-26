@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -18,45 +18,39 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Ellaisys\Cognito\Validators\AwsCognitoTokenValidator;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\InvalidUserException;
 
 class AwsCognitoClaim
 {
-
     /**
      * @var string
      */
     public $token;
-
 
     /**
      * @var object
      */
     public $data;
 
-
     /**
      * @var string
      */
     public $username;
-
 
     /**
      * @var \Illuminate\Contracts\Auth\Authenticatable
      */
     public $user;
 
-
     /**
      * @var \mixed
      */
     public $sub;
 
-
     /**
      * @var object
      */
     public $tokenDecode;
-
 
     /**
      * Create a new JSON Web Token.
@@ -69,7 +63,7 @@ class AwsCognitoClaim
         try {
             $authResult = $result['AuthenticationResult'];
             if (!is_array($authResult)) {
-                throw new Exception('Malformed AWS Authentication Result.', 400);
+                throw new InvalidUserException('Malformed AWS Authentication Result.');
             } //End if
 
             //Create token object
@@ -91,7 +85,6 @@ class AwsCognitoClaim
         } //Try-catch ends
     } //Function ends
 
-
     /**
      * Get the token.
      *
@@ -101,7 +94,6 @@ class AwsCognitoClaim
     {
         return $this->token;
     } //Function ends
-
 
     /**
      * Get the data.
@@ -113,7 +105,6 @@ class AwsCognitoClaim
         return $this->data;
     } //Function ends
 
-
     /**
      * Get the User.
      *
@@ -124,7 +115,6 @@ class AwsCognitoClaim
         return $this->user;
     } //Function ends
 
-
     /**
      * Set the User.
      *
@@ -134,7 +124,6 @@ class AwsCognitoClaim
         $this->user = $user;
     } //Function ends
 
-    
     /**
      * Get the Username.
      *
@@ -144,7 +133,6 @@ class AwsCognitoClaim
     {
         return $this->username;
     } //Function ends
-
 
     /**
      * Get the Sub Data.
@@ -156,7 +144,6 @@ class AwsCognitoClaim
         return $this->sub;
     } //Function ends
 
-
     /**
      * Get the Decoded Token Data.
      *
@@ -166,7 +153,6 @@ class AwsCognitoClaim
     {
         return $this->tokenDecode;
     } //Function ends
-
 
     /**
      * Get the token when casting to string.

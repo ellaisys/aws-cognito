@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -26,14 +26,12 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 abstract class BaseMiddleware //extends Middleware
 {
-    
     /**
      * The Cognito Authenticator.
      *
      * @var \Ellaisys\Cognito\AwsCognito
      */
     protected $cognito;
-
 
     /**
      * Create a new BaseMiddleware instance.
@@ -47,13 +45,12 @@ abstract class BaseMiddleware //extends Middleware
         $this->cognito = $cognito;
     }
 
-
     /**
      * Check the request for the presence of a token.
      *
      * @param  \Illuminate\Http\Request  $request
      *
-     * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
+     * @throws \Ellaisys\Cognito\Exceptions\NoTokenException
      *
      * @return void
      */
@@ -64,6 +61,22 @@ abstract class BaseMiddleware //extends Middleware
         } //End if
     } //Function ends
 
+    /**
+     * Check the request for the presence of a cognito user.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException
+     *
+     * @return void
+     */
+    public function checkForUser(Request $request)
+    {
+        $cognitoUser = $this->cognito->setRequest($request)->parseToken()->authenticate();
+        if (empty($cognitoUser)) {
+            throw new UnauthorizedHttpException('aws-cognito', 'User not found');
+        } //End if
+    } //Function ends
 
     /**
      * Attempt to authenticate a user via the token in the request.
@@ -77,30 +90,29 @@ abstract class BaseMiddleware //extends Middleware
     public function authenticate(Request $request, string $guard)
     {
         try {
+            // Validate the token
+            $this->checkForToken($request);
+
+            // Validate Cognito User
+            $this->checkForUser($request);
+            
             switch ($guard) {
                 case 'web':
                     $user = $request->user();
                     if (empty($user)) {
-                        Log::info('BaseMiddleware:authenticate', ['guard' => $guard, 'user' => $user]);
                         throw new UnauthorizedHttpException('aws-cognito', 'User not found');
                     } //End if
                     break;
                 
                 case 'api':
                 default:
-                    $this->checkForToken($request);
-
-                    if (! $this->cognito->parseToken()->authenticate()) {
-                        throw new UnauthorizedHttpException('aws-cognito', 'User not found');
-                    } //End if
                     break;
             } //Switch ends
         } catch (Exception $e) {
-            Log::error('BaseMiddleware:authenticate:Exception');
+            Log::error('BaseMiddleware:authenticate:Exception', ['$e' => $e]);
             throw $e;
         } //Try-catch ends
     } //Function ends
-
 
     /**
      * Set the authentication header.

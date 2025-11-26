@@ -9,6 +9,7 @@ use Ellaisys\Cognito\Http\Controllers\Auth\MFAController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
+use Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
@@ -51,6 +52,9 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
 
             //Route to invite a new user
             Route::post('/invite', [RegisterController::class, 'actionInvite']);
+
+            //Change password
+            Route::post('/changepassword', [ConfirmPasswordController::class, 'change']);
 
             //Route group for MFA
             Route::group(['prefix' => 'mfa', 'controller' => MFAController::class], function() {

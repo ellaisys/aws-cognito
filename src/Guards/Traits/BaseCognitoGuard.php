@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,6 +13,7 @@ namespace Ellaisys\Cognito\Guards\Traits;
 
 use Aws\Result as AwsResult;
 
+use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -23,9 +24,12 @@ use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClientInterface;
 use Ellaisys\Cognito\AwsCognitoClientManager;
 
+use Ellaisys\Cognito\Http\Parser\ClaimSession;
+
 use Exception;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
+use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Ellaisys\Cognito\Validators\AwsCognitoTokenValidator;
 
 /**
@@ -33,7 +37,6 @@ use Ellaisys\Cognito\Validators\AwsCognitoTokenValidator;
  */
 trait BaseCognitoGuard
 {
-
     /**
      * Get the AWS Cognito object
      *
@@ -43,6 +46,63 @@ trait BaseCognitoGuard
         return $this->cognito;
     } //Function ends
 
+    /**
+     * Set the token.
+     *
+     * @return $this
+     */
+    public function setToken()
+    {
+        $this->cognito->setClaim($this->claim)->storeToken();
+
+        return $this;
+    } //Function ends
+
+    /**
+     * Get the claim data.
+     *
+     * @return $claim
+     */
+    public function getClaim()
+    {
+        if (empty($this->claim)) {
+            $callingClass = static::class;
+            if (Str::contains($callingClass, 'CognitoSessionGuard')) {
+                //Get authentication token from session
+                $session = $this->getSession();
+
+                //Get the claim from session
+                return $session->has(ClaimSession::SESSION_KEY)?
+                    $session->get(ClaimSession::SESSION_KEY):
+                    throw new InvalidTokenException();
+            } elseif (Str::contains($callingClass, 'CognitoTokenGuard')) {
+                Log::info('Token');
+            } else {
+                throw new InvalidTokenException();
+            } //End if
+        } //End if
+    } //Function ends
+
+    /**
+     * Get the challenged claim.
+     *
+     * @return $claim
+     */
+    public function getChallengeData(string $key)
+    {
+        return $this->cognito->getChallengeData($key);
+    } //Function ends
+
+    /**
+     * Save the challenged claim.
+     *
+     * @return $this
+     */
+    public function setChallengeData(string $key)
+    {
+        $this->cognito->setChallengeData($key, $this->challengeData);
+        return $this;
+    } //Function ends
 
     /**
      * Get the User Information from AWS Cognito
@@ -52,7 +112,6 @@ trait BaseCognitoGuard
     public function getRemoteUserData(string $username) {
         return $this->client->getUser($username);
     } //Function ends
-
 
     /**
      * Set the User Information into the local DB
@@ -92,7 +151,6 @@ trait BaseCognitoGuard
         return $this->client->getUser($username);
     } //Function ends
 
-
     /**
      * Validate the user credentials with AWS Cognito
      *
@@ -126,7 +184,6 @@ trait BaseCognitoGuard
 
         return $result;
     } //Function ends
-
 
     /**
      * handle Cognito Challenge
@@ -169,7 +226,6 @@ trait BaseCognitoGuard
 
         return $returnValue;
     } //Function ends
-
 
     /**
      * Build the payload array.
@@ -218,7 +274,6 @@ trait BaseCognitoGuard
         return collect($payload);
     } //Function ends
 
-
     /**
      * Validate the user credentials with Local Data Store
      *
@@ -255,7 +310,6 @@ trait BaseCognitoGuard
             throw $e;
         } //End try-catch
     } //Function ends
-
 
     /**
      * Build the payload for Local DB
@@ -297,7 +351,6 @@ trait BaseCognitoGuard
         return collect($payload);
     } //Function ends
 
-    
     /**
      * Create a local user if one does not exist.
      *

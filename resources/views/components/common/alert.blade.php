@@ -6,7 +6,7 @@
 
 @if ($errors->any())
     <div class="alert alert-danger">
-        @if (count($errors) > 1)
+        @if (!$errors->has('error'))
         <p>You have {{ count($errors) }} error(s):</p>
         <ul>
             @foreach ($errors->all() as $error)

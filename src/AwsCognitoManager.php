@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -88,7 +88,7 @@ class AwsCognitoManager
      *
      * @return \boolean
      */
-    public function decode()
+    public function decode() : AwsCognitoClaim
     {
         return ($this->claim)?$this->claim:null;
     } //Function ends
@@ -158,7 +158,7 @@ class AwsCognitoManager
     public function fetchData(string $key)
     {
         $data = $this->provider->get($key);
-        return $data?json_decode($data, true):null;
+        return $data?json_decode($data):null;
     } //Function ends
 
 } //Class ends

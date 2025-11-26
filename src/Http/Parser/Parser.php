@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -117,6 +117,7 @@ class Parser
     public function hasToken(): bool
     {
         $response = $this->parseToken();
+        log::info(['$response' => $response]);
         return $response != null;
     } //Function ends
 

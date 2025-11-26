@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -30,6 +30,11 @@ use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 trait ChangePasswords
 {
     /**
+     * private variable for Cognito User
+     */
+    private $cognitoUser = null;
+
+    /**
      * private variable for password policy
      */
     private $passwordPolicy = null;
@@ -51,7 +56,7 @@ trait ChangePasswords
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function reset(Request $request,
+    public function reset(Request $request, string $guard = 'web',
         string $paramUsername='email',
         string $passwordOld='password', string $passwordNew='new_password')
     {
@@ -121,7 +126,7 @@ trait ChangePasswords
      * @return string
      */
     private function forceNewPassword(
-        AwsCognitoClient $client, $request, string $paramUsername,
+        AwsCognitoClient $client, Request $request, string $paramUsername,
         string $passwordOld, string $passwordNew)
     {
         //Authenticate user

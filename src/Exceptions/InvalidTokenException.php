@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class InvalidTokenException extends Exception
+class InvalidTokenException extends HttpException
 {
 
     public function __construct(string $message = 'Invalid Authentication Token',

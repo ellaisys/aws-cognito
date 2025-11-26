@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -202,39 +202,6 @@ class CognitoTokenGuard extends TokenGuard
     } //Fucntion ends
 
     /**
-     * Set the token.
-     *
-     * @return $this
-     */
-    public function setToken()
-    {
-        $this->cognito->setClaim($this->claim)->storeToken();
-
-        return $this;
-    } //Function ends
-
-    /**
-     * Get the challenged claim.
-     *
-     * @return $this
-     */
-    public function getChallengeData(string $key)
-    {
-        return $this->cognito->getChallengeData($key);
-    } //Function ends
-
-    /**
-     * Save the challenged claim.
-     *
-     * @return $this
-     */
-    public function setChallengeData(string $key)
-    {
-        $this->cognito->setChallengeData($key, $this->challengeData);
-        return $this;
-    } //Function ends
-
-    /**
      * Logout the user, thus invalidating the token.
      *
      * @param  bool  $forceForever
@@ -323,22 +290,20 @@ class CognitoTokenGuard extends TokenGuard
             return null;
         } //End if
 
-        //Get model from the Token Provider and user details
-        $user = ($this->provider->getModel())::where(
-            config('cognito.user_subject_uuid', 'sub'), $claim['sub']
-            )->first();
-
         //Get user and return
-        return $this->user = $user;
+        return $this->user = $this->getUser($claim['sub']);
     } //Function ends
 
     /**
      * Get the user from the provider.
+     *
      * @return User
      */
-    public function getUser (string $identifier)
+    public function getUser (string $identifierValue, string $identifierKey='sub')
     {
-        return $this->provider->retrieveById($identifier);
+        return ($this->provider->getModel())::where(
+            config('cognito.user_subject_uuid', $identifierKey), $identifierValue
+            )->first();
     } //Function ends
 
     /**

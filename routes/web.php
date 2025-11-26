@@ -9,6 +9,7 @@ use Ellaisys\Cognito\Http\Controllers\Auth\MFAController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
+use Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
@@ -57,7 +58,8 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
         });
 
         Route::group(['prefix' => 'user'], function() {
-            Route::get('/changepassword', function () { return view('cognito::auth.change'); })->name('form.change.password');
+            Route::get('/changepassword', function () { return view('cognito::auth.passwords.change'); })->name('form.change.password');
+            Route::post('/changepassword', [ConfirmPasswordController::class, 'change'])->name('action.change.password');
 
             Route::group(['prefix' => 'mfa', 'controller' => MFAController::class], function() {
                 Route::get('/activate', 'activate')->name('form.user.mfa.activate');

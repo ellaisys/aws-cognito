@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -276,14 +276,20 @@ class AwsCognito
      */
     public function authenticate()
     {
-        $claim = $this->manager->fetch($this->token->get())->decode();
-        $this->claim = $claim;
+        try
+        {
+            $claim = $this->manager->fetch($this->token->get())->decode();
+            $this->claim = $claim;
 
-        if (empty($this->claim)) {
-            throw new InvalidTokenException();
-        } //End if
+            if (empty($this->claim)) {
+                throw new InvalidTokenException();
+            } //End if
 
-        return $this; //->user();
+            return $this->user();
+        } catch (Exception $e) {
+            Log::error('AwsCognito:authenticate:Exception');
+            throw $e;
+        }
     } //Function ends
 
     /**

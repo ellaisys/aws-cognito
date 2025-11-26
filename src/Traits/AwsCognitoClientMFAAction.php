@@ -20,14 +20,13 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
  */
 trait AwsCognitoClientMFAAction
 {
-
     /**
      * Generate the Software MFA Token for the user
      * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AssociateSoftwareToken.html
      *
      * @param string $accessToken (optional)
      * @param string $session (optional)
-     * 
+     *
      * @return mixed
      */
     public function associateSoftwareTokenMFA(string $accessToken=null, string $session=null)
@@ -49,12 +48,12 @@ trait AwsCognitoClientMFAAction
 
             $response = $this->client->associateSoftwareToken($payload);
         } catch (Exception $e) {
+            Log::error('AwsCognitoClientMFAAction:associateSoftwareTokenMFA:Exception');
             throw $e;
         } //Try-catch ends
 
         return $response;
     } //Function ends
-
 
     /**
      * Verify the user code for the Software MFA Token
@@ -64,7 +63,7 @@ trait AwsCognitoClientMFAAction
      * @param string $accessToken (optional)
      * @param string $session (optional)
      * @param string $deviceName (optional)
-     * 
+     *
      * @return mixed
      */
     public function verifySoftwareTokenMFA(string $userCode, string $accessToken=null, string $session=null, string $deviceName=null)
@@ -89,12 +88,12 @@ trait AwsCognitoClientMFAAction
 
             $response = $this->client->verifySoftwareToken($payload);
         } catch (Exception $e) {
+            Log::error('AwsCognitoClientMFAAction:verifySoftwareTokenMFA:Exception');
             throw $e;
         } //Try-catch ends
 
         return $response;
     } //Function ends
-
 
     /**
      * Set user MFA preference setting by self/user.
@@ -115,19 +114,19 @@ trait AwsCognitoClientMFAAction
 
             $response = $this->client->setUserMFAPreference($payload);
         } catch (Exception $e) {
+            Log::error('AwsCognitoClientMFAAction:setUserMFAPreference:Exception');
             throw $e;
         } //Try-catch ends
 
         return $response;
     } //Function ends
 
-
     /**
      * Set user MFA preference setting by admin.
      * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminSetUserMFAPreference.html
      *
      * @param string $username
-     * 
+     *
      * @return mixed
      */
     public function setUserMFAPreferenceByAdmin(string $username, bool $isEnable=false)
@@ -142,12 +141,12 @@ trait AwsCognitoClientMFAAction
 
             $response = $this->client->adminSetUserMFAPreference($payload);
         } catch (Exception $e) {
+            Log::error('AwsCognitoClientMFAAction:setUserMFAPreferenceByAdmin:Exception');
             throw $e;
         } //Try-catch ends
 
         return $response;
     } //Function ends
-
 
     /**
      * Responds to MFA challenge
@@ -156,7 +155,7 @@ trait AwsCognitoClientMFAAction
      * @param string $session
      * @param string $challengeValue
      * @param string $username
-     *  
+     *
      * @return \Aws\Result|false
      */
     public function authMFAChallenge(string $challengeName, string $session, string $challengeValue, string $username)
@@ -168,12 +167,12 @@ trait AwsCognitoClientMFAAction
                 throw new HttpException(400, 'ERROR_UNSUPPORTED_MFA_CHALLENGE');
             } //End if
         } catch (Exception $e) {
+            Log::error('AwsCognitoClientMFAAction:authMFAChallenge:Exception');
             throw $e;
         } //Try-catch ends
 
         return $response;
     } //Function ends
-
 
     /**
      * Private method for Setting MFA preference objects
@@ -208,6 +207,7 @@ trait AwsCognitoClientMFAAction
 
             $response = $payload;
         } catch (Exception $e) {
+            Log::error('AwsCognitoClientMFAAction:setMFAPreference:Exception');
             throw $e;
         } //Try-catch ends
 
