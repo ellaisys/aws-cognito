@@ -88,7 +88,7 @@ class AwsCognitoManager
      *
      * @return \boolean
      */
-    public function decode() : AwsCognitoClaim
+    public function decode()
     {
         return ($this->claim)?$this->claim:null;
     } //Function ends
@@ -158,7 +158,7 @@ class AwsCognitoManager
     public function fetchData(string $key)
     {
         $data = $this->provider->get($key);
-        return $data?json_decode($data):null;
+        return $data?json_decode($data, true):null;
     } //Function ends
 
 } //Class ends

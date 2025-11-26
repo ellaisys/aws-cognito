@@ -253,7 +253,7 @@ class CognitoTokenGuard extends TokenGuard
     } //Function ends
 
     /**
-     * Get the authenticated user.
+     * Get the authenticated DB user.
      *
      * @return \Illuminate\Contracts\Auth\Authenticatable
      */
@@ -275,17 +275,8 @@ class CognitoTokenGuard extends TokenGuard
      */
     public function getTokenForRequest ()
     {
-        //Check for request having token
-        if (! $this->cognito->parser()->setRequest($this->request)->hasToken()) {
-            return null;
-        } //End if
-
-        if (! $this->cognito->parseToken()->authenticate()) {
-            throw new NoLocalUserException();
-        } //End if
-
         //Get claim
-        $claim = $this->cognito->getClaim();
+        $claim = $this->getClaim();
         if (empty($claim)) {
             return null;
         } //End if

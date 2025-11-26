@@ -42,15 +42,15 @@ class ConfirmPasswordController extends Controller
      */
     protected $redirectTo = 'cognito.form.login';
 
-	/**
-	 * Action to update the user password
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 */
+    /**
+     * Action to update the user password
+     *
+     * @param  \Illuminate\Http\Request  $request
+     */
     public function change(Request $request)
     {
-		try
-		{
+        try
+        {
             //Initialize parameters
             $returnValue = null;
             $guard = 'web';
@@ -73,18 +73,21 @@ class ConfirmPasswordController extends Controller
             //Change password
             $response = $this->confirm($request, $guard);
 
+            //Logout on success
+            auth()->guard($guard)->logout(true);
+
             //Check the password
             if ($isJsonResponse) {
                 $returnValue = $this->response->success($response);
             } else {
-                //Logout on success
-                auth()->guard()->logout(true);
+                //Invalidate session
                 $request->session()->invalidate();
 
+                //Redirect to the login or homepage
                 $returnValue = redirect(route($this->redirectTo))
                     ->with('success', true)
                     ->with('message', 'Password successfully changed.');
-			} //End if
+            } //End if
 
             return $returnValue;
         } catch(Exception $e) {

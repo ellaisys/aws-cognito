@@ -65,22 +65,21 @@ trait BaseCognitoGuard
      */
     public function getClaim()
     {
-        if (empty($this->claim)) {
-            $callingClass = static::class;
-            if (Str::contains($callingClass, 'CognitoSessionGuard')) {
-                //Get authentication token from session
-                $session = $this->getSession();
-
-                //Get the claim from session
-                return $session->has(ClaimSession::SESSION_KEY)?
-                    $session->get(ClaimSession::SESSION_KEY):
-                    throw new InvalidTokenException();
-            } elseif (Str::contains($callingClass, 'CognitoTokenGuard')) {
-                Log::info('Token');
-            } else {
-                throw new InvalidTokenException();
-            } //End if
+        //Check for request having token
+        if (! $this->cognito->parser()->setRequest($this->request)->hasToken()) {
+            return null;
         } //End if
+
+        if (! $this->cognito->parseToken()->authenticate()) {
+            throw new NoLocalUserException();
+        } //End if
+
+        //Get claim
+        $claim = $this->cognito->getClaim();
+        if (empty($claim)) {
+            throw new InvalidTokenException();
+        } //End if
+        return $claim;
     } //Function ends
 
     /**

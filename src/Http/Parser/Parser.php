@@ -117,7 +117,6 @@ class Parser
     public function hasToken(): bool
     {
         $response = $this->parseToken();
-        log::info(['$response' => $response]);
         return $response != null;
     } //Function ends
 

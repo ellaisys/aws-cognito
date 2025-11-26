@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 /**
@@ -38,6 +39,8 @@ class JsonResponseService
             //convert model to array
             if (is_object($resource) && method_exists($resource, 'toArray')) {
                 $resource = $resource->toArray();
+            } else {
+                $resource = [];
             } //End if
         } //End if
 
@@ -132,7 +135,7 @@ class JsonResponseService
                 ))->additional($merged);
         }
 
-        throw new Exception('Resource must be an array or an instance of JsonResource');
+        throw new HttpException('Resource must be an array or an instance of JsonResource');
     } //Function end
 
 } //Class end

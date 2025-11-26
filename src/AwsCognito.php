@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
@@ -285,7 +286,7 @@ class AwsCognito
                 throw new InvalidTokenException();
             } //End if
 
-            return $this->user();
+            return $this->claim['user'];
         } catch (Exception $e) {
             Log::error('AwsCognito:authenticate:Exception');
             throw $e;
@@ -316,7 +317,11 @@ class AwsCognito
             throw new InvalidTokenException();
         } //End if
 
-        return $this->claim->getUser();
+        if ($this->claim instanceof AwsCognitoClaim) {
+            return $this->claim->getUser();
+        } else {
+            return $this->toUser();
+        }
     } //Function ends
 
     /**
