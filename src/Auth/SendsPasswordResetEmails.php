@@ -35,7 +35,7 @@ trait SendsPasswordResetEmails
      * 
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function sendResetLinkEmail(\Illuminate\Http\Request $request, string $usernameKey='email', bool $resetTypeCode=true, bool $isJsonResponse=false, array $attributes=null)
+    public function sendResetLinkEmail(\Illuminate\Http\Request $request, string $usernameKey = 'email', bool $resetTypeCode = true, bool $isJsonResponse = false, ?array $attributes = null)
     {
         try {        
             //Cognito reset link
@@ -75,7 +75,7 @@ trait SendsPasswordResetEmails
      * @param  \string  $username
      * @return \bool
      */
-    public function sendCognitoResetLinkEmail(string $username, array $clientMetadata=null)
+    public function sendCognitoResetLinkEmail(string $username, ?array $clientMetadata = null)
     {
         $response = null; $returnValue = false;
 

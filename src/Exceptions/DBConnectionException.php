@@ -14,7 +14,7 @@ class DBConnectionException extends PDOException
      *
      * @return void
      */
-    public function report($message="Database Connection Error", $code=null, Throwable $previous=null)
+    public function report($message = "Database Connection Error", $code = null, ?Throwable $previous = null)
     {
         parent::report($message, [], $code, $previous);
     }
