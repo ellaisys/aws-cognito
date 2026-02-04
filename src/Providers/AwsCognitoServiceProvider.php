@@ -95,7 +95,6 @@ class AwsCognitoServiceProvider extends ServiceProvider
     public function setLaravelVersion(): void
     {
         $laravelVersion = Application::VERSION;
-        Log::debug('Laravel Version: '.$laravelVersion);
         $this->laravelVersion = $laravelVersion;
     } //Function ends
 
