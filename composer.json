@@ -8,13 +8,13 @@
     "authors": [
         {
             "name": "EllaiSys",
-            "email": "support@ellaisys.com",
+            "email": "ellaisys@gmail.com",
             "role": "owner",
             "homepage": "https://ellaisys.github.io/"
         }
     ],
     "support": {
-        "email": "support@ellaisys.com"
+        "email": "ellaisys@gmail.com"
     },
     "prefer-stable": true,
     "minimum-stability": "stable",

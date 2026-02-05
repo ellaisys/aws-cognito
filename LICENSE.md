@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) Ellai Information Systems Pvt Ltd, India <support@ellaisys.com>
+Copyright (c) Ellai Information Systems Pvt Ltd, India <ellaisys@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
