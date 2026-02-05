@@ -53,7 +53,7 @@ trait RegistersUsers
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function invite(Request $request, array $clientMetadata=null)
+    public function invite(Request $request, ?array $clientMetadata = null)
     {
         $this->registrationType = 'invite';
         return $this->register($request, $clientMetadata, true);
@@ -66,8 +66,8 @@ trait RegistersUsers
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function register(Request $request, array $clientMetadata=null,
-        bool $ignoreConfigRegistrationType=false)
+    public function register(Request $request, ?array $clientMetadata = null,
+        bool $ignoreConfigRegistrationType = false)
     {
         $cognitoRegistered=false;
         $user = [];
@@ -153,7 +153,7 @@ trait RegistersUsers
      * @return \Illuminate\Http\Response
      * @throws InvalidUserFieldException
      */
-    public function createCognitoUser(Collection $request, array $clientMetadata=null, string $groupname=null)
+    public function createCognitoUser(Collection $request, ?array $clientMetadata = null, ?string $groupname = null)
     {
         //Initialize Cognito Attribute array
         $attributes = [];

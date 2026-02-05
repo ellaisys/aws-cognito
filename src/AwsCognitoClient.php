@@ -247,7 +247,7 @@ class AwsCognitoClient
      * @return bool
      */
     public function register($username, $password, array $attributes = [],
-        array $clientMetadata=null, string $groupname=null)
+        ?array $clientMetadata = null, ?string $groupname = null)
     {
         try {
             //Build payload
@@ -291,7 +291,7 @@ class AwsCognitoClient
      * @param array $clientMetadata (optional)
      * @return string
      */
-    public function sendResetLink($username, array $clientMetadata=null)
+    public function sendResetLink($username, ?array $clientMetadata = null)
     {
         try {
             //Build payload
@@ -431,9 +431,9 @@ class AwsCognitoClient
      * @param string $messageAction (optional)
      * @return bool $groupname (optional)
      */
-    public function inviteUser(string $username, string $password=null, array $attributes = [],
-        array $clientMetadata=null, string $messageAction=null,
-        string $groupname=null)
+    public function inviteUser(string $username, ?string $password = null, array $attributes = [],
+        ?array $clientMetadata = null, ?string $messageAction = null,
+        ?string $groupname = null)
     {
         //Validate phone for MFA
         if (config('cognito.mfa_setup')=="MFA_ENABLED") {
@@ -877,7 +877,7 @@ class AwsCognitoClient
      * @param array $attributes
      * @return array $clientMetadata (optional)
      */
-    protected function buildClientMetadata(array $attributes, array $clientMetadata=null)
+    protected function buildClientMetadata(array $attributes, ?array $clientMetadata = null)
     {
         if (!empty($clientMetadata)) {
             $userAttributes = array_merge($attributes, $clientMetadata);

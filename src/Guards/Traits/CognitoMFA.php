@@ -82,7 +82,7 @@ trait CognitoMFA
      *
      * @return array
      */
-    public function associateSoftwareTokenMFA(string $appName=null, string $userParamToAddToQR='email') {
+    public function associateSoftwareTokenMFA(?string $appName = null, string $userParamToAddToQR = 'email') {
         try {
             //Get Access Token
             $accessToken = $this->cognito->getToken();
@@ -119,7 +119,7 @@ trait CognitoMFA
      *
      * @return array
      */
-    public function verifySoftwareTokenMFA(string $userCode, string $deviceName=null) {
+    public function verifySoftwareTokenMFA(string $userCode, ?string $deviceName = null) {
         try {
             //Get Access Token
             $accessToken = $this->cognito->getToken();
