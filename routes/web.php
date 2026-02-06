@@ -26,20 +26,20 @@ use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
 */
 Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
     //Route to register a new user
-    Route::get('/register',  function () { return view('cognito::auth.register'); })->name('form.register');
+    Route::get('/register',  function () { return view('cognito::pages.auth.register'); })->name('form.register');
     Route::post('/register', [RegisterController::class, 'register'])->name('form.register.submit');
 
     //Forgot password
     Route::group(['prefix' => 'password'], function() {
-        Route::get('/forgot',  function () { return view('cognito::auth.passwords.email'); })->name('form.password.forgot');
+        Route::get('/forgot',  function () { return view('cognito::pages.auth.passwords.email'); })->name('form.password.forgot');
         Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLink'])->name('action.password.forgot');
-        Route::get('/reset',  function () { return view('cognito::auth.passwords.reset'); })->name('form.password.reset');
+        Route::get('/reset',  function () { return view('cognito::pages.auth.passwords.reset'); })->name('form.password.reset');
         Route::post('/reset', [ResetPasswordController::class, 'reset'])->name('action.password.reset');
     });
 
     //Route group login
     Route::group(['prefix' => 'login'], function() {
-        Route::get('/', function () { return view('cognito::auth.login'); })->name('form.login');
+        Route::get('/', function () { return view('cognito::pages.auth.login'); })->name('form.login');
         Route::post('/', [LoginController::class, 'login'])->name('form.login.submit');
         Route::post('/mfa', [LoginController::class, 'validateMFA'])->name('form.mfa.code.submit');
     });
@@ -58,7 +58,7 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
         });
 
         Route::group(['prefix' => 'user'], function() {
-            Route::get('/changepassword', function () { return view('cognito::auth.passwords.change'); })->name('form.change.password');
+            Route::get('/changepassword', function () { return view('cognito::pages.auth.passwords.change'); })->name('form.change.password');
             Route::post('/changepassword', [ConfirmPasswordController::class, 'change'])->name('action.change.password');
 
             Route::group(['prefix' => 'mfa', 'controller' => MFAController::class], function() {

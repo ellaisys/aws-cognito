@@ -29,23 +29,23 @@
     <div class="dropdown-divider"></div>
 
     @if (Route::has('cognito.logout'))
-    <a class="dropdown-item" href="{{ redirect('/') }}"
+    <button class="dropdown-item"
         onclick="event.preventDefault();
         frmAction=document.getElementById('form-action');
         frmAction.action='{{ route('cognito.logout') }}';
         frmAction.submit();">
         {{ __('Logout') }}
-    </a>
+    </button>
     @endif
 
     @if (Route::has('cognito.logout_forced'))
-    <a class="dropdown-item" href="#"
+    <button class="dropdown-item"
         onclick="event.preventDefault();
         frmAction=document.getElementById('form-action');
         frmAction.action='{{ route('cognito.logout_forced') }}';
         frmAction.submit();">
         {{ __('Logout (Forced)') }}
-    </a>
+    </button>
     @endif
 
     <form id="form-action" method="POST" class="d-none" action="#">
