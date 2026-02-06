@@ -33,10 +33,10 @@ class AwsCognitoException extends HttpException
      * @return void
      */
     public function __construct(string $message="AWS Cognito Error",
-        Throwable $previous=null, array $headers=[], int $code=400)
+        ?Throwable $previous=null, array $headers=[], int $code=400)
     {
         if ($previous instanceof CognitoIdentityProviderException && (!empty($previous->getAwsErrorCode()))) {
-            $message = $this->processAwsCognitoError($previous);
+            $message = self::processAwsCognitoError($previous);
         } //End if
 
         parent::__construct(400, $message, $previous, $headers, $code);
@@ -49,7 +49,14 @@ class AwsCognitoException extends HttpException
         return new self(self::processAwsCognitoError($e), $e);
     }
 
-    private function processAwsCognitoError(CognitoIdentityProviderException $e) : string {
+    /**
+     * Process AWS Cognito error and return proper error code
+     *
+     * @param  CognitoIdentityProviderException  $e
+     *
+     * @return string
+     */
+    private static function processAwsCognitoError(CognitoIdentityProviderException $e) : string {
         //Set proper route
         switch ($e->getAwsErrorCode()) {
             case 'PasswordResetRequiredException':

@@ -34,9 +34,9 @@ trait SendsPasswordResetEmails
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function sendResetLinkEmail(Request $request,
-        string $usernameKey='email', bool $resetTypeCode=true,
-        bool $isJsonResponse=false, array $clientMetadata=null)
+    public function sendResetLinkEmail(\Illuminate\Http\Request $request,
+        string $usernameKey = 'email', bool $resetTypeCode = true,
+        bool $isJsonResponse = false, ?array $clientMetadata = null)
     {
         try {
             //Initialize variables
@@ -81,7 +81,7 @@ trait SendsPasswordResetEmails
      * @param  \string  $username
      * @return \bool
      */
-    public function sendCognitoResetLinkEmail(string $username, array $clientMetadata=null)
+    public function sendCognitoResetLinkEmail(string $username, ?array $clientMetadata = null)
     {
         $response = null; $returnValue = false;
 
@@ -113,7 +113,7 @@ trait SendsPasswordResetEmails
                                     $username, null, $attributes,
                                     $clientMetadata, 'RESEND'
                                 );
-                            $returnValue = (empty($response) == false);
+                            $returnValue = !empty($response);
                         } else {
                             throw new HttpException(400, 'The forgot password resend is disabled.');
                         } //End if

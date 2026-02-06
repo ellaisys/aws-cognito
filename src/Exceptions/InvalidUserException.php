@@ -13,7 +13,7 @@ class InvalidUserException extends HttpException
 {
 
     public function __construct(string $message = 'Invalid Cognito User',
-        Throwable $previous = null, int $code = 0, array $headers = [])
+        ?Throwable $previous = null, int $code = 0, array $headers = [])
     {
         parent::__construct(400, $message, $previous, $headers, $code);
     }

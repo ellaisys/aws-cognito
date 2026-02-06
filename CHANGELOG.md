@@ -1,3 +1,8 @@
+Release 43 (tag v1.4.1)
+- Fix: Remove Laravel version debug log by @aaronhuisinga in [PR #123](https://github.com/ellaisys/aws-cognito/pull/123)
+- Fix: PHP 8.4 implicit nullable parameter deprecations by @joshkautz in [PR #122](https://github.com/ellaisys/aws-cognito/pull/122)
+- Fix: update the support email address
+
 Release 42 (tag v1.4.0)
  - Feat: Support for Laravel 11 and Laravel 12
  - Feat: Add registration type (invite, register) flow

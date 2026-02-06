@@ -732,7 +732,7 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 ## Security
 
-If you discover any security related issues, please email [support@ellaisys.com](mailto:support@ellaisys.com) and also add it to the issue tracker.
+If you discover any security related issues, please email [ellaisys@gmail.com](mailto:ellaisys@gmail.com) and also add it to the issue tracker.
 
 ## Roadmap
 

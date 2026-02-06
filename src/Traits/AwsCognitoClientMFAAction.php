@@ -29,7 +29,7 @@ trait AwsCognitoClientMFAAction
      *
      * @return mixed
      */
-    public function associateSoftwareTokenMFA(string $accessToken=null, string $session=null)
+    public function associateSoftwareTokenMFA(?string $accessToken = null, ?string $session = null)
     {
         try {
             //Build payload
@@ -66,7 +66,7 @@ trait AwsCognitoClientMFAAction
      *
      * @return mixed
      */
-    public function verifySoftwareTokenMFA(string $userCode, string $accessToken=null, string $session=null, string $deviceName=null)
+    public function verifySoftwareTokenMFA(string $userCode, ?string $accessToken = null, ?string $session = null, ?string $deviceName = null)
     {
         try {
             //Build payload
