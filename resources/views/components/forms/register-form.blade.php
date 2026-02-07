@@ -1,4 +1,4 @@
-<form method="POST" action="{{ route('cognito.form.register.submit') }}">
+<form method="POST" action="{{ route('cognito.action.register.submit') }}">
     @csrf
 
     <div class="row mb-3">

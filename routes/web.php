@@ -27,7 +27,7 @@ use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
 Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
     //Route to register a new user
     Route::get('/register',  function () { return view('cognito::pages.auth.register'); })->name('form.register');
-    Route::post('/register', [RegisterController::class, 'register'])->name('form.register.submit');
+    Route::post('/register', [RegisterController::class, 'register'])->name('action.register.submit');
 
     //Forgot password
     Route::group(['prefix' => 'password'], function() {
@@ -40,8 +40,8 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
     //Route group login
     Route::group(['prefix' => 'login'], function() {
         Route::get('/', function () { return view('cognito::pages.auth.login'); })->name('form.login');
-        Route::post('/', [LoginController::class, 'login'])->name('form.login.submit');
-        Route::post('/mfa', [LoginController::class, 'validateMFA'])->name('form.mfa.code.submit');
+        Route::post('/', [LoginController::class, 'login'])->name('action.login.submit');
+        Route::post('/mfa', [LoginController::class, 'validateMFA'])->name('action.mfa.code.submit');
     });
 
     //Authenticated routes

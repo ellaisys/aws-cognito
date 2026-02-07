@@ -190,7 +190,7 @@ class LoginController extends Controller
                 $returnValue = $this->response->success([]);
             } else {
                 $request->session()->invalidate();
-                $returnValue = redirect('/');
+                $returnValue = redirect(route('cognito.form.login'));
             } //End if
         } catch (Exception $e) {
             Log::error('LoginController:logout:Exception');
