@@ -19,6 +19,7 @@ use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Ellaisys\Cognito\AwsCognito;
 
 use Exception;
+use Illuminate\Auth\AuthenticationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\NoTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
@@ -109,7 +110,10 @@ abstract class BaseMiddleware //extends Middleware
                     break;
             } //Switch ends
         } catch (Exception $e) {
-            Log::error('BaseMiddleware:authenticate:Exception', ['$e' => $e]);
+            Log::error('BaseMiddleware:authenticate:Exception');
+            if (($guard=='web') && ($e instanceof NoTokenException || $e instanceof InvalidTokenException)) {
+                throw new AuthenticationException($e->getMessage());
+            } //End if
             throw $e;
         } //Try-catch ends
     } //Function ends

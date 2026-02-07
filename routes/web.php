@@ -45,7 +45,7 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
     });
 
     //Authenticated routes
-    Route::group(['middleware' => ['aws-cognito:web']], function() {
+    Route::group(['middleware' => ['aws-cognito']], function() {
         Route::get('/home', function () { return view('cognito::home'); })->name('home');
 
         //Route for refresh session

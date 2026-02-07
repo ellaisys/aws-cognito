@@ -15,7 +15,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 use Exception;
-//use Ellaisys\Cognito\Contracts\Http\Parser as ParserContract;
 
 class ClaimSession //implements ParserContract
 {
@@ -47,6 +46,7 @@ class ClaimSession //implements ParserContract
             if ($claim && is_array($claim) && array_key_exists('token', $claim)) {
                 return $claim['token'];
             } //End if
+            return null;
         } catch (Exception $e) {
             Log::error('ClaimSession:parse:Exception');
             return null;
