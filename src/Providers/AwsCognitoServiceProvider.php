@@ -126,11 +126,11 @@ class AwsCognitoServiceProvider extends ServiceProvider
             //Publish config
             $this->publishes([
                 __DIR__ . '/../../config/cognito.php' => $this->app->configPath('cognito.php'),
-            ], 'cognito-config');
+            ], 'config');
 
             $this->publishes([
                 __DIR__ . '/../../database/migrations' => $this->app->databasePath('migrations'),
-            ], 'cognito-migrations');
+            ], 'migrations');
 
             $this->publishes([
                 __DIR__ . '/../../resources/views' => $this->app->resourcePath('views/vendor/ellaisys/aws-cognito'),
@@ -138,15 +138,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
             //Publish Controllers
             $this->publishes([
-                __DIR__.'/../../src/Http/Controllers/BaseCognitoController.php' => app_path('Http/Controllers/BaseCognitoController.php'),
-                __DIR__.'/../../src/Http/Controllers/ApiBaseCognitoController.php' => app_path('Http/Controllers/ApiBaseCognitoController.php'),
-                __DIR__.'/../../src/Http/Controllers/Api/AuthController.php' => app_path('Http/Controllers/Api/AuthController.php'),
-                __DIR__.'/../../src/Http/Controllers/Api/MFAController.php' => app_path('Http/Controllers/Api/MFAController.php'),
-                __DIR__.'/../../src/Http/Controllers/Api/RefreshTokenController.php' => app_path('Http/Controllers/Api/RefreshTokenController.php'),
-                __DIR__.'/../../src/Http/Controllers/Api/RegisterController.php' => app_path('Http/Controllers/Api/RegisterController.php'),
-                __DIR__.'/../../src/Http/Controllers/Api/UserController.php' => app_path('Http/Controllers/Api/UserController.php'),
-                __DIR__.'/../../src/Http/Controllers/Auth/LoginController.php' => app_path('Http/Controllers/Auth/LoginController.php'),
-            ], 'cognito-controllers');
+                __DIR__ . '/../../src/Http/Controllers/' => app_path('Http/Controllers/')
+            ], 'controllers');
 
         } //End if
     } //Function ends
