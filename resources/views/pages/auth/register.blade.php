@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends(config('cognito.views.layout'))
 
 @section('content')
 <div class="container">

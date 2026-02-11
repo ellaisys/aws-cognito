@@ -132,7 +132,6 @@ return [
         'locale' => null
     ],
 
-
     /*
     |--------------------------------------------------------------------------
     | Cognito Subject UUID
@@ -144,7 +143,6 @@ return [
     |
     */
     'user_subject_uuid' => env('AWS_COGNITO_USER_SUBJECT_UUID', 'sub'),
-
 
     /*
     |--------------------------------------------------------------------------
@@ -349,15 +347,26 @@ return [
     'mfa_qr_library' => env('AWS_COGNITO_MFA_QR_LIBRARY', 'https://quickchart.io/qr?size=200&text='),
 
     /*
-     |--------------------------------------------------------------------------
-     | Registration Type
-     |--------------------------------------------------------------------------
-     | This option controls the registration type for new users. The options
-     | available are "register" and "invite". The default value is set to
-     | "invite".
-     |
-     */
+    |--------------------------------------------------------------------------
+    | Registration Type
+    |--------------------------------------------------------------------------
+    | This option controls the registration type for new users. The options
+    | available are "register" and "invite". The default value is set to
+    | "invite".
+    |
+    */
     'registration_type' => env('AWS_COGNITO_REGISTRATION_TYPE', 'invite'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Views
+    |--------------------------------------------------------------------------
+    | This option controls the views for the package. You can set the layout
+    | for the views here.
+    */
+    'views' => [
+        'layout' => env('AWS_COGNITO_VIEWS_LAYOUT', 'cognito::layouts.app'),
+    ],
 
     // 'routes' => [
     //     'web' => [
