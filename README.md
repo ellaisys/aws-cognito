@@ -48,8 +48,8 @@ We decided to use it and contribute it to the community as a package, that encou
 - [MFA Implementation for Session and Token Guards](./README_MFA.md)
 - [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
 - [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
-- [Preconfigured routes and controllers for Web and API ](/README_ROUTES.md#routes) **NEW**
-- [Preconfigured views for Web ](/README_ROUTES.md)**NEW**
+- [Preconfigured routes and controllers for Web and API ](/README_ROUTES.md#routes) **New Feature**
+- [Preconfigured views for Web ](/README_ROUTES.md#web-views-and-components)**New Feature**
 
 ## Compatability
 
