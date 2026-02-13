@@ -9,7 +9,7 @@ Also, configure below keys into the .env file to change the default setting.
  - The **AWS_COGNITO_MFA_SETUP** should be set to MFA_ENABLED to enable the MFA feature. The default value is MFA_NONE resulting into disabled MFA functionality. 
  - The **AWS_COGNITO_MFA_TYPE** can have values SOFTWARE_TOKEN_MFA (default) for the Software Token and SMS_MFA for the SMS based TOTP.
 
-   The provider configuration to send out the SMS needs to be carried out in AWS and costs additional as per the AWS SNS pricing. For more details refer this [AWS link](https://aws.amazon.com/sns/sms-pricing/)
+   The provider configuration aids to send out the SMS from AWS with additional costs. Refer AWS SNS pricing for more details [AWS SMS Pricing](https://aws.amazon.com/sns/sms-pricing/)
 
 ```php
 
@@ -29,26 +29,9 @@ Also, configure below keys into the .env file to change the default setting.
 # **API Routes**
 >[!IMPORTANT]
 >We are releasign the API predefined routes as a new feature from V1.3.0.
-> php artisan vendor:publish --tag=cognito-controllers
+> php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
 
-The API routes that are wired via the API Controller, making it easy for users to implement. The validations are built in and API response format is standardized. 
-
-You can change the API prefix by configuring **AWS_COGNITO_API_PREFIX** in the .env file. The default value of the AWS_COGNITO_API_PREFIX is **cognito**.
-
-```php
-    POST      api/cognito/refresh-token ........... Ellaisys\Cognito\Http\Controllers\Api\RefreshTokenController@actionRefreshToken
-    POST      api/cognito/register ..................... Ellaisys\Cognito\Http\Controllers\Api\AuthController@actionRegister
-    POST      api/cognito/login ........................... Ellaisys\Cognito\Http\Controllers\Api\AuthController@actionLogin
-    POST      api/cognito/login/mfa .................. Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionValidateMFA
-    PUT       api/cognito/logout ......................... Ellaisys\Cognito\Http\Controllers\Api\AuthController@actionLogout
-    PUT       api/cognito/logout/forced ............ Ellaisys\Cognito\Http\Controllers\Api\AuthController@actionLogoutForced
-
-    GET|HEAD  api/cognito/mfa/activate ............ Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionApiActivateMFA
-    POST      api/cognito/mfa/activate/{code} ....... Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionApiVerifyMFA
-    POST      api/cognito/mfa/deactivate ........ Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionApiDeactivateMFA
-    POST      api/cognito/mfa/disable .............. Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionApiDisableMFA
-    POST      api/cognito/mfa/enable ................ Ellaisys\Cognito\Http\Controllers\Api\MFAController@actionApiEnableMFA
-```
+For the list of published routes and configurations, please refer [API Routes](/README_ROUTES.md#api-routes)
 
 ### **Login**
 The login shall require two steps for implementation of the overall authentication using the MFA approach. The first step shall generate the challenge, identified as a session token. The second step involves the OTP/TOTP code against that session token.
