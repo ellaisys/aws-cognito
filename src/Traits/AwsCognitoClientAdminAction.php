@@ -32,12 +32,18 @@ trait AwsCognitoClientAdminAction
      * @param string $username
      * @return bool
      */
-    public function confirmSignUp($username)
+    public function confirmSignUp($username): bool
     {
-        $this->client->adminConfirmSignUp([
-            'UserPoolId' => $this->poolId,
-            'Username' => $username,
-        ]);
+        try {
+            $this->client->adminConfirmSignUp([
+                'UserPoolId' => $this->poolId,
+                'Username' => $username,
+            ]);
+            return true;
+        } catch (Exception $e) {
+            return false;
+        } //Try-catch ends
+
     } //Function ends
 
     /**
@@ -48,7 +54,7 @@ trait AwsCognitoClientAdminAction
      * @param string $username
      * @return bool
      */
-    public function adminEnableUser(string $username)
+    public function adminEnableUser(string $username): bool
     {
         try {
             return $this->client->adminEnableUser([
@@ -76,7 +82,7 @@ trait AwsCognitoClientAdminAction
      * @param string $username
      * @return bool
      */
-    public function adminDisableUser(string $username)
+    public function adminDisableUser(string $username): bool
     {
         try {
             return $this->client->adminDisableUser([
@@ -105,7 +111,7 @@ trait AwsCognitoClientAdminAction
      * @param string $username
      * @return bool
      */
-    public function adminUserGlobalSignOut(string $username)
+    public function adminUserGlobalSignOut(string $username): bool
     {
         try {
             return $this->client->adminUserGlobalSignOut([
@@ -133,7 +139,7 @@ trait AwsCognitoClientAdminAction
      * @param string $username
      * @return bool
      */
-    public function invalidatePassword(string $username)
+    public function invalidatePassword(string $username): bool
     {
         try {
             return $this->client->adminResetUserPassword([
@@ -160,7 +166,7 @@ trait AwsCognitoClientAdminAction
      *
      * @return mixed
      */
-    public function describeUserPool()
+    public function describeUserPool(): mixed
     {
         try {
             return $this->client->describeUserPool([
@@ -187,7 +193,7 @@ trait AwsCognitoClientAdminAction
      * @param string $username
      * @return mixed
      */
-    public function getUser($username)
+    public function getUser($username): mixed
     {
         try {
             return $this->client->adminGetUser([

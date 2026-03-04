@@ -122,20 +122,24 @@ class JsonResponseService
             ];
         } //End if
 
-        $merged = array_merge($resource->additional ?? [], $meta);
+        if (!is_array($resource)) {
+            $merged = array_merge($resource->additional ?? [], $meta);
+        } else {
+            $merged = array_merge($resource, $meta);
+        } //End if
 
         if ($resource instanceof JsonResource) {
             return $resource->additional($merged);
-        }
+        } //End if
 
         if (is_array($resource)) {
             return (
                 new JsonResource(
                     collect($resource)
                 ))->additional($merged);
-        }
+        } //End if
 
-        throw new HttpException('Resource must be an array or an instance of JsonResource');
+        throw new HttpException(400, 'Resource must be an array or an instance of JsonResource');
     } //Function end
 
 } //Class end
