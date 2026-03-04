@@ -37,7 +37,6 @@ class MFAController extends Controller
     use AuthenticatesUsers;
     use RegisterMFA;
 
-
     /**
      * Constructor.
      *
@@ -50,29 +49,27 @@ class MFAController extends Controller
         parent::__construct();
     }
 
-
-	/**
-	 * Action to activate MFA
-	 */
+    /**
+     * Action to activate MFA
+     */
     public function actionApiActivateMFA()
     {
-		try
-		{
+        try
+        {
             $response = $this->activateMFA('api');
             return $this->response->success($response, 200, 'MFA activated successfully');
         } catch(Exception $e) {
-			throw $e;
+            throw $e;
         } //Try-catch ends
     } //Function ends
 
-
-	/**
-	 * Action to deactivate MFA for the user
-	 */
+    /**
+     * Action to deactivate MFA for the user
+     */
     public function actionApiDeactivateMFA()
     {
-		try
-		{
+        try
+        {
             $response = $this->deactivateMFA('api');
             if (isset($response['@metadata']['statusCode']) && $response['@metadata']['statusCode']==200) {
                 return $this->response->success([], 200, 'MFA deactivated successfully');
@@ -80,20 +77,19 @@ class MFAController extends Controller
                 throw new HttpException(400, 'Error deactivating the MFA.');
             } //End if
         } catch(Exception $e) {
-			throw $e;
+            throw $e;
         } //Try-catch ends
     } //Function ends
 
-
-	/**
-	 * Action to enable MFA for the user
-	 * 
-	 * @param  \Illuminate\Http\Request  $request
-	 */
+    /**
+     * Action to enable MFA for the user
+     *
+     * @param  \Illuminate\Http\Request  $request
+     */
     public function actionApiEnableMFA(Request $request, string $paramUsername='username')
     {
-		try
-		{
+        try
+        {
             $response = $this->enableMFA('api', $request[$paramUsername]);
             if (isset($response['@metadata']['statusCode']) && $response['@metadata']['statusCode']==200) {
                 return $this->response->success([], 200, 'MFA enabled successfully');
@@ -101,29 +97,28 @@ class MFAController extends Controller
                 throw new HttpException(400, 'Error enabling the MFA.');
             } //End if
         } catch(Exception $e) {
-			$message = 'Error enabling the MFA.';
-			if ($e instanceof ValidationException) {
+            $message = 'Error enabling the MFA.';
+            if ($e instanceof ValidationException) {
                 $message = $e->errors();
             } else if ($e instanceof CognitoIdentityProviderException) {
-				$message = $e->getAwsErrorMessage();
-			} else {
+                $message = $e->getAwsErrorMessage();
+            } else {
                 //Do nothing
             } //End if
 
-			throw $e;
+            throw $e;
         } //Try-catch ends
     } //Function ends
 
-
-	/**
-	 * Action to disable MFA for the user
-	 * 
-	 * @param  \Illuminate\Http\Request  $request
-	 */
+    /**
+     * Action to disable MFA for the user
+     *
+     * @param  \Illuminate\Http\Request  $request
+     */
     public function actionApiDisableMFA(Request $request, string $paramUsername='username')
     {
-		try
-		{
+        try
+        {
             $response = $this->disableMFA('api', $request[$paramUsername]);
             if (isset($response['@metadata']['statusCode']) && $response['@metadata']['statusCode']==200) {
                 return $this->response->success([], 200, 'MFA disabled successfully');
@@ -131,44 +126,42 @@ class MFAController extends Controller
                 throw new HttpException(400, 'Error disabling the MFA.');
             } //End if
         } catch(Exception $e) {
-			$message = 'Error disabling the MFA.';
-			if ($e instanceof ValidationException) {
+            $message = 'Error disabling the MFA.';
+            if ($e instanceof ValidationException) {
                 $message = $e->errors();
             } else if ($e instanceof CognitoIdentityProviderException) {
-				$message = $e->getAwsErrorMessage();
-			} else {
+                $message = $e->getAwsErrorMessage();
+            } else {
                 //Do nothing
             } //End if
 
-			throw $e;
+            throw $e;
         } //Try-catch ends
     } //Function ends
 
-
-	/**
-	 * Verify the MFA user code
-	 * 
-	 * @param  \Illuminate\Http\Request  $request
-	 */
+    /**
+     * Verify the MFA user code
+     *
+     * @param  \Illuminate\Http\Request  $request
+     */
     public function actionApiVerifyMFA(Request $request, string $code)
     {
-		try
-		{
+        try
+        {
             return $this->verifyMFA('api', $code);
         } catch(Exception $e) {
-			$message = 'Error activating the MFA.';
-			if ($e instanceof ValidationException) {
+            $message = 'Error activating the MFA.';
+            if ($e instanceof ValidationException) {
                 $message = $e->errors();
             } else if ($e instanceof CognitoIdentityProviderException) {
-				$message = $e->getAwsErrorMessage();
-			} else {
+                $message = $e->getAwsErrorMessage();
+            } else {
                 //Do nothing
             } //End if
 
-			throw $e;
+            throw $e;
         } //Try-catch ends
     } //Function ends
-
 
     /**
      * Authenticate using the MFA code using the API console
@@ -178,7 +171,6 @@ class MFAController extends Controller
         try
         {
             //Create credentials object
-            $collection = collect($request->all());
             $claim = $this->attemptLoginMFA($request, 'api', true);
 
             if ($claim instanceof AwsCognitoClaim) {
@@ -190,5 +182,5 @@ class MFAController extends Controller
             throw $e;
         } //try-catch ends
     } //Function ends
-    
+
 } //Class ends

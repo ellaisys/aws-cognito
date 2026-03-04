@@ -142,15 +142,15 @@ class AuthController extends Controller
     } //Function ends
 
 
-	/**
-	 * Action to update the user password
-	 * 
-	 * @param  \Illuminate\Http\Request  $request
-	 */
+    /**
+     * Action to update the user password
+     *
+     * @param  \Illuminate\Http\Request  $request
+     */
     public function actionChangePassword(Request $request)
     {
-		try
-		{
+        try
+        {
             //Validate request
             $validator = Validator::make($request->all(), [
                 'email'    => 'required|email',
@@ -165,23 +165,23 @@ class AuthController extends Controller
             // if ($this->reset($request)) {
             //     return redirect(route('login'))->with('success', true);
             // } else {
-			// 	return redirect()->back()
-			// 		->with('status', 'error')
-			// 		->with('message', 'Password updated failed');
-			// } //End if
+            //     return redirect()->back()
+            //         ->with('status', 'error')
+            //         ->with('message', 'Password updated failed');
+            // } //End if
         } catch(Exception $e) {
-			$message = 'Error sending the reset mail.';
-			if ($e instanceof ValidationException) {
+            $message = 'Error sending the reset mail.';
+            if ($e instanceof ValidationException) {
                 $message = $e->errors();
             } else if ($e instanceof CognitoIdentityProviderException) {
-				$message = $e->getAwsErrorMessage();
-			} else {
+                $message = $e->getAwsErrorMessage();
+            } else {
                 //Do nothing
             } //End if
 
-			// return redirect()->back()
-			// 	->with('status', 'error')
-			// 	->with('message', $message);
+            // return redirect()->back()
+            //     ->with('status', 'error')
+            //     ->with('message', $message);
         } //Try-catch ends
     } //Function ends
 

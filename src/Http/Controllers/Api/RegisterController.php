@@ -33,7 +33,6 @@ class RegisterController extends Controller
 {
     use RegistersUsers;
 
-
     /**
      * Constructor.
      *
@@ -49,7 +48,6 @@ class RegisterController extends Controller
         parent::__construct();
     }
     
-
     /**
      * Action to register the a new user
      *
@@ -69,7 +67,6 @@ class RegisterController extends Controller
         } //End try-catch
     } //Function ends
 
-    
     /**
      * Action to invite the a new user
      *
