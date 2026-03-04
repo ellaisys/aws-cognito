@@ -156,8 +156,6 @@ class RegisterController extends Controller
         } //End try-catch
     } //Function ends
 
-
-
     private function callPreRegistrationEvent(Request $request): void
     {
         //Raise pre registration event
@@ -171,7 +169,7 @@ class RegisterController extends Controller
     private function callPostRegistrationEvent(Request $request, array $user): void
     {
         //Raise post registration event
-        event(new PostAuthSuccessEvent(
+        event(new PostRegistrationEvent(
             $this->registrationType,
             $user,
             $request->except('password'),
