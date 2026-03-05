@@ -113,13 +113,25 @@ class JsonResponseService
                 $systemErrorMsg = $parentError->getAwsErrorMessage();
             }
 
+            //Build error response
             $meta['error'] = [
                 'code' => $statusCode,
                 'message' => $message,
-                'key' => $errorKey,
-                'system_code' => $systemErrorCode,
-                'system_message' => $systemErrorMsg,
+                'key' => $errorKey
             ];
+
+            //Add system messages when in debug mode
+            if (config('app.debug')) {
+                $meta['error'] = array_merge($meta['error'], [
+                    'system_code' => $systemErrorCode,
+                    'system_message' => $systemErrorMsg,
+                    'exception' => get_class($e),
+                    'trace' => collect($e->getTrace())->take(3),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+            } //End if
+
         } //End if
 
         if (!is_array($resource)) {
