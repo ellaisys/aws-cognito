@@ -40,13 +40,13 @@ class MFAController extends Controller
         parent::__construct();
     }
 
-	/**
-	 * Action to activate MFA
-	 */
+    /**
+     * Action to activate MFA
+     */
     public function activate(Request $request)
     {
-		try
-		{
+        try
+        {
             //Initialize parameters
             $returnValue = null;
             $guard = 'web';
@@ -75,17 +75,17 @@ class MFAController extends Controller
             return $returnValue;
         } catch(Exception $e) {
             Log::error('MFAController:activate:Exception');
-			throw $e;
+            throw $e;
         } //Try-catch ends
     } //Function ends
 
-	/**
-	 * Action to deactivate MFA
-	 */
+    /**
+     * Action to deactivate MFA
+     */
     public function deactivate(Request $request)
     {
-		try
-		{
+        try
+        {
             //Initialize parameters
             $returnValue = null;
             $guard = 'web';
@@ -119,17 +119,17 @@ class MFAController extends Controller
             } //End if
         } catch(Exception $e) {
             Log::error('MFAController:deactivate:Exception');
-			throw $e;
+            throw $e;
         } //Try-catch ends
     } //Function ends
 
-	/**
-	 * Action to enable MFA for the user
-	 */
+    /**
+     * Action to enable MFA for the user
+     */
     public function enable()
     {
-		try
-		{
+        try
+        {
             $user = auth()->guard('web')->user();
             $response = $this->enableMFA('web', $user->email);
             $userCognito = auth()->guard('web')->getRemoteUserData($user->email);
@@ -141,26 +141,26 @@ class MFAController extends Controller
                     'message' => $response
                 ]);
         } catch(Exception $e) {
-			$message = 'Error activating the MFA.';
-			if ($e instanceof ValidationException) {
+            $message = 'Error activating the MFA.';
+            if ($e instanceof ValidationException) {
                 $message = $e->errors();
             } elseif ($e instanceof CognitoIdentityProviderException) {
-				$message = $e->getAwsErrorMessage();
-			} else {
+                $message = $e->getAwsErrorMessage();
+            } else {
                 //Do nothing
             } //End if
 
-			throw $e;
+            throw $e;
         } //Try-catch ends
     } //Function ends
 
-	/**
-	 * Action to disable MFA for the user
-	 */
+    /**
+     * Action to disable MFA for the user
+     */
     public function disable()
     {
-		try
-		{
+        try
+        {
             $user = auth()->guard('web')->user();
             $response = $this->disableMFA('web', $user->email);
             $userCognito = auth()->guard('web')->getRemoteUserData($user->email);
@@ -172,28 +172,28 @@ class MFAController extends Controller
                     'status' => $response['@metadata']['statusCode']==200
                 ]);
         } catch(Exception $e) {
-			$message = 'Error activating the MFA.';
-			if ($e instanceof ValidationException) {
+            $message = 'Error activating the MFA.';
+            if ($e instanceof ValidationException) {
                 $message = $e->errors();
             } elseif ($e instanceof CognitoIdentityProviderException) {
-				$message = $e->getAwsErrorMessage();
-			} else {
+                $message = $e->getAwsErrorMessage();
+            } else {
                 //Do nothing
             } //End if
 
-			throw $e;
+            throw $e;
         } //Try-catch ends
     } //Function ends
 
-	/**
-	 * Verify the MFA user code
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 */
+    /**
+     * Verify the MFA user code
+     *
+     * @param  \Illuminate\Http\Request  $request
+     */
     public function verify(Request $request, string $code=null, string $deviceName=null)
     {
-		try
-		{
+        try
+        {
             //Initialize parameters
             $returnValue = null;
             $guard = 'web';
@@ -220,7 +220,7 @@ class MFAController extends Controller
             return $returnValue;
         } catch(Exception $e) {
             Log::error('MFAController:deactivate:Exception');
-			throw $e;
+            throw $e;
         } //Try-catch ends
     } //Function ends
 
