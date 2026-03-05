@@ -51,7 +51,7 @@
                 pattern="^\d{10}$"
                 required autocomplete="off" />
 
-            @error('email')
+            @error('phone')
                 <span class="invalid-feedback" role="alert">
                     <strong>{{ $message }}</strong>
                 </span>
