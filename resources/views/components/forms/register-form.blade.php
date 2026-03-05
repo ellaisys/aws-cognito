@@ -47,8 +47,9 @@
             <input id="phone" type="tel"
                 class="form-control @error('phone') is-invalid @enderror"
                 name="phone" value="{{ old('phone') }}"
-                minlength="10" maxlength="10"
-                pattern="^\d{10}$"
+                minlength="10" maxlength="15"
+                pattern="^\+\d{1,14}$"
+                placeholder="+14325551212"
                 required autocomplete="off" />
 
             @error('phone')

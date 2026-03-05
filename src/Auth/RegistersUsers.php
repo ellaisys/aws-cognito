@@ -271,7 +271,7 @@ trait RegistersUsers
                             break;
 
                         case 'phone_number':
-                            $rules = array_merge($rules, [ $value => 'required']);
+                            $rules = array_merge($rules, [ $value => 'required|regex:/^\+[1-9]\d{1,14}$/']);
                             break;
                         
                         default:

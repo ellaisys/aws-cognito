@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito\Http\Controllers\Auth;
 
+use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
