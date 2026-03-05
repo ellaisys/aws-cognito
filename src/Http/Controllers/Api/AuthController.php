@@ -173,7 +173,7 @@ class AuthController extends Controller
             $message = 'Error sending the reset mail.';
             if ($e instanceof ValidationException) {
                 $message = $e->errors();
-            } else if ($e instanceof CognitoIdentityProviderException) {
+            } elseif ($e instanceof CognitoIdentityProviderException) {
                 $message = $e->getAwsErrorMessage();
             } else {
                 //Do nothing

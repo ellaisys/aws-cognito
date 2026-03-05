@@ -71,12 +71,14 @@ trait RespondsMFAChallenge
 
         if (is_string($result)) {
             return $response = response()->json(['error' => 'cognito.'.$result], 400);
-        } else if ($result instanceof AWSResult) {
+        } elseif ($result instanceof AWSResult) {
             $user = User::where('email', $request['email'])->first();
             $claim = new AwsCognitoClaim($result, $user, 'email');
             $this->cognito->setClaim($claim)->storeToken();
             return $result['AuthenticationResult'];
-        }
+        } else {
+            //Do nothing
+        } //End if
 
         return $result;
     }

@@ -42,15 +42,15 @@ class ChangePasswordController extends Controller
      */
     protected $redirectTo = '/home';
 
-	/**
-	 * Action to update the user password
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 */
+    /**
+     * Action to update the user password
+     *
+     * @param  \Illuminate\Http\Request  $request
+     */
     public function actionChangePassword(Request $request)
     {
-		try
-		{
+        try
+        {
             //Initialize parameters
             $returnValue = null;
             $guard = 'web';
@@ -83,7 +83,7 @@ class ChangePasswordController extends Controller
 
                 $returnValue = redirect(route('login'))
                     ->with('success', true);
-			} //End if
+            } //End if
 
             return $returnValue;
         } catch(Exception $e) {

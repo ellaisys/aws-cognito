@@ -100,7 +100,7 @@ class MFAController extends Controller
             $message = 'Error enabling the MFA.';
             if ($e instanceof ValidationException) {
                 $message = $e->errors();
-            } else if ($e instanceof CognitoIdentityProviderException) {
+            } elseif ($e instanceof CognitoIdentityProviderException) {
                 $message = $e->getAwsErrorMessage();
             } else {
                 //Do nothing
@@ -129,7 +129,7 @@ class MFAController extends Controller
             $message = 'Error disabling the MFA.';
             if ($e instanceof ValidationException) {
                 $message = $e->errors();
-            } else if ($e instanceof CognitoIdentityProviderException) {
+            } elseif ($e instanceof CognitoIdentityProviderException) {
                 $message = $e->getAwsErrorMessage();
             } else {
                 //Do nothing
@@ -153,7 +153,7 @@ class MFAController extends Controller
             $message = 'Error activating the MFA.';
             if ($e instanceof ValidationException) {
                 $message = $e->errors();
-            } else if ($e instanceof CognitoIdentityProviderException) {
+            } elseif ($e instanceof CognitoIdentityProviderException) {
                 $message = $e->getAwsErrorMessage();
             } else {
                 //Do nothing

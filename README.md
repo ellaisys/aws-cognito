@@ -432,7 +432,7 @@ In case you want to use this trait for Web login, you can write the code as show
             if ($response = $this->attemptLogin($collection, 'web')) {
                 if ($response===true) {
                     return redirect(route('home'))->with('success', true);
-                } else if ($response===false) {
+                } elseif ($response===false) {
                     // If the login attempt was unsuccessful you may increment the number of attempts
                     // to login and redirect the user back to the login form. Of course, when this
                     // user surpasses their maximum number of attempts they will get locked out.
