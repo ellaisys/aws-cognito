@@ -124,7 +124,6 @@ trait AuthenticatesUsers
         return $returnValue;
     } //Function ends
 
-    
     /**
      * Attempt to log the user into the application.
      *
@@ -220,7 +219,6 @@ trait AuthenticatesUsers
         return $claim?$claim:$response;
     } //Function ends
 
-
     /**
      * Handle Failed Cognito Exception
      *
@@ -234,7 +232,6 @@ trait AuthenticatesUsers
             $paramName => $exception->getAwsErrorMessage(),
         ]);
     } //Function ends
-
 
     /**
      * Handle Generic Exception
@@ -275,7 +272,6 @@ trait AuthenticatesUsers
                 ]);
         } //End if
     } //Function ends
-
 
     /**
      * Get the MFA authentication validation rules.

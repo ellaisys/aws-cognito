@@ -33,7 +33,7 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
     //Route group login
     Route::group(['prefix' => 'login'], function() {
         Route::post('/', [LoginController::class, 'login']);
-        Route::post('/mfa', [MFAController::class, 'actionValidateMFA']);
+        Route::post('/mfa', [LoginController::class, 'validateMFA']);
     });
 
     //Forgot password routes

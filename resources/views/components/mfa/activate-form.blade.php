@@ -19,7 +19,7 @@
                             <div class="flex-fill font-regular text-nowrap">
                                 <small>Key: {{ $actionActivateMFA['SecretCode'] }}</small>
                                 <input type="hidden" name="mfa_secret_code" id="mfa_secret_code"
-                                    value="{ $actionActivateMFA['SecretCode'] }}" />
+                                    value="{{ $actionActivateMFA['SecretCode'] }}" />
                             </div>
                             <div class="flex-fill">
                                 <img src="{{ $actionActivateMFA['SecretCodeQR'] }}" alt="QR Code"
