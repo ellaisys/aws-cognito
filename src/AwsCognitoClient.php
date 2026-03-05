@@ -20,13 +20,13 @@ use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 use Ellaisys\Cognito\Traits\AwsCognitoClientMFAAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientAdminAction;
 
-use Exception;
+use Excption;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 use Aws\CognitoIdentityProvider\Exception\InvalidPasswordException;
-use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException ;
+use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class AwsCognitoClient
@@ -404,7 +404,7 @@ class AwsCognitoClient
         } //End If
 
         //Set Delivery Mediums
-        if ((config('cognito.add_user_delivery_mediums')!="NONE")) {
+        if (config('cognito.add_user_delivery_mediums')!="NONE") {
             if (config('cognito.add_user_delivery_mediums')=="BOTH") {
                 $payload['DesiredDeliveryMediums'] = ['EMAIL', 'SMS'];
             } else {
@@ -412,6 +412,7 @@ class AwsCognitoClient
                 $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
             } //End if
         } //End if
+        
         if (config('cognito.mfa_setup')=="MFA_ENABLED") {
             $defaultDeliveryMedium = 'SMS';
             $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
