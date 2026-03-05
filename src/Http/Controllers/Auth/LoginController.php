@@ -27,6 +27,11 @@ use Ellaisys\Cognito\Events\Auth\PreLogoutEvent;
 use Ellaisys\Cognito\Events\Auth\PostLogoutEvent;
 
 use Exception;
+use Illuminate\Validation\ValidationException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\NoLocalUserException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class LoginController extends Controller
 {
@@ -97,12 +102,15 @@ class LoginController extends Controller
                 $usernameField, $passwordField, $isJsonResponse, true);
 
             //Process the claim response
-            return $this->processClaimResponse($request, $claim, $guard, $isJsonResponse);
+            return $this->processClaimResponse(
+                    $request, $claim, $guard, $isJsonResponse,
+                    $usernameField, $passwordField
+                );
         } catch(Exception $e) {
             Log::error('AuthController:actionLogin:Exception');
 
             //Rise Post Auth Failed Event
-            $this->callPostAuthErrorEvent($request, $e);
+            $this->callPostAuthErrorEvent($request, $e, $passwordField);
 
             throw $e;
         } //Try-catch ends
@@ -133,12 +141,15 @@ class LoginController extends Controller
             $claim = $this->attemptLoginMFA($request, $guard, true);
 
             //Process the claim response
-            return $this->processClaimResponse($request, $claim, $guard, $isJsonResponse);
+            return $this->processClaimResponse(
+                    $request, $claim, $guard, $isJsonResponse,
+                    $usernameField, $passwordField
+                );
         } catch (Exception $e) {
             Log::error('AuthController:validateMFA:Exception');
 
             //Rise Post Auth Failed Event
-            $this->callPostAuthErrorEvent($request, $e);
+            $this->callPostAuthErrorEvent($request, $e, $passwordField);
 
             if ($isJsonResponse) {
                 throw $e;
@@ -204,7 +215,8 @@ class LoginController extends Controller
     } //Function ends
 
     private function processClaimResponse(Request $request, $claim,
-        string $guard, bool $isJsonResponse): mixed
+        string $guard, bool $isJsonResponse,
+        string $usernameField, string $passwordField): mixed
     {
         try
         {
@@ -216,12 +228,12 @@ class LoginController extends Controller
                 if ($isJsonResponse) {
                     if ($claim instanceof AwsCognitoClaim) { // Success authentication
                         //Raise Post Auth Success Event
-                        $this->callPostAuthSuccessEvent($request, $guard);
+                        $this->callPostAuthSuccessEvent($request, $guard, $passwordField);
 
                         $returnValue = $this->response->success($claim->getData());
                     } else { // Challenge generated
                         //Raise Post Auth Success Event
-                        $this->callPostAuthSuccessEvent($request, $null);
+                        $this->callPostAuthSuccessEvent($request, null, $passwordField);
 
                         $returnValue = $this->response->success([]);
                     } //End if
@@ -230,7 +242,7 @@ class LoginController extends Controller
                         $request->session()->regenerate();
 
                         //Raise Post Auth Success Event
-                        $this->callPostAuthSuccessEvent($request, $guard);
+                        $this->callPostAuthSuccessEvent($request, $guard, $passwordField);
 
                         $returnValue = redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
                     } elseif ($claim===false) {
@@ -253,7 +265,7 @@ class LoginController extends Controller
         }
     } //Function ends
 
-    private function callPreAuthEvent(Request $request, $passwordField): void
+    private function callPreAuthEvent(Request $request, string $passwordField): void
     {
         //Raise pre registration event
         event(new PreAuthEvent(
@@ -262,22 +274,24 @@ class LoginController extends Controller
         ));
     } //Function ends
 
-    private function callPostAuthSuccessEvent(Request $request, string $guard): void
+    private function callPostAuthSuccessEvent(Request $request,
+        string $guard, string $passwordField): void
     {
         //Raise Post Auth Success Event
         $user = Auth::guard($guard)->user();
         event(new PostAuthSuccessEvent(
             $user->toArray(),
-            $request->except('password'),
+            $request->except($passwordField),
             $request->ip()
         ));
     } //Function ends
 
-    private function callPostAuthErrorEvent(Request $request, $e): void
+    private function callPostAuthErrorEvent(Request $request,
+        $e, string $passwordField): void
     {
         //Rise Post Auth Failed Event
         event(new PostAuthFailedEvent(
-            $request->except('password'),
+            $request->except($passwordField),
             $e, $request->ip()
         ));
     } //Function ends

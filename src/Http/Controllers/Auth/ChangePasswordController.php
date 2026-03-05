@@ -24,10 +24,10 @@ class ChangePasswordController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | Confirm Password Controller
+    | Change Password Controller
     |--------------------------------------------------------------------------
     |
-    | This controller is responsible for handling password confirmations and
+    | This controller is responsible for handling password changes and
     | uses a simple trait to include the behavior. You're free to explore
     | this trait and override any functions that require customization.
     |
@@ -87,7 +87,7 @@ class ChangePasswordController extends Controller
 
             return $returnValue;
         } catch(Exception $e) {
-            Log::error('SendsPasswordResetEmails:sendResetLinkEmail:Exception');
+            Log::error('ChangePasswordController:actionChangePassword:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends

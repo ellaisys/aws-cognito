@@ -89,11 +89,12 @@ class RegisterController extends Controller
      * Create a new user instance after a valid registration.
      *
      * @param  array  $data
-     * @return \App\Models\User
+     * @return \Illuminate\Database\Eloquent\Model
      */
     protected function create(array $data)
     {
-        return User::create($data);
+        $user = Auth::getProvider()->getModel();
+        return $user::create($data);
     }
 
     /**
@@ -146,7 +147,7 @@ class RegisterController extends Controller
             $user = $this->invite($request, $this->clientMetadata);
             if ($user) {
                 //Raise post registration event
-                $this->callPostRegistrationEvent($request, $user);
+                $this->callPostRegistrationEvent($request, $user->toArray());
 
                 return $this->response->success($user);
             } //End if

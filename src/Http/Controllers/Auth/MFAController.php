@@ -20,6 +20,9 @@ use Ellaisys\Cognito\Auth\RegisterMFA;
 use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
 
 use Exception;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class MFAController extends Controller
 {

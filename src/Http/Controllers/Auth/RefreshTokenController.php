@@ -24,10 +24,6 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\Validator;
 
 use Exception;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
-use Ellaisys\Cognito\Exceptions\NoLocalUserException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-
 
 class RefreshTokenController extends Controller
 {
