@@ -91,6 +91,11 @@ abstract class BaseMiddleware //extends Middleware
     public function authenticate(Request $request, string $guard)
     {
         try {
+            if(($guard=='web') && ($request->has('challenge_name'))
+                && ($request->input('challenge_name') == 'NEW_PASSWORD_REQUIRED')) {
+                return true;
+            } //End if
+
             // Validate the token
             $this->checkForToken($request);
 
@@ -101,6 +106,7 @@ abstract class BaseMiddleware //extends Middleware
                 case 'web':
                     $user = $request->user();
                     if (empty($user)) {
+                        dd('User not found');
                         throw new UnauthorizedHttpException('aws-cognito', 'User not found');
                     } //End if
                     break;

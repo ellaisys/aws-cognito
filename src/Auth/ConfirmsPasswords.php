@@ -86,8 +86,15 @@ trait ConfirmsPasswords
 
             //Get User data from Guard
             $claim = Auth::guard($guard)->getClaim();
-            if (empty($claim)) { throw new InvalidUserException(); }
-            $payload = $payload->replace([$paramUsername => $claim['username']]);
+            if (empty($claim)) {
+                if ($request->has('challenge_name') && $request->input('challenge_name') == 'NEW_PASSWORD_REQUIRED') {
+                    $payload = $payload->replace([$paramUsername => $request->input($paramUsername)]);
+                } else {
+                    throw new InvalidUserException();
+                } //End if
+            } else {
+                $payload = $payload->replace([$paramUsername => $claim['username']]);
+            } //End if
 
             //Get the password policy
             $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
@@ -113,7 +120,7 @@ trait ConfirmsPasswords
             switch ($this->authData['UserStatus']) {
                 case AwsCognitoClient::FORCE_CHANGE_PASSWORD:
                     $returnValue = $this->forceNewPassword(
-                        $client, $guard, $request,
+                        $client, $guard, $payload,
                         $paramUsername, $passwordOld, $passwordNew
                     );
                     break;

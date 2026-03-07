@@ -307,7 +307,7 @@ trait AwsCognitoClientAdminAction
      * Responds to an authentication challenge, as an administrator.
      * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminRespondToAuthChallenge.html
      *
-     * @param string $challengeName
+     * @param CognitoChallengeTypes $challengeName
      * @param string $session
      * @param string $challengeValue
      * @param string $username
@@ -315,7 +315,7 @@ trait AwsCognitoClientAdminAction
      * @return \Aws\Result
      */
     protected function adminRespondToAuthChallenge(
-        string $challengeName, string $session,
+        CognitoChallengeTypes $challengeName, string $session,
         string $challengeValue, string $username)
     {
         try {
@@ -324,7 +324,7 @@ trait AwsCognitoClientAdminAction
                 'ClientId' => $this->clientId,
                 'UserPoolId' => $this->poolId,
                 'Session' => $session,
-                'ChallengeName' => $challengeName,
+                'ChallengeName' => $challengeName->value,
             ];
 
             //Set challenge response
@@ -350,7 +350,7 @@ trait AwsCognitoClientAdminAction
         return $response;
     } //Function ends
 
-    private function buildChallengePayload(string $challengeName,
+    private function buildChallengePayload(CognitoChallengeTypes $challengeName,
         string $challengeValue, string $username): array
     {
         try {
