@@ -14,6 +14,14 @@
     </a>
     @endif
 
+    @if (Route::has('cognito.action.user.mfa.deactivate'))
+    <a class="dropdown-item" href="{{ route('cognito.action.user.mfa.deactivate') }}">
+        {{ __('Deactivate MFA') }}
+    </a>
+    @endif
+
+    <div class="dropdown-divider"></div>
+
     @if (Route::has('cognito.action.mfa.enable'))
     <a class="dropdown-item" href="{{ route('cognito.action.mfa.enable') }}">
         {{ __('Enable MFA') }}

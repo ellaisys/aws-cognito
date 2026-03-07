@@ -65,6 +65,8 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
                 Route::get('/activate', 'activate')->name('form.user.mfa.activate');
                 Route::post('/verify', 'verify')->name('action.user.mfa.activate');
                 Route::get('/deactivate', 'deactivate')->name('action.user.mfa.deactivate');
+                Route::get('/enable', 'enable')->name('action.mfa.enable');
+                Route::get('/disable', 'disable')->name('action.mfa.disable');
             });
         });
     });

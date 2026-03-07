@@ -8,12 +8,8 @@
                 <div class="card-header">{{ __('Dashboard') }}</div>
 
                 <div class="card-body">
-                    @if (session('status'))
-                        <div class="alert alert-success" role="alert">
-                            {{ session('status') }}
-                        </div>
-                    @endif
-
+                    <x-cognito::common.alert />
+                    
                     <img src="https://github.com/ellaisys/aws-cognito/raw/master/assets/images/banner.png"
                         width="100%" alt="EllaiSys AWS Cloud Capability"/>
 
