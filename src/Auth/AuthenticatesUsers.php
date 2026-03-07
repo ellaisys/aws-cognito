@@ -142,25 +142,18 @@ trait AuthenticatesUsers
             $response = null;
             $claim = null;
 
+            if ($request instanceof Request) {
+                //Set the response type
+                $isJsonResponse = ($request->expectsJson() || $request->isJson());
+
+                $request = collect($request->all());
+            } //End if
+
             //Validate request
             $validator = Validator::make($request->all(), $this->rulesMFA());
 
             if ($validator->fails()) {
                 throw new ValidationException($validator);
-            } //End if
-
-            if ($request instanceof Request) {
-                //Validate request
-                $validator = Validator::make($request->all(), $this->rulesMFA());
-
-                if ($validator->fails()) {
-                    throw new ValidationException($validator);
-                } //End if
-
-                //Set the response type
-                $isJsonResponse = ($request->expectsJson() || $request->isJson());
-
-                $request = collect($request->all());
             } //End if
 
             //Generate challenge array
@@ -181,6 +174,10 @@ trait AuthenticatesUsers
                 
                 case 'api': //API
                     $challengeData = Auth::guard($guard)->getChallengeData($challenge['session']);
+                    if (empty($challengeData) || empty($challengeData['username'])) {
+                        throw new HttpException(400, 'ERROR_AWS_COGNITO_SESSION_MFA_CODE');
+                    } //End if
+
                     $username = $challengeData['username'];
                     $challenge['username'] = $username;
                     break;
@@ -193,10 +190,11 @@ trait AuthenticatesUsers
             $claim = Auth::guard($guard)->attemptMFA($challenge);
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:NoLocalUserException');
-            $response = $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername, $isRaiseException);
+            $response = $this->sendFailedLoginResponse($request, $e, $isJsonResponse);
         } catch (CognitoIdentityProviderException $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:CognitoIdentityProviderException');
-            $response = $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName, $isRaiseException);
+            if ($isJsonResponse) { throw AwsCognitoException::create($e); }
+            $response = $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:Exception');
             if ($isJsonResponse) {
@@ -212,7 +210,7 @@ trait AuthenticatesUsers
                         $paramName = 'mfa_code';
                         break;
                 } //Switch ends
-                $response = $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName, $isRaiseException);
+                $response = $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);
             } //End if
         } //Try-catch ends
 

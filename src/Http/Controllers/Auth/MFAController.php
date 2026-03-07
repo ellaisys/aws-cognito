@@ -70,6 +70,7 @@ class MFAController extends Controller
 
                 $returnValue = back()
                     ->with('user', $userCognito->toArray())
+                    ->with('status', 'MFA activated successfully')
                     ->with('actionActivateMFA', $response);
             } //End if
             return $returnValue;
@@ -111,6 +112,7 @@ class MFAController extends Controller
 
                     $returnValue = back()
                     ->with('user', $userCognito->toArray())
+                    ->with('status', 'MFA deactivated successfully')
                     ->with('actionDeactivateMFA', $response);
                 }
                 return $returnValue;
@@ -126,22 +128,45 @@ class MFAController extends Controller
     /**
      * Action to enable MFA for the user
      */
-    public function enable()
+    public function enable(Request $request)
     {
         try
         {
-            $user = auth()->guard('web')->user();
-            $response = $this->enableMFA('web', $user->email);
-            $userCognito = auth()->guard('web')->getRemoteUserData($user->email);
+            //Initialize parameters
+            $returnValue = null;
+            $guard = 'web';
+            $isJsonResponse = false;
 
-            //Return status to screen
-            return back()
-                ->with('user', $userCognito->toArray())
-                ->with('actionEnableMFA', [
-                    'message' => $response
-                ]);
+            //Check if request is json
+            if ($this->isJson($request)) {
+                $isJsonResponse = true;
+                $guard = 'api';
+            } //End if
+
+            $user = auth()->guard($guard)->user();
+            $response = $this->enableMFA($guard, $user->email);
+
+            if ((isset($response['@metadata']['statusCode'])) &&
+                ($response['@metadata']['statusCode']==200)) {
+                //Return status to screen
+                if ($isJsonResponse) {
+                    $returnValue = $this->response->success([], 200, 'MFA enabled successfully');
+                } else {
+                    $userCognito = auth()->guard($guard)->getRemoteUserData($user->email);
+
+                    $returnValue = back()
+                        ->with('user', $userCognito->toArray())
+                        ->with('status', 'MFA enabled successfully')
+                        ->with('actionEnableMFA', [
+                            'message' => $response
+                        ]);
+                }
+                return $returnValue;
+            } else {
+                throw new HttpException(400, 'Error enabling the MFA.');
+            } //End if
         } catch(Exception $e) {
-            $message = 'Error activating the MFA.';
+            $message = 'Error enabling the MFA.';
             if ($e instanceof ValidationException) {
                 $message = $e->errors();
             } elseif ($e instanceof CognitoIdentityProviderException) {
@@ -157,22 +182,45 @@ class MFAController extends Controller
     /**
      * Action to disable MFA for the user
      */
-    public function disable()
+    public function disable(Request $request)
     {
         try
         {
-            $user = auth()->guard('web')->user();
-            $response = $this->disableMFA('web', $user->email);
-            $userCognito = auth()->guard('web')->getRemoteUserData($user->email);
+            //Initialize parameters
+            $returnValue = null;
+            $guard = 'web';
+            $isJsonResponse = false;
 
-            //Return status to screen
-            return back()
-                ->with('user', $userCognito->toArray())
-                ->with('actionDisableMFA', [
-                    'status' => $response['@metadata']['statusCode']==200
-                ]);
+            //Check if request is json
+            if ($this->isJson($request)) {
+                $isJsonResponse = true;
+                $guard = 'api';
+            } //End if
+
+            $user = auth()->guard($guard)->user();
+            $response = $this->disableMFA($guard, $user->email);
+
+            if ((isset($response['@metadata']['statusCode'])) &&
+                ($response['@metadata']['statusCode']==200)) {
+                //Return status to screen
+                if ($isJsonResponse) {
+                    $returnValue = $this->response->success([], 200, 'MFA disabled successfully');
+                } else {
+                    $userCognito = auth()->guard($guard)->getRemoteUserData($user->email);
+
+                    $returnValue = back()
+                        ->with('user', $userCognito->toArray())
+                        ->with('status', 'MFA disabled successfully')
+                        ->with('actionDisableMFA', [
+                            'message' => $response
+                        ]);
+                }
+                return $returnValue;
+            } else {
+                throw new HttpException(400, 'Error disabling the MFA.');
+            } //End if
         } catch(Exception $e) {
-            $message = 'Error activating the MFA.';
+            $message = 'Error disabling the MFA.';
             if ($e instanceof ValidationException) {
                 $message = $e->errors();
             } elseif ($e instanceof CognitoIdentityProviderException) {
@@ -202,7 +250,7 @@ class MFAController extends Controller
             $deviceName = $deviceName?:$request['device_name'];
 
             //Verify MFA Code
-            $response = $this->verifyMFA($guard, $code, $deviceName);
+            $this->verifyMFA($guard, $code, $deviceName);
 
             if ($isJsonResponse) {
                 $returnValue = $this->response->success([], 200, 'MFA verified successfully');
@@ -219,7 +267,7 @@ class MFAController extends Controller
             }
             return $returnValue;
         } catch(Exception $e) {
-            Log::error('MFAController:deactivate:Exception');
+            Log::error('MFAController:verify:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends

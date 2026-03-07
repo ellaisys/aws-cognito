@@ -4,6 +4,7 @@ namespace Ellaisys\Cognito\Traits;
 
 use Config;
 
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\AwsCognitoClient;
@@ -158,10 +159,10 @@ trait AwsCognitoClientMFAAction
      *
      * @return \Aws\Result|false
      */
-    public function authMFAChallenge(string $challengeName, string $session, string $challengeValue, string $username)
+    public function authMFAChallenge(CognitoChallengeTypes $challengeName, string $session, string $challengeValue, string $username)
     {
         try {
-            if (in_array($challengeName, [AwsCognitoClient::SMS_MFA, AwsCognitoClient::SOFTWARE_TOKEN_MFA])) {
+            if (in_array($challengeName->value, [AwsCognitoClient::SMS_MFA, AwsCognitoClient::SOFTWARE_TOKEN_MFA])) {
                 $response = $this->adminRespondToAuthChallenge($challengeName, $session, $challengeValue, $username);
             } else {
                 throw new HttpException(400, 'ERROR_UNSUPPORTED_MFA_CHALLENGE');

@@ -13,6 +13,7 @@ namespace Ellaisys\Cognito\Guards\Traits;
 
 use Aws\Result as AwsResult;
 
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\Authenticatable;
 
@@ -43,7 +44,7 @@ trait CognitoMFA
             $this->claim = null;
             $this->awsResult = null;
 
-            $challengeName = $challenge['challenge_name'];
+            $challengeName = CognitoChallengeTypes::from($challenge['challenge_name']);
             $session = $challenge['session'];
             $challengeValue = $challenge['mfa_code'];
             $username = $challenge['username'];
