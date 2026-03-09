@@ -115,10 +115,10 @@ trait AuthenticatesUsers
             } //End if
 
             if ($e instanceof CognitoIdentityProviderException) {
-                $this->sendFailedCognitoResponse($e, $isJsonResponse, $paramUsername);
+                $this->sendFailedCognitoResponse($e, $paramUsername);
             }
 
-            $returnValue = $this->sendFailedLoginResponse($payload, $e, $isJsonResponse, $paramUsername);
+            $returnValue = $this->sendFailedLoginResponse($e, $isJsonResponse, $paramUsername);
         } //Try-catch ends
 
         return $returnValue;
@@ -190,11 +190,11 @@ trait AuthenticatesUsers
             $claim = Auth::guard($guard)->attemptMFA($challenge);
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:NoLocalUserException');
-            $response = $this->sendFailedLoginResponse($request, $e, $isJsonResponse);
+            $response = $this->sendFailedLoginResponse($e, $isJsonResponse);
         } catch (CognitoIdentityProviderException $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:CognitoIdentityProviderException');
             if ($isJsonResponse) { throw AwsCognitoException::create($e); }
-            $response = $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);
+            $response = $this->sendFailedLoginResponse($e, $isJsonResponse, $paramName);
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:Exception');
             if ($isJsonResponse) {
@@ -210,7 +210,7 @@ trait AuthenticatesUsers
                         $paramName = 'mfa_code';
                         break;
                 } //Switch ends
-                $response = $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);
+                $response = $this->sendFailedLoginResponse($e, $isJsonResponse, $paramName);
             } //End if
         } //Try-catch ends
 
@@ -224,7 +224,7 @@ trait AuthenticatesUsers
      */
     private function sendFailedCognitoResponse(
         CognitoIdentityProviderException $exception,
-        bool $isJsonResponse=false, string $paramName='email')
+        string $paramName='email')
     {
         throw ValidationException::withMessages([
             $paramName => $exception->getAwsErrorMessage(),
@@ -237,8 +237,7 @@ trait AuthenticatesUsers
      * @param  \Collection $request
      * @param  \Exception $exception
      */
-    private function sendFailedLoginResponse(
-        Request|Collection $request, $exception=null,
+    private function sendFailedLoginResponse($exception,
         bool $isJsonResponse=false, string $paramName='email')
     {
         $errorCode = 400;

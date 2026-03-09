@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\Auth\AuthenticatesUsers;
-use Ellaisys\Cognito\Auth\ChangePasswords;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -41,8 +40,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 class AuthController extends Controller
 {
     use AuthenticatesUsers;
-    use ChangePasswords;
-
     
     /**
      * Constructor.
@@ -55,7 +52,6 @@ class AuthController extends Controller
         
         parent::__construct();
     }
-
 
     /**
      * Login action for the API based approach.
@@ -118,7 +114,6 @@ class AuthController extends Controller
         
     } //Function ends
 
-
     /**
      * Logout action for the API based approach.
      *
@@ -139,50 +134,6 @@ class AuthController extends Controller
     public function actionLogoutForced(Request $request)
     {
         return $this->actionLogout($request, true);
-    } //Function ends
-
-
-    /**
-     * Action to update the user password
-     *
-     * @param  \Illuminate\Http\Request  $request
-     */
-    public function actionChangePassword(Request $request)
-    {
-        try
-        {
-            //Validate request
-            $validator = Validator::make($request->all(), [
-                'email'    => 'required|email',
-                'password'  => 'required',
-                'new_password' => 'required|confirmed',
-            ]);
-            $validator->validate();
-
-            // Get Current User
-            $userCurrent = auth()->guard('api')->user();
-
-            // if ($this->reset($request)) {
-            //     return redirect(route('login'))->with('success', true);
-            // } else {
-            //     return redirect()->back()
-            //         ->with('status', 'error')
-            //         ->with('message', 'Password updated failed');
-            // } //End if
-        } catch(Exception $e) {
-            $message = 'Error sending the reset mail.';
-            if ($e instanceof ValidationException) {
-                $message = $e->errors();
-            } elseif ($e instanceof CognitoIdentityProviderException) {
-                $message = $e->getAwsErrorMessage();
-            } else {
-                //Do nothing
-            } //End if
-
-            // return redirect()->back()
-            //     ->with('status', 'error')
-            //     ->with('message', $message);
-        } //Try-catch ends
     } //Function ends
 
 } //Class ends
