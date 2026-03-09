@@ -37,7 +37,7 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function activateMFA(string $guard='web')
+    public function activateMFA(string $guard='web'): mixed
     {
         return Auth::guard($guard)->associateSoftwareTokenMFA();
     } //Function ends
@@ -50,7 +50,7 @@ trait RegisterMFA
      * @return mixed
      */
     public function verifyMFA(string $guard='web',
-        string $userCode=null, string $deviceName='my device')
+        string $userCode=null, string $deviceName='my device'): mixed
     {
         $response = Auth::guard($guard)->verifySoftwareTokenMFA($userCode, $deviceName);
         if (!empty($response) && ($response['Status']=='SUCCESS')) {
@@ -65,7 +65,7 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function deactivateMFA(string $guard='web')
+    public function deactivateMFA(string $guard='web'): mixed
     {
         return $this->toggleMFA($guard, false);
     } //Function ends
@@ -78,7 +78,7 @@ trait RegisterMFA
      *
      * @return array
      */
-    private function toggleMFA(string $guard, bool $isEnable=false)
+    private function toggleMFA(string $guard, bool $isEnable=false): mixed
     {
         try {
             //Create AWS Cognito Client
@@ -122,7 +122,7 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function enableMFA(string $guard='web', string $username='email')
+    public function enableMFA(string $guard='web', string $username='email'): mixed
     {
         return $this->toggleAdminMFA($guard, $username, true);
     } //Function ends
@@ -135,7 +135,7 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function disableMFA(string $guard='web', string $username='email')
+    public function disableMFA(string $guard='web', string $username='email'): mixed
     {
         return $this->toggleAdminMFA($guard, $username, false);
     } //Function ends
@@ -149,7 +149,7 @@ trait RegisterMFA
      *
      * @return array
      */
-    private function toggleAdminMFA(string $guard, string $username, bool $isEnable=false)
+    private function toggleAdminMFA(string $guard, string $username, bool $isEnable=false): mixed
     {
         try {
             //Create AWS Cognito Client
