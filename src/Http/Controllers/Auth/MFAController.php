@@ -144,6 +144,9 @@ class MFAController extends Controller
             } //End if
 
             $user = auth()->guard($guard)->user();
+            if (empty($user)) {
+                throw new HttpException(400, 'User not found.');
+            } //End if
             $response = $this->enableMFA($guard, $user->email);
 
             if ((isset($response['@metadata']['statusCode'])) &&
@@ -166,15 +169,7 @@ class MFAController extends Controller
                 throw new HttpException(400, 'Error enabling the MFA.');
             } //End if
         } catch(Exception $e) {
-            $message = 'Error enabling the MFA.';
-            if ($e instanceof ValidationException) {
-                $message = $e->errors();
-            } elseif ($e instanceof CognitoIdentityProviderException) {
-                $message = $e->getAwsErrorMessage();
-            } else {
-                //Do nothing
-            } //End if
-
+            Log::error('MFAController:enable:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends
@@ -198,6 +193,9 @@ class MFAController extends Controller
             } //End if
 
             $user = auth()->guard($guard)->user();
+            if (empty($user)) {
+                throw new HttpException(400, 'User not found.');
+            } //End if
             $response = $this->disableMFA($guard, $user->email);
 
             if ((isset($response['@metadata']['statusCode'])) &&
@@ -220,15 +218,7 @@ class MFAController extends Controller
                 throw new HttpException(400, 'Error disabling the MFA.');
             } //End if
         } catch(Exception $e) {
-            $message = 'Error disabling the MFA.';
-            if ($e instanceof ValidationException) {
-                $message = $e->errors();
-            } elseif ($e instanceof CognitoIdentityProviderException) {
-                $message = $e->getAwsErrorMessage();
-            } else {
-                //Do nothing
-            } //End if
-
+            Log::error('MFAController:disable:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends

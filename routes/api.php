@@ -61,6 +61,8 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
                 Route::get('/activate', 'activate');
                 Route::post('/activate/{code}', 'verify');
                 Route::post('/deactivate', 'deactivate');
+                Route::post('/enable', 'enable');
+                Route::post('/disable', 'disable');
             });
         });
 
