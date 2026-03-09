@@ -106,7 +106,6 @@ abstract class BaseMiddleware //extends Middleware
                 case 'web':
                     $user = $request->user();
                     if (empty($user)) {
-                        dd('User not found');
                         throw new UnauthorizedHttpException('aws-cognito', 'User not found');
                     } //End if
                     break;
