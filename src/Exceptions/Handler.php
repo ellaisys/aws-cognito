@@ -21,6 +21,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Ellaisys\Cognito\Exceptions\NoTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
+use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -100,8 +101,15 @@ class Handler extends ExceptionHandler
         });
     } //Function ends
 
-
-    protected function handleException(Throwable $e, $request)
+    /**
+     * Handle exceptions and return appropriate responses.
+     *
+     * @param  \Throwable  $e
+     * @param  \Illuminate\Http\Request  $request
+     *
+     * @return mixed
+     */
+    protected function handleException(Throwable $e, $request): mixed
     {
         $return = null;
         $isRedirectToLogin = false;
@@ -109,7 +117,9 @@ class Handler extends ExceptionHandler
         $errorMessage = 'Something went wrong. Please try again later.';
         $errorKey = '';
 
-        if ($e instanceof ValidationException) {
+        if ($e instanceof AwsCognitoException) { //400
+            list($statusCode, $errorMessage, $errorKey) = $this->handleAwsCognitoException($e);
+        } elseif ($e instanceof ValidationException) {
             $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY; //422
             $errorMessage = 'Data validation error';
         } elseif ($e instanceof ModelNotFoundException) {
@@ -119,49 +129,26 @@ class Handler extends ExceptionHandler
             ($e instanceof HttpException)) {
             $statusCode = Response::HTTP_BAD_REQUEST; //400
             $errorMessage = $e->getMessage();
-        } elseif ($e instanceof AwsCognitoException) {
-            $statusCode = Response::HTTP_BAD_REQUEST; //400
-            switch ($e->getMessage()) {
-                case AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED:
-                    $errorMessage = 'User authentication error';
-                    $errorKey = AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED;
-                    break;
-
-                case AwsCognitoException::COGNITO_AUTH_USER_RESET_PASS:
-                    $errorMessage = 'User password reset error';
-                    $errorKey = AwsCognitoException::COGNITO_AUTH_USER_RESET_PASS;
-                    break;
-
-                case AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS:
-                    $errorMessage = 'User already exists';
-                    $errorKey = AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS;
-                    break;
-                
-                default:
-                    $errorMessage = $e->getMessage();
-                    $errorKey = 'ERROR_COGNITO_DEFAULT';
-                    break;
-            } //End Switch
         } elseif (($e instanceof AuthenticationException) ||
             ($e instanceof UnauthorizedHttpException) ||
-            ($e instanceof InvalidUserException)) {
+            ($e instanceof InvalidUserException) ||
+            ($e instanceof NoTokenException) ||
+            ($e instanceof InvalidTokenException)) {
             $statusCode = Response::HTTP_UNAUTHORIZED; //401
             $errorMessage = 'Unauthenticated.';
             $errorKey = $e->getMessage();
             $isRedirectToLogin = true;
-        } elseif ($e instanceof NoTokenException) {
-            $statusCode = Response::HTTP_UNAUTHORIZED; //401
-            $errorMessage = 'Unauthenticated.';
-            $errorKey = $e->getMessage();
         } elseif ($e instanceof AccessDeniedHttpException) {
             $statusCode = Response::HTTP_FORBIDDEN; //403
             $errorMessage = 'You do not have permission to perform this action.';
-        } elseif (config('app.debug')) {
-            // Show detailed info in debug mode
-            return response()->json([
-                'error' => $e->getMessage(),
-                'trace' => collect($e->getTrace())->take(3),
-            ], 500);
+        } else {
+            if (config('app.debug')) {
+                // Show detailed info in debug mode
+                return response()->json([
+                    'error' => $e->getMessage(),
+                    'trace' => collect($e->getTrace())->take(3),
+                ], 500);
+            }
         }
 
         if ($request->isJson() || $request->wantsJson() || $request->expectsJson()) {
@@ -189,6 +176,52 @@ class Handler extends ExceptionHandler
         return $return;
     } //Function ends
 
+    /**
+     * Handle AWS Cognito exceptions and map them to appropriate status codes and messages.
+     *
+     * @param  \Exception  $e
+     *
+     * @return array
+     */
+    protected function handleAwsCognitoException(Exception $e): array
+    {
+        $statusCode = Response::HTTP_BAD_REQUEST; //400
+        switch ($e->getMessage()) {
+            case AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED:
+                $errorMessage = 'User authentication error';
+                $errorKey = AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED;
+                break;
+
+            case AwsCognitoException::COGNITO_AUTH_USER_RESET_PASS:
+                $errorMessage = 'User password reset error';
+                $errorKey = AwsCognitoException::COGNITO_AUTH_USER_RESET_PASS;
+                break;
+
+            case AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS:
+                $errorMessage = 'User already exists';
+                $errorKey = AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS;
+                break;
+            
+            default:
+                $errorMessage = $e->getMessage();
+                $errorKey = 'ERROR_COGNITO_DEFAULT';
+                break;
+        } //End Switch
+
+        return [$statusCode, $errorMessage, $errorKey];
+    } //Function ends
+
+    /**
+     * Handle exceptions and return appropriate JSON responses.
+     *
+     * @param  \Throwable  $e
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $statusCode
+     * @param  string  $message
+     * @param  string|null  $errorKey
+     *
+     * @return mixed
+     */
     protected function JsonResponseBuilder(Throwable $e, $request,
         $statusCode,
         string $message='An error occurred',

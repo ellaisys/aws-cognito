@@ -120,7 +120,7 @@ trait ConfirmsPasswords
             switch ($this->authData['UserStatus']) {
                 case AwsCognitoClient::FORCE_CHANGE_PASSWORD:
                     $returnValue = $this->forceNewPassword(
-                        $client, $guard, $payload,
+                        $client, $payload,
                         $paramUsername, $passwordOld, $passwordNew
                     );
                     break;
@@ -159,7 +159,7 @@ trait ConfirmsPasswords
      * @return string
      */
     private function forceNewPassword(
-        AwsCognitoClient $client, string $guard,
+        AwsCognitoClient $client,
         Collection $payload, string $paramUsername,
         string $passwordOld, string $passwordNew)
     {

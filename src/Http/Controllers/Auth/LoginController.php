@@ -112,7 +112,7 @@ class LoginController extends Controller
                     $usernameField, $passwordField
                 );
         } catch(Exception $e) {
-            Log::error('AuthController:actionLogin:Exception');
+            Log::error('LoginController:actionLogin:Exception');
 
             //Rise Post Auth Failed Event
             $this->callPostAuthErrorEvent($request, $e, $passwordField);
@@ -151,7 +151,7 @@ class LoginController extends Controller
                     $this->usernameField, $this->passwordField
                 );
         } catch (Exception $e) {
-            Log::error('AuthController:validateMFA:Exception');
+            Log::error('LoginController:validateMFA:Exception');
 
             //Rise Post Auth Failed Event
             $this->callPostAuthErrorEvent($request, $e, $this->passwordField);
@@ -260,7 +260,7 @@ class LoginController extends Controller
 
             return $returnValue;
         } catch(Exception $e) {
-            Log::error('AuthController:processClaimResponse:Exception');
+            Log::error('LoginController:processClaimResponse:Exception');
             throw $e;
         }
     } //Function ends

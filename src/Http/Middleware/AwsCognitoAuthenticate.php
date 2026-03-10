@@ -32,7 +32,7 @@ class AwsCognitoAuthenticate extends BaseMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, \Closure $next, $guards=null)
+    public function handle(Request $request, \Closure $next)
     {
         $guard='';
         $middleware='';
