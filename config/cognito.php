@@ -375,7 +375,7 @@ return [
     |--------------------------------------------------------------------------
     | Routes
     |--------------------------------------------------------------------------
-    | This option controls the routes for the package. You can set the routes 
+    | This option controls the routes for the package. You can set the routes
     | for the package here.
     */
     'routes' => [
