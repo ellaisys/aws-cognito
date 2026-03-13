@@ -1,3 +1,8 @@
+Release 44 (tag v2.0.0)
+- Feat: Issue [#70](https://github.com/ellaisys/aws-cognito/issues/70) Add web views as partials
+- Feat: Preconfigured routes and controllers for Web and API
+- Docs: Updated readme
+
 Release 43 (tag v1.4.1)
 - Fix: Remove Laravel version debug log by @aaronhuisinga in [PR #123](https://github.com/ellaisys/aws-cognito/pull/123)
 - Fix: PHP 8.4 implicit nullable parameter deprecations by @joshkautz in [PR #122](https://github.com/ellaisys/aws-cognito/pull/122)
@@ -95,3 +100,4 @@ Release 20 (tag v1.0.5):
 
 Release 19 (tag v1.0.4): 
  - Feature: Forgot password RESEND option
+ 

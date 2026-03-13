@@ -77,22 +77,26 @@ trait AuthenticatesUsers
      */
     protected function attemptLogin(Request|Collection $request,
         string $guard='web', string $paramUsername='email',
-        string $paramPassword='password', bool $isJsonResponse=false)
+        string $paramPassword='password', bool $isJsonResponse=false,
+        bool $isRaiseException=false)
     {
         try {
             $returnValue = null;
+            $payload = null;
 
             //Convert request to collection
             if ($request instanceof Request) {
                 $isJsonResponse = ($request->expectsJson() || $request->isJson());
-                $request = collect($request->all());
+                $payload = collect($request->all());
+            } else {
+                $payload = $request;
             } //End if
 
             //Get the password policy
             $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
-            $validator = Validator::make($request->only([$paramPassword])->toArray(), [
+            $validator = Validator::make($payload->only([$paramPassword])->toArray(), [
                 $paramPassword => 'required|regex:'.$passwordPolicy['regex']
             ], [
                 'regex' => 'Must contain atleast ' . $passwordPolicy['message']
@@ -103,32 +107,23 @@ trait AuthenticatesUsers
             } //End if
 
             //Authenticate User
-            $returnValue = Auth::guard($guard)->attempt($request->toArray(), false, $paramUsername, $paramPassword);
-        } catch (NoLocalUserException | CognitoIdentityProviderException | Exception $e) {
-            $exceptionClass = basename(str_replace('\\', DIRECTORY_SEPARATOR, get_class($e)));
-            $exceptionCode = $e->getCode();
-            $exceptionMessage = $e->getMessage().':(code:'.$exceptionCode.', line:'.$e->getLine().')';
-            if ($e instanceof CognitoIdentityProviderException) {
-                $exceptionCode = $e->getAwsErrorCode();
-                $exceptionMessage = $e->getAwsErrorMessage().':'.$exceptionCode;
-            } //End if
-            Log::error('AuthenticatesUsers:attemptLogin:'.$exceptionClass.':'.$exceptionMessage);
-
-            if ($e instanceof ValidationException) {
+            $returnValue = Auth::guard($guard)->attempt($payload->toArray(), false, $paramUsername, $paramPassword);
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:attemptLogin:Exception');
+            if ($e instanceof ValidationException || ($isRaiseException)) {
                 throw $e;
             } //End if
 
             if ($e instanceof CognitoIdentityProviderException) {
-                $this->sendFailedCognitoResponse($e, $isJsonResponse, $paramUsername);
+                $this->sendFailedCognitoResponse($e, $paramUsername);
             }
 
-            $returnValue = $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
+            $returnValue = $this->sendFailedLoginResponse($e, $isJsonResponse, $paramUsername);
         } //Try-catch ends
 
         return $returnValue;
     } //Function ends
 
-    
     /**
      * Attempt to log the user into the application.
      *
@@ -143,18 +138,22 @@ trait AuthenticatesUsers
         string $paramName='mfa_code')
     {
         try {
+            // Initialize variables
+            $response = null;
+            $claim = null;
+
             if ($request instanceof Request) {
-                //Validate request
-                $validator = Validator::make($request->all(), $this->rulesMFA());
-
-                if ($validator->fails()) {
-                    throw new ValidationException($validator);
-                } //End if
-
                 //Set the response type
                 $isJsonResponse = ($request->expectsJson() || $request->isJson());
 
                 $request = collect($request->all());
+            } //End if
+
+            //Validate request
+            $validator = Validator::make($request->all(), $this->rulesMFA());
+
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
             } //End if
 
             //Generate challenge array
@@ -175,6 +174,10 @@ trait AuthenticatesUsers
                 
                 case 'api': //API
                     $challengeData = Auth::guard($guard)->getChallengeData($challenge['session']);
+                    if (empty($challengeData) || empty($challengeData['username'])) {
+                        throw new HttpException(400, 'ERROR_AWS_COGNITO_SESSION_MFA_CODE');
+                    } //End if
+
                     $username = $challengeData['username'];
                     $challenge['username'] = $username;
                     break;
@@ -187,28 +190,32 @@ trait AuthenticatesUsers
             $claim = Auth::guard($guard)->attemptMFA($challenge);
         } catch (NoLocalUserException $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:NoLocalUserException');
-            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramUsername);
+            $response = $this->sendFailedLoginResponse($e, $isJsonResponse);
         } catch (CognitoIdentityProviderException $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:CognitoIdentityProviderException');
-            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);
+            if ($isJsonResponse) { throw AwsCognitoException::create($e); }
+            $response = $this->sendFailedLoginResponse($e, $isJsonResponse, $paramName);
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLoginMFA:Exception');
-            Log::error($e);
-            switch ($e->getMessage()) {
-                case 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER':
-                    $paramName = 'mfa_code';
-                    break;
-                
-                default:
-                    $paramName = 'mfa_code';
-                    break;
-            } //Switch ends
-            return $this->sendFailedLoginResponse($request, $e, $isJsonResponse, $paramName);
+            if ($isJsonResponse) {
+                throw $e;
+            } else {
+                Log::error($e);
+                switch ($e->getMessage()) {
+                    case 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER':
+                        $paramName = 'mfa_code';
+                        break;
+                    
+                    default:
+                        $paramName = 'mfa_code';
+                        break;
+                } //Switch ends
+                $response = $this->sendFailedLoginResponse($e, $isJsonResponse, $paramName);
+            } //End if
         } //Try-catch ends
 
-        return $claim;
+        return $claim?$claim:$response;
     } //Function ends
-
 
     /**
      * Handle Failed Cognito Exception
@@ -217,13 +224,12 @@ trait AuthenticatesUsers
      */
     private function sendFailedCognitoResponse(
         CognitoIdentityProviderException $exception,
-        bool $isJsonResponse=false, string $paramName='email')
+        string $paramName='email')
     {
         throw ValidationException::withMessages([
             $paramName => $exception->getAwsErrorMessage(),
         ]);
     } //Function ends
-
 
     /**
      * Handle Generic Exception
@@ -231,8 +237,7 @@ trait AuthenticatesUsers
      * @param  \Collection $request
      * @param  \Exception $exception
      */
-    private function sendFailedLoginResponse(
-        Request|Collection $request, $exception=null,
+    private function sendFailedLoginResponse($exception,
         bool $isJsonResponse=false, string $paramName='email')
     {
         $errorCode = 400;
@@ -251,7 +256,7 @@ trait AuthenticatesUsers
         } //End if
 
         if ($isJsonResponse) {
-            return  response()->json([
+            return response()->json([
                 'error' => $errorMessageCode,
                 'message' => $message
             ], $errorCode);
@@ -264,7 +269,6 @@ trait AuthenticatesUsers
                 ]);
         } //End if
     } //Function ends
-
 
     /**
      * Get the MFA authentication validation rules.

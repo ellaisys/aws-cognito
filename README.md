@@ -30,7 +30,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Login (Sign In)](#user-authentication)
 - Token Validation for all Session and Token Guard Requests
 - Remember Me Cookie
-- Single Sign On **Updated** (Fix: Issue #86)
+- Single Sign On (Fix: Issue #86)
 - Forgot Password (Resend - configurable)
 - User Deletion
 - Edit User Attributes
@@ -42,16 +42,19 @@ We decided to use it and contribute it to the community as a package, that encou
 - Support for App Client without Secret
 - Support for Cognito Groups, including assigning a default group to a new user
 - Session (Web) now has AccessToken and RefreshToken as part of the claim object
+- [Refresh Token API](#refresh-token)
 - [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
 - [MFA Implementation for Session and Token Guards](./README_MFA.md)
 - [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
 - [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
+- [Preconfigured routes and controllers for Web and API ](/README_ROUTES.md#routes) **New Feature**
+- [Preconfigured views for Web ](/README_ROUTES.md#web-views-and-components)**New Feature**
 
 ## Compatability
 
 |PHP Version|Support|
-|-|-|
+|-|-| 
 |7.4|Yes :heavy_check_mark:|
 |8.0|Yes :heavy_check_mark:|
 |8.1|Yes :heavy_check_mark:|
@@ -92,7 +95,7 @@ Using a version prior to Laravel 5.5 you need to manually register the service p
 ### Configuration File: Next you can publish the config.
 
 ```bash
-    php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider"
+    php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="config"
 ```
 Last but not least you want to change the auth driver. To do so got to your config\auth.php file and change it
 to look the following:
@@ -122,7 +125,7 @@ The AWS Cognito service provider registers its own database migration directory,
 If you need to overwrite the migrations that ship with AWS Cognito, you can publish them using the vendor:publish Artisan command:
 
 ```bash
-    php artisan vendor:publish --tag="cognito-migrations"
+    php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="migrations"
 ```
 
 If you would like to prevent AWS Cognito's migrations from running entirely, you may use the ignoreMigrations method provided by AWS Cognito. Typically, this method should be called in the register method of your AppServiceProvider:
@@ -137,7 +140,6 @@ If you would like to prevent AWS Cognito's migrations from running entirely, you
         AwsCognito::ignoreMigrations();
     }
 ```
-
 
 ## Cognito User Pool
 
@@ -430,7 +432,7 @@ In case you want to use this trait for Web login, you can write the code as show
             if ($response = $this->attemptLogin($collection, 'web')) {
                 if ($response===true) {
                     return redirect(route('home'))->with('success', true);
-                } else if ($response===false) {
+                } elseif ($response===false) {
                     // If the login attempt was unsuccessful you may increment the number of attempts
                     // to login and redirect the user back to the login form. Of course, when this
                     // user surpasses their maximum number of attempts they will get locked out.

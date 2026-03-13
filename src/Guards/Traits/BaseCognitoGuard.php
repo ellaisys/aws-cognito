@@ -13,6 +13,7 @@ namespace Ellaisys\Cognito\Guards\Traits;
 
 use Aws\Result as AwsResult;
 
+use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -23,9 +24,12 @@ use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClientInterface;
 use Ellaisys\Cognito\AwsCognitoClientManager;
 
+use Ellaisys\Cognito\Http\Parser\ClaimSession;
+
 use Exception;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
+use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Ellaisys\Cognito\Validators\AwsCognitoTokenValidator;
 
 /**
@@ -33,7 +37,6 @@ use Ellaisys\Cognito\Validators\AwsCognitoTokenValidator;
  */
 trait BaseCognitoGuard
 {
-
     /**
      * Get the AWS Cognito object
      *
@@ -43,6 +46,62 @@ trait BaseCognitoGuard
         return $this->cognito;
     } //Function ends
 
+    /**
+     * Set the token.
+     *
+     * @return $this
+     */
+    public function setToken()
+    {
+        $this->cognito->setClaim($this->claim)->storeToken();
+
+        return $this;
+    } //Function ends
+
+    /**
+     * Get the claim data.
+     *
+     * @return $claim
+     */
+    public function getClaim()
+    {
+        //Check for request having token
+        if (! $this->cognito->parser()->setRequest($this->request)->hasToken()) {
+            return null;
+        } //End if
+
+        if (! $this->cognito->parseToken()->authenticate()) {
+            throw new NoLocalUserException();
+        } //End if
+
+        //Get claim
+        $claim = $this->cognito->getClaim();
+        if (empty($claim)) {
+            throw new InvalidTokenException();
+        } //End if
+        return $claim;
+    } //Function ends
+
+    /**
+     * Get the challenged claim.
+     *
+     * @return $claim
+     */
+    public function getChallengeData(string $key)
+    {
+        return $this->cognito->getChallengeData($key);
+    } //Function ends
+
+    /**
+     * Save the challenged claim.
+     *
+     * @return $this
+     */
+    public function setChallengeData(string $key)
+    {
+        $this->cognito->setChallengeData($key, $this->challengeData);
+        return $this;
+    } //Function ends
 
     /**
      * Get the User Information from AWS Cognito
@@ -52,7 +111,6 @@ trait BaseCognitoGuard
     public function getRemoteUserData(string $username) {
         return $this->client->getUser($username);
     } //Function ends
-
 
     /**
      * Set the User Information into the local DB
@@ -92,7 +150,6 @@ trait BaseCognitoGuard
         return $this->client->getUser($username);
     } //Function ends
 
-
     /**
      * Validate the user credentials with AWS Cognito
      *
@@ -107,7 +164,6 @@ trait BaseCognitoGuard
 
         //Authenticate the user with AWS Cognito
         $result = $this->client->authenticate($credentials['email'], $credentials['password']);
-
         //Check if the result is an instance of AwsResult
         if (!empty($result) && $result instanceof AwsResult) {
             //Set value into class param
@@ -127,7 +183,6 @@ trait BaseCognitoGuard
 
         return $result;
     } //Function ends
-
 
     /**
      * handle Cognito Challenge
@@ -170,7 +225,6 @@ trait BaseCognitoGuard
 
         return $returnValue;
     } //Function ends
-
 
     /**
      * Build the payload array.
@@ -219,7 +273,6 @@ trait BaseCognitoGuard
         return collect($payload);
     } //Function ends
 
-
     /**
      * Validate the user credentials with Local Data Store
      *
@@ -256,7 +309,6 @@ trait BaseCognitoGuard
             throw $e;
         } //End try-catch
     } //Function ends
-
 
     /**
      * Build the payload for Local DB
@@ -298,7 +350,6 @@ trait BaseCognitoGuard
         return collect($payload);
     } //Function ends
 
-    
     /**
      * Create a local user if one does not exist.
      *

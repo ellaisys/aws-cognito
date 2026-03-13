@@ -15,15 +15,18 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
 
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
+
 use Ellaisys\Cognito\Traits\AwsCognitoClientMFAAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientAdminAction;
 
-use Execption;
+use Excption;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 use Aws\CognitoIdentityProvider\Exception\InvalidPasswordException;
-use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException ;
+use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class AwsCognitoClient
@@ -38,14 +41,12 @@ class AwsCognitoClient
      */
     const USER_STATUS_CONFIRMED = 'CONFIRMED';
 
-
     /**
      * Constant representing the user needs a new password.
      *
      * @var string
      */
     const NEW_PASSWORD_CHALLENGE = 'NEW_PASSWORD_REQUIRED';
-
 
     /**
      * Constant representing the user needs to reset password.
@@ -54,14 +55,12 @@ class AwsCognitoClient
      */
     const RESET_REQUIRED_PASSWORD = 'RESET_REQUIRED';
 
-
     /**
      * Constant representing the force new password status.
      *
      * @var string
      */
     const FORCE_CHANGE_PASSWORD = 'FORCE_CHANGE_PASSWORD';
-
 
     /**
      * Constant representing the password reset required exception.
@@ -70,14 +69,12 @@ class AwsCognitoClient
      */
     const RESET_REQUIRED = 'PasswordResetRequiredException';
 
-
     /**
      * Constant representing the user not found exception.
      *
      * @var string
      */
     const USER_NOT_FOUND = 'UserNotFoundException';
-
 
     /**
      * Constant representing the username exists exception.
@@ -86,14 +83,12 @@ class AwsCognitoClient
      */
     const USERNAME_EXISTS = 'UsernameExistsException';
 
-
     /**
      * Constant representing the invalid password exception.
      *
      * @var string
      */
     const INVALID_PASSWORD = 'InvalidPasswordException';
-
 
     /**
      * Constant representing the code mismatch exception.
@@ -102,14 +97,12 @@ class AwsCognitoClient
      */
     const CODE_MISMATCH = 'CodeMismatchException';
 
-
     /**
      * Constant representing the expired code exception.
      *
      * @var string
      */
     const EXPIRED_CODE = 'ExpiredCodeException';
-
 
     /**
      * Constant representing the not authorized exception.
@@ -118,14 +111,12 @@ class AwsCognitoClient
      */
     const COGNITO_NOT_AUTHORIZED_ERROR = 'NotAuthorizedException';
 
-
     /**
      * Constant representing the SMS MFA challenge.
      *
      * @var string
      */
     const SMS_MFA = 'SMS_MFA';
-
     
     /**
      * Constant representing the SOFTWARE TOKEN MFA challenge.
@@ -134,36 +125,30 @@ class AwsCognitoClient
      */
     const SOFTWARE_TOKEN_MFA = 'SOFTWARE_TOKEN_MFA';
 
-
     /**
      * @var CognitoIdentityProviderClient
      */
     protected $client;
-
 
     /**
      * @var string
      */
     protected $clientId;
 
-
     /**
      * @var string
      */
     protected $clientSecret;
-
 
     /**
      * @var string
      */
     protected $poolId;
 
-
     /**
      * @var bool
      */
     protected $boolClientSecret;
-
 
     /**
      * AwsCognitoClient constructor.
@@ -227,13 +212,12 @@ class AwsCognitoClient
 
             $response = $this->client->adminInitiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
-            Log::error('CognitoIdentityProvider:adminInitiateAuth:Exception');
-            throw $exception;
+            Log::error('AwsCognitoClient:adminInitiateAuth:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $response;
     } //Function ends
-
 
     /**
      * Registers a user in the given user pool.
@@ -273,7 +257,7 @@ class AwsCognitoClient
             $response = $this->client->signUp($payload);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
-                throw new InvalidUserException('ERROR_COGNITO_USER_EXISTS', $e);
+                throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS, $e);
             } //End if
 
             throw $e;
@@ -281,7 +265,6 @@ class AwsCognitoClient
 
         return (bool)$response['UserConfirmed'];
     } //Function ends
-
 
     /**
      * Send a password reset code to a user.
@@ -297,7 +280,9 @@ class AwsCognitoClient
             //Build payload
             $payload = [
                 'ClientId' => $this->clientId,
-                'ClientMetadata' => $this->buildClientMetadata(['username' => $username], $clientMetadata),
+                'ClientMetadata' => $this->buildClientMetadata([
+                    'username' => $username
+                ], $clientMetadata),
                 'Username' => $username,
             ];
 
@@ -308,7 +293,7 @@ class AwsCognitoClient
                 ]);
             } //End if
 
-            $result = $this->client->forgotPassword($payload);
+            $this->client->forgotPassword($payload);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
                 return Password::INVALID_USER;
@@ -320,9 +305,9 @@ class AwsCognitoClient
         return Password::RESET_LINK_SENT;
     } //Function ends
 
-
     /**
-     * Reset a users password based on reset code.
+     * Allow users new password based on reset code, this is primarily part of
+     * the reset password workflow.
      * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html
      *
      * @param string $code
@@ -333,6 +318,9 @@ class AwsCognitoClient
     public function resetPassword($code, $username, $password)
     {
         try {
+            //Initialize variables
+            $returnValue = Password::PASSWORD_RESET;
+
             //Build payload
             $payload = [
                 'ClientId' => $this->clientId,
@@ -351,74 +339,22 @@ class AwsCognitoClient
             $this->client->confirmForgotPassword($payload);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
-                return Password::INVALID_USER;
+                $returnValue = Password::INVALID_USER;
             } //End if
 
             if ($e->getAwsErrorCode() === self::INVALID_PASSWORD) {
-                return Lang::has('passwords.password') ? 'passwords.password' : $e->getAwsErrorMessage();
+                $returnValue = Lang::has('passwords.password') ? 'passwords.password' : $e->getAwsErrorMessage();
             } //End if
 
             if ($e->getAwsErrorCode() === self::CODE_MISMATCH || $e->getAwsErrorCode() === self::EXPIRED_CODE) {
-                return Password::INVALID_TOKEN;
+                $returnValue = Password::INVALID_TOKEN;
             } //End if
 
             throw $e;
         } //Try-catch ends
 
-        return Password::PASSWORD_RESET;
+        return $returnValue;
     } //Function ends
-
-
-    /**
-     * Gets the user's groups from Cognito
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminListGroupsForUser.html
-     *
-     * @param string $username
-     * @return \Aws\Result
-     */
-    public function adminListGroupsForUser(string $username)
-    {
-        try {
-            $groups = $this->client->AdminListGroupsForUser([
-                    'UserPoolId' => $this->poolId, // REQUIRED
-                    'Username' => $username // REQUIRED
-                ]
-            );
-            return $groups;
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:adminListGroupsForUser:Exception');
-            throw $e;
-        } //Try-catch ends
-
-        return false;
-    } //Function ends
-
-
-    /**
-     * Add a user to a given group
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminAddUserToGroup.html
-     *
-     * @param string $username
-     * @param string $groupname
-     * 
-     * @return bool
-     */
-    public function adminAddUserToGroup(string $username, string $groupname)
-    {
-        try {
-            $this->client->adminAddUserToGroup([
-                'GroupName' => $groupname,
-                'UserPoolId' => $this->poolId,
-                'Username' => $username
-            ]);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:adminAddUserToGroup:Exception');
-            throw $e;
-        } //Try-catch ends
-
-        return true;
-    } //Function ends
-
 
     /**
      * Register a user and send them an email to set their password.
@@ -468,7 +404,7 @@ class AwsCognitoClient
         } //End If
 
         //Set Delivery Mediums
-        if ((config('cognito.add_user_delivery_mediums')!="NONE")) {
+        if (config('cognito.add_user_delivery_mediums')!="NONE") {
             if (config('cognito.add_user_delivery_mediums')=="BOTH") {
                 $payload['DesiredDeliveryMediums'] = ['EMAIL', 'SMS'];
             } else {
@@ -476,6 +412,7 @@ class AwsCognitoClient
                 $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
             } //End if
         } //End if
+        
         if (config('cognito.mfa_setup')=="MFA_ENABLED") {
             $defaultDeliveryMedium = 'SMS';
             $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
@@ -490,15 +427,14 @@ class AwsCognitoClient
             } //End if
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
-                throw new InvalidUserException('ERROR_COGNITO_USER_EXISTS', $e);
+                throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS, $e);
             } //End if
 
-            throw $e;
+            throw AwsCognitoException::create($e);
         } //Try-catch ends
 
         return $response;
     } //Function ends
-
 
     /**
      * Set a new password for a user that has been flagged as needing a password change.
@@ -506,14 +442,14 @@ class AwsCognitoClient
      * @param string $username
      * @param string $password
      * @param string $session
-     * 
+     *
      * @return bool
      */
     public function confirmPassword($username, $password, $session)
     {
         try {
             $this->adminRespondToAuthChallenge(
-                AwsCognitoClient::NEW_PASSWORD_CHALLENGE,
+                CognitoChallengeTypes::NEW_PASSWORD_CHALLENGE,
                 $session, $password, $username
             );
         } catch (CognitoIdentityProviderException $e) {
@@ -526,58 +462,6 @@ class AwsCognitoClient
 
         return Password::PASSWORD_RESET;
     } //Function ends
-
-
-    /**
-     * @param string $username
-     *
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#admindeleteuser
-     */
-    public function deleteUser($username)
-    {
-        if (config('cognito.delete_user', false)) {
-            $this->client->adminDeleteUser([
-                'UserPoolId' => $this->poolId,
-                'Username' => $username,
-            ]);
-        } //End if
-    } //Function ends
-
-
-    /**
-     * Sets the specified user's password in a user pool as an administrator.
-     *
-     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminSetUserPassword.html
-     *
-     * @param string $username
-     * @param string $password
-     * @param bool $permanent
-     * @return bool
-     */
-    public function setUserPassword($username, $password, $permanent = true)
-    {
-        try {
-            $this->client->adminSetUserPassword([
-                'Password' => $password,
-                'Permanent' => $permanent,
-                'Username' => $username,
-                'UserPoolId' => $this->poolId,
-            ]);
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
-                return Password::INVALID_USER;
-            } //End if
-
-            if ($e->getAwsErrorCode() === self::INVALID_PASSWORD) {
-                return Lang::has('passwords.password') ? 'passwords.password' : $e->getAwsErrorMessage();
-            } //End if
-
-            throw $e;
-        } //Try-catch ends
-
-        return Password::PASSWORD_RESET;
-    } //Function ends
-
 
     /**
      * Changes the password for a specified user in a user pool.
@@ -611,19 +495,12 @@ class AwsCognitoClient
         return true;
     } //Function ends
 
-
-    public function confirmSignUp($username)
-    {
-        $this->client->adminConfirmSignUp([
-            'UserPoolId' => $this->poolId,
-            'Username' => $username,
-        ]);
-    } //Function ends
-
-
     public function confirmUserSignUp($username, $confirmationCode)
     {
         try {
+            //Initialize variables
+            $returnValue = null;
+
             $this->client->confirmSignUp([
                 'ClientId' => $this->clientId,
                 'SecretHash' => $this->cognitoSecretHash($username),
@@ -632,25 +509,26 @@ class AwsCognitoClient
             ]);
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
-                return 'validation.invalid_user';
+                $returnValue = 'validation.invalid_user';
             } //End if
 
             if ($e->getAwsErrorCode() === self::CODE_MISMATCH || $e->getAwsErrorCode() === self::EXPIRED_CODE) {
-                return 'validation.invalid_token';
+                $returnValue = 'validation.invalid_token';
             } //End if
 
             if ($e->getAwsErrorCode() === 'NotAuthorizedException' && $e->getAwsErrorMessage() === 'User cannot be confirmed. Current status is CONFIRMED') {
-                return 'validation.confirmed';
+                $returnValue = 'validation.confirmed';
             } //End if
 
             if ($e->getAwsErrorCode() === 'LimitExceededException') {
-                return 'validation.exceeded';
+                $returnValue = 'validation.exceeded';
             } //End if
+
+            if (!empty($returnValue)) { return $returnValue; }
 
             throw $e;
         } //Try-catch ends
     } //Function ends
-
 
     public function resendToken($username)
     {
@@ -678,7 +556,6 @@ class AwsCognitoClient
         } //Try-catch ends
     } //Function ends
 
-
     /**
      * Set a users attributes.
      * http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminUpdateUserAttributes.html.
@@ -701,82 +578,12 @@ class AwsCognitoClient
             //Execute the payload
             $this->client->AdminUpdateUserAttributes($payload);
         } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:adminUpdateUserAttributes:Exception');
+            Log::error('AwsCognitoClient:setUserAttributes:CognitoIdentityProviderException');
             throw $e;
         } //End try
 
         return true;
     } //Function ends
-
-
-    /**
-     * Responds to an authentication challenge, as an administrator.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminRespondToAuthChallenge.html
-     *
-     * @param string $challengeName
-     * @param string $session
-     * @param string $challengeValue
-     * @param string $username
-     *
-     * @return \Aws\Result
-     */
-    protected function adminRespondToAuthChallenge(
-        string $challengeName, string $session,
-        string $challengeValue, string $username)
-    {
-        try {
-
-            //Build payload
-            $payload = [
-                'ClientId' => $this->clientId,
-                'UserPoolId' => $this->poolId,
-                'Session' => $session,
-                'ChallengeName' => $challengeName,
-            ];
-
-            //Set challenge response
-            $challengeResponse=['USERNAME' => $username];
-            switch ($challengeName) {
-                case 'SMS_MFA':
-                    $challengeResponse = array_merge($challengeResponse, [
-                        'SMS_MFA_CODE' => $challengeValue
-                    ]);
-                    break;
-
-                case 'SOFTWARE_TOKEN_MFA':
-                    $challengeResponse = array_merge($challengeResponse, [
-                        'SOFTWARE_TOKEN_MFA_CODE' => $challengeValue
-                    ]);
-                    break;
-                
-                case 'NEW_PASSWORD_REQUIRED':
-                    $challengeResponse = array_merge($challengeResponse, [
-                        'NEW_PASSWORD' => $challengeValue
-                    ]);
-                    break;
-                default:
-                    # code...
-                    break;
-            } //End Switch
-            $payload['ChallengeResponses'] = $challengeResponse;
-
-            //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload['ChallengeResponses'] = array_merge($payload['ChallengeResponses'], [
-                    'SECRET_HASH' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
-
-            //Execute the payload
-            $response = $this->client->adminRespondToAuthChallenge($payload);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:adminRespondToAuthChallenge:Exception');
-            throw $e;
-        } //Try-catch ends
-
-        return $response;
-    } //Function ends
-
 
     /**
      * Creates the Cognito secret hash.
@@ -787,7 +594,6 @@ class AwsCognitoClient
     {
         return $this->hash($username . $this->clientId);
     } //Function ends
-
 
     /**
      * Creates a HMAC from a string.
@@ -807,27 +613,6 @@ class AwsCognitoClient
         return base64_encode($hash);
     } //Function ends
 
-
-    /**
-     * Get user details.
-     * http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GetUser.html.
-     *
-     * @param string $username
-     * @return mixed
-     */
-    public function getUser($username)
-    {
-        try {
-            return $this->client->adminGetUser([
-                'Username' => $username,
-                'UserPoolId' => $this->poolId,
-            ]);
-        } catch (CognitoIdentityProviderException $e) {
-            return false;
-        } //Try-catch ends
-    } //Function ends
-
-
     /**
      * Get user details by access token.
      * https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#getuser
@@ -842,13 +627,12 @@ class AwsCognitoClient
                 'AccessToken' => $token
             ]);
         } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:getUserByAccessToken:Exception');
+            Log::error('AwsCognitoClient:getUserByAccessToken:Exception');
             throw $e;
         } //Try-catch ends
 
         return $result;
     } //Function ends
-
 
     /**
      * Format attributes in Name/Value array.
@@ -870,7 +654,6 @@ class AwsCognitoClient
         return $userAttributes;
     } //Function ends
 
-
     /**
      * Build Client Metadata to be forwarded to Cognito.
      *
@@ -887,7 +670,6 @@ class AwsCognitoClient
 
         return $userAttributes;
     } //Function ends
-
     
     /**
      * Generate a new token using refresh token.
@@ -922,13 +704,12 @@ class AwsCognitoClient
             // Reuse same refreshToken
             $response['AuthenticationResult']['RefreshToken'] = $refreshToken;
         } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoIdentityProvider:refreshToken:Exception');
+            Log::error('AwsCognitoClient:refreshToken:Exception');
             throw $e;
         } //Try-catch ends
 
         return $response;
     } //Function ends
-    
 
     /**
      * Revoke all the access tokens from AWS Cognit for a specified refresh-token in a user pool.
@@ -952,7 +733,6 @@ class AwsCognitoClient
         } //Try-catch ends
         return true;
     } //Function ends
-
 
     /**
      * Revoke the access-token from AWS Cognito in a user pool.

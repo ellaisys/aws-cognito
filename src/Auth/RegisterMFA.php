@@ -24,12 +24,12 @@ use Ellaisys\Cognito\AwsCognitoClaim;
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 trait RegisterMFA
 {
-
     /**
      * Activate the MFA for the authenticated user
      *
@@ -37,11 +37,10 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function activateMFA(string $guard='web')
+    public function activateMFA(string $guard='web'): mixed
     {
         return Auth::guard($guard)->associateSoftwareTokenMFA();
     } //Function ends
-
 
     /**
      * Verify the MFA for the authenticated user
@@ -50,14 +49,14 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function verifyMFA(string $guard='web', string $userCode, string $deviceName='my device')
+    public function verifyMFA(string $guard='web',
+        string $userCode=null, string $deviceName='my device'): mixed
     {
         $response = Auth::guard($guard)->verifySoftwareTokenMFA($userCode, $deviceName);
         if (!empty($response) && ($response['Status']=='SUCCESS')) {
             return $this->toggleMFA($guard, true);
         } //End if
     } //Function ends
-
 
     /**
      * Deactivate the MFA for the authenticated user
@@ -66,21 +65,20 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function deactivateMFA(string $guard='web')
+    public function deactivateMFA(string $guard='web'): mixed
     {
         return $this->toggleMFA($guard, false);
     } //Function ends
 
-
     /**
      * Toggle the MFA for the authenticated user
-     * 
+     *
      * @param  string  $guard
      * @param  bool    $isEnable (optional)
      *
      * @return array
      */
-    private function toggleMFA(string $guard, bool $isEnable=false)
+    private function toggleMFA(string $guard, bool $isEnable=false): mixed
     {
         try {
             //Create AWS Cognito Client
@@ -88,7 +86,7 @@ trait RegisterMFA
 
             //Get Authenticated user
             $authUser = Auth::guard($guard)->user();
-            if (empty($authUser)) { throw new HttpException(400, 'EXCEPTION_INVALID_USER'); }
+            if (empty($authUser)) { throw new InvalidUserException(); }
 
             //Token Object
             $objToken = Auth::guard($guard)->cognito()->getToken();
@@ -101,19 +99,20 @@ trait RegisterMFA
             if (!empty($accessToken)) {
                 $response = $client->setUserMFAPreference($accessToken, $isEnable);
                 if (empty($response)) {
-                    throw new HttpException(400);
+                    throw new AwsCognitoException('EXCEPTION_COGNITO_MFA_PREFERENCE');
                 } //End if
+
+                return $response;
             } else {
-                throw new HttpException(400, 'EXCEPTION_INVALID_USERNAME_OR_TOKEN');
+                throw new AwsCognitoException('EXCEPTION_INVALID_USERNAME_OR_TOKEN');
             } //End if
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                throw new HttpException(400, $e->getAwsErrorMessage(), $e);
+                throw AwsCognitoException::create($e);
             } //End if
             throw $e;
         } //Try-catch ends
     } //Function ends
-
 
     /**
      * Enable the MFA for the mentioned user
@@ -123,11 +122,10 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function enableMFA(string $guard='web', string $username)
+    public function enableMFA(string $guard='web', string $username='email'): mixed
     {
         return $this->toggleAdminMFA($guard, $username, true);
     } //Function ends
-
 
     /**
      * Disable the MFA for the mentioned user
@@ -137,22 +135,21 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function disableMFA(string $guard='web', string $username)
+    public function disableMFA(string $guard='web', string $username='email'): mixed
     {
         return $this->toggleAdminMFA($guard, $username, false);
     } //Function ends
 
-
     /**
      * Toggle the MFA by the admin user
-     * 
+     *
      * @param  string  $guard
      * @param  string  $username
      * @param  bool    $isEnable (optional)
      *
      * @return array
      */
-    private function toggleAdminMFA(string $guard, string $username, bool $isEnable=false)
+    private function toggleAdminMFA(string $guard, string $username, bool $isEnable=false): mixed
     {
         try {
             //Create AWS Cognito Client
@@ -160,18 +157,15 @@ trait RegisterMFA
 
             //Get Authenticated user
             $authUser = Auth::guard($guard)->user();
-            if (empty($authUser)) { throw new HttpException(400, 'EXCEPTION_INVALID_USER'); }
+            if (empty($authUser)) { throw new InvalidUserException(); }
            
             //Use username for the MFA configurations
-            if (!empty($username)) {
-                return $client->setUserMFAPreferenceByAdmin($username, $isEnable);
-            } else {
-                return response()->json(['error' => 'cognito.validation.invalid_username'], 400);
-            } //End if
+            return $client->setUserMFAPreferenceByAdmin($username, $isEnable);
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                return response()->json(['error' => ['code' => $e->getAwsErrorCode(), 'message' => $e->getAwsErrorMessage()]], 400);
+                throw AwsCognitoException::create($e);
             } //End if
+
             throw $e;
         } //Try-catch ends
     } //Function ends

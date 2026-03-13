@@ -24,7 +24,7 @@ use Illuminate\Contracts\Session\Session;
 use Symfony\Component\HttpFoundation\Request;
 
 use Illuminate\Database\Eloquent\Model;
-
+use Ellaisys\Cognito\Http\Parser\ClaimSession;
 
 use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
@@ -43,7 +43,6 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 {
-
     use BaseCognitoGuard, CognitoMFA;
 
     /**
@@ -53,12 +52,15 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     protected $keyUsername;
 
-
     /**
      * @var AwsCognitoClient
      */
     protected $client;
 
+    /**
+     * @var Request Session
+     */
+    protected $session;
 
     /**
      * The AwsCognito instance.
@@ -67,7 +69,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     protected $cognito;
     
-
     /**
      * The AwsCognito Claim token
      *
@@ -75,24 +76,20 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     protected $claim;
 
-
     /**
      * @var Authentication Challenge
      */
     protected $challengeName;
-
 
     /**
      * @var AwsResult
      */
     protected $awsResult;
 
-
     /**
      * @var Challenge Data based on the challenge
      */
     protected $challengeData;
-
 
     /**
      * CognitoSessionGuard constructor.
@@ -115,12 +112,12 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
     ) {
         $this->cognito = $cognito;
         $this->client = $client;
+        $this->session = $session;
         $this->awsResult = null;
         $this->keyUsername = $keyUsername;
 
         parent::__construct($name, $provider, $session, $request);
     }
-
 
     /**
      * Attempt to authenticate an existing user using the credentials
@@ -197,7 +194,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         return $returnValue;
     } //Function ends
 
-
     /**
      * Process the AWS Claim and Authenticate the user with the local database
      *
@@ -215,10 +211,16 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             //Save the user data into the claim
             $this->claim->setUser($user);
 
+            //Set Token
+            $this->setToken();
+
             //Get Session and store details
             $session = $this->getSession();
             $session->invalidate();
-            $session->put('claim', json_decode(json_encode($this->claim), true));
+            $session->put(
+                ClaimSession::SESSION_KEY,
+                json_decode(json_encode($this->claim), true)
+            );
 
             //Fire successful attempt
             $this->fireValidatedEvent($user);
@@ -229,7 +231,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             throw new NoLocalUserException();
         } //End if
     } //Function ends
-
 
     /**
      * Handle the AWS Challenge
@@ -279,7 +280,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         return $returnValue;
     } //Funtion ends
 
-
     /**
      * Handle the AWS Cognito Exception
      *
@@ -292,7 +292,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             if (!empty($e->getAwsErrorCode())) {
                 switch ($e->getAwsErrorCode()) {
                     case 'PasswordResetRequiredException':
-                        return redirect(route('cognito.form.reset.password.code'))
+                        return redirect(route('cognito.form.password.reset.password.code'))
                             ->with('success', false)
                             ->with('force', true)
                             ->with('messaage', $e->getAwsErrorMessage())
@@ -312,7 +312,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         } //End if
     } //Function ends
 
-
     /**
      * Logout the user, thus invalidating the session.
      *
@@ -325,7 +324,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         $this->invalidate($forceForever);
         $this->user = null;
     } //Function ends
-
 
     /**
      * Invalidate the token.
@@ -344,7 +342,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             $session = $this->getSession();
 
             //Get the claim from session
-            $claim = $session->has('claim')?$session->get('claim'):null;
+            $claim = $session->has(ClaimSession::SESSION_KEY)?$session->get(ClaimSession::SESSION_KEY):null;
             if (empty($claim)) { $session->invalidate(); throw new HttpException(400, 'EXCEPTION_INVALID_CLAIM'); }
 
             $accessToken = (!empty($claim))?$claim['token']:null;
@@ -387,7 +385,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         return $returnValue;
     } //Function ends
 
-
     /**
      * Attempt MFA based Authentication
      */
@@ -414,6 +411,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 throw new HttpException(400, 'ERROR_AWS_COGNITO');
             } //End if
         } catch(Exception $e) {
+            Log::error('CognitoSessionGuard:attemptMFA:Exception');
             throw $e;
         } //Try-catch ends
 

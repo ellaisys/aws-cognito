@@ -2,34 +2,16 @@
 
 namespace Ellaisys\Cognito\Exceptions;
 
-use Exception;
 use Throwable;
-
 use PDOException;
 
 class DBConnectionException extends PDOException
 {
-    /**
-     * Report the exception.
-     *
-     * @return void
-     */
-    public function report($message = "Database Connection Error", $code = null, ?Throwable $previous = null)
-    {
-        parent::report($message, [], $code, $previous);
-    }
 
-
-    /**
-     * Render the exception into an HTTP response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $exception
-     * @return \Illuminate\Http\Response
-     */
-    public function render($request, Throwable $exception)
+    public function __construct(string $message = 'Database Connection Error',
+        Throwable $previous = null, int $code = 400)
     {
-        return parent::render($request, $exception);
+        parent::__construct(401, $message, (int) $code, $previous);
     }
     
 } //Class ends

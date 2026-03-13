@@ -11,7 +11,6 @@
 
 namespace Ellaisys\Cognito\Http\Middleware;
 
-use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 
@@ -33,7 +32,7 @@ class AwsCognitoAuthenticate extends BaseMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next, $guards=null)
+    public function handle(Request $request, \Closure $next)
     {
         $guard='';
         $middleware='';
@@ -42,31 +41,21 @@ class AwsCognitoAuthenticate extends BaseMiddleware
         try {
             $routeMiddleware = $request->route()->middleware();
             if (empty($routeMiddleware) || (($countRouteMiddleware=count($routeMiddleware))<1)) {
-                return response()->json(['error' => 'UNAUTHORIZED_REQUEST', 'exception' => null], 401);
+                throw new InvalidTokenException();
             } else {
                 ($countRouteMiddleware>0)?($guard = $routeMiddleware[0]):null;
                 ($countRouteMiddleware>1)?($middleware = $routeMiddleware[1]):null;
             } //End if
 
             //Authenticate the request
-            $this->authenticate($request, $guard);
+            if (in_array($middleware, ['aws-cognito'])) {
+                $this->authenticate($request, $guard);
+            } //End if
 
             return $next($request);
         } catch (Exception $e) {
-            if ($e instanceof NoTokenException) {
-                return response()->json(['error' => 'UNAUTHORIZED_REQUEST', 'exception' => 'NoTokenException'], 401);             
-            } //End if
-
-            if ($e instanceof InvalidTokenException) {
-                return response()->json(['error' => 'UNAUTHORIZED_REQUEST', 'exception' => 'InvalidTokenException'], 401);
-            } //End if
-
-            //Raise error in case of generic error
-            if ($guard=='web') {
-                return redirect('/');
-            } else {
-                return response()->json(['error' => $e->getMessage()], 401);
-            } //End if
+            Log::error('AwsCognitoAuthenticate:handle:Exception');
+            throw $e;
         } //Try-catch ends
     } //Function ends
 

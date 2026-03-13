@@ -49,6 +49,62 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AWS Cognito Path
+    |--------------------------------------------------------------------------
+    |
+    | This is the base URI path where the package views, such as the MFA
+    | verification screen, activation screen, etc will be available from.
+    | You're free to tweak this path according to your preferences and
+    | application design.
+    |
+    */
+    'path' => env('AWS_COGNITO_PATH', ''),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Web Path Prefix
+    |--------------------------------------------------------------------------
+    |
+    | This is the Web Prefix for the endpoint. You can change is such that it
+    | does not cause any conflict with your existing web endpoints or as per
+    | your application design.
+    |
+    | The default value is set to 'cognito'.
+    |
+    */
+    'web_prefix' => env('AWS_COGNITO_WEB_PREFIX', 'cognito'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Path Prefix
+    |--------------------------------------------------------------------------
+    |
+    | This is the API Prefix for the endpoint. You can change is such that it
+    | does not cause any conflict with your existing API endpoints or as per
+    | your application design.
+    |
+    | The default value is set to 'cognito'.
+    |
+    */
+    'api_prefix' => env('AWS_COGNITO_API_PREFIX', 'cognito'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | AWS Cognito Home Route Name
+    |--------------------------------------------------------------------------
+    |
+    | This is the home route name where the page redirects post successful
+    | authentication. This will work with and without the MFA enabled using
+    | the AWS Cognito based authentication. This is applicable for web routes
+    | only.
+    |
+    | The default value is set to 'home'.
+    |
+    */
+    'redirect_to_route_name' => env('AWS_COGNITO_HOME_ROUTE_NAME', 'cognito.home'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cognito Fields & DB Mapping
     |--------------------------------------------------------------------------
     |
@@ -70,12 +126,11 @@ return [
         'nickname' => null,
         'preferred_username' => null,
         'email' => 'email', //Do Not set this parameter to null
-        'phone_number' => null,
+        'phone_number' => env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE') !== 'MFA_NONE' ? 'phone' : null,
         'gender' => null,
         'birthdate' => null,
         'locale' => null
     ],
-
 
     /*
     |--------------------------------------------------------------------------
@@ -88,7 +143,6 @@ return [
     |
     */
     'user_subject_uuid' => env('AWS_COGNITO_USER_SUBJECT_UUID', 'sub'),
-
 
     /*
     |--------------------------------------------------------------------------
@@ -103,7 +157,6 @@ return [
     */
     'add_user_delivery_mediums' => env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'),
 
-
     /*
     |--------------------------------------------------------------------------
     | Cognito Default User Group
@@ -117,7 +170,6 @@ return [
     */
     'default_user_group' => env('AWS_COGNITO_DEFAULT_USER_GROUP', null),
 
-
     /*
     |--------------------------------------------------------------------------
     | Cognito MFA Setup and configurations
@@ -130,8 +182,7 @@ return [
     |
     */
     'mfa_setup' => env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE'),
-    'force_mfa_code_route_name' => env('AWS_COGNITO_MFA_CODE_ROUTE_NAME', 'cognito.form.mfa.code'),
-
+    'force_mfa_code_route_name' => env('AWS_COGNITO_MFA_CODE_ROUTE_NAME', 'cognito.form.login'),
 
     /*
     |--------------------------------------------------------------------------
@@ -146,7 +197,6 @@ return [
     |
     */
     'mfa_type' => env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA'),
-
 
     /*
     |--------------------------------------------------------------------------
@@ -264,6 +314,8 @@ return [
     | SUPPRESS in order to stop the invitation mails from being sent. The default
     | value is set to null.
     |
+    | Possible values: "RESEND", "SUPPRESS"
+    |
     */
     'new_user_message_action' => env('AWS_COGNITO_NEW_USER_MESSAGE_ACTION', null),
 
@@ -272,11 +324,14 @@ return [
     | Allow new user to set the password and have verified
     |--------------------------------------------------------------------------
     |
-    | This option enables the user to set the password and have that verified
-    | during the to invitation for the new user. The default value is set to true.
+    | This option enables the user to set the custom password and have that
+    | verified during the to invitation for the new user. The default value
+    | is set to true.
+    | Setting the value to false will auto generate a random password and
+    | send it to the user via email or SMS
     |
     */
-    'force_new_user_password' => env('AWS_COGNITO_FORCE_NEW_USER_PASSWORD', false),
+    'force_new_user_password' => env('AWS_COGNITO_FORCE_NEW_USER_PASSWORD', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -295,13 +350,39 @@ return [
     'mfa_qr_library' => env('AWS_COGNITO_MFA_QR_LIBRARY', 'https://quickchart.io/qr?size=200&text='),
 
     /*
-     |--------------------------------------------------------------------------
-     | Registration Type
-     |--------------------------------------------------------------------------
-     | This option controls the registration type for new users. The options
-     | available are "register" and "invite". The default value is set to
-     | "invite".
-     |
-     */
+    |--------------------------------------------------------------------------
+    | Registration Type
+    |--------------------------------------------------------------------------
+    | This option controls the registration type for new users. The options
+    | available are "register" and "invite". The default value is set to
+    | "invite".
+    |
+    */
     'registration_type' => env('AWS_COGNITO_REGISTRATION_TYPE', 'invite'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Views
+    |--------------------------------------------------------------------------
+    | This option controls the views for the package. You can set the layout
+    | for the views here.
+    */
+    'views' => [
+        'layout' => env('AWS_COGNITO_VIEWS_LAYOUT', 'cognito::layouts.app'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Routes
+    |--------------------------------------------------------------------------
+    | This option controls the routes for the package. You can set the routes
+    | for the package here.
+    */
+    'routes' => [
+        'web' => [
+           'default_root_page' => env('AWS_COGNITO_DEFAULT_ROOT_PAGE', ''),
+           'login_page' => env('AWS_COGNITO_LOGIN_PAGE', 'cognito.form.login'),
+           'home_page' => env('AWS_COGNITO_HOME_ROUTE_NAME', 'cognito.home'),
+        ]
+    ]
 ];
