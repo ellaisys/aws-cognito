@@ -30,7 +30,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Login (Sign In)](#user-authentication)
 - Token Validation for all Session and Token Guard Requests
 - Remember Me Cookie
-- Single Sign On **Updated** (Fix: Issue #86)
+- Single Sign On (Fix: Issue #86)
 - Forgot Password (Resend - configurable)
 - User Deletion
 - Edit User Attributes
@@ -42,16 +42,19 @@ We decided to use it and contribute it to the community as a package, that encou
 - Support for App Client without Secret
 - Support for Cognito Groups, including assigning a default group to a new user
 - Session (Web) now has AccessToken and RefreshToken as part of the claim object
+- [Refresh Token API](#refresh-token)
 - [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
 - [MFA Implementation for Session and Token Guards](./README_MFA.md)
 - [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
-- [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid) **NEW**
+- [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
+- [Preconfigured routes and controllers for Web and API ](/README_ROUTES.md#routes) **New Feature**
+- [Preconfigured views for Web ](/README_ROUTES.md#web-views-and-components)**New Feature**
 
 ## Compatability
 
 |PHP Version|Support|
-|-|-|
+|-|-| 
 |7.4|Yes :heavy_check_mark:|
 |8.0|Yes :heavy_check_mark:|
 |8.1|Yes :heavy_check_mark:|
@@ -62,7 +65,12 @@ We decided to use it and contribute it to the community as a package, that encou
 |7.x|Yes :heavy_check_mark:|
 |8.x|Yes :heavy_check_mark:|
 |9.x|Yes :heavy_check_mark:|
-|10.x|Not tested|
+|10.x|Yes :heavy_check_mark:|
+|[11.x](#laravel-110-and-above-updated)|Yes :heavy_check_mark:|
+|12.x|Yes :heavy_check_mark:|
+
+>[!IMPORTANT]
+>The middleware configurtion in Laravel 11.x and above shall need a configuration. Refer [### Laravel 11.0 and above **Updated**](#laravel-110-and-above-updated)
 
 ## Installation
 
@@ -76,7 +84,7 @@ composer require ellaisys/aws-cognito
 Using a version prior to Laravel 5.5 you need to manually register the service provider.
 
 ```php
-    // config/app.php
+    // bootstrap/app.php
     'providers' => [
         ...
         Ellaisys\Cognito\Providers\AwsCognitoServiceProvider::class,
@@ -87,7 +95,7 @@ Using a version prior to Laravel 5.5 you need to manually register the service p
 ### Configuration File: Next you can publish the config.
 
 ```bash
-    php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider"
+    php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="config"
 ```
 Last but not least you want to change the auth driver. To do so got to your config\auth.php file and change it
 to look the following:
@@ -117,7 +125,7 @@ The AWS Cognito service provider registers its own database migration directory,
 If you need to overwrite the migrations that ship with AWS Cognito, you can publish them using the vendor:publish Artisan command:
 
 ```bash
-    php artisan vendor:publish --tag="cognito-migrations"
+    php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="migrations"
 ```
 
 If you would like to prevent AWS Cognito's migrations from running entirely, you may use the ignoreMigrations method provided by AWS Cognito. Typically, this method should be called in the register method of your AppServiceProvider:
@@ -132,7 +140,6 @@ If you would like to prevent AWS Cognito's migrations from running entirely, you
         AwsCognito::ignoreMigrations();
     }
 ```
-
 
 ## Cognito User Pool
 
@@ -229,8 +236,8 @@ We have made this configurable for the developers so that they can use it as per
 
 ```
 
-## Middleware configuration for API Routes
-In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware
+## Middleware configuration for API Routes **Updated**
+for Laravel 10 and before: In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware 
 
 ```php
 
@@ -238,6 +245,24 @@ In case you are using this library as API driver, you can register the middlewar
         ...
         'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
     ]
+
+```
+
+### Laravel 11.0 and above **Updated**
+With Laravel 11 and above the middleware congiguration is defined in the app.php in the bootstrap folder. Please configure as shown below
+
+```php
+    // bootstrap/app.php
+        ...
+        ->withMiddleware(function (Middleware $middleware): void {
+            ...
+            $middleware->alias([
+                ...
+                'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
+            ]);
+            ...
+        })
+        ...
 
 ```
 
@@ -338,6 +363,13 @@ We have made is very easy for anyone to use the default behaviour.
 
 ```
 
+10. The registration process now allows two types of request, 'invite' and 'register'. The register is self registration and an verification email is sent to the user. The invite is sent from the admin and contains the temporary cedentials. The RegistersUsers Trait allows two methods invite and register respectively. The default method called in the trait is set to **invite**. You can change the behaviour of the register method by setting following configuration.
+
+```php
+
+    AWS_COGNITO_REGISTRATION_TYPE="register" //optional - the default type is invite
+```
+
 ## User Authentication
 
 We have provided you with a useful trait that make the authentication very simple (with Web or API routes). You don't have to worry about any additional code to manage sessions and token (for API).
@@ -400,7 +432,7 @@ In case you want to use this trait for Web login, you can write the code as show
             if ($response = $this->attemptLogin($collection, 'web')) {
                 if ($response===true) {
                     return redirect(route('home'))->with('success', true);
-                } else if ($response===false) {
+                } elseif ($response===false) {
                     // If the login attempt was unsuccessful you may increment the number of attempts
                     // to login and redirect the user back to the login form. Of course, when this
                     // user surpasses their maximum number of attempts they will get locked out.
@@ -630,12 +662,13 @@ This library fetches the password policy from the cognito pool configurations. T
 
 >[!IMPORTANT]
 >In case of special characters, we are supporting all except the pipe character **|** for now.
+>We are working on making sure that pipe character is handled soon.
 
 ## Mapping Cognito User using Subject UUID
 
 The library maps the Cognito user subject UUID with the local repository. Everytime a new user is created in cognito, the sub UUID is mapped with the local user table with an user specified column name.
 
-The column in the local BD is identified with the config parameter `user_subject_uuid` with the default value set to `sub`.
+The column name in the local database is identified as `sub`. This can be changed and managed with the config parameter `user_subject_uuid`. The default value of the config is set to `sub`. 
 
 However, to customize the column name in the local DB user table, you may do that with below setting fields to your `.env` file
 
@@ -644,8 +677,55 @@ However, to customize the column name in the local DB user table, you may do tha
     AWS_COGNITO_USER_SUBJECT_UUID="sub"
     
 ```
+>[!IMPORTANT]
+>Please make sure to set the $primaryKey attribute in the User Model so that the data is retirived without any error. Sample code of user model is shared.
 
-We are working on making sure that pipe character is handled soon.
+```php
+
+    class User extends Authenticatable
+    {
+        ...
+
+        /**
+         * The primary key for the model.
+         *
+         * @var string
+         */
+        protected $primaryKey = null;
+
+
+        /**
+         * The attributes that are mass assignable.
+         *
+         * @var array<int, string>
+         */
+        protected $fillable = [
+            'name',
+            'email',
+            'password',
+            'sub'
+        ];
+
+        ...
+
+        /**
+         * Create a new user instance.
+         *
+         * @param  array  $attributes
+         * @return void
+         */
+        public function __construct(array $attributes = [])
+        {
+            parent::__construct($attributes);
+
+            $this->primaryKey = config('cognito.user_subject_uuid', 'id');
+        }
+
+        ...
+
+    }
+
+```
 
 ## Changelog
 
@@ -653,7 +733,7 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 ## Security
 
-If you discover any security related issues, please email [support@ellaisys.com](mailto:support@ellaisys.com) and also add it to the issue tracker.
+If you discover any security related issues, please email [ellaisys@gmail.com](mailto:ellaisys@gmail.com) and also add it to the issue tracker.
 
 ## Roadmap
 

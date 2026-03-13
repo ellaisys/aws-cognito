@@ -9,7 +9,7 @@ Also, configure below keys into the .env file to change the default setting.
  - The **AWS_COGNITO_MFA_SETUP** should be set to MFA_ENABLED to enable the MFA feature. The default value is MFA_NONE resulting into disabled MFA functionality. 
  - The **AWS_COGNITO_MFA_TYPE** can have values SOFTWARE_TOKEN_MFA (default) for the Software Token and SMS_MFA for the SMS based TOTP.
 
-   The provider configuration to send out the SMS needs to be carried out in AWS and costs additional as per the AWS SNS pricing. For more details refer this [AWS link](https://aws.amazon.com/sns/sms-pricing/)
+   The provider configuration aids to send out the SMS from AWS with additional costs. Refer AWS SNS pricing for more details [AWS SMS Pricing](https://aws.amazon.com/sns/sms-pricing/)
 
 ```php
 
@@ -25,6 +25,13 @@ Also, configure below keys into the .env file to change the default setting.
 - [Deactivate MFA](#deactivate-mfa-software-token-only)
 - [Enable MFA](#enabledisable-mfa)
 - [Disable MFA](#enabledisable-mfa)
+
+# **API Routes**
+>[!IMPORTANT]
+>We are releasign the API predefined routes as a new feature from V1.3.0.
+> php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+
+For the list of published routes and configurations, please refer [API Routes](/README_ROUTES.md#api-routes)
 
 ### **Login**
 The login shall require two steps for implementation of the overall authentication using the MFA approach. The first step shall generate the challenge, identified as a session token. The second step involves the OTP/TOTP code against that session token.
@@ -69,10 +76,24 @@ In case the MFA is enabled and activated, then the response will be as shown bel
 ```
 
 #### Web Application Approach
-The first step for the web application is same for MFA enabled / disabled implementation.
+The first step for the web application is same for MFA enabled / disabled implementation. However now you can use the provided blade components to accept the SMS TOTP or Software Token code.
 
-```php
+```html
+    @extends('layouts.app')
 
+    @section('content')
+        <div class="container">
+            @if (!((request()->has('status')) && (request()->has('session_token'))))
+            <div class="row justify-content-center">
+                <!-- Write your login page here -->
+            </div>
+            @endif
+
+            <!-- Below is the blade component view -->
+            <x-cognito::mfa.code />
+
+        </div>
+    @endsection
 ```
 
 ### **Activate MFA (Software Token Only)**
@@ -173,4 +194,3 @@ Below methods in the trait help to enable or disable the MFA returning the HTTP 
     } //Function ends
 
 ```
-

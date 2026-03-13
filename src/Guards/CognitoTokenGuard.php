@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -36,7 +36,6 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoTokenGuard extends TokenGuard
 {
-
     use BaseCognitoGuard, CognitoMFA;
 
     /**
@@ -46,12 +45,10 @@ class CognitoTokenGuard extends TokenGuard
      */
     protected $keyUsername;
 
-
     /**
      * @var  \AwsCognitoClient
      */
     protected $client;
-
 
     /**
      * The AwsCognito instance.
@@ -60,7 +57,6 @@ class CognitoTokenGuard extends TokenGuard
      */
     protected $cognito;
 
-
     /**
      * The AwsCognito Claim token
      *
@@ -68,24 +64,20 @@ class CognitoTokenGuard extends TokenGuard
      */
     protected $claim;
     
-
     /**
      * @var Authentication Challenge
      */
     protected $challengeName;
-
 
     /**
      * @var AwsResult
      */
     protected $awsResult;
 
-
     /**
      * @var Challenge Data based on the challenge
      */
     protected $challengeData;
-
 
     /**
      * CognitoTokenGuard constructor.
@@ -99,8 +91,8 @@ class CognitoTokenGuard extends TokenGuard
         AwsCognito $cognito,
         AwsCognitoClient $client,
         Request $request,
-        UserProvider $provider = null,
-        string $keyUsername = null
+        ?UserProvider $provider = null,
+        ?string $keyUsername = null
     ) {
         $this->cognito = $cognito;
         $this->client = $client;
@@ -108,7 +100,6 @@ class CognitoTokenGuard extends TokenGuard
 
         parent::__construct($provider, $request);
     }
-
 
     /**
      * Attempt to authenticate a user using the given credentials.
@@ -118,7 +109,8 @@ class CognitoTokenGuard extends TokenGuard
      * @throws
      * @return bool
      */
-    public function attempt(array $request = [], $remember = false, string $paramUsername='email', string $paramPassword='password')
+    public function attempt(array $request = [], $remember = false,
+        string $paramUsername='email', string $paramPassword='password')
     {
         $returnValue = null;
         try {
@@ -155,50 +147,16 @@ class CognitoTokenGuard extends TokenGuard
             } else {
                 throw new InvalidUserException();
             } //End if
-        } catch (NoLocalUserException $e) {
-            Log::error('CognitoTokenGuard:attempt:NoLocalUserException:'.$e->getMessage());
-            throw $e;
         } catch (CognitoIdentityProviderException $e) {
             Log::error('CognitoTokenGuard:attempt:CognitoIdentityProviderException:'.$e->getAwsErrorCode());
-            $returnValue = $e->getAwsErrorCode();
-
-            //Set proper route
-            if (!empty($e->getAwsErrorCode())) {
-                $errorCode = 'CognitoIdentityProviderException';
-                switch ($e->getAwsErrorCode()) {
-                    case 'PasswordResetRequiredException':
-                        $errorCode = 'cognito.validation.auth.reset_password';
-                        break;
-
-                    case 'NotAuthorizedException':
-                        $errorCode = 'cognito.validation.auth.user_unauthorized';
-                        break;
-                    
-                    default:
-                        $errorCode = $e->getAwsErrorCode();
-                        break;
-                } //End switch
-
-                $returnValue =  response()->json([
-                    'error' => $errorCode,
-                    'message' => $e->getAwsErrorMessage(),
-                    'aws_error_code' => $e->getAwsErrorCode(),
-                    'aws_error_message' => $e->getAwsErrorMessage()
-                ], 400);
-            } //End if
-
-            return $returnValue;
-        } catch (AwsCognitoException | InvalidUserException $e) {
-            Log::error('CognitoTokenGuard:attempt:AwsCognitoException:'. $e->getMessage());
-            throw $e;
+            throw AwsCognitoException::create($e);
         } catch (Exception $e) {
-            Log::error('CognitoTokenGuard:attempt:Exception:'.$e->getMessage());
+            Log::error('CognitoTokenGuard:attempt:Exception:'. $e->getMessage());
             throw $e;
         } //Try-catch ends
 
         return $returnValue;
     } //Function ends
-
 
     /**
      * Create a token for a user.
@@ -243,43 +201,6 @@ class CognitoTokenGuard extends TokenGuard
         return $claim;
     } //Fucntion ends
 
-
-    /**
-     * Set the token.
-     *
-     * @return $this
-     */
-    public function setToken()
-    {
-        $this->cognito->setClaim($this->claim)->storeToken();
-
-        return $this;
-    } //Function ends
-
-
-    /**
-     * Get the challenged claim.
-     *
-     * @return $this
-     */
-    public function getChallengeData(string $key)
-    {
-        return $this->cognito->getChallengeData($key);
-    } //Function ends
-
-
-    /**
-     * Save the challenged claim.
-     *
-     * @return $this
-     */
-    public function setChallengeData(string $key)
-    {
-        $this->cognito->setChallengeData($key, $this->challengeData);
-        return $this;
-    } //Function ends
-
-
     /**
      * Logout the user, thus invalidating the token.
      *
@@ -292,7 +213,6 @@ class CognitoTokenGuard extends TokenGuard
         $this->invalidate($forceForever);
         $this->user = null;
     } //Function ends
-
 
     /**
      * Invalidate the token.
@@ -310,7 +230,7 @@ class CognitoTokenGuard extends TokenGuard
             //Revoke the token from AWS Cognito
             if ($this->client->signOut($accessToken)) {
 
-                //Global logout and invalidate the Refresh Token 
+                //Global logout and invalidate the Refresh Token
                 if ($forceForever) {
                     //Get claim data
                     $data = $this->cognito->getClaim();
@@ -327,61 +247,55 @@ class CognitoTokenGuard extends TokenGuard
                 return $this->cognito->unsetToken($forceForever);
             } //End if
         } catch (Exception $e) {
+            Log::error('CognitoTokenGuard:invalidate:Exception');
             throw $e;
         } //try-catch ends
     } //Function ends
 
-
     /**
-     * Get the authenticated user.
+     * Get the authenticated DB user.
      *
      * @return \Illuminate\Contracts\Auth\Authenticatable
      */
-    public function user() {
+    public function user()
+    {
 
         //Check if the user exists
         if (!is_null($this->user)) {
-			return $this->user;
-		} //End if
+            return $this->user;
+        } //End if
 
         //Retrieve token from request and authenticate
-		return $this->getTokenForRequest();
+        return $this->getTokenForRequest();
     } //Function ends
 
-
     /**
-	 * Get the token for the current request.
-	 * @return string
-	 */
-	public function getTokenForRequest () {
-        //Check for request having token
-        if (! $this->cognito->parser()->setRequest($this->request)->hasToken()) {
-            return null;
-        } //End if
-
-        if (! $this->cognito->parseToken()->authenticate()) {
-            throw new NoLocalUserException();
-        } //End if
-
+     * Get the token for the current request.
+     * @return string
+     */
+    public function getTokenForRequest ()
+    {
         //Get claim
-        $claim = $this->cognito->getClaim();
+        $claim = $this->getClaim();
         if (empty($claim)) {
             return null;
         } //End if
 
         //Get user and return
-        return $this->user = $this->provider->retrieveById($claim['sub']);
-	} //Function ends
-
-
-    /**
-	 * Get the user from the provider.
-	 * @return User
-	 */
-	public function getUser (string $identifier) {
-        return $this->provider->retrieveById($identifier);
+        return $this->user = $this->getUser($claim['sub']);
     } //Function ends
 
+    /**
+     * Get the user from the provider.
+     *
+     * @return User
+     */
+    public function getUser (string $identifierValue, string $identifierKey='sub')
+    {
+        return ($this->provider->getModel())::where(
+            config('cognito.user_subject_uuid', $identifierKey), $identifierValue
+            )->first();
+    } //Function ends
 
     /**
      * Attempt MFA based Authentication
@@ -393,7 +307,8 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @return bool
      */
-    public function attemptMFA(array $challenge=[], bool $remember=false) {
+    public function attemptMFA(array $challenge=[], bool $remember=false)
+    {
         $returnValue = null;
         try {
             $responseCognito = $this->attemptBaseMFA($challenge, $remember);
@@ -417,6 +332,7 @@ class CognitoTokenGuard extends TokenGuard
                 throw new InvalidUserException();
             } //End if
         } catch(AwsCognitoException | InvalidUserException | Exception $e) {
+            Log::error('CognitoTokenGuard:attemptMFA:Exception');
             throw $e;
         } //Try-catch ends
 

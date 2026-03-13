@@ -1,3 +1,24 @@
+Release 44 (tag v2.0.0)
+- Feat: Issue [#70](https://github.com/ellaisys/aws-cognito/issues/70) Add web views as partials
+- Feat: Preconfigured routes and controllers for Web and API
+- Docs: Updated readme
+
+Release 43 (tag v1.4.1)
+- Fix: Remove Laravel version debug log by @aaronhuisinga in [PR #123](https://github.com/ellaisys/aws-cognito/pull/123)
+- Fix: PHP 8.4 implicit nullable parameter deprecations by @joshkautz in [PR #122](https://github.com/ellaisys/aws-cognito/pull/122)
+- Fix: update the support email address
+
+Release 42 (tag v1.4.0)
+ - Feat: Support for Laravel 11 and Laravel 12
+ - Feat: Add registration type (invite, register) flow
+ - Feat: Update the user email verification at first login flow
+ - Fix: Issue [#109](https://github.com/ellaisys/aws-cognito/issues/109)
+ - Fix: Issue [#110](https://github.com/ellaisys/aws-cognito/issues/110)
+ - Fix: Issue [#113](https://github.com/ellaisys/aws-cognito/issues/113)
+
+Release 41 (tag v1.3.1)
+ - Fix: Issue #114, Crash in CognitoTokenGuard for NEW_PASSWORD_REQUIRED challenge
+ 
 Release 40 (tag v1.3.0)
  - Feat: Issue #50, Architecture change to map the local and cognito users with sub (SubjectId)
  - Fix: Issue #86, SSO enabled the user is now created for both guards
@@ -79,3 +100,4 @@ Release 20 (tag v1.0.5):
 
 Release 19 (tag v1.0.4): 
  - Feature: Forgot password RESEND option
+ 

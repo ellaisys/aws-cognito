@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -71,12 +71,14 @@ trait RespondsMFAChallenge
 
         if (is_string($result)) {
             return $response = response()->json(['error' => 'cognito.'.$result], 400);
-        } else if ($result instanceof AWSResult) {
+        } elseif ($result instanceof AWSResult) {
             $user = User::where('email', $request['email'])->first();
             $claim = new AwsCognitoClaim($result, $user, 'email');
             $this->cognito->setClaim($claim)->storeToken();
             return $result['AuthenticationResult'];
-        }
+        } else {
+            //Do nothing
+        } //End if
 
         return $result;
     }

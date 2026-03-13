@@ -19,7 +19,7 @@ class NoLocalUserException extends HttpException
      *
      * @return void
      */
-    public function __construct(string $message = 'User does not exist locally.', Throwable $previous = null, int $code = 0, array $headers = [])
+    public function __construct(string $message = 'User does not exist locally.', ?Throwable $previous = null, int $code = 0, array $headers = [])
     {
         parent::__construct(401, $message, $previous, $headers, $code);
     }

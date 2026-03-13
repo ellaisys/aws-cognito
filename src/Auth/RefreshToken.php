@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -30,22 +30,10 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 trait RefreshToken
 {
     /**
-     * The AwsCognito instance.
-     *
-     * @var \Ellaisys\Cognito\AwsCognito
+     * Passed params
      */
-    protected $cognito;
-
-
-    /**
-     * RespondsMFAChallenge constructor.
-     *
-     * @param AwsCognito $cognito
-     */
-    public function __construct(AwsCognito $cognito) {
-        $this->cognito = $cognito;
-    }
-
+    private $paramRefreshToken = 'refresh_token';
+    private $paramUsername = 'email';
 
     /**
      * Generate a new token.
@@ -56,59 +44,98 @@ trait RefreshToken
      *
      * @return mixed
      */
-    public function refresh(Request $request, string $paramUsername='email', string $paramRefreshToken='refresh_token')
+    public function refresh(Request $request,
+        string $guard = 'api',
+        string $paramUsername='email',
+        string $paramRefreshToken='refresh_token')
     {
         try {
+            //Assign params
+            $this->paramRefreshToken = $paramRefreshToken;
+            $this->paramUsername = $paramUsername;
+            
+            //Validate request
+            $this->validateRefreshRequest($request);
 
-            if ($request instanceof Request) {
-                //Validate request
-                $validator = Validator::make($request->all(), $this->rules());
-
-                if ($validator->fails()) {
-                    throw new ValidationException($validator);
-                } //End if
-
-                $request = collect($request->all());
-            } //End if
-
-            //Create AWS Cognito Client
-            $client = app()->make(AwsCognitoClient::class);
-
-            //Get Authenticated user
-            $authUser  = Auth::guard('api')->user();
-
-            //Get User Data
-            $user = $client->getUser($authUser[$paramUsername]);
-
-            //Use username from AWS to refresh token, not email from login!
-            if (!empty($user['Username'])) {
-                $response = $client->refreshToken($user['Username'], $request[$paramRefreshToken]);
-                if (empty($response) || empty($response['AuthenticationResult'])) {
-                    throw new HttpException(400);
-                } //End if
-
-                //Authenticate User
-                $claim = new AwsCognitoClaim($response, $authUser, 'email');
-                if ($claim && $claim instanceof AwsCognitoClaim) { 
-                    //Store the token
-                    $this->cognito->setClaim($claim)->storeToken();
-
-                    //Return the response object
-                    return $claim->getData();    
-                } else {
-                    return false;            
-                } //End if
-            } else {
-                return response()->json(['error' => 'cognito.validation.invalid_username'], 400);
-            } //End if
+            //Process token refresh
+            return $this->processTokenRefresh($request, $guard);
         } catch(Exception $e) {
             if ($e instanceof CognitoIdentityProviderException) {
-                return response()->json(['error' => $e->getAwsErrorCode()], 400);
+                throw AwsCognitoException::create($e);
             } //End if
             throw $e;
         } //Try-catch ends
     } //Function ends
 
+    /**
+     * Validate the refresh token request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     *
+     * @return void
+     */
+    private function validateRefreshRequest(Request $request)
+    {
+        try{
+            $validator = Validator::make($request->all(), $this->rules());
+
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (Exception $e) {
+            throw new HttpException(400, 'ERROR_VALIDATION');
+        } //Try-catch ends
+    } //Function ends
+
+    /**
+     * Process the token refresh.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     *
+     * @return mixed
+     */
+    private function processTokenRefresh(Request $request, string $guard): mixed
+    {
+        //Convert request to collection
+        $payload = collect($request->all());
+
+        //Create AWS Cognito Client
+        $client = app()->make(AwsCognitoClient::class);
+
+        //Get Authenticated user
+        $authUser  = Auth::guard($guard)->user();
+
+        //Get User Data
+        $user = $client->getUser($authUser[$this->paramUsername]);
+
+        //Use username from AWS to refresh token, not email from login!
+        if (!empty($user['Username'])) {
+            $response = $client->refreshToken($user['Username'], $payload[$this->paramRefreshToken]);
+            if (empty($response) || empty($response['AuthenticationResult'])) {
+                throw new HttpException(400);
+            } //End if
+
+            //Authenticate User
+            $claim = new AwsCognitoClaim($response, $authUser, $this->paramUsername);
+            if (!($claim instanceof AwsCognitoClaim)) {
+                return false;
+            } //End if
+
+            //Store the token
+            $cognito = app()->make('ellaisys.aws.cognito');
+            if (empty($cognito)) {
+                throw new HttpException(400, 'ERROR_COGNITO_TOKEN_STORE');
+            } //End if
+            $cognito->setClaim($claim)->storeToken();
+
+            //Return the response object
+            return $claim->getData();
+        } else {
+            throw new HttpException(400, 'ERROR_COGNITO_USER_NOT_FOUND');
+        } //End if
+    } //Function ends
 
     /**
      * Get the password reset validation rules.
@@ -118,7 +145,7 @@ trait RefreshToken
     protected function rules()
     {
         return [
-            'refresh_token'    => 'required'
+            $this->paramRefreshToken => 'required'
         ];
     } //Function ends
 

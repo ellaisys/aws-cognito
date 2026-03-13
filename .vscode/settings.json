@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "ellaisys",
+        "projectKey": "ellaisys_aws-cognito"
+    }
+}

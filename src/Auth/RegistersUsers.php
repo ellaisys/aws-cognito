@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,9 +13,11 @@ namespace Ellaisys\Cognito\Auth;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Application;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoUserPool;
@@ -29,6 +31,29 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 trait RegistersUsers
 {
     /**
+     * Private variable to indicate if the action
+     * is called from controller
+     */
+    private bool $isControllerAction = false;
+
+    /**
+     * Private variable to indicate if the response
+     * is to be in json format
+     */
+    private bool $isJsonResponse = false;
+
+    /**
+     * Private variable to indicate if the response
+     * is to be raised as an exception
+     */
+    private bool $isRaiseException = false;
+
+    /**
+     * Private variable for Registration Type
+     */
+    private string $registrationType = 'register';
+
+    /**
      * private variable for password policy
      */
     private $passwordPolicy = null;
@@ -39,6 +64,20 @@ trait RegistersUsers
     private $paramUsername = 'email';
     private $paramPassword = 'password';
 
+    /**
+     * Handle a registration invite for the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
+    public function invite(Request $request, ?array $clientMetadata = null)
+    {
+        $this->registrationType = 'invite';
+        return $this->register(
+            $request, $clientMetadata, true
+        );
+
+    } //Function ends
 
     /**
      * Handle a registration request for the application.
@@ -46,18 +85,30 @@ trait RegistersUsers
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function register(Request $request, array $clientMetadata=null)
+    public function register(Request $request, ?array $clientMetadata = null,
+        bool $ignoreConfigRegistrationType = false)
     {
-        $cognitoRegistered=false;
-        $user = [];
-
         try {
+            // Initialize variables
+            $returnValue = null;
+            $cognitoRegistered=false;
+            $user = [];
+
+            if(!$this->isJsonResponse) {
+                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
+            } //End if
+
+            //Set the registration type
+            if (!$ignoreConfigRegistrationType) {
+                $this->registrationType = config('cognito.registration_type', 'register');
+            } //End if
 
             //Get the password policy
             $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
-            $validator = Validator::make($request->all(), $this->rulesRegisterUser(), [
+            $validator = Validator::make(
+                $request->all(), $this->rulesRegisterUser(), [
                 'regex' => 'Must contain atleast '.$this->passwordPolicy['message'],
             ]);
             if ($validator->fails()) {
@@ -65,17 +116,20 @@ trait RegistersUsers
             } //End if
 
             //Create data to save
-            $data = $request->all();
+            $payload = $request->all();
 
             //Create credentials object
-            $collection = collect($data);
+            $collection = collect($payload);
 
             //Register User in Cognito
-            $cognitoRegistered=$this->createCognitoUser($collection, $clientMetadata, config('cognito.default_user_group', null));            
+            $cognitoRegistered=$this->createCognitoUser(
+                $collection, $clientMetadata,
+                config('cognito.default_user_group', null)
+            );
             if ($cognitoRegistered) {
                 //Remove the password
-                if(!empty($data[$this->paramPassword])) {
-                    unset($data[$this->paramPassword]);
+                if(!empty($payload[$this->paramPassword])) {
+                    unset($payload[$this->paramPassword]);
                 } //End if
 
                 //Add cognito data to user data
@@ -84,24 +138,31 @@ trait RegistersUsers
                     $cognitoAttributes = $cognitoUser['Attributes'];
                     if ($cognitoAttributes && is_array($cognitoAttributes) && count($cognitoAttributes)>0) {
                         foreach ($cognitoAttributes as $cognitoAttribute) {
-                            $data[$cognitoAttribute['Name']] = $cognitoAttribute['Value'];
+                            $payload[$cognitoAttribute['Name']] = $cognitoAttribute['Value'];
                         } //End foreach
-                    } //End if                     
+                    } //End if
                 } //End if
 
                 //Create user in local store
-                $user = $this->create($data);
+                $user = $this->create($payload);
             } //End if
 
-            // Return with user data
-            return ($request->expectsJson() || $request->isJson())
-                ? new JsonResponse($user, 200)
-                : redirect($this->redirectPath());
-        } catch (Exception $e) {
-            throw $e;
-        } //End try 
-    } //Function ends
+            //Return response
+            if ($this->isJsonResponse) {
+                $returnValue = $this->isControllerAction ? new JsonResponse($user, 200) : $user;
+            } else {
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('status', 'Registration successful. Please login to continue.')
+                    ->with('message', trans('messages.auth.registration_success'));
+            } //End if
 
+            return $returnValue;
+        } catch (Exception $e) {
+            Log::error('RegistersUsers:register:Exception');
+            throw $e;
+        } //End try
+    } //Function ends
 
     /**
      * Adds the newly created user to the default group (if one exists) in the config file.
@@ -120,7 +181,6 @@ trait RegistersUsers
         return [];
     } //Function ends
 
-
     /**
      * Handle a registration request for the application.
      *
@@ -128,7 +188,8 @@ trait RegistersUsers
      * @return \Illuminate\Http\Response
      * @throws InvalidUserFieldException
      */
-    public function createCognitoUser(Collection $request, array $clientMetadata=null, string $groupname=null)
+    public function createCognitoUser(Collection $request,
+        ?array $clientMetadata = null, ?string $groupname = null)
     {
         //Initialize Cognito Attribute array
         $attributes = [];
@@ -159,22 +220,46 @@ trait RegistersUsers
         $password = null;
         if (config('cognito.force_new_user_password', true)) {
             $password = $request->has($this->paramPassword)?$request[$this->paramPassword]:null;
-        }// End if            
+        }// End if
 
-        return app()->make(AwsCognitoClient::class)->inviteUser(
-            $request[$userKey], $password, $attributes,
-            $clientMetadata, $messageAction,
-            $groupname
-        );
+        switch ($this->registrationType) {
+            case 'invite':
+                //Invite User
+                return app()->make(AwsCognitoClient::class)->inviteUser(
+                    $request[$userKey], $password, $attributes,
+                    $clientMetadata, $messageAction,
+                    $groupname
+                );
+                break;
+
+            case 'register':
+            default:
+                //Password is required for register
+                if (empty($password)) {
+                    //Laravel versions prior to 10 do not have Str::password method
+                    if (version_compare(Application::VERSION, '10.0.0', '<')) {
+                        $password = Str::random(10).'1A!';
+                    } else {
+                        $password = Str::password(12);
+                    } //End if
+                } //End if
+
+                //Register User
+                return app()->make(AwsCognitoClient::class)->register(
+                    $request[$userKey], $password, $attributes,
+                    $clientMetadata, $groupname
+                );
+                break;
+        } //End switch
+
     } //Function ends
-
 
     /**
      * Get the registration validation rules.
      *
      * @return array
      */
-    protected function rulesRegisterUser()
+    public function rulesRegisterUser()
     {
         $rules=[];
 
@@ -189,7 +274,7 @@ trait RegistersUsers
                             break;
 
                         case 'phone_number':
-                            $rules = array_merge($rules, [ $value => 'required']);
+                            $rules = array_merge($rules, [ $value => 'required|regex:/^\+[1-9]\d{1,14}$/']);
                             break;
                         
                         default:
@@ -211,8 +296,41 @@ trait RegistersUsers
 
             return $rules;
         } catch (Exception $e) {
+            Log::error('RegistersUsers:rulesRegisterUser:Exception');
             throw $e;
         } //End try
     } //Function ends
+
+    /**
+     * Set flag for action method called from controller
+     *
+     * @param bool $isControllerAction
+     */
+    protected function setIsControllerAction(bool $isControllerAction): void
+    {
+        $this->isControllerAction = $isControllerAction;
+
+    }
+
+    /**
+     * Set flag if the response is to be in json format
+     *
+     * @param bool $isJsonResponse
+     */
+    protected function setIsJsonResponse(bool $isJsonResponse): void
+    {
+        $this->isJsonResponse = $isJsonResponse;
+    }
+
+    /**
+     * Set flag if the response is to be raised as an exception
+     * in case of errors
+     *
+     * @param bool $isRaiseException
+     */
+    protected function setIsRaiseException(bool $isRaiseException): void
+    {
+        $this->isRaiseException = $isRaiseException;
+    }
 
 } //Trait ends

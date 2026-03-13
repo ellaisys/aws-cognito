@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,6 +12,8 @@
 namespace Ellaisys\Cognito\Http\Parser;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class Parser
 {
@@ -91,11 +93,19 @@ class Parser
      */
     public function parseToken()
     {
-        foreach ($this->chain as $parser) {
-            if ($response = $parser->parse($this->request)) {
-                return $response;
-            } //End if
-        } //Loop ends
+        try {
+            $response = null;
+            foreach ($this->chain as $parser) {
+                $response = $parser->parse($this->request);
+                if (!empty($response)) {
+                    return $response;
+                } //End if
+            } //Loop ends
+            return $response;
+        } catch (Exception $e) {
+            Log::error('Parser:parseToken:Exception');
+            return $response;
+        } //Try-catch ends
     } //Function ends
 
 
@@ -104,9 +114,10 @@ class Parser
      *
      * @return bool
      */
-    public function hasToken()
+    public function hasToken(): bool
     {
-        return $this->parseToken() !== null;
+        $response = $this->parseToken();
+        return $response != null;
     } //Function ends
 
 

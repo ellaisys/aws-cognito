@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,10 @@
 namespace Ellaisys\Cognito\Http\Parser;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 //use Ellaisys\Cognito\Contracts\Http\Parser as ParserContract;
+
+use Exception;
 
 class AuthHeaders //implements ParserContract
 {
@@ -55,11 +58,16 @@ class AuthHeaders //implements ParserContract
      */
     public function parse(Request $request)
     {
-        $header = $request->headers->get($this->header) ?: $this->fromAltHeaders($request);
+        try {
+            $header = $request->headers->get($this->header) ?: $this->fromAltHeaders($request);
 
-        if ($header && preg_match('/'.$this->prefix.'\s*(\S+)\b/i', $header, $matches)) {
-            return $matches[1];
-        } //End if
+            if ($header && preg_match('/'.$this->prefix.'\s*(\S+)\b/i', $header, $matches)) {
+                return $matches[1];
+            } //End if
+        } catch (Exception $e) {
+            Log::error('AuthHeaders:parse:Exception');
+            return null;
+        }
     } //Function ends
 
 

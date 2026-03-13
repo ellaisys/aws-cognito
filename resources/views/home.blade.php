@@ -1,0 +1,46 @@
+@extends(config('cognito.views.layout'))
+
+@section('content')
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mb-2">
+                <div class="card-header">{{ __('Dashboard') }}</div>
+
+                <div class="card-body">
+                    <x-cognito::common.alert />
+                    
+                    <img src="https://github.com/ellaisys/aws-cognito/raw/master/assets/images/banner.png"
+                        width="100%" alt="EllaiSys AWS Cloud Capability"/>
+
+                    <h2><strong>Welcome: {{ __('You are logged in!') }}</strong></h2>
+                    <h4>This is a demo application, that uses the Laravel Package to manage Web and API authentication with AWS Cognito</h4>
+
+                    </br>
+                    <h2><strong>Session Parameters:</strong></h2>
+                    @if ($sessionData = session()->all())
+                        <table class="table table-bordered table-striped">
+                                <thead class="dark">
+                                    <tr>
+                                        <td style="width: 30%;">Key</td>
+                                        <td>Value</td>
+                                    </tr>
+                                </thead>
+                            <tbody>
+                            @foreach($sessionData as $key=>$value)
+                                <tr>
+                                    <td style="word-break: break-word;">{{ $key }}</td>
+                                    <td style="word-break: break-word;">{{ json_encode($value, JSON_UNESCAPED_UNICODE)}}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    @endif
+                </div>
+            </div>
+
+            <x-cognito::mfa.activate-form />
+        </div>
+    </div>
+</div>
+@endsection

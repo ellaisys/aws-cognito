@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -47,7 +47,7 @@ class AwsCognitoManager
 
     /**
      * The AwsCognito Claim token
-     * 
+     *
      * @var \Ellaisys\Cognito\AwsCognitoClaim|null
      */
     protected $claim;
@@ -126,9 +126,9 @@ class AwsCognitoManager
      *
      * @return \AwsCognitoManager
      */
-    public function release(string $token)
+    public function release(string $token, bool $forceForever = false)
     {
-        $this->provider->destroy($token);
+        $this->provider->destroy($token, $forceForever);
 
         return $this;
     } //Function ends
@@ -136,7 +136,7 @@ class AwsCognitoManager
 
     /**
      * Save challenge object
-     * 
+     *
      * @param  string  $key
      * @param  mixed  $data
      * @param  int  $durationInSecs

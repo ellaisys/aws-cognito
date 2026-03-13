@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -56,7 +56,6 @@ class AwsCognitoUserPool
             $response = $this->client->describeUserPool();
             $this->dataUserPool = $response->get('UserPool');
         } //If ends
-        Log::info($this->dataUserPool);
         return $this->dataUserPool;
     } //Function ends
     public function setDataUserPool($dataUserPool)

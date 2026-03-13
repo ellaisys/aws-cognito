@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,18 +12,18 @@
 namespace Ellaisys\Cognito\Http\Parser;
 
 use Illuminate\Http\Request;
-//use Ellaisys\Cognito\Contracts\Http\Parser as ParserContract;
+use Illuminate\Support\Facades\Log;
+
+use Exception;
 
 class ClaimSession //implements ParserContract
 {
-    
     /**
-     * The session key name.
+     * Constant representing the session key name.
      *
      * @var string
      */
-    protected $sessionKey = 'claim';
-
+    const SESSION_KEY = 'claim';
 
     /**
      * The header prefix.
@@ -32,7 +32,6 @@ class ClaimSession //implements ParserContract
      */
     protected $prefix = 'bearer';
 
-
     /**
      * Try to parse the token from the request header.
      *
@@ -40,12 +39,18 @@ class ClaimSession //implements ParserContract
      *
      * @return null|string
      */
-    public function parse(Request $request)
+    public function parse(Request $request): string|null
     {
-        $claim = $request->session()->has($this->sessionKey)?$request->session()->get($this->sessionKey):null;
-        if ($claim && is_array($claim) && array_key_exists('token', $claim)) {
-            return $claim['token'];
-        } //End if
+        try {
+            $claim = $request->session()->has(self::SESSION_KEY)?$request->session()->get(self::SESSION_KEY):null;
+            if ($claim && is_array($claim) && array_key_exists('token', $claim)) {
+                return $claim['token'];
+            } //End if
+            return null;
+        } catch (Exception $e) {
+            Log::error('ClaimSession:parse:Exception');
+            return null;
+        } //Try-catch ends
     } //Function ends
 
 

@@ -1,0 +1,5 @@
+{
+    "sonarCloudOrganization": "ellaisys",
+    "projectKey": "ellaisys_aws-cognito",
+    "region": "EU"
+}

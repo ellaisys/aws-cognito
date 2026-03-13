@@ -3,7 +3,7 @@
 /*
  * This file is part of AWS Cognito Auth solution.
  *
- * (c) EllaiSys <support@ellaisys.com>
+ * (c) EllaiSys <ellaisys@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -95,7 +95,7 @@ class AwsCognitoTokenValidator
             $parts = explode('.', $token);
 
             if (count($parts) !== 3) {
-                throw new InvalidTokenException('Wrong number of segments');
+                throw new InvalidTokenException();
             } //End if
 
             $parts = array_filter(array_map('trim', $parts));
