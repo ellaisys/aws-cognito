@@ -35,7 +35,7 @@ You can change the API prefix by configuring **AWS_COGNITO_API_PREFIX** in the .
 
 ```php
     POST      api/cognito/login ............................... Ellaisys\Cognito\Http\Controllers\Auth\LoginController@login
-    POST      api/cognito/login/mfa ................. Ellaisys\Cognito\Http\Controllers\Auth\MFAController@actionValidateMFA
+    POST      api/cognito/login/mfa ..................... Ellaisys\Cognito\Http\Controllers\Auth\LoginController@validateMFA
     PUT       api/cognito/logout ............................. Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout
     PUT       api/cognito/logout/forced ................ Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logoutForced
     POST      api/cognito/password/forgot .... Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLink
@@ -44,7 +44,7 @@ You can change the API prefix by configuring **AWS_COGNITO_API_PREFIX** in the .
     POST      api/cognito/token/refresh ........... Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
     POST      api/cognito/user/changepassword ...... Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@change
     POST      api/cognito/user/invite ............... Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@actionInvite
-    GET|HEAD  api/cognito/user/profile ............ Ellaisys\Cognito\Http\Controllers\Api\UserController@actionGetRemoteUser 
+    GET|HEAD  api/cognito/user/profile ............ Ellaisys\Cognito\Http\Controllers\Api\UserController@actionGetRemoteUser
 
     GET|HEAD  api/cognito/user/mfa/activate .................. Ellaisys\Cognito\Http\Controllers\Auth\MFAController@activate
     POST      api/cognito/user/mfa/activate/{code} ............. Ellaisys\Cognito\Http\Controllers\Auth\MFAController@verify
@@ -64,21 +64,24 @@ You can change the API prefix by configuring **AWS_COGNITO_WEB_PREFIX** in the .
     GET|HEAD  cognito/home ................................................................................................................. cognito.home
     GET|HEAD  cognito/login .......................................................................................................... cognito.form.login
     POST      cognito/login .................................. cognito.action.login.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@login
-    POST      cognito/login/mfa ..................... cognito.action.mfa.code.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@validateMFA  
-    POST      cognito/logout ............................................. cognito.logout › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout  
-    POST      cognito/logout/forced ......................... cognito.logout_forced › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logoutForced  
-    GET|HEAD  cognito/password/forgot ...................................................................................... cognito.form.password.forgot  
+    POST      cognito/login/mfa ..................... cognito.action.mfa.code.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@validateMFA
+    POST      cognito/logout ............................................. cognito.logout › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout
+    POST      cognito/logout/forced ......................... cognito.logout_forced › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logoutForced
+    GET|HEAD  cognito/password/forgot ...................................................................................... cognito.form.password.forgot
     POST      cognito/password/forgot .... cognito.action.password.forgot › Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLink
-    GET|HEAD  cognito/password/reset ........................................................................................ cognito.form.password.reset  
-    POST      cognito/password/reset ............... cognito.action.password.reset › Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController@reset  
-    GET|HEAD  cognito/register .................................................................................................... cognito.form.register  
-    POST      cognito/register ...................... cognito.action.register.submit › Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@register  
-    POST      cognito/session/refresh ............................... cognito. › Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate  
+    GET|HEAD  cognito/password/reset ........................................................................................ cognito.form.password.reset
+    POST      cognito/password/reset ............... cognito.action.password.reset › Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController@reset
+    GET|HEAD  cognito/register .................................................................................................... cognito.form.register
+    POST      cognito/register ...................... cognito.action.register.submit › Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@register
+    POST      cognito/session/refresh ............................... cognito. › Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
     GET|HEAD  cognito/user/changepassword .................................................................................. cognito.form.change.password
-    POST      cognito/user/changepassword ...... cognito.action.change.password › Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@change  
-    GET|HEAD  cognito/user/mfa/activate .................. cognito.form.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@activate  
+    POST      cognito/user/changepassword ...... cognito.action.change.password › Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@change
+    GET|HEAD  cognito/user/mfa/activate .................. cognito.form.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@activate
     GET|HEAD  cognito/user/mfa/deactivate .......... cognito.action.user.mfa.deactivate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@deactivate
-    POST      cognito/user/mfa/verify .................... cognito.action.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@verify 
+    GET|HEAD  cognito/user/mfa/disable ........................ cognito.action.mfa.disable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@disable
+    GET|HEAD  cognito/user/mfa/enable ........................... cognito.action.mfa.enable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@enable
+    POST      cognito/user/mfa/verify .................... cognito.action.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@verify
+
 ```
 
 ### Ignore the routes and controllers
