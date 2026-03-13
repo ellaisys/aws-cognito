@@ -165,7 +165,8 @@ class Handler extends ExceptionHandler
             $errors=($e instanceof ValidationException)?$e->errors():['error' => $systemErrorMsg];
 
             if ($isRedirectToLogin) {
-                $return = redirect()->route('cognito.form.login')
+                $return = redirect()
+                    ->route(config('cognito.routes.web.login_page', 'cognito.form.login'))
                     ->withErrors($errors);
             } else {
                 $return = redirect()->back()

@@ -156,12 +156,7 @@ class LoginController extends Controller
             //Rise Post Auth Failed Event
             $this->callPostAuthErrorEvent($request, $e, $this->passwordField);
 
-            if ($isJsonResponse) {
-                throw $e;
-            } //End if
-
-            return response()->redirectToRoute(config('cognito.force_mfa_code_route_name', 'cognito.form.login'))
-                ->withErrors(['error' => $e->getMessage()]);
+            throw $e;
         } //try-catch ends
     } //Function ends
 

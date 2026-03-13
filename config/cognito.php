@@ -371,12 +371,18 @@ return [
         'layout' => env('AWS_COGNITO_VIEWS_LAYOUT', 'cognito::layouts.app'),
     ],
 
-    // 'routes' => [
-    //     'web' => [
-    //        'default_root_page' => env('', ''),
-    //        'login_page' => env('', 'cognito.form.login'),
-    //        'home_page' => env('', ''),
-
-    //     ]
-    // ]
+    /*
+    |--------------------------------------------------------------------------
+    | Routes
+    |--------------------------------------------------------------------------
+    | This option controls the routes for the package. You can set the routes 
+    | for the package here.
+    */
+    'routes' => [
+        'web' => [
+           'default_root_page' => env('AWS_COGNITO_DEFAULT_ROOT_PAGE', ''),
+           'login_page' => env('AWS_COGNITO_LOGIN_PAGE', 'cognito.form.login'),
+           'home_page' => env('AWS_COGNITO_HOME_ROUTE_NAME', 'cognito.home'),
+        ]
+    ]
 ];

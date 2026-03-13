@@ -213,7 +213,7 @@ class AwsCognitoClient
             $response = $this->client->adminInitiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClient:adminInitiateAuth:CognitoIdentityProviderException');
-            throw $exception;
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $response;

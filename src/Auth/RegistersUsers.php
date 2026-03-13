@@ -151,7 +151,10 @@ trait RegistersUsers
             if ($this->isJsonResponse) {
                 $returnValue = $this->isControllerAction ? new JsonResponse($user, 200) : $user;
             } else {
-                $returnValue = redirect($this->redirectPath());
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('status', 'Registration successful. Please login to continue.')
+                    ->with('message', trans('messages.auth.registration_success'));
             } //End if
 
             return $returnValue;

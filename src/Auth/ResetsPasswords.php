@@ -29,6 +29,12 @@ use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 trait ResetsPasswords
 {
     /**
+     * Private variable to indicate if the action
+     * is called from controller
+     */
+    private bool $isControllerAction = false;
+
+    /**
      * private variable for password policy
      */
     private $passwordPolicy = null;
@@ -113,8 +119,10 @@ trait ResetsPasswords
             return new JsonResponse(['message' => trans($response)], 200);
         } //End if
 
-        return redirect($this->redirectPath())
-            ->with('status', trans($response));
+        return redirect()
+            ->route($this->redirectPath())
+            ->with('status', trans($response))
+            ->with('message', trans('messages.auth.password_reset_success'));
     } //Function ends
 
     /**
@@ -134,7 +142,8 @@ trait ResetsPasswords
 
         return redirect()->back()
             ->withInput($request->only('email'))
-            ->withErrors(['email' => trans($response)]);
+            ->withErrors(['email' => trans($response)])
+            ->with('message', trans('messages.auth.password_reset_failed'));
     } //Function ends
 
     /**
@@ -142,13 +151,19 @@ trait ResetsPasswords
      *
      * @return string
      */
-    public function redirectPath()
+    public function redirectPath(): string
     {
+        //Check if method exists
         if (method_exists($this, 'redirectTo')) {
             return $this->redirectTo();
         } //End if
 
-        return property_exists($this, 'redirectTo') ? $this->redirectTo : '/home';
+        //Check if property exists and not null
+        if (property_exists($this, 'redirectTo') && !is_null($this->redirectTo)) {
+            return $this->redirectTo;
+        } //End if
+
+        return config('cognito.routes.web.login_page', 'cognito.form.login');
     } //Function ends
 
     /**

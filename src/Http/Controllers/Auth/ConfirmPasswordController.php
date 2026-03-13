@@ -84,9 +84,10 @@ class ConfirmPasswordController extends Controller
                 $request->session()->invalidate();
 
                 //Redirect to the login or homepage
-                $returnValue = redirect(route($this->redirectTo))
-                    ->with('success', true)
-                    ->with('message', 'Password successfully changed.');
+                $returnValue = redirect()
+                    ->route(config('cognito.routes.web.login_page', $this->redirectTo))
+                    ->with('status', 'Password successfully changed.')
+                    ->with('message', trans('messages.auth.password_change_success'));
             } //End if
 
             return $returnValue;

@@ -47,7 +47,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = null;
 
     /**
      * Client metadata to be sent to AWS Cognito
@@ -105,7 +105,12 @@ class RegisterController extends Controller
      */
     public function redirectPath()
     {
-        return $this->redirectTo;
+        //Check if property exists and not null
+        if (property_exists($this, 'redirectTo') && !is_null($this->redirectTo)) {
+            return $this->redirectTo;
+        } //End if
+
+        return config('cognito.routes.web.login_page', 'cognito.form.login');
     }
 
     /**
