@@ -24,14 +24,12 @@ final class CognitoUserProvider implements UserProviderContract
      */
     private $provider;
 
-
     /**
      * The cache repository contract.
      *
      * @var \Illuminate\Contracts\Cache\Repository
      */
     private $cache;
-
 
     /**
      * The used cache tag.
@@ -40,7 +38,6 @@ final class CognitoUserProvider implements UserProviderContract
      */
     protected $tag = 'userprovider.aws.cognito';
 
-
     /**
      * Constructor.
      *
@@ -48,12 +45,12 @@ final class CognitoUserProvider implements UserProviderContract
      *
      * @return void
      */
-    public function __construct(UserProvider $provider, Repository $cache)
+    public function __construct(UserProvider $provider,
+        Repository $cache)
     {
         $this->provider = $provider;
         $this->cache = $cache;
     }
-
 
     /**
      * Retrieve a user by the given credentials.
@@ -62,22 +59,24 @@ final class CognitoUserProvider implements UserProviderContract
      *
      * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
-    protected function retrieveByCredentials(array $credentials) {
+    protected function retrieveByCredentials(array $credentials): ?Authenticatable {
         return $this->provider->retrieveByCredentials($credentials);
     } //Function ends
-
 
     /**
      * Retrieve a user by the given identifier.
      *
-     * @param  mixed  $identifier
+     * @param  string  $identifier
+     *
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
-    protected function retrieveById($identifier) {
+    protected function retrieveById(string $identifier): ?Authenticatable {
+        
+
         return new User([
-            config('cognito.user_subject_uuid') => $identifier
+            config('cognito.user_subject_uuid', 'sub') => $identifier
         ]);
     } //Function ends
-
 
     /**
      * Validate a user against the given credentials.
@@ -87,10 +86,9 @@ final class CognitoUserProvider implements UserProviderContract
      *
      * @return bool
      */
-    protected function validateCredentials(Authenticatable $user, array $credentials) {
-            
+    protected function validateCredentials(Authenticatable $user, array $credentials): bool {
+        return $this->provider->validateCredentials($user, $credentials);
     } //Function ends
-
 
     /**
      * Retrieve a user by the given token.
@@ -100,8 +98,9 @@ final class CognitoUserProvider implements UserProviderContract
      *
      * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
-    protected function retrieveByToken($identifier, $token) {}
-
+    protected function retrieveByToken(mixed $identifier, string $token): ?Authenticatable {
+        return $this->provider->retrieveByToken($identifier, $token);
+    } //Function ends
 
     /**
      * Update the "remember me" token for the given user in storage.
@@ -109,6 +108,6 @@ final class CognitoUserProvider implements UserProviderContract
      * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
      * @param  string  $token
      */
-    protected function updateRememberToken(Authenticatable $user, $token) {}
+    protected function updateRememberToken(Authenticatable $user, string $token): void {}
 
 } //Class ends

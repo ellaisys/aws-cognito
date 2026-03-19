@@ -44,8 +44,7 @@ class AwsCognitoUserPool
     public function __construct(AwsCognitoClient $client)
     {
         $this->client = $client;
-        $response = $client->describeUserPool();
-        $this->dataUserPool = $response->get('UserPool');
+        $this->getDataUserPool();
     } //Function ends
 
 
