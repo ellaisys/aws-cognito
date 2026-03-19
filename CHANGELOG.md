@@ -1,3 +1,7 @@
+Release 45 (tag v2.0.1)
+- Fix: Issue [#127](https://github.com/ellaisys/aws-cognito/issues/127)
+- Fix: Weak encryption in php-jwt (CVE-2025-45769)
+
 Release 44 (tag v2.0.0)
 - Feat: Issue [#70](https://github.com/ellaisys/aws-cognito/issues/70) Add web views as partials
 - Feat: Preconfigured routes and controllers for Web and API
