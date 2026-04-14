@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
 
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Traits\AwsCognitoClientMFAAction;
@@ -194,7 +195,7 @@ class AwsCognitoClient
         try {
             //Build payload
             $payload = [
-                'AuthFlow' => 'ADMIN_NO_SRP_AUTH',
+                'AuthFlow' => CognitoAuthFlowTypes::ADMIN_NO_SRP_AUTH->value,
                 'AuthParameters' => [
                     'USERNAME' => $username,
                     'PASSWORD' => $password
@@ -212,7 +213,7 @@ class AwsCognitoClient
 
             $response = $this->client->adminInitiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClient:adminInitiateAuth:CognitoIdentityProviderException');
+            Log::error('AwsCognitoClient:authenticate:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
@@ -674,7 +675,7 @@ class AwsCognitoClient
     /**
      * Generate a new token using refresh token.
      *
-     * @see http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html
      * @param string $username
      * @param string $refreshToken
      * @return \Aws\Result|bool
@@ -684,7 +685,7 @@ class AwsCognitoClient
         try {
             //Build payload
             $payload = [
-                'AuthFlow' => 'REFRESH_TOKEN_AUTH',
+                'AuthFlow' => CognitoAuthFlowTypes::REFRESH_TOKEN_AUTH->value,
                 'AuthParameters' => [
                     'REFRESH_TOKEN' => $refreshToken,
                 ],
@@ -699,7 +700,7 @@ class AwsCognitoClient
                 ]);
             } //End if
 
-            $response = $this->client->adminInitiateAuth($payload);
+            $response = $this->client->initiateAuth($payload);
 
             // Reuse same refreshToken
             $response['AuthenticationResult']['RefreshToken'] = $refreshToken;
@@ -712,7 +713,7 @@ class AwsCognitoClient
     } //Function ends
 
     /**
-     * Revoke all the access tokens from AWS Cognit for a specified refresh-token in a user pool.
+     * Revoke all the access tokens from AWS Cognito for a specified refresh-token in a user pool.
      *
      * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#revoketoken
      *
