@@ -29,6 +29,7 @@ use Ellaisys\Cognito\Http\Parser\ClaimSession;
 use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClaim;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Guards\Traits\BaseCognitoGuard;
 use Ellaisys\Cognito\Guards\Traits\CognitoMFA;
@@ -240,9 +241,10 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
     private function handleAWSChallenge() {
         $returnValue = null;
 
-        switch ($this->challengeName) {
-            case 'SOFTWARE_TOKEN_MFA':
-            case 'SMS_MFA':
+        $challengeType = CognitoChallengeTypes::from($this->challengeName);
+        switch ($challengeType) {
+            case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
+            case CognitoChallengeTypes::SMS_MFA:
                 //Get Session and store details
                 $session = $this->getSession();
                 $session->invalidate();
@@ -257,8 +259,8 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                     ->with('messaage', $this->challengeName);
                 break;
 
-            case AwsCognitoClient::NEW_PASSWORD_CHALLENGE:
-            case AwsCognitoClient::RESET_REQUIRED_PASSWORD:
+            case CognitoChallengeTypes::NEW_PASSWORD_CHALLENGE:
+            case CognitoChallengeTypes::RESET_REQUIRED:
                 if (config('cognito.force_password_change_web', false)) {
                     $returnValue =  redirect(route(config('cognito.force_redirect_route_name'), [
                         'challenge_name' => $this->challengeName,

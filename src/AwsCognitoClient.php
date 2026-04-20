@@ -36,32 +36,11 @@ class AwsCognitoClient
     use AwsCognitoClientAdminAction;
 
     /**
-     * Constant representing the user status as Confirmed.
-     *
-     * @var string
-     */
-    const USER_STATUS_CONFIRMED = 'CONFIRMED';
-
-    /**
      * Constant representing the user needs a new password.
      *
      * @var string
      */
     const NEW_PASSWORD_CHALLENGE = 'NEW_PASSWORD_REQUIRED';
-
-    /**
-     * Constant representing the user needs to reset password.
-     *
-     * @var string
-     */
-    const RESET_REQUIRED_PASSWORD = 'RESET_REQUIRED';
-
-    /**
-     * Constant representing the force new password status.
-     *
-     * @var string
-     */
-    const FORCE_CHANGE_PASSWORD = 'FORCE_CHANGE_PASSWORD';
 
     /**
      * Constant representing the password reset required exception.
@@ -256,6 +235,11 @@ class AwsCognitoClient
             } //End if
 
             $response = $this->client->signUp($payload);
+
+            //Add user to the group
+            if (!empty($groupname)) {
+                $this->adminAddUserToGroup($username, $groupname);
+            } //End if
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
                 throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS, $e);
@@ -373,8 +357,8 @@ class AwsCognitoClient
         ?string $groupname = null)
     {
         //Validate phone for MFA
-        if (config('cognito.mfa_setup')=="MFA_ENABLED") {
-            if (empty($attributes['phone_number'])) { throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING'); }
+        if (config('cognito.mfa_setup')=="MFA_ENABLED" && empty($attributes['phone_number'])) {
+            throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING');
         } //End if
         
         //Force validate email

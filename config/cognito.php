@@ -1,6 +1,14 @@
 <?php
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 return [
     /*
@@ -230,13 +238,13 @@ return [
     |
     | This option controls the package action based on the Challenge Status
     | received from the AWS Cognito Authentication. If the challenge status
-    | is 'NEW_PASSWORD_CHALLENGE' and/or 'RESET_REQUIRED_PASSWORD', this
+    | is 'NEW_PASSWORD_CHALLENGE' and/or 'RESET_REQUIRED', this
     | configuration will force the user to change their password.
     |
     */
     'forced_challenge_names' => [
-        AwsCognitoClient::NEW_PASSWORD_CHALLENGE,
-        AwsCognitoClient::RESET_REQUIRED_PASSWORD
+        CognitoChallengeTypes::NEW_PASSWORD_CHALLENGE,
+        CognitoChallengeTypes::RESET_REQUIRED
     ],
 
     /*

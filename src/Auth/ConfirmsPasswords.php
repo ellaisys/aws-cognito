@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoUserPool;
+use Ellaisys\Cognito\Enums\CognitoUserStatusTypes;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -28,6 +29,7 @@ use Ellaisys\Cognito\Exceptions\NoTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 trait ConfirmsPasswords
 {
@@ -117,15 +119,15 @@ trait ConfirmsPasswords
             } //End if
 
             //Action based on User Status
-            switch ($this->authData['UserStatus']) {
-                case AwsCognitoClient::FORCE_CHANGE_PASSWORD:
+            switch (CognitoUserStatusTypes::from($this->authData['UserStatus'])) {
+                case CognitoUserStatusTypes::FORCE_CHANGE_PASSWORD:
                     $returnValue = $this->forceNewPassword(
                         $client, $payload,
                         $paramUsername, $passwordOld, $passwordNew
                     );
                     break;
 
-                case AwsCognitoClient::RESET_REQUIRED_PASSWORD:
+                case CognitoUserStatusTypes::RESET_REQUIRED:
                     throw new AwsCognitoException(AwsCognitoException::COGNITO_RESET_PWD_REQ_INVALID);
                     break;
 

@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoUserPool;
+use Ellaisys\Cognito\Enums\CognitoUserStatusTypes;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -92,9 +93,14 @@ trait ResetsPasswords
             $user = $client->getUser($request[$paramUsername]);
 
             //Check user status and change password
-            if (($user['UserStatus'] == AwsCognitoClient::USER_STATUS_CONFIRMED) ||
-                ($user['UserStatus'] == AwsCognitoClient::RESET_REQUIRED_PASSWORD)) {
-                $response = $client->resetPassword($request[$paramToken], $request[$paramUsername], $request[$paramPassword]);
+            $userStatus = CognitoUserStatusTypes::from($user['UserStatus']);
+            if (($userStatus == CognitoUserStatusTypes::CONFIRMED) ||
+                ($userStatus == CognitoUserStatusTypes::RESET_REQUIRED)) {
+                $response = $client->resetPassword(
+                        $request[$paramToken],
+                        $request[$paramUsername],
+                        $request[$paramPassword]
+                    );
             } else {
                 $response = false;
             } //End if

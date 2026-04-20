@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Password;
 
 use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\Enums\CognitoUserStatusTypes;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -55,7 +56,7 @@ trait SendsPasswordResetEmails
                 $isPasswordResetRoute = Route::has('cognito.form.password.reset');
 
                 if ($resetTypeCode && $isPasswordResetRoute &&
-                    ($response['status'] != 'FORCE_CHANGE_PASSWORD')) {
+                    (CognitoUserStatusTypes::from($response['status']) != CognitoUserStatusTypes::FORCE_CHANGE_PASSWORD)) {
                     $returnValue = redirect(route('cognito.form.password.reset'))
                         ->withInput($request->only($usernameKey))
                         ->with('success', true);
@@ -92,8 +93,8 @@ trait SendsPasswordResetEmails
             if ($user) {
                 //Change the action based on user status
 
-                switch ($user->get('UserStatus')) {
-                    case 'FORCE_CHANGE_PASSWORD':
+                switch (CognitoUserStatusTypes::from($user->get('UserStatus'))) {
+                    case CognitoUserStatusTypes::FORCE_CHANGE_PASSWORD:
                         //Check the config settings
                         if (config('cognito.allow_forgot_password_resend')) {
                             $attributes = [];
@@ -119,8 +120,8 @@ trait SendsPasswordResetEmails
                         } //End if
                         break;
                     
-                    case 'RESET_REQUIRED';
-                    case 'CONFIRMED';
+                    case CognitoUserStatusTypes::RESET_REQUIRED;
+                    case CognitoUserStatusTypes::CONFIRMED;
                     default:
                         //Send AWS Cognito reset link
                         $response = app()->make(AwsCognitoClient::class)
