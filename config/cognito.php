@@ -183,8 +183,10 @@ return [
     | Cognito MFA Setup and configurations
     |--------------------------------------------------------------------------
     |
-    | This option controls the cognito MFA configuration for the assigned user.
-    |
+    | This option controls the cognito MFA configuration to be used for the
+    | users in the User Pool. The options available are "MFA_NONE" and 
+    | "MFA_ENABLED". The default value is set to "MFA_NONE" which means that 
+    | the MFA is not enabled for the users.
     |
     | MFA_NONE, MFA_ENABLED
     |
@@ -194,14 +196,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito Default User Group
+    | Cognito MFA Types supported
     |--------------------------------------------------------------------------
     |
-    | This option controls the default cognito user group assigned to a user
-    | when added to a User Pool.  Leave null if not assigning a group on
-    | registration.
+    | This option controls the default cognito MFA types allowed if the MFA is 
+    | enabled for the user.  The options available are "SMS_MFA" and 
+    | "SOFTWARE_TOKEN_MFA". The default value is set to "SOFTWARE_TOKEN_MFA".
+    | In case you want to allow both the MFA types, you can set the value to 
+    | "SMS_MFA,SOFTWARE_TOKEN_MFA" separated by comma.
     |
-    | SMS_MFA, SOFTWARE_TOKEN_MFA
+    | The first MFA type in the list will be set as preferred MFA type.
     |
     */
     'mfa_type' => env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA'),
@@ -238,12 +242,12 @@ return [
     |
     | This option controls the package action based on the Challenge Status
     | received from the AWS Cognito Authentication. If the challenge status
-    | is 'NEW_PASSWORD_CHALLENGE' and/or 'RESET_REQUIRED', this
+    | is 'NEW_PASSWORD_REQUIRED' and/or 'RESET_REQUIRED', this
     | configuration will force the user to change their password.
     |
     */
     'forced_challenge_names' => [
-        CognitoChallengeTypes::NEW_PASSWORD_CHALLENGE,
+        CognitoChallengeTypes::NEW_PASSWORD_REQUIRED,
         CognitoChallengeTypes::RESET_REQUIRED
     ],
 

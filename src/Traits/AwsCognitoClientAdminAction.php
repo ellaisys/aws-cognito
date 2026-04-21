@@ -391,7 +391,7 @@ trait AwsCognitoClientAdminAction
                     ]);
                     break;
                 
-                case CognitoChallengeTypes::NEW_PASSWORD_CHALLENGE:
+                case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
                     $challengeResponse = array_merge($challengeResponse, [
                         'NEW_PASSWORD' => $challengeValue
                     ]);

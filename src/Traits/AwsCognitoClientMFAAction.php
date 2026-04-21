@@ -4,10 +4,10 @@ namespace Ellaisys\Cognito\Traits;
 
 use Config;
 
-use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -159,11 +159,16 @@ trait AwsCognitoClientMFAAction
      *
      * @return \Aws\Result|false
      */
-    public function authMFAChallenge(CognitoChallengeTypes $challengeName, string $session, string $challengeValue, string $username)
+    public function authMFAChallenge(
+        CognitoChallengeTypes $challengeName,
+        string $session, string $challengeValue, string $username)
     {
         try {
-            if (in_array($challengeName->value, [AwsCognitoClient::SMS_MFA, AwsCognitoClient::SOFTWARE_TOKEN_MFA])) {
-                $response = $this->adminRespondToAuthChallenge($challengeName, $session, $challengeValue, $username);
+            if (($challengeName == CognitoChallengeTypes::SMS_MFA) ||
+                ($challengeName == CognitoChallengeTypes::SELECT_MFA_TYPE)) {
+                $response = $this->adminRespondToAuthChallenge(
+                    $challengeName, $session, $challengeValue, $username
+                );
             } else {
                 throw new HttpException(400, 'ERROR_UNSUPPORTED_MFA_CHALLENGE');
             } //End if

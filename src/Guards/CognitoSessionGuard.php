@@ -259,7 +259,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                     ->with('messaage', $this->challengeName);
                 break;
 
-            case CognitoChallengeTypes::NEW_PASSWORD_CHALLENGE:
+            case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
             case CognitoChallengeTypes::RESET_REQUIRED:
                 if (config('cognito.force_password_change_web', false)) {
                     $returnValue =  redirect(route(config('cognito.force_redirect_route_name'), [

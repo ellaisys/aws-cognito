@@ -22,6 +22,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClaim;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Guards\Traits\BaseCognitoGuard;
 use Ellaisys\Cognito\Guards\Traits\CognitoMFA;
@@ -185,9 +186,10 @@ class CognitoTokenGuard extends TokenGuard
         //Send claim object
         $claim = $this->claim;
         if ($claim && is_array($claim) && $claim['status']) {
-            switch ($claim['status']) {
-                case 'SOFTWARE_TOKEN_MFA':
-                case 'SMS_MFA':
+            $challengeType = CognitoChallengeTypes::from($claim['status']);
+            switch ($challengeType) {
+                case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
+                case CognitoChallengeTypes::SMS_MFA:
                     unset($claim['username']);
                     unset($claim['user']);
                     break;

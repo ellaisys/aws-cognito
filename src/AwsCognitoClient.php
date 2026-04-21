@@ -36,13 +36,6 @@ class AwsCognitoClient
     use AwsCognitoClientAdminAction;
 
     /**
-     * Constant representing the user needs a new password.
-     *
-     * @var string
-     */
-    const NEW_PASSWORD_CHALLENGE = 'NEW_PASSWORD_REQUIRED';
-
-    /**
      * Constant representing the password reset required exception.
      *
      * @var string
@@ -90,20 +83,6 @@ class AwsCognitoClient
      * @var string
      */
     const COGNITO_NOT_AUTHORIZED_ERROR = 'NotAuthorizedException';
-
-    /**
-     * Constant representing the SMS MFA challenge.
-     *
-     * @var string
-     */
-    const SMS_MFA = 'SMS_MFA';
-    
-    /**
-     * Constant representing the SOFTWARE TOKEN MFA challenge.
-     *
-     * @var string
-     */
-    const SOFTWARE_TOKEN_MFA = 'SOFTWARE_TOKEN_MFA';
 
     /**
      * @var CognitoIdentityProviderClient
@@ -434,7 +413,7 @@ class AwsCognitoClient
     {
         try {
             $this->adminRespondToAuthChallenge(
-                CognitoChallengeTypes::NEW_PASSWORD_CHALLENGE,
+                CognitoChallengeTypes::NEW_PASSWORD_REQUIRED,
                 $session, $password, $username
             );
         } catch (CognitoIdentityProviderException $e) {
@@ -739,7 +718,7 @@ class AwsCognitoClient
                 return true;
             } //End if
 
-            throw $e;
+            throw AwsCognitoException::create($e);
         } catch (Exception $e) {
             throw $e;
         } //Try-catch ends

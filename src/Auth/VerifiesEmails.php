@@ -40,7 +40,9 @@ trait VerifiesEmails
             'confirmation_code' => 'required|numeric',
         ]);
 
-        $response = app()->make(AwsCognitoClient::class)->confirmUserSignUp($request['email'], $request['confirmation_code']);
+        $response = app()->make(AwsCognitoClient::class)->confirmUserSignUp(
+                $request['email'], $request['confirmation_code']
+            );
 
         if ($response == 'validation.invalid_user') {
             return redirect()->back()

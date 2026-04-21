@@ -68,6 +68,10 @@ class AwsCognitoException extends HttpException
                 $errorCode = self::COGNITO_AUTH_USER_UNAUTHORIZED;
                 break;
 
+            case 'UserNotFoundException':
+                $errorCode = self::COGNITO_USER_INVALID;
+                break;
+
             case 'UsernameExistsException':
                 $errorCode = self::COGNITO_AUTH_USERNAME_EXITS;
                 break;
