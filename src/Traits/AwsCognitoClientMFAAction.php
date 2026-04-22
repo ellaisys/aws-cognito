@@ -165,7 +165,7 @@ trait AwsCognitoClientMFAAction
     {
         try {
             if (($challengeName == CognitoChallengeTypes::SMS_MFA) ||
-                ($challengeName == CognitoChallengeTypes::SELECT_MFA_TYPE)) {
+                ($challengeName == CognitoChallengeTypes::SOFTWARE_TOKEN_MFA)) {
                 $response = $this->adminRespondToAuthChallenge(
                     $challengeName, $session, $challengeValue, $username
                 );

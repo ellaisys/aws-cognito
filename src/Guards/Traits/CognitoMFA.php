@@ -50,7 +50,10 @@ trait CognitoMFA
             $username = $challenge['username'];
 
             //Attempt MFA Challenge
-            $result = $this->client->authMFAChallenge($challengeName, $session, $challengeValue, $username);
+            $result = $this->client->authMFAChallenge(
+                    $challengeName, $session,
+                    $challengeValue, $username
+                );
 
             //Check if the result is an instance of AwsResult
             if (!empty($result) && $result instanceof AwsResult) {
