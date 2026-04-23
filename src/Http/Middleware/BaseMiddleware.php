@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 
 use Ellaisys\Cognito\AwsCognito;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Exception;
 use Illuminate\Auth\AuthenticationException;
@@ -92,7 +93,7 @@ abstract class BaseMiddleware //extends Middleware
     {
         try {
             if(($guard=='web') && ($request->has('challenge_name'))
-                && ($request->input('challenge_name') == 'NEW_PASSWORD_REQUIRED')) {
+                && ($request->input('challenge_name') == CognitoChallengeTypes::NEW_PASSWORD_REQUIRED->value)) {
                 return true;
             } //End if
 
