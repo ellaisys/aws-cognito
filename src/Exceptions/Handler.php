@@ -111,7 +111,6 @@ class Handler extends ExceptionHandler
      */
     protected function handleException(Throwable $e, $request): mixed
     {
-        $return = null;
         $isRedirectToLogin = false;
         $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR;
         $errorMessage = 'Something went wrong. Please try again later.';
@@ -125,10 +124,6 @@ class Handler extends ExceptionHandler
         } elseif ($e instanceof ModelNotFoundException) {
             $statusCode = Response::HTTP_BAD_REQUEST; //400
             $errorMessage = 'Resource not found.';
-        } elseif (($e instanceof NotFoundHttpException) ||
-            ($e instanceof HttpException)) {
-            $statusCode = Response::HTTP_BAD_REQUEST; //400
-            $errorMessage = $e->getMessage();
         } elseif (($e instanceof AuthenticationException) ||
             ($e instanceof UnauthorizedHttpException) ||
             ($e instanceof InvalidUserException) ||
@@ -141,6 +136,10 @@ class Handler extends ExceptionHandler
         } elseif ($e instanceof AccessDeniedHttpException) {
             $statusCode = Response::HTTP_FORBIDDEN; //403
             $errorMessage = 'You do not have permission to perform this action.';
+        } elseif (($e instanceof NotFoundHttpException) ||
+            ($e instanceof HttpException)) {
+            $statusCode = Response::HTTP_BAD_REQUEST; //400
+            $errorMessage = $e->getMessage();
         } else {
             if (config('app.debug')) {
                 // Show detailed info in debug mode
@@ -151,30 +150,12 @@ class Handler extends ExceptionHandler
             }
         }
 
-        if ($request->isJson() || $request->wantsJson() || $request->expectsJson()) {
-            $return = $this->JsonResponseBuilder(
-                $e, $request, $statusCode,
-                $errorMessage, $errorKey
-            );
-        } else {
-            $systemErrorMsg = (!$isRedirectToLogin)?$e->getMessage():$errorMessage;
-            $parentError = $e->getPrevious();
-            if ($parentError instanceof CognitoIdentityProviderException) {
-                $systemErrorMsg = $parentError->getAwsErrorMessage();
-            }
-            $errors=($e instanceof ValidationException)?$e->errors():['error' => $systemErrorMsg];
-
-            if ($isRedirectToLogin) {
-                $return = redirect()
-                    ->route(config('cognito.routes.web.login_page', 'cognito.form.login'))
-                    ->withErrors($errors);
-            } else {
-                $return = redirect()->back()
-                    ->withInput($request->input())
-                    ->withErrors($errors);
-            }
-        }
-        return $return;
+        // Build the response based on request type (API vs Web)
+        return $this->responseBuilder(
+            $e, $request, $statusCode,
+            $errorMessage, $errorKey,
+            $isRedirectToLogin
+        );
     } //Function ends
 
     /**
@@ -213,6 +194,40 @@ class Handler extends ExceptionHandler
     } //Function ends
 
     /**
+     * Handle exceptions and return appropriate responses based on request type (API vs Web).
+     *
+     * @param  \Throwable  $e
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $statusCode
+     * @param  string  $message
+     * @param  string|null  $errorKey
+     * @param  bool  $isRedirectToLogin
+     *
+     * @return mixed
+     */
+    protected function responseBuilder(Throwable $e, $request,
+        $statusCode,
+        string $message='An error occurred',
+        string $errorKey = null,
+        bool $isRedirectToLogin = false): mixed
+    {
+        if ($request->isJson() || $request->wantsJson() || $request->expectsJson()) {
+            // API Response
+            return $this->JsonResponseBuilder(
+                $e, $request, $statusCode,
+                $message, $errorKey
+            );
+        } else {
+            // Web Response
+            return $this->WebResponseBuilder(
+                $e, $request, $statusCode,
+                $message, $errorKey,
+                $isRedirectToLogin
+            );
+        }
+    } //Function ends
+
+    /**
      * Handle exceptions and return appropriate JSON responses.
      *
      * @param  \Throwable  $e
@@ -225,7 +240,7 @@ class Handler extends ExceptionHandler
      */
     protected function JsonResponseBuilder(Throwable $e, $request,
         $statusCode,
-        string $message='An error occurred',
+        string $message,
         string $errorKey = null): mixed
     {
         return $this->response->fail(
@@ -235,6 +250,46 @@ class Handler extends ExceptionHandler
             $message,
             $errorKey
         );
+    } //Function ends
+
+    /**
+     * Handle exceptions and return appropriate web responses (redirects with errors).
+     *
+     * @param  \Throwable  $e
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $statusCode
+     * @param  string  $message
+     * @param  string|null  $errorKey
+     * @param  bool  $isRedirectToLogin
+     *
+     * @return mixed
+     */
+    protected function WebResponseBuilder(Throwable $e, $request,
+        $statusCode,
+        string $message,
+        string $errorKey = null,
+        bool $isRedirectToLogin = false): mixed
+    {
+        $systemErrorMsg = (!$isRedirectToLogin)?$e->getMessage():$message;
+        $parentError = $e->getPrevious();
+
+        // Handle AWS Cognito exceptions to extract more user-friendly messages
+        if ($parentError instanceof CognitoIdentityProviderException) {
+            $systemErrorMsg = $parentError->getAwsErrorMessage();
+        }
+
+        // Validation errors will have a different structure, so we handle them separately
+        $errors=($e instanceof ValidationException)?$e->errors():['error' => $systemErrorMsg];
+
+        if ($isRedirectToLogin) {
+            return redirect()
+                ->route(config('cognito.routes.web.login_page', 'cognito.form.login'))
+                ->withErrors($errors);
+        } else {
+            return redirect()->back()
+                ->withInput($request->input())
+                ->withErrors($errors);
+        }
     } //Function ends
 
 } //Class ends
