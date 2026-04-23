@@ -10,6 +10,10 @@
 
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
+$allowPhoneNumber = env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE') === 'MFA_ENABLED' ||
+    in_array(env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'), ['SMS', 'BOTH']) ||
+    (env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false) == true);
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -134,7 +138,7 @@ return [
         'nickname' => null,
         'preferred_username' => null,
         'email' => 'email', //Do Not set this parameter to null
-        'phone_number' => env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE') !== 'MFA_NONE' ? 'phone' : null,
+        'phone_number' => $allowPhoneNumber ? 'phone' : null,
         'gender' => null,
         'birthdate' => null,
         'locale' => null

@@ -39,7 +39,10 @@
         $userFields = config('cognito.cognito_user_fields');
     @endphp
 
-    @if((Config::get('cognito.mfa_setup')=='MFA_ENABLED') || !empty($userFields['phone_number']))
+    @if((Config::get('cognito.mfa_setup')=='MFA_ENABLED') || 
+        !empty($userFields['phone_number']) ||
+        (Config::get('cognito.add_user_delivery_mediums')=='SMS') ||
+        (Config::get('cognito.add_user_delivery_mediums')=='BOTH'))
     <div class="row mb-3">
         <label for="phone" class="col-md-4 col-form-label text-md-end">{{ __('Phone Number') }}</label>
 
