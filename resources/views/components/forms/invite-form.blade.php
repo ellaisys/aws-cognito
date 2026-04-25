@@ -1,4 +1,4 @@
-<form method="POST" action="{{ route('cognito.action.register.submit') }}">
+<form method="POST" action="{{ route('cognito.action.invite.submit') }}">
     @csrf
 
     @php
@@ -102,12 +102,12 @@
     <div class="row mb-0">
         <div class="col-md-6 offset-md-4">
             <button type="submit" class="btn btn-primary">
-                {{ __('Register') }}
+                {{ __('Invite') }}
             </button>
 
-            @if (Route::has('cognito.form.login'))
-                <a class="btn btn-link float-end" href="{{ route('cognito.form.login') }}">
-                    {{ __('Login?') }}
+            @if (Route::has('cognito.home'))
+                <a class="btn btn-link float-end" href="{{ route('cognito.home') }}">
+                    {{ __('Back?') }}
                 </a>
             @endif
         </div>

@@ -23,6 +23,7 @@ use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClientInterface;
 use Ellaisys\Cognito\AwsCognitoClientManager;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Http\Parser\ClaimSession;
 
@@ -192,8 +193,9 @@ trait BaseCognitoGuard
         //Return value
         $returnValue = null;
         
-        switch ($result['ChallengeName']) {
-            case 'SOFTWARE_TOKEN_MFA':
+        $challengeType = CognitoChallengeTypes::from($result['ChallengeName']);
+        switch ($challengeType) {
+            case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
                 $returnValue = [
                     'status' => $result['ChallengeName'],
                     'session_token' => $result['Session'],
@@ -201,8 +203,8 @@ trait BaseCognitoGuard
                 ];
                 break;
 
-            case 'SMS_MFA':
-            case 'SELECT_MFA_TYPE':
+            case CognitoChallengeTypes::SMS_MFA:
+            case CognitoChallengeTypes::SELECT_MFA_TYPE:
                 $returnValue = [
                     'status' => $result['ChallengeName'],
                     'session_token' => $result['Session'],
@@ -212,7 +214,7 @@ trait BaseCognitoGuard
                 break;
 
             default:
-                if (in_array($result['ChallengeName'], config('cognito.forced_challenge_names'))) {
+                if (in_array($challengeType, config('cognito.forced_challenge_names'))) {
                     $returnValue = [
                         'status' => $result['ChallengeName'],
                         'session_token' => isset($result['Session']) ? $result['Session'] : null,

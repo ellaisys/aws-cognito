@@ -1,6 +1,18 @@
 <?php
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
+
+$allowPhoneNumber = env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE') === 'MFA_ENABLED' ||
+    in_array(env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'), ['SMS', 'BOTH']) ||
+    env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false);
 
 return [
     /*
@@ -126,7 +138,7 @@ return [
         'nickname' => null,
         'preferred_username' => null,
         'email' => 'email', //Do Not set this parameter to null
-        'phone_number' => env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE') !== 'MFA_NONE' ? 'phone' : null,
+        'phone_number' => $allowPhoneNumber ? 'phone' : null,
         'gender' => null,
         'birthdate' => null,
         'locale' => null
@@ -175,8 +187,10 @@ return [
     | Cognito MFA Setup and configurations
     |--------------------------------------------------------------------------
     |
-    | This option controls the cognito MFA configuration for the assigned user.
-    |
+    | This option controls the cognito MFA configuration to be used for the
+    | users in the User Pool. The options available are "MFA_NONE" and
+    | "MFA_ENABLED". The default value is set to "MFA_NONE" which means that
+    | the MFA is not enabled for the users.
     |
     | MFA_NONE, MFA_ENABLED
     |
@@ -186,14 +200,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito Default User Group
+    | Cognito MFA Types supported
     |--------------------------------------------------------------------------
     |
-    | This option controls the default cognito user group assigned to a user
-    | when added to a User Pool.  Leave null if not assigning a group on
-    | registration.
+    | This option controls the default cognito MFA types allowed if the MFA is
+    | enabled for the user.  The options available are "SMS_MFA" and
+    | "SOFTWARE_TOKEN_MFA". The default value is set to "SOFTWARE_TOKEN_MFA".
+    | In case you want to allow both the MFA types, you can set the value to
+    | "SMS_MFA,SOFTWARE_TOKEN_MFA" separated by comma.
     |
-    | SMS_MFA, SOFTWARE_TOKEN_MFA
+    | The first MFA type in the list will be set as preferred MFA type.
     |
     */
     'mfa_type' => env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA'),
@@ -230,13 +246,13 @@ return [
     |
     | This option controls the package action based on the Challenge Status
     | received from the AWS Cognito Authentication. If the challenge status
-    | is 'NEW_PASSWORD_CHALLENGE' and/or 'RESET_REQUIRED_PASSWORD', this
+    | is 'NEW_PASSWORD_REQUIRED' and/or 'RESET_REQUIRED', this
     | configuration will force the user to change their password.
     |
     */
     'forced_challenge_names' => [
-        AwsCognitoClient::NEW_PASSWORD_CHALLENGE,
-        AwsCognitoClient::RESET_REQUIRED_PASSWORD
+        CognitoChallengeTypes::NEW_PASSWORD_REQUIRED,
+        CognitoChallengeTypes::RESET_REQUIRED
     ],
 
     /*
@@ -355,10 +371,10 @@ return [
     |--------------------------------------------------------------------------
     | This option controls the registration type for new users. The options
     | available are "register" and "invite". The default value is set to
-    | "invite".
+    | "register".
     |
     */
-    'registration_type' => env('AWS_COGNITO_REGISTRATION_TYPE', 'invite'),
+    'registration_type' => env('AWS_COGNITO_REGISTRATION_TYPE', 'register'),
 
     /*
     |--------------------------------------------------------------------------

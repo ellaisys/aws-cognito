@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
 
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Traits\AwsCognitoClientMFAAction;
@@ -33,34 +34,6 @@ class AwsCognitoClient
 {
     use AwsCognitoClientMFAAction;
     use AwsCognitoClientAdminAction;
-
-    /**
-     * Constant representing the user status as Confirmed.
-     *
-     * @var string
-     */
-    const USER_STATUS_CONFIRMED = 'CONFIRMED';
-
-    /**
-     * Constant representing the user needs a new password.
-     *
-     * @var string
-     */
-    const NEW_PASSWORD_CHALLENGE = 'NEW_PASSWORD_REQUIRED';
-
-    /**
-     * Constant representing the user needs to reset password.
-     *
-     * @var string
-     */
-    const RESET_REQUIRED_PASSWORD = 'RESET_REQUIRED';
-
-    /**
-     * Constant representing the force new password status.
-     *
-     * @var string
-     */
-    const FORCE_CHANGE_PASSWORD = 'FORCE_CHANGE_PASSWORD';
 
     /**
      * Constant representing the password reset required exception.
@@ -110,20 +83,6 @@ class AwsCognitoClient
      * @var string
      */
     const COGNITO_NOT_AUTHORIZED_ERROR = 'NotAuthorizedException';
-
-    /**
-     * Constant representing the SMS MFA challenge.
-     *
-     * @var string
-     */
-    const SMS_MFA = 'SMS_MFA';
-    
-    /**
-     * Constant representing the SOFTWARE TOKEN MFA challenge.
-     *
-     * @var string
-     */
-    const SOFTWARE_TOKEN_MFA = 'SOFTWARE_TOKEN_MFA';
 
     /**
      * @var CognitoIdentityProviderClient
@@ -194,7 +153,7 @@ class AwsCognitoClient
         try {
             //Build payload
             $payload = [
-                'AuthFlow' => 'ADMIN_NO_SRP_AUTH',
+                'AuthFlow' => CognitoAuthFlowTypes::ADMIN_NO_SRP_AUTH->value,
                 'AuthParameters' => [
                     'USERNAME' => $username,
                     'PASSWORD' => $password
@@ -212,7 +171,7 @@ class AwsCognitoClient
 
             $response = $this->client->adminInitiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClient:adminInitiateAuth:CognitoIdentityProviderException');
+            Log::error('AwsCognitoClient:authenticate:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
@@ -255,6 +214,11 @@ class AwsCognitoClient
             } //End if
 
             $response = $this->client->signUp($payload);
+
+            //Add user to the group
+            if (!empty($groupname)) {
+                $this->adminAddUserToGroup($username, $groupname);
+            } //End if
         } catch (CognitoIdentityProviderException $e) {
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
                 throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS, $e);
@@ -372,8 +336,8 @@ class AwsCognitoClient
         ?string $groupname = null)
     {
         //Validate phone for MFA
-        if (config('cognito.mfa_setup')=="MFA_ENABLED") {
-            if (empty($attributes['phone_number'])) { throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING'); }
+        if (config('cognito.mfa_setup')=="MFA_ENABLED" && empty($attributes['phone_number'])) {
+            throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING');
         } //End if
         
         //Force validate email
@@ -449,7 +413,7 @@ class AwsCognitoClient
     {
         try {
             $this->adminRespondToAuthChallenge(
-                CognitoChallengeTypes::NEW_PASSWORD_CHALLENGE,
+                CognitoChallengeTypes::NEW_PASSWORD_REQUIRED,
                 $session, $password, $username
             );
         } catch (CognitoIdentityProviderException $e) {
@@ -674,7 +638,7 @@ class AwsCognitoClient
     /**
      * Generate a new token using refresh token.
      *
-     * @see http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html
      * @param string $username
      * @param string $refreshToken
      * @return \Aws\Result|bool
@@ -684,7 +648,7 @@ class AwsCognitoClient
         try {
             //Build payload
             $payload = [
-                'AuthFlow' => 'REFRESH_TOKEN_AUTH',
+                'AuthFlow' => CognitoAuthFlowTypes::REFRESH_TOKEN_AUTH->value,
                 'AuthParameters' => [
                     'REFRESH_TOKEN' => $refreshToken,
                 ],
@@ -699,7 +663,7 @@ class AwsCognitoClient
                 ]);
             } //End if
 
-            $response = $this->client->adminInitiateAuth($payload);
+            $response = $this->client->initiateAuth($payload);
 
             // Reuse same refreshToken
             $response['AuthenticationResult']['RefreshToken'] = $refreshToken;
@@ -712,7 +676,7 @@ class AwsCognitoClient
     } //Function ends
 
     /**
-     * Revoke all the access tokens from AWS Cognit for a specified refresh-token in a user pool.
+     * Revoke all the access tokens from AWS Cognito for a specified refresh-token in a user pool.
      *
      * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#revoketoken
      *
@@ -754,7 +718,7 @@ class AwsCognitoClient
                 return true;
             } //End if
 
-            throw $e;
+            throw AwsCognitoException::create($e);
         } catch (Exception $e) {
             throw $e;
         } //Try-catch ends

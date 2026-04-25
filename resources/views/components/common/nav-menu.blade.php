@@ -5,6 +5,12 @@
     </a>
     @endif
 
+    @if (Route::has('cognito.form.user.invite'))
+    <a class="dropdown-item" href="{{ route('cognito.form.user.invite') }}">
+        {{ __('Invite User') }}
+    </a>
+    @endif
+
     <div class="dropdown-divider"></div>
 
     @if (Route::has('cognito.form.user.mfa.activate'))

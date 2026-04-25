@@ -38,7 +38,7 @@ class UserController extends Controller
     public function __construct()
     {
         //Mandate authentication for all the API's of this controller
-        $this->middleware('auth:api');
+        $this->middleware('aws-cognito');
 
         parent::__construct();
     }
