@@ -12,7 +12,7 @@ use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 $allowPhoneNumber = env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE') === 'MFA_ENABLED' ||
     in_array(env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'), ['SMS', 'BOTH']) ||
-    (env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false) == true);
+    (env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false) === true);
 
 return [
     /*
@@ -188,8 +188,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | This option controls the cognito MFA configuration to be used for the
-    | users in the User Pool. The options available are "MFA_NONE" and 
-    | "MFA_ENABLED". The default value is set to "MFA_NONE" which means that 
+    | users in the User Pool. The options available are "MFA_NONE" and
+    | "MFA_ENABLED". The default value is set to "MFA_NONE" which means that
     | the MFA is not enabled for the users.
     |
     | MFA_NONE, MFA_ENABLED
@@ -203,10 +203,10 @@ return [
     | Cognito MFA Types supported
     |--------------------------------------------------------------------------
     |
-    | This option controls the default cognito MFA types allowed if the MFA is 
-    | enabled for the user.  The options available are "SMS_MFA" and 
+    | This option controls the default cognito MFA types allowed if the MFA is
+    | enabled for the user.  The options available are "SMS_MFA" and
     | "SOFTWARE_TOKEN_MFA". The default value is set to "SOFTWARE_TOKEN_MFA".
-    | In case you want to allow both the MFA types, you can set the value to 
+    | In case you want to allow both the MFA types, you can set the value to
     | "SMS_MFA,SOFTWARE_TOKEN_MFA" separated by comma.
     |
     | The first MFA type in the list will be set as preferred MFA type.
