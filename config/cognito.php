@@ -371,10 +371,10 @@ return [
     |--------------------------------------------------------------------------
     | This option controls the registration type for new users. The options
     | available are "register" and "invite". The default value is set to
-    | "invite".
+    | "register".
     |
     */
-    'registration_type' => env('AWS_COGNITO_REGISTRATION_TYPE', 'invite'),
+    'registration_type' => env('AWS_COGNITO_REGISTRATION_TYPE', 'register'),
 
     /*
     |--------------------------------------------------------------------------

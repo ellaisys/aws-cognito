@@ -47,7 +47,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = null;
+    public $redirectTo = null;
 
     /**
      * Client metadata to be sent to AWS Cognito
@@ -63,7 +63,7 @@ class RegisterController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('guest')->except(['actionInvite']);
+        $this->middleware('guest')->except(['actionInvite', 'invite']);
 
         //Set flag to indicate action called from controller
         $this->setIsControllerAction(true);

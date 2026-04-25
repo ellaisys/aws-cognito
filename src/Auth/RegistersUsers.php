@@ -70,9 +70,11 @@ trait RegistersUsers
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function invite(Request $request, ?array $clientMetadata = null)
+    public function invite(Request $request, ?array $clientMetadata = null): mixed
     {
         $this->registrationType = 'invite';
+        $this->redirectTo = config('cognito.routes.web.home_page');
+
         return $this->register(
             $request, $clientMetadata, true
         );

@@ -60,6 +60,8 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
         Route::group(['prefix' => 'user'], function() {
             Route::get('/changepassword', function () { return view('cognito::pages.auth.passwords.change'); })->name('form.change.password');
             Route::post('/changepassword', [ConfirmPasswordController::class, 'change'])->name('action.change.password');
+            Route::get('/invite', function () { return view('cognito::pages.auth.invite'); })->name('form.user.invite');
+            Route::post('/invite', [RegisterController::class, 'invite'])->name('action.invite.submit');
 
             Route::group(['prefix' => 'mfa', 'controller' => MFAController::class], function() {
                 Route::get('/activate', 'activate')->name('form.user.mfa.activate');
