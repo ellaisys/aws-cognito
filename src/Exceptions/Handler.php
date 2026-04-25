@@ -208,7 +208,7 @@ class Handler extends ExceptionHandler
     protected function responseBuilder(Throwable $e, $request,
         $statusCode,
         string $message='An error occurred',
-        string $errorKey = null,
+        ?string $errorKey = null,
         bool $isRedirectToLogin = false): mixed
     {
         if ($request->isJson() || $request->wantsJson() || $request->expectsJson()) {
