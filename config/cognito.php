@@ -12,7 +12,7 @@ use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 $allowPhoneNumber = env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE') === 'MFA_ENABLED' ||
     in_array(env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'), ['SMS', 'BOTH']) ||
-    (env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false) === true);
+    env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false);
 
 return [
     /*
