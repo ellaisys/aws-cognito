@@ -76,6 +76,8 @@ You can change the API prefix by configuring **AWS_COGNITO_WEB_PREFIX** in the .
     POST      cognito/session/refresh ............................... cognito. › Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
     GET|HEAD  cognito/user/changepassword .................................................................................. cognito.form.change.password
     POST      cognito/user/changepassword ...... cognito.action.change.password › Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@change
+    GET|HEAD  cognito/user/invite .............................................................................................. cognito.form.user.invite
+    POST      cognito/user/invite ....................... cognito.action.invite.submit › Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@invite
     GET|HEAD  cognito/user/mfa/activate .................. cognito.form.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@activate
     GET|HEAD  cognito/user/mfa/deactivate .......... cognito.action.user.mfa.deactivate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@deactivate
     GET|HEAD  cognito/user/mfa/disable ........................ cognito.action.mfa.disable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@disable
