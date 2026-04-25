@@ -1,3 +1,10 @@
+Release 46 (tag v2.0.2)
+- Feat: Issue [#129](https://github.com/ellaisys/aws-cognito/issues/129)
+- Feat: Added new enums for Cognito user statuses and auth flows; expanded challenge enum usage across guards/middleware/client.
+- Feat: Implemented a web-based “Invite User” flow (routes, controller wiring, nav link, and Blade views/components).
+- Fix: Refactored exception handling to centralize JSON vs web redirect response building.
+- Docs: Update readme
+
 Release 45 (tag v2.0.1)
 - Fix: Issue [#127](https://github.com/ellaisys/aws-cognito/issues/127)
 - Fix: Weak encryption in php-jwt (CVE-2025-45769)
