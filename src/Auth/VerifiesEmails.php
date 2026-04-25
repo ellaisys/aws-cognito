@@ -22,7 +22,7 @@ use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait VerifiesEmails
-{ 
+{
 
     /**
      * Mark the authenticated user's email address as verified.
@@ -36,7 +36,7 @@ trait VerifiesEmails
     {
 
         $validator = Validator::make($request, [
-            'email' => 'required|email', 
+            'email' => 'required|email',
             'confirmation_code' => 'required|numeric',
         ]);
 
