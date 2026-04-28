@@ -351,6 +351,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Force Alias Creation
+    |--------------------------------------------------------------------------
+    | This option enables the user to force alias creation for the new user.
+    | The default value is set to false. Setting the value to true will force
+    | the alias creation for the new user.
+    |
+    | This will help in cases where the email or phone number is already
+    | associated with another user in the User Pool. Setting the value to true
+    | will allow the new user to be created and the email or phone number will
+    | be associated with the new user, while disassociating it from the previous
+    | user.
+    | 
+    | Possible values: true, false
+    |
+    */
+    'force_alias_creation' => env('AWS_COGNITO_FORCE_ALIAS_CREATION', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Allow new user configure the MFA QR Library
     |--------------------------------------------------------------------------
     |
