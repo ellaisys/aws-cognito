@@ -32,7 +32,7 @@ trait AwsCognitoClientAdminAction
      * @param string $username
      * @return bool
      */
-    public function confirmSignUp($username): bool
+    public function adminConfirmSignUp($username): bool
     {
         try {
             $this->client->adminConfirmSignUp([
