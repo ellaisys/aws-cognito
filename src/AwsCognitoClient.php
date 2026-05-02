@@ -20,6 +20,7 @@ use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Traits\AwsCognitoClientMFAAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientAdminAction;
+use Ellaisys\Cognito\Traits\AwsCognitoClientPasskeyAction;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
@@ -34,6 +35,7 @@ class AwsCognitoClient
 {
     use AwsCognitoClientMFAAction;
     use AwsCognitoClientAdminAction;
+    use AwsCognitoClientPasskeyAction;
 
     /**
      * Constant representing the password reset required exception.
@@ -509,7 +511,7 @@ class AwsCognitoClient
      * @return mixed
      * @throws Exception
      */
-    public function resendToken(string $username, ?array $clientMetadata = null): mixed
+    public function resendConfirmationCode(string $username, ?array $clientMetadata = null): mixed
     {
         try {
             //Initialize variables
@@ -529,8 +531,9 @@ class AwsCognitoClient
 
             //Execute the payload
             $returnValue = $this->client->resendConfirmationCode($payload);
-        } catch (CognitoIdentityProviderException $e) {
-            throw AwsCognitoException::create($e);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClient:resendConfirmationCode:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $returnValue;
@@ -557,9 +560,9 @@ class AwsCognitoClient
 
             //Execute the payload
             $this->client->AdminUpdateUserAttributes($payload);
-        } catch (CognitoIdentityProviderException $e) {
+        } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClient:setUserAttributes:CognitoIdentityProviderException');
-            throw $e;
+            throw AwsCognitoException::create($exception);
         } //End try
 
         return true;
@@ -597,18 +600,18 @@ class AwsCognitoClient
      * Get user details by access token.
      * https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#getuser
      *
-     * @param string $token
+     * @param string $accessToken
      * @return mixed
      */
-    public function getUserByAccessToken(string $token)
+    public function getUserByAccessToken(string $accessToken)
     {
         try {
             $result = $this->client->getUser([
-                'AccessToken' => $token
+                'AccessToken' => $accessToken
             ]);
         } catch (CognitoIdentityProviderException $e) {
-            Log::error('AwsCognitoClient:getUserByAccessToken:Exception');
-            throw $e;
+            Log::error('AwsCognitoClient:getUserByAccessToken:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($e);
         } //Try-catch ends
 
         return $result;

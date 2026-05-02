@@ -145,7 +145,7 @@ trait VerifiesEmails
                 'email', 'code'
             ]);
 
-            $response = app()->make(AwsCognitoClient::class)->resendToken(
+            $response = app()->make(AwsCognitoClient::class)->resendConfirmationCode(
                     $payload['email'],
                     $clientMetadata
                 );
