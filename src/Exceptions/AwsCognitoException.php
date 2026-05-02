@@ -20,6 +20,8 @@ class AwsCognitoException extends HttpException
     const COGNITO_USER_INVALID = 'ERROR_COGNITO_USER_INVALID';
     const COGNITO_RESET_PWD_REQ_INVALID = 'ERROR_COGNITO_RESET_PWD_REQ_INVALID';
     const COGNITO_RESET_PWD_FAILED = 'ERROR_COGNITO_RESET_PWD_FAILED';
+    const COGNITO_THROTTLING_LIMIT = 'ERROR_COGNITO_THROTTLING_LIMIT';
+    const COGNITO_WEB_AUTH_INVALID = 'ERROR_COGNITO_WEB_AUTH_INVALID';
 
     //cognito.validation.reset_required.invalid_user
 
@@ -81,7 +83,22 @@ class AwsCognitoException extends HttpException
             case 'ExpiredCodeException':
                 $errorCode = self::COGNITO_AUTH_CODE_INVALID;
                 break;
+
+            case 'LimitExceededException':
+            case 'TooManyRequestsException':
+                $errorCode = self::COGNITO_THROTTLING_LIMIT;
+                break;
+
+            case 'WebAuthnNotEnabledException':
+            case 'WebAuthnChallengeNotFoundException':
+            case 'WebAuthnRelyingPartyMismatchException':
+            case 'WebAuthnClientMismatchException':
+            case 'WebAuthnOriginNotAllowedException':
+                $errorCode = self::COGNITO_WEB_AUTH_INVALID;
+                break;
             
+            case 'InvalidParameterException':
+            case 'InternalErrorException':
             default:
                 $errorCode = $e->getAwsErrorCode();
                 break;
