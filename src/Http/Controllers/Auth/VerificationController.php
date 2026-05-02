@@ -1,9 +1,31 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Auth\VerifiesEmails;
+namespace Ellaisys\Cognito\Http\Controllers\Auth;
+
+use Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
+
+use Ellaisys\Cognito\Auth\VerifiesEmails;
+
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+
+use Ellaisys\Cognito\Events\Auth\PreRegistrationEvent;
+use Ellaisys\Cognito\Events\Auth\PostRegistrationEvent;
+
+use Exception;
 
 class VerificationController extends Controller
 {
@@ -25,7 +47,14 @@ class VerificationController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    public $redirectTo = null;
+
+    /**
+     * Client metadata to be sent to AWS Cognito
+     *
+     * @var array|null
+     */
+    protected $clientMetadata = null;
 
     /**
      * Create a new controller instance.
@@ -34,8 +63,31 @@ class VerificationController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
-        $this->middleware('signed')->only('verify');
-        $this->middleware('throttle:6,1')->only('verify', 'resend');
+        $this->middleware('guest');
+
+        //Set flag to indicate action called from controller
+        $this->setIsControllerAction(true);
+
+        parent::__construct();
+
+        // $this->middleware('auth');
+        // $this->middleware('signed')->only('verify');
+        // $this->middleware('throttle:6,1')->only('verify', 'resend');
+    } //Function ends
+
+    /**
+     * Get the post register / login redirect path.
+     *
+     * @return string
+     */
+    public function redirectPath()
+    {
+        //Check if property exists and not null
+        if (property_exists($this, 'redirectTo') && !is_null($this->redirectTo)) {
+            return $this->redirectTo;
+        } //End if
+
+        return config('cognito.routes.web.login_page', 'cognito.form.login');
     }
-}
+
+} //Class ends

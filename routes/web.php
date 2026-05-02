@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use Ellaisys\Cognito\Http\Controllers\Auth\LoginController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RegisterController;
+use Ellaisys\Cognito\Http\Controllers\Auth\VerificationController;
 use Ellaisys\Cognito\Http\Controllers\Auth\MFAController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
@@ -12,7 +13,6 @@ use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
-use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,8 +26,14 @@ use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
 */
 Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
     //Route to register a new user
-    Route::get('/register',  function () { return view('cognito::pages.auth.register'); })->name('form.register');
-    Route::post('/register', [RegisterController::class, 'register'])->name('action.register.submit');
+    Route::group(['prefix' => 'register'], function() {
+        Route::get('/',  function () { return view('cognito::pages.auth.registers.register'); })->name('form.register');
+        Route::post('/', [RegisterController::class, 'register'])->name('action.register.submit');
+        Route::get('/verify',  function () { return view('cognito::pages.auth.registers.verify'); })->name('form.register.verify');
+        Route::post('/verify', [VerificationController::class, 'verify'])->name('action.register.verify');
+        Route::get('/resend-code',  function () { return view('cognito::pages.auth.registers.resend'); })->name('form.register.resend_code');
+        Route::post('/resend-code', [VerificationController::class, 'resend'])->name('action.register.resend_code');
+    });
 
     //Forgot password
     Route::group(['prefix' => 'password'], function() {

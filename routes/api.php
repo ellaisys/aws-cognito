@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use Ellaisys\Cognito\Http\Controllers\Auth\LoginController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RegisterController;
+use Ellaisys\Cognito\Http\Controllers\Auth\VerificationController;
 use Ellaisys\Cognito\Http\Controllers\Auth\MFAController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
@@ -12,7 +13,6 @@ use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
-use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,7 +28,11 @@ use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
 Route::group(['prefix' => config('cognito.api_prefix', ''),
     'headers' => ['Accept' => 'application/json']], function () {
     //Route to register a new user
-    Route::post('/register', [RegisterController::class, 'register']);
+    Route::group(['prefix' => 'register'], function() {
+        Route::post('/', [RegisterController::class, 'register']);
+        Route::post('/verify', [VerificationController::class, 'verify']);
+        Route::post('/resend-code', [VerificationController::class, 'resend']);
+    });
 
     //Route group login
     Route::group(['prefix' => 'login'], function() {

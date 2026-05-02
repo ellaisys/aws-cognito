@@ -14,86 +14,207 @@ namespace Ellaisys\Cognito\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
 use Exception;
+use Illuminate\Validation\ValidationException;
+use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait VerifiesEmails
 {
+    /**
+     * Private variable to indicate if the action
+     * is called from controller
+     */
+    private bool $isControllerAction = false;
+
+    /**
+     * Private variable to indicate if the response
+     * is to be in json format
+     */
+    private bool $isJsonResponse = false;
+
+    /**
+     * Private variable to indicate if the response
+     * is to be raised as an exception
+     */
+    private bool $isRaiseException = false;
 
     /**
      * Mark the authenticated user's email address as verified.
      *
-     * @param  \Illuminate\Support\Collection  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  \Illuminate\Http\Request  $request
+     * @param  array|null  $clientMetadata
+     *
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function verify(Collection $request)
+    public function verify(Request $request, ?array $clientMetadata = null): mixed
     {
+        try {
+            // Initialize variables
+            $returnValue = null;
 
-        $validator = Validator::make($request, [
-            'email' => 'required|email',
-            'confirmation_code' => 'required|numeric',
-        ]);
+            if(!$this->isJsonResponse) {
+                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
+            } //End if
 
-        $response = app()->make(AwsCognitoClient::class)->confirmUserSignUp(
-                $request['email'], $request['confirmation_code']
-            );
+            // If email is present in query parameters, encode it before validation and processing
+            if ($request->query('email') ) {
+                $email = urlencode($request->input('email'));
+    
+                //find %40 and replace with @ to avoid validation error
+                $email = str_replace('%40', '@', $email);
+                $request->merge(['email' => $email]);
+            } //End if
 
-        if ($response == 'validation.invalid_user') {
-            return redirect()->back()
-                ->withInput($request->only('email'))
-                ->withErrors(['email' => 'cognito.validation.invalid_user']);
-        }
+            //Validate request
+            $validator = Validator::make(
+                $request->all(), $this->rules(['code' => 'required|numeric']));
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
 
-        if ($response == 'validation.invalid_token') {
-            return redirect()->back()
-                ->withInput($request->only('email'))
-                ->withErrors(['confirmation_code' => 'cognito.validation.invalid_token']);
-        }
+            //Create data to save
+            $payload = $request->only([
+                'email', 'code'
+            ]);
 
-        if ($response == 'validation.exceeded') {
-            return redirect()->back()
-                ->withInput($request->only('email'))
-                ->withErrors(['confirmation_code' => 'cognito.validation.exceeded']);
-        }
+            //Call AWS Cognito to confirm user sign up
+            $response = app()->make(AwsCognitoClient::class)->confirmUserSignUp(
+                    $payload['email'], $payload['code'],
+                    $clientMetadata
+                );
 
-        if ($response == 'validation.confirmed') {
-            return redirect($this->redirectPath())->with('verified', true);
-        }
+            //Return response
+            if ($this->isJsonResponse) {
+                $returnValue = $this->isControllerAction ? $this->response->success($response) : $response;
+            } else {
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('status', 'Verification successful. Please login to continue.')
+                    ->with('message', trans('messages.auth.registration_verification_success'));
+            } //End if
+        } catch (Exception $e) {
+            Log::error('VerifiesEmails:verify:Exception');
+            throw $e;
+        } //End try
 
-        return redirect($this->redirectPath())->with('verified', true);
+        return $returnValue;
     } //Function ends
-
 
     /**
      * Resend the email verification notification.
      *
-     * @param  \Illuminate\Support\Collection  $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
-    public function resend(Collection $request)
+    public function resend(Request $request, ?array $clientMetadata = null): mixed
     {
+        try {
+            // Initialize variables
+            $returnValue = null;
 
-        $response = app()->make(AwsCognitoClient::class)->resendToken($request->email);
+            if(!$this->isJsonResponse) {
+                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
+            } //End if
 
-        if ($response == 'validation.invalid_user') {
-            return response()->json(['error' => 'cognito.validation.invalid_user'], 400);
-        }
+            // If email is present in query parameters, encode it before validation and processing
+            if ($request->query('email') ) {
+                $email = urlencode($request->input('email'));
+    
+                //find %40 and replace with @ to avoid validation error
+                $email = str_replace('%40', '@', $email);
+                $request->merge(['email' => $email]);
+            } //End if
 
-        if ($response == 'validation.exceeded') {
-            return response()->json(['error' => 'cognito.validation.exceeded'], 400);
-        }
+            //Validate request
+            $validator = Validator::make(
+                $request->all(), $this->rules());
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
 
-        if ($response == 'validation.confirmed') {
-            return response()->json(['error' => 'cognito.validation.confirmed'], 400);
-        }
+            //Create data to save
+            $payload = $request->only([
+                'email', 'code'
+            ]);
 
-        return response()->json(['success' => 'true']);
+            $response = app()->make(AwsCognitoClient::class)->resendToken(
+                    $payload['email'],
+                    $clientMetadata
+                );
+
+            //Return response
+            if ($this->isJsonResponse) {
+                $returnValue = $this->isControllerAction ? $this->response->success($response) : $response;
+            } else {
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('status', 'Resend code request successful. Please verify your email.')
+                    ->with('message', trans('messages.auth.registration_code_resend_success'));
+            } //End if
+        } catch (Exception $e) {
+            Log::error('VerifiesEmails:resend:Exception');
+            throw $e;
+        } //End try
+
+        return $returnValue;
     } //Function ends
     
+    /**
+     * Get the registration validation rules.
+     *
+     * @return array
+     */
+    public function rules(?array $moreRules = null): array
+    {
+        $rules = [
+            'email' => 'required|email:rfc,dns|max:255'
+        ];
+
+        if ($moreRules) {
+            $rules = array_merge($rules, $moreRules);
+        }
+
+        return $rules;
+    } //Function ends
+
+    /**
+     * Set flag for action method called from controller
+     *
+     * @param bool $isControllerAction
+     */
+    protected function setIsControllerAction(bool $isControllerAction): void
+    {
+        $this->isControllerAction = $isControllerAction;
+
+    }
+
+    /**
+     * Set flag if the response is to be in json format
+     *
+     * @param bool $isJsonResponse
+     */
+    protected function setIsJsonResponse(bool $isJsonResponse): void
+    {
+        $this->isJsonResponse = $isJsonResponse;
+    }
+
+    /**
+     * Set flag if the response is to be raised as an exception
+     * in case of errors
+     *
+     * @param bool $isRaiseException
+     */
+    protected function setIsRaiseException(bool $isRaiseException): void
+    {
+        $this->isRaiseException = $isRaiseException;
+    }
+
 } //Trait ends
