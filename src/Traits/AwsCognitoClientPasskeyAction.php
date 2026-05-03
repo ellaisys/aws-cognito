@@ -53,7 +53,7 @@ trait AwsCognitoClientPasskeyAction
      *
      * @return mixed
      */
-    public function completeWebAuthnRegistration(string $accessToken, mixed $credential)
+    public function completeWebAuthnRegistration(string $accessToken, array $credential)
     {
         try {
             //Build payload

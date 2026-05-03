@@ -11,6 +11,7 @@ use Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController;
+use Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 
@@ -75,6 +76,13 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
                 Route::get('/deactivate', 'deactivate')->name('action.user.mfa.deactivate');
                 Route::get('/enable', 'enable')->name('action.mfa.enable');
                 Route::get('/disable', 'disable')->name('action.mfa.disable');
+            });
+
+            //Route to passkeys
+            Route::group(['prefix' => 'passkey', 'controller' => WebAuthPasskeyController::class], function() {
+                Route::post('/start', 'start')->name('action.user.passkey.start');
+                Route::post('/complete', 'complete')->name('action.user.passkey.complete');
+                //Route::delete('/{id}', 'deletePasskey')->name('action.user.passkey.delete');
             });
         });
     });
