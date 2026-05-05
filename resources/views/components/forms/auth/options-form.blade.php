@@ -93,6 +93,7 @@
                 noChallengesItem.type = 'submit';
                 noChallengesItem.className = 'list-group-item list-group-item-action active';
                 noChallengesItem.textContent = 'Password';
+                noChallengesItem.formAction = "{{ route('cognito.form.login') }}/password";
                 challengesList.appendChild(noChallengesItem);
             }
         } catch (error) {
