@@ -83,7 +83,7 @@ trait AwsCognitoClientPasskeyAction
      *
      * @return mixed
      */
-    public function listWebAuthnCredentials(string $accessToken, 
+    public function listWebAuthnCredentials(string $accessToken,
         ?int $maxResults = 20, ?string $nextToken = null)
     {
         try {

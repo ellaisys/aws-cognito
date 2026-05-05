@@ -223,7 +223,7 @@ return [
     |--------------------------------------------------------------------------
     | This option controls the default cognito Email MFA configurations. You can set
     | the message and subject for the Email MFA. The default message is set to
-    | 'Your authentication code is {####}'. Make sure to include the {####} in the 
+    | 'Your authentication code is {####}'. Make sure to include the {####} in the
     | message, as this will be replaced by the actual authentication code.
     |
     */

@@ -389,7 +389,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
     /**
      * Attempt Challenge based Authentication
-     * 
+     *
      * @param  array  $challenge
      * @param  bool   $remember
      *

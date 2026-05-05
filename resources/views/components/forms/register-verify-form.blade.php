@@ -69,12 +69,12 @@
                 {{ __('If you did not receive the email') }},
                 {{ __('Resend Code?') }}
             </a>
-            @endif            
+            @endif
         </div>
     </div>
 </form>
 
-@if(request()->has('code') && request()->has('email') && 
+@if(request()->has('code') && request()->has('email') &&
     request()->has('action') && request()->get('action') == 'verify')
 <script>
     //document.verifyForm.submit();

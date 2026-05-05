@@ -64,13 +64,12 @@ trait WebAuthPasskey
             //Get the response from AWS Cognito for starting passkey registration
             $response = $client->startWebAuthnRegistration($accessToken);
             $returnValue = $this->response->success($response);
-
-            return $returnValue;
         } catch (Exception $e) {
             Log::error('WebAuthPasskeyController:start:Exception');
-            Log::error($e);
             throw $e;
         }
+
+        return $returnValue;
     } //Function ends
 
     /**
@@ -139,11 +138,9 @@ trait WebAuthPasskey
         try {
             // Initialize variables
             $returnValue = null;
-            $guard = 'web';
 
             if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
                 $this->isJsonResponse = true;
-                $guard = 'api';
             } //End if
 
             if (!empty($challengeName)) {

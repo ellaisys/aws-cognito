@@ -488,7 +488,7 @@ class AwsCognitoClient
      * Confirm a user registration with a confirmation code for self registered
      * users.
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmSignUp.html
-     * 
+     *
      * @param string $username
      * @param string $confirmationCode
      * @param array|null $clientMetadata
