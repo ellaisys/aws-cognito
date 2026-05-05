@@ -440,7 +440,7 @@ return [
     | will allow the new user to be created and the email or phone number will
     | be associated with the new user, while disassociating it from the previous
     | user.
-    | 
+    |
     | Possible values: true, false
     |
     */
