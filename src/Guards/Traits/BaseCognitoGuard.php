@@ -35,6 +35,7 @@ use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Ellaisys\Cognito\Validators\AwsCognitoTokenValidator;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 /**
  * Trait Base Cognito Guard
