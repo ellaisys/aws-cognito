@@ -45,8 +45,8 @@ trait WebAuthPasskey
             $returnValue = null;
             $guard = 'web';
 
-            if(!$this->isJsonResponse) {
-                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
+            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
+                $this->isJsonResponse = true;
                 $guard = 'api';
             } //End if
 
@@ -87,8 +87,8 @@ trait WebAuthPasskey
             $returnValue = null;
             $guard = 'web';
 
-            if(!$this->isJsonResponse) {
-                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
+            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
+                $this->isJsonResponse = true;
                 $guard = 'api';
             } //End if
 
@@ -141,8 +141,8 @@ trait WebAuthPasskey
             $returnValue = null;
             $guard = 'web';
 
-            if(!$this->isJsonResponse) {
-                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
+            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
+                $this->isJsonResponse = true;
                 $guard = 'api';
             } //End if
 
@@ -180,6 +180,61 @@ trait WebAuthPasskey
             $returnValue = $this->response->success($response);
         } catch (Exception $e) {
             Log::error('WebAuthPasskeyController:challenge:Exception');
+            Log::error($e);
+            throw $e;
+        }
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Action to delete a registered passkey authenticator for the currently signed-in user.
+     * TO BE TESTED
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function delete(Request $request)
+    {
+        try {
+            // Initialize variables
+            $returnValue = null;
+            $guard = 'web';
+
+            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
+                $this->isJsonResponse = true;
+                $guard = 'api';
+            } //End if
+
+            //Validate payload
+            $validator = Validator::make($request->all(), [
+                'credential_id' => ['required']
+            ]);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Get Authenticated user
+            $authUser = Auth::guard($guard)->user();
+            if (empty($authUser)) { throw new InvalidUserException(); }
+
+            //Token Object
+            $accessToken = Auth::guard($guard)->cognito()->getToken();
+            if (empty($accessToken)) { throw new HttpException(400, 'EXCEPTION_INVALID_TOKEN'); }
+
+            //Get the response from AWS Cognito for deleting the passkey authenticator
+            $response = $client->deleteWebAuthnCredential(
+                $accessToken,
+                $request['credential_id']
+            );
+
+            $returnValue = $this->response->success($response);
+        } catch (Exception $e) {
+            Log::error('WebAuthPasskeyController:delete:Exception');
             Log::error($e);
             throw $e;
         }

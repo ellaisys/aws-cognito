@@ -77,7 +77,7 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
             Route::group(['prefix' => 'passkey', 'controller' => WebAuthPasskeyController::class], function() {
                 Route::get('/start', 'start');
                 Route::post('/complete', 'complete');
-                //Route::delete('/{id}', 'deletePasskey');
+                Route::delete('/', 'delete');
             });
         });
 
