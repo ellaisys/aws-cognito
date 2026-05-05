@@ -150,19 +150,41 @@ class AwsCognitoClient
      * @param string $password
      * @return \Aws\Result|bool
      */
-    public function authenticate($username, $password)
+    public function authenticate(CognitoAuthFlowTypes $authFlow,
+        string $username, ?string $password)
     {
         try {
             //Build payload
             $payload = [
-                'AuthFlow' => CognitoAuthFlowTypes::ADMIN_NO_SRP_AUTH->value,
-                'AuthParameters' => [
-                    'USERNAME' => $username,
-                    'PASSWORD' => $password
-                ],
+                'AuthFlow' => $authFlow->value,
                 'ClientId' => $this->clientId,
                 'UserPoolId' => $this->poolId,
             ];
+
+            //Set Auth Parameters based on the Auth Flow
+            switch ($authFlow) {
+                case CognitoAuthFlowTypes::USER_SRP_AUTH:
+                    $payload['AuthParameters'] = [
+                        'USERNAME' => $username,
+                        'SRP_A' => $password
+                    ];
+                    break;
+
+                case CognitoAuthFlowTypes::CUSTOM_AUTH:
+                    $payload['AuthParameters'] = [
+                        'USERNAME' => $username
+                    ];
+                    break;
+
+                case CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH:
+                case CognitoAuthFlowTypes::ADMIN_NO_SRP_AUTH:
+                default:
+                    $payload['AuthParameters'] = [
+                        'USERNAME' => $username,
+                        'PASSWORD' => $password
+                    ];
+                    break;
+            } //End switch
 
             //Add Secret Hash in case of Client Secret being configured
             if ($this->boolClientSecret) {
@@ -184,15 +206,15 @@ class AwsCognitoClient
      * Registers a user in the given user pool.
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html
      *
-     * @param $username
-     * @param $password
+     * @param string $username
+     * @param string $password
      * @param array $attributes
      * @param array $clientMetadata (optional)
      * @return bool $groupname (optional)
      *
      * @return bool
      */
-    public function register($username, $password, array $attributes = [],
+    public function register(string $username, string $password, array $attributes = [],
         ?array $clientMetadata = null, ?string $groupname = null)
     {
         try {
@@ -241,7 +263,7 @@ class AwsCognitoClient
      * @param array $clientMetadata (optional)
      * @return string
      */
-    public function sendResetLink($username, ?array $clientMetadata = null)
+    public function sendResetLink(string $username, ?array $clientMetadata = null)
     {
         try {
             //Build payload
@@ -282,7 +304,7 @@ class AwsCognitoClient
      * @param string $password
      * @return string
      */
-    public function resetPassword($code, $username, $password)
+    public function resetPassword(string $code, string $username, string $password)
     {
         try {
             //Initialize variables

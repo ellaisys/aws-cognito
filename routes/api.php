@@ -39,6 +39,9 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
     Route::group(['prefix' => 'login'], function() {
         Route::post('/', [LoginController::class, 'login']);
         Route::post('/mfa', [LoginController::class, 'validateMFA']);
+        Route::get('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge']);
+        Route::get('/passkey/challenge/{challengeName}', [WebAuthPasskeyController::class, 'challenge']);
+        Route::post('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge']);
     });
 
     //Forgot password routes

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -131,6 +132,80 @@ trait WebAuthPasskey
     } //Function ends
 
     /**
+     * Action to authenticate by responding to the passkey authentication challenge
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function challenge(Request $request, ?string $challengeName = null)
+    {
+        try {
+            if (!empty($challengeName)) {
+                $request->merge(['challenge_name' => $challengeName]);
+            } //End if
+
+            // If username present in query parameters is email, encode it before validation and processing
+            if ($request->query('username')) {
+                $email = urlencode($request->input('username'));
+    
+                //find %40 and replace with @ to avoid validation error
+                $email = str_replace('%40', '@', $email);
+                if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $request->merge(['username' => $email]);
+                } //End if
+            } //End if
+
+            //Validate payload
+            $validator = Validator::make($request->all(), [
+                'username' => ['required'],
+                'challenge_name' => ['sometimes', 'in:WEB_AUTHN,EMAIL_OTP,SMS_OTP']
+            ]);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
+            //Initialize parameters
+            $returnValue = null;
+
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Get the response from AWS Cognito for authenticating with passkey credentials
+            $response = $client->authWebAuthnCredential(
+                CognitoAuthFlowTypes::USER_AUTH,
+                $request['username'],
+                $request['challenge_name'] ?? null
+            );
+
+            return $this->response->success($response);
+        } catch (Exception $e) {
+            Log::error('WebAuthPasskeyController:challenge:Exception');
+            Log::error($e);
+            throw $e;
+        }
+    } //Function ends
+
+    /**
+     * Authenticate by responding to the passkey authentication challenge
+     *
+     * @param string $authFlow The authentication flow to use. Must be either "USER_AUTH" or "CUSTOM_AUTH".
+     * @param string $username The username of the user to authenticate.
+     * @param string $challengeName The type of challenge to request. Must be either "WEB_AUTHN", "EMAIL_OTP", or "SMS_OTP".
+     * @return \Aws\Result
+     */
+    public function authWebAuthnCredential(Request $request, string $guard='web')
+    {
+        try {
+            return $this->response->success($response);
+        } catch (Exception $e) {
+            Log::error('WebAuthPasskeyController:challenge:Exception');
+            Log::error($e);
+            throw $e;
+        }
+    } //Function ends
+
+    /**
      * Resolve the authenticated guard from available contexts.
      *
      * @return string
@@ -156,7 +231,6 @@ trait WebAuthPasskey
     protected function setIsControllerAction(bool $isControllerAction): void
     {
         $this->isControllerAction = $isControllerAction;
-
     }
 
     /**

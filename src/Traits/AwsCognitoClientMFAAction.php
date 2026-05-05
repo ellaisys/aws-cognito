@@ -154,6 +154,7 @@ trait AwsCognitoClientMFAAction
 
     /**
      * Responds to MFA challenge
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminRespondToAuthChallenge.html
      *
      * @param string $challengeName
      * @param string $session

@@ -23,6 +23,8 @@ use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClientInterface;
 use Ellaisys\Cognito\AwsCognitoClientManager;
+
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Http\Parser\ClaimSession;
@@ -164,7 +166,11 @@ trait BaseCognitoGuard
         $this->awsResult = null;
 
         //Authenticate the user with AWS Cognito
-        $result = $this->client->authenticate($credentials['email'], $credentials['password']);
+        $result = $this->client->authenticate(
+            CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH,
+            $credentials['email'], $credentials['password']
+        );
+
         //Check if the result is an instance of AwsResult
         if (!empty($result) && $result instanceof AwsResult) {
             //Set value into class param

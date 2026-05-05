@@ -396,6 +396,13 @@ trait AwsCognitoClientAdminAction
                         'NEW_PASSWORD' => $challengeValue
                     ]);
                     break;
+
+                case CognitoChallengeTypes::WEB_AUTHN:
+                    $challengeResponse = array_merge($challengeResponse, [
+                        'CREDENTIAL' => json_encode($challengeValue)
+                    ]);
+                    break;
+
                 default:
                     # code...
                     break;

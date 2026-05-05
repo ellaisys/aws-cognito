@@ -47,7 +47,9 @@ class WebAuthPasskeyController extends Controller
     public function __construct()
     {
         //Mandate authentication for all the API's of this controller
-        $this->middleware('aws-cognito');
+        $this->middleware('aws-cognito')->except([
+                'challenge'
+            ]);
 
         //Set flag to indicate action called from controller
         $this->setIsControllerAction(true);

@@ -49,6 +49,11 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
         Route::get('/', function () { return view('cognito::pages.auth.login'); })->name('form.login');
         Route::post('/', [LoginController::class, 'login'])->name('action.login.submit');
         Route::post('/mfa', [LoginController::class, 'validateMFA'])->name('action.mfa.code.submit');
+        Route::any('/{step}', function (string $step) {
+            return view('cognito::pages.auth.login', ['step' => $step]);
+        });
+        Route::get('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge'])->name('action.auth.passkey.challenge');
+        Route::post('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge'])->name('action.auth.passkey.submit');
     });
 
     //Authenticated routes
