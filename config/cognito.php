@@ -256,11 +256,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito WebAuthn MFA Configurations
+    | Cognito WebAuthn MFA Configurations (FIDO2 / Passkeys)
     |--------------------------------------------------------------------------
     | This option controls the default cognito WebAuthn MFA configurations. You
     | can set the factor configuration, relying party id and user verification
     | method for the WebAuthn MFA.
+    |
+    | Use the 'allow_passkeys' configuration to enable or disable the use of
+    | passkeys as a multi-factor authentication (MFA) method. When set to true,
+    | users can register and sign in using passkeys that are capable of user
+    | verification. When set to false, passkeys will not be available for the
+    | authentication.
     |
     | Factor configuration is set to 'MULTI_FACTOR_WITH_USER_VERIFICATION'.
     | Sets whether passkeys can be used as multi-factor authentication (MFA).
@@ -279,6 +285,7 @@ return [
     | encourages it.
     |
     */
+    'allow_passkeys' => env('AWS_COGNITO_ALLOW_PASSKEYS', false),
     'web_authn_mfa_configuration' => [
         'FactorConfiguration' => env('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', 'MULTI_FACTOR_WITH_USER_VERIFICATION'),
         'RelyingPartyId' => env('AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID', null),

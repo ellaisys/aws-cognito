@@ -49,8 +49,9 @@
 <script>
     const urlPasskeyStartEndpoint = "{{Route::has('cognito.action.user.passkey.start') ? (route('cognito.action.user.passkey.start')) : 'null'}}";
     const urlPasskeyCompleteEndpoint = "{{Route::has('cognito.action.user.passkey.complete') ? (route('cognito.action.user.passkey.complete')) : 'null'}}";
+    const CSRF_TOKEN = '{{ csrf_token() }}';
 
-    var enablePasskeysButton = document.getElementById('enable-passkeys-button');
+    const enablePasskeysButton = document.getElementById('enable-passkeys-button');
     enablePasskeysButton.addEventListener('click', function() {
         enablePasskeys();
     });
@@ -63,7 +64,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': CSRF_TOKEN
                 }
             });
 
@@ -85,7 +86,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': CSRF_TOKEN
                 },
                 credentials: 'same-origin',
                 body: JSON.stringify({
