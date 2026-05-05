@@ -11,9 +11,6 @@
                 <div class="card-body">
                     <x-cognito::common.alert />
                     @switch(request()->route('step'))
-                        @case('old')
-                            <x-cognito::forms.login-form />
-                            @break
                         @case('options')
                             <x-cognito::forms.auth.options-form />
                             @break
