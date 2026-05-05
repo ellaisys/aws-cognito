@@ -282,10 +282,9 @@ trait AwsCognitoClientMFAAction
             //Add WebAuthn  configuration if enabled
             if ($isMfaEnabled && in_array('WEB_AUTHN', $listMfaTypes)) {
                 $payload = array_merge($payload, [
-                    'WebAuthnMfaConfiguration' => config('cognito.webauthn_mfa_configuration')
+                    'WebAuthnMfaConfiguration' => config('cognito.web_authn_mfa_configuration')
                 ]);
             } //End if
-
 
             $response = $this->client->setUserPoolMfaConfig($payload);
         } catch (Exception $e) {
