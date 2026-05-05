@@ -9,6 +9,7 @@ use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 use Illuminate\Support\Facades\Log;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -314,7 +315,7 @@ trait AwsCognitoClientAdminAction
      *
      * @return \Aws\Result
      */
-    protected function adminRespondToAuthChallenge(
+    public function adminRespondToAuthChallenge(
         CognitoChallengeTypes $challengeName, string $session,
         string $challengeValue, string $username)
     {
@@ -342,9 +343,9 @@ trait AwsCognitoClientAdminAction
 
             //Execute the payload
             $response = $this->client->adminRespondToAuthChallenge($payload);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('AwsCognitoClientAdminAction:adminRespondToAuthChallenge:Exception');
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminRespondToAuthChallenge:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $response;
@@ -399,7 +400,7 @@ trait AwsCognitoClientAdminAction
 
                 case CognitoChallengeTypes::WEB_AUTHN:
                     $challengeResponse = array_merge($challengeResponse, [
-                        'CREDENTIAL' => json_encode($challengeValue)
+                        'CREDENTIAL' => $challengeValue
                     ]);
                     break;
 
@@ -409,6 +410,7 @@ trait AwsCognitoClientAdminAction
             } //End Switch
         } catch (Exception $e) {
             Log::error('AwsCognitoClientAdminAction:buildChallengePayload:Exception');
+            throw $e;
         } //Try-catch ends
 
         return $challengeResponse;

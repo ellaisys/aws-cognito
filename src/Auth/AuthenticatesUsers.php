@@ -24,13 +24,14 @@ use Ellaisys\Cognito\AwsCognitoUserPool;
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
-
 trait AuthenticatesUsers
 {
+    use BaseAuthTrait;
 
     /**
      * Pulls list of groups attached to a user in Cognito
@@ -50,7 +51,7 @@ trait AuthenticatesUsers
                 $groups = $result['Groups'];
 
                 if ((!empty($groups)) && is_array($groups)) {
-                    foreach ($groups as $key => &$value) {
+                    foreach ($groups as &$value) {
                         unset($value['UserPoolId']);
                         unset($value['RoleArn']);
                     } //Loop ends
@@ -63,7 +64,6 @@ trait AuthenticatesUsers
         return $groups;
     } //End if
 
-    
     /**
      * Attempt to log the user into the application.
      *
@@ -75,28 +75,25 @@ trait AuthenticatesUsers
      *
      * @return mixed
      */
-    protected function attemptLogin(Request|Collection $request,
-        string $guard='web', string $paramUsername='email',
-        string $paramPassword='password', bool $isJsonResponse=false,
-        bool $isRaiseException=false)
+    protected function attemptLogin(Request $request,
+        string $paramUsername='email',
+        string $paramPassword='password')
     {
         try {
+            // Initialize variables
             $returnValue = null;
-            $payload = null;
+            $guard = 'web';
 
-            //Convert request to collection
-            if ($request instanceof Request) {
-                $isJsonResponse = ($request->expectsJson() || $request->isJson());
-                $payload = collect($request->all());
-            } else {
-                $payload = $request;
+            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
+                $this->isJsonResponse = true;
+                $guard = 'api';
             } //End if
 
             //Get the password policy
             $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
-            $validator = Validator::make($payload->only([$paramPassword])->toArray(), [
+            $validator = Validator::make($request->only([$paramPassword])->toArray(), [
                 $paramPassword => 'required|regex:'.$passwordPolicy['regex']
             ], [
                 'regex' => 'Must contain atleast ' . $passwordPolicy['message']
@@ -107,10 +104,13 @@ trait AuthenticatesUsers
             } //End if
 
             //Authenticate User
-            $returnValue = Auth::guard($guard)->attempt($payload->toArray(), false, $paramUsername, $paramPassword);
+            $returnValue = Auth::guard($guard)->attempt(
+                    $request->toArray(), false,
+                    $paramUsername, $paramPassword
+                );
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLogin:Exception');
-            if ($e instanceof ValidationException || ($isRaiseException)) {
+            if ($e instanceof ValidationException || ($this->isRaiseException)) {
                 throw $e;
             } //End if
 
@@ -118,103 +118,121 @@ trait AuthenticatesUsers
                 $this->sendFailedCognitoResponse($e, $paramUsername);
             }
 
-            $returnValue = $this->sendFailedLoginResponse($e, $isJsonResponse, $paramUsername);
+            $returnValue = $this->sendFailedLoginResponse($e, $this->isJsonResponse, $paramUsername);
         } //Try-catch ends
 
         return $returnValue;
     } //Function ends
 
     /**
-     * Attempt to log the user into the application.
-     *
-     * @param  \Illuminate\Support\Collection  $request
-     * @param  \string  $guard (optional)
-     * @param  \bool  $isJsonResponse (optional)
+     * Authenticate by responding to the authentication challenge
+     * @param Request $request
      *
      * @return mixed
      */
-    protected function attemptLoginMFA(Request|Collection $request,
-        string $guard='web', bool $isJsonResponse=false,
-        string $paramName='mfa_code')
+    protected function attemptLoginChallenge(Request $request): mixed
     {
         try {
             // Initialize variables
-            $response = null;
-            $claim = null;
+            $returnValue = null;
+            $guard = 'web';
 
-            if ($request instanceof Request) {
-                //Set the response type
-                $isJsonResponse = ($request->expectsJson() || $request->isJson());
-
-                $request = collect($request->all());
+            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
+                $this->isJsonResponse = true;
+                $guard = 'api';
             } //End if
 
-            //Validate request
-            $validator = Validator::make($request->all(), $this->rulesMFA());
-
+            //Validate payload
+            $validator = Validator::make($request->all(), $this->rulesChallenge());
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
 
             //Generate challenge array
-            $challenge = $request->only(['challenge_name', 'session', 'mfa_code'])->toArray();
+            $challenge = $request->only([
+                'challenge_name',
+                'session', 'challenge_value']);
 
-            //Fetch user details
-            switch ($guard) {
-                case 'web': //Web
-                    if (request()->session()->has($challenge['session'])) {
-                        //Get stored session
-                        $sessionToken = request()->session()->get($challenge['session']);
-                        $username = $sessionToken['username'];
-                        $challenge['username'] = $username;
-                    } else{
-                        throw new HttpException(400, 'ERROR_AWS_COGNITO_SESSION_MFA_CODE');
-                    } //End if
-                    break;
-                
-                case 'api': //API
-                    $challengeData = Auth::guard($guard)->getChallengeData($challenge['session']);
-                    if (empty($challengeData) || empty($challengeData['username'])) {
-                        throw new HttpException(400, 'ERROR_AWS_COGNITO_SESSION_MFA_CODE');
-                    } //End if
-
-                    $username = $challengeData['username'];
-                    $challenge['username'] = $username;
-                    break;
-                
-                default:
-                    break;
-            } //End switch
+            $username = $this->getUsernameFromChallengeSession($request, $challenge['session'], $guard);
+            if (empty($username)) {
+                throw new InvalidUserException();
+            } else {
+                $challenge['username'] = $username;
+            } //End if
 
             //Authenticate User
-            $claim = Auth::guard($guard)->attemptMFA($challenge);
-        } catch (NoLocalUserException $e) {
-            Log::error('AuthenticatesUsers:attemptLoginMFA:NoLocalUserException');
-            $response = $this->sendFailedLoginResponse($e, $isJsonResponse);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('AuthenticatesUsers:attemptLoginMFA:CognitoIdentityProviderException');
-            if ($isJsonResponse) { throw AwsCognitoException::create($e); }
-            $response = $this->sendFailedLoginResponse($e, $isJsonResponse, $paramName);
+            $returnValue = Auth::guard($guard)->attemptChallengeAuth($challenge);
         } catch (Exception $e) {
-            Log::error('AuthenticatesUsers:attemptLoginMFA:Exception');
-            if ($isJsonResponse) {
-                throw $e;
-            } else {
-                Log::error($e);
-                switch ($e->getMessage()) {
-                    case 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER':
-                        $paramName = 'mfa_code';
+            Log::error('AuthenticatesUsers:attemptLoginChallenge:Exception');
+            throw $e;
+        }
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Get the username from the session or challenge data based on the guard type
+     *
+     * @param Request $request
+     * @param string $session The session key to look for in the request session or challenge data
+     * @param string $guard The authentication guard type (e.g., 'web' or 'api')
+     *
+     * @return string|null The username if found, or null if not found
+     */
+    private function getUsernameFromChallengeSession(Request $request,
+        string $session, string $guard): ?string
+    {
+        $username = null;
+
+        try {
+            if(!empty($request['username'])) {
+                $username = $request['username'];
+            } else{
+                //Fetch user details
+                switch ($guard) {
+                    case 'web': //Web
+                        if ($request->session()->has($session)) {
+                            //Get stored session
+                            $sessionToken = $request->session()->get($session);
+                            $username = $sessionToken['username'];
+                        } else{
+                            throw new InvalidUserException();
+                        } //End if
+                        break;
+                    
+                    case 'api': //API
+                        $challengeData = Auth::guard($guard)->getChallengeData($session);
+                        if (empty($challengeData) || empty($challengeData['username'])) {
+                            throw new InvalidUserException();
+                        } //End if
+
+                        $username = $challengeData['username'];
                         break;
                     
                     default:
-                        $paramName = 'mfa_code';
                         break;
-                } //Switch ends
-                $response = $this->sendFailedLoginResponse($e, $isJsonResponse, $paramName);
+                } //End switch
             } //End if
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:getUserNameFromChallengeSession:Exception');
+            throw $e;
         } //Try-catch ends
 
-        return $claim?$claim:$response;
+        return $username;
+    } //Function ends
+
+    /**
+     * Get the challenge validation rules.
+     *
+     * @return array
+     */
+    protected function rulesChallenge()
+    {
+        return [
+            'username'          => 'sometimes',
+            'session'           => 'required',
+            'challenge_name'    => 'required|in:WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA',
+            'challenge_value'   => 'required',
+        ];
     } //Function ends
 
     /**
@@ -268,20 +286,6 @@ trait AuthenticatesUsers
                     $paramName => $message,
                 ]);
         } //End if
-    } //Function ends
-
-    /**
-     * Get the MFA authentication validation rules.
-     *
-     * @return array
-     */
-    protected function rulesMFA()
-    {
-        return [
-            'challenge_name'    => 'required',
-            'session'           => 'required',
-            'mfa_code'          => 'required|numeric|min:4',
-        ];
     } //Function ends
 
 } //Trait ends

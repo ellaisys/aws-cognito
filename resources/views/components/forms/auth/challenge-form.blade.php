@@ -1,4 +1,4 @@
-<form method="POST" id="auth-passkey-challenge-form" action="{{ route('cognito.action.auth.passkey.submit') }}">
+<form method="POST" id="auth-challenge-form" action="{{ route('cognito.action.auth.challenge.submit') }}">
     @csrf
 
     @php
@@ -67,7 +67,9 @@
     // Function to handle the passkey authentication process
     async function getChallengeData() {
         try {
+            const challengeNameValue = document.getElementById('challenge_name');
             const challengeValue = document.getElementById('challenge_value');
+            const sessionValue = document.getElementById('session');
 
             var response = await fetch(urlPasskeyAuthChallenge, {
                 method: 'POST',
@@ -89,10 +91,33 @@
             responseData = await response.json();
             responseData = responseData.data || {};
 
+            //Set the session value received from the server
+            sessionValue.value = responseData.Session || '';
+            challengeNameValue.value = responseData.ChallengeName || '';
+
             // If the challenge is for WebAuthn, set the challenge value and submit the form
             if (responseData.ChallengeName == 'WEB_AUTHN') {
-                challengeValue.value = responseData.ChallengeParameters.CREDENTIAL_REQUEST_OPTIONS;
-                document.getElementById('auth-passkey-challenge-form').submit();
+                // Build the options for navigator.credentials.get() based on the challenge parameters received from the server
+                var signinOptions = JSON.parse(responseData.ChallengeParameters.CREDENTIAL_REQUEST_OPTIONS);
+                signinOptions.challenge = Uint8Array.from(atob(signinOptions.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+                signinOptions.allowCredentials = signinOptions.allowCredentials.map(cred => {
+                    return {
+                        ...cred,
+                        id: Uint8Array.from(atob(cred.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+                    };
+                });
+
+                // Prompt the user to authenticate using their passkey credential
+                var credential = await navigator.credentials.get({
+                    mediation: 'optional',
+                    password: true,
+                    publicKey: signinOptions
+                });
+
+                console.log('Passkey authentication response:', credential);
+
+                challengeValue.value = credential ? JSON.stringify(credential) : '';
+                document.getElementById('auth-challenge-form').submit();
             } else {
                 var challengeParam = responseData.ChallengeParameters || {};
                 challengeValue.placeholder = `${challengeParam.CODE_DELIVERY_DELIVERY_MEDIUM} sent to ${challengeParam.CODE_DELIVERY_DESTINATION}`;

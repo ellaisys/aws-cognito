@@ -187,6 +187,7 @@ trait AwsCognitoClientPasskeyAction
 
     /**
      * Responds to the passkey authentication challenges with the user's passkey credential response.
+     * TO BE DELETED
      *
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html
      * @param string $challengeName

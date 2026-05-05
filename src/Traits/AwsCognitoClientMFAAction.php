@@ -155,6 +155,7 @@ trait AwsCognitoClientMFAAction
     /**
      * Responds to MFA challenge
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminRespondToAuthChallenge.html
+     * TO BE DELETED
      *
      * @param string $challengeName
      * @param string $session
@@ -229,7 +230,7 @@ trait AwsCognitoClientMFAAction
                 //Add WebAuthn configuration if enabled
                 $payload = array_merge($payload, [
                     'WebAuthnMfaSettings' => [
-                        'Enabled' => ($isMfaEnabled && $isEnable)?($mfaType=='WEBAUTHN'):false
+                        'Enabled' => ($isMfaEnabled && $isEnable)?($mfaType=='WEB_AUTHN'):false
                     ]
                 ]);
             } //Loop ends
@@ -279,7 +280,7 @@ trait AwsCognitoClientMFAAction
             } //End if
 
             //Add WebAuthn  configuration if enabled
-            if ($isMfaEnabled && in_array('WEBAUTHN', $listMfaTypes)) {
+            if ($isMfaEnabled && in_array('WEB_AUTHN', $listMfaTypes)) {
                 $payload = array_merge($payload, [
                     'WebAuthnMfaConfiguration' => config('cognito.webauthn_mfa_configuration')
                 ]);

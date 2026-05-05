@@ -29,23 +29,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait WebAuthPasskey
 {
-    /**
-     * Private variable to indicate if the action
-     * is called from controller
-     */
-    private bool $isControllerAction = false;
-
-    /**
-     * Private variable to indicate if the response
-     * is to be in json format
-     */
-    private bool $isJsonResponse = false;
-
-    /**
-     * Private variable to indicate if the response
-     * is to be raised as an exception
-     */
-    private bool $isRaiseException = false;
+    use BaseAuthTrait;
 
     /**
      * Action to start registration of a passkey authenticator for the currently signed-in user.
@@ -57,9 +41,14 @@ trait WebAuthPasskey
     public function start(Request $request)
     {
         try {
-            //Initialize parameters
+            // Initialize variables
             $returnValue = null;
-            $guard = $this->resolveAuthenticatedGuard();
+            $guard = 'web';
+
+            if(!$this->isJsonResponse) {
+                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
+                $guard = 'api';
+            } //End if
 
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
@@ -94,6 +83,15 @@ trait WebAuthPasskey
     public function complete(Request $request)
     {
         try {
+            // Initialize variables
+            $returnValue = null;
+            $guard = 'web';
+
+            if(!$this->isJsonResponse) {
+                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
+                $guard = 'api';
+            } //End if
+
             //Validate payload
             $validator = Validator::make($request->all(), [
                 'credential' => ['required']
@@ -101,10 +99,6 @@ trait WebAuthPasskey
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
-
-            //Initialize parameters
-            $returnValue = null;
-            $guard = $this->resolveAuthenticatedGuard();
 
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
@@ -123,12 +117,14 @@ trait WebAuthPasskey
                 json_decode($request['credential'], true)
             );
 
-            return $this->response->success($response);
+            $returnValue = $this->response->success($response);
         } catch (Exception $e) {
             Log::error('WebAuthPasskeyController:complete:Exception');
             Log::error($e);
             throw $e;
         }
+
+        return $returnValue;
     } //Function ends
 
     /**
@@ -141,16 +137,22 @@ trait WebAuthPasskey
     public function challenge(Request $request, ?string $challengeName = null)
     {
         try {
+            // Initialize variables
+            $returnValue = null;
+            $guard = 'web';
+
+            if(!$this->isJsonResponse) {
+                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
+                $guard = 'api';
+            } //End if
+
             if (!empty($challengeName)) {
                 $request->merge(['challenge_name' => $challengeName]);
             } //End if
 
             // If username present in query parameters is email, encode it before validation and processing
             if ($request->query('username')) {
-                $email = urlencode($request->input('username'));
-    
-                //find %40 and replace with @ to avoid validation error
-                $email = str_replace('%40', '@', $email);
+                $email = base64_decode($request['username']);
                 if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $request->merge(['username' => $email]);
                 } //End if
@@ -165,9 +167,6 @@ trait WebAuthPasskey
                 throw new ValidationException($validator);
             } //End if
 
-            //Initialize parameters
-            $returnValue = null;
-
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
@@ -178,80 +177,14 @@ trait WebAuthPasskey
                 $request['challenge_name'] ?? null
             );
 
-            return $this->response->success($response);
+            $returnValue = $this->response->success($response);
         } catch (Exception $e) {
             Log::error('WebAuthPasskeyController:challenge:Exception');
             Log::error($e);
             throw $e;
         }
+
+        return $returnValue;
     } //Function ends
-
-    /**
-     * Authenticate by responding to the passkey authentication challenge
-     *
-     * @param string $authFlow The authentication flow to use. Must be either "USER_AUTH" or "CUSTOM_AUTH".
-     * @param string $username The username of the user to authenticate.
-     * @param string $challengeName The type of challenge to request. Must be either "WEB_AUTHN", "EMAIL_OTP", or "SMS_OTP".
-     * @return \Aws\Result
-     */
-    public function authWebAuthnCredential(Request $request, string $guard='web')
-    {
-        try {
-            return $this->response->success($response);
-        } catch (Exception $e) {
-            Log::error('WebAuthPasskeyController:challenge:Exception');
-            Log::error($e);
-            throw $e;
-        }
-    } //Function ends
-
-    /**
-     * Resolve the authenticated guard from available contexts.
-     *
-     * @return string
-     */
-    private function resolveAuthenticatedGuard(): string
-    {
-        if (!empty(Auth::guard('web')->user())) {
-            return 'web';
-        } //End if
-
-        if (!empty(Auth::guard('api')->user())) {
-            return 'api';
-        } //End if
-
-        throw new InvalidUserException();
-    } //Function ends
-
-    /**
-     * Set flag for action method called from controller
-     *
-     * @param bool $isControllerAction
-     */
-    protected function setIsControllerAction(bool $isControllerAction): void
-    {
-        $this->isControllerAction = $isControllerAction;
-    }
-
-    /**
-     * Set flag if the response is to be in json format
-     *
-     * @param bool $isJsonResponse
-     */
-    protected function setIsJsonResponse(bool $isJsonResponse): void
-    {
-        $this->isJsonResponse = $isJsonResponse;
-    }
-
-    /**
-     * Set flag if the response is to be raised as an exception
-     * in case of errors
-     *
-     * @param bool $isRaiseException
-     */
-    protected function setIsRaiseException(bool $isRaiseException): void
-    {
-        $this->isRaiseException = $isRaiseException;
-    }
 
 } //Trait ends

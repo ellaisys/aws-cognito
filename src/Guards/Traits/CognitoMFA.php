@@ -32,56 +32,6 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
  */
 trait CognitoMFA
 {
-
-    /**
-     * Attempt MFA based Authentication
-     */
-    public function attemptBaseMFA(array $challenge = [], bool $remember=false) {
-        try {
-            //Reset global variables
-            $this->challengeName = null;
-            $this->challengeData = null;
-            $this->claim = null;
-            $this->awsResult = null;
-
-            $challengeName = CognitoChallengeTypes::from($challenge['challenge_name']);
-            $session = $challenge['session'];
-            $challengeValue = $challenge['mfa_code'];
-            $username = $challenge['username'];
-
-            //Attempt MFA Challenge
-            $result = $this->client->authMFAChallenge(
-                    $challengeName, $session,
-                    $challengeValue, $username
-                );
-
-            //Check if the result is an instance of AwsResult
-            if (!empty($result) && $result instanceof AwsResult) {
-                //Set value into class param
-                $this->awsResult = $result;
-
-                //Check in case of any challenge
-                if (isset($result['ChallengeName'])) {
-                    $this->challengeName = $result['ChallengeName'];
-                    $this->challengeData = $this->handleCognitoChallenge($result, $username);
-                } elseif (isset($result['AuthenticationResult'])) {
-                    //Create claim token
-                    $this->claim = new AwsCognitoClaim($result, null);
-                } else {
-                    throw new HttpException(400, 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER');
-                } //End if
-            } //End if
-    
-            return $result;
-        } catch(CognitoIdentityProviderException | Exception $e) {
-            Log::error('CognitoMFA:attemptBaseMFA:Exception');
-            throw $e;
-        } //Try-catch ends
-            
-        return $result;
-    } //Function ends
-
-
     /**
      * Associate the MFA Software Token
      *
@@ -121,7 +71,6 @@ trait CognitoMFA
             throw $e;
         } //Try-catch ends
     } //Function ends
-
 
     /**
      * Verify the MFA Software Token

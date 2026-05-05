@@ -205,12 +205,12 @@ return [
     |
     | This option controls the default cognito MFA types allowed if the MFA is
     | enabled for the user. The options available are "EMAIL_MFA", "SMS_MFA",
-    | "SOFTWARE_TOKEN_MFA" and "WEBAUTHN".
+    | "SOFTWARE_TOKEN_MFA" and "WEB_AUTHN".
     | The default value is set to "SOFTWARE_TOKEN_MFA".
     |
     | You can set one or more MFA types as per your requirements.
     | In case you want to allow both the MFA types, you can set the value to
-    | "SMS_MFA,SOFTWARE_TOKEN_MFA,WEBAUTHN" separated by comma.
+    | "SMS_MFA,SOFTWARE_TOKEN_MFA,WEB_AUTHN" separated by comma.
     |
     | The first MFA type in the list will be set as preferred MFA type.
     |

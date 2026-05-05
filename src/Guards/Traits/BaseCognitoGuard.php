@@ -30,6 +30,7 @@ use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 use Ellaisys\Cognito\Http\Parser\ClaimSession;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
@@ -381,6 +382,57 @@ trait BaseCognitoGuard
         } //End if
 
         return $user;
+    } //Function ends
+
+    /**
+     * Attempt Challenge based Authentication
+     */
+    final public function attemptBaseChallenge(array $challenge, bool $remember=false) {
+        try {
+            //Reset global variables
+            $this->challengeName = null;
+            $this->challengeData = null;
+            $this->claim = null;
+            $this->awsResult = null;
+
+            $challengeName = CognitoChallengeTypes::from($challenge['challenge_name']);
+            $session = $challenge['session'];
+            $challengeValue = $challenge['challenge_value'];
+            $username = $challenge['username'];
+
+            //Attempt MFA Challenge
+            $result = $this->client->adminRespondToAuthChallenge(
+                    $challengeName, $session,
+                    $challengeValue, $username
+                );
+
+            //Check if the result is an instance of AwsResult
+            if (!empty($result) && $result instanceof AwsResult) {
+                //Set value into class param
+                $this->awsResult = $result;
+
+                //Check in case of any challenge
+                if (isset($result['ChallengeName'])) {
+                    $this->challengeName = $result['ChallengeName'];
+                    $this->challengeData = $this->handleCognitoChallenge($result, $username);
+                } elseif (isset($result['AuthenticationResult'])) {
+                    //Create claim token
+                    $this->claim = new AwsCognitoClaim($result, null);
+                } else {
+                    throw new HttpException(400, 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER');
+                } //End if
+            } //End if
+    
+            return $result;
+        } catch(CognitoIdentityProviderException $exception) {
+            Log::error('BaseCognitoGuard:attemptBaseChallenge:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } catch(Exception $e) {
+            Log::error('BaseCognitoGuard:attemptBaseChallenge:Exception');
+            throw $e;
+        } //Try-catch ends
+            
+        return $result;
     } //Function ends
 
 } //Trait ends
