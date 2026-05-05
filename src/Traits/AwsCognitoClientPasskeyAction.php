@@ -148,8 +148,7 @@ trait AwsCognitoClientPasskeyAction
             //Build payload
             $payload = [
                 'AuthFlow' => $authFlow->value,
-                'ClientId' => $this->clientId,
-                'UserPoolId' => $this->poolId,
+                'ClientId' => $this->clientId
             ];
 
             //Set Auth Parameters based on the Auth Flow
