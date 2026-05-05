@@ -105,7 +105,7 @@ trait AuthenticatesUsers
 
             //Authenticate User
             $returnValue = Auth::guard($guard)->attempt(
-                    $request->only([$paramUsername, $paramPassword]), false,
+                    $request->all(), false,
                     $paramUsername, $paramPassword
                 );
         } catch (Exception $e) {
