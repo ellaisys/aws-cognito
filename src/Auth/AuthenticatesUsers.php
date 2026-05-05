@@ -93,7 +93,7 @@ trait AuthenticatesUsers
             $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
-            $validator = Validator::make($request->only([$paramPassword])->toArray(), [
+            $validator = Validator::make($request->only([$paramPassword]), [
                 $paramPassword => 'required|regex:'.$passwordPolicy['regex']
             ], [
                 'regex' => 'Must contain atleast ' . $passwordPolicy['message']
@@ -105,7 +105,7 @@ trait AuthenticatesUsers
 
             //Authenticate User
             $returnValue = Auth::guard($guard)->attempt(
-                    $request->toArray(), false,
+                    $request->only([$paramUsername, $paramPassword]), false,
                     $paramUsername, $paramPassword
                 );
         } catch (Exception $e) {
