@@ -11,7 +11,6 @@
 
 namespace Ellaisys\Cognito\Auth;
 
-use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -43,23 +42,12 @@ trait WebAuthPasskey
         try {
             // Initialize variables
             $returnValue = null;
-            $guard = 'web';
-
-            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
-                $this->isJsonResponse = true;
-                $guard = 'api';
-            } //End if
 
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
-            //Get Authenticated user
-            $authUser = Auth::guard($guard)->user();
-            if (empty($authUser)) { throw new InvalidUserException(); }
-
             //Token Object
-            $accessToken = Auth::guard($guard)->cognito()->getToken();
-            if (empty($accessToken)) { throw new HttpException(400, 'EXCEPTION_INVALID_TOKEN'); }
+            $accessToken = $this->getAccessToken($request);
 
             //Get the response from AWS Cognito for starting passkey registration
             $response = $client->startWebAuthnRegistration($accessToken);
@@ -84,12 +72,6 @@ trait WebAuthPasskey
         try {
             // Initialize variables
             $returnValue = null;
-            $guard = 'web';
-
-            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
-                $this->isJsonResponse = true;
-                $guard = 'api';
-            } //End if
 
             //Validate payload
             $validator = Validator::make($request->all(), [
@@ -102,13 +84,8 @@ trait WebAuthPasskey
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
-            //Get Authenticated user
-            $authUser = Auth::guard($guard)->user();
-            if (empty($authUser)) { throw new InvalidUserException(); }
-
             //Token Object
-            $accessToken = Auth::guard($guard)->cognito()->getToken();
-            if (empty($accessToken)) { throw new HttpException(400, 'EXCEPTION_INVALID_TOKEN'); }
+            $accessToken = $this->getAccessToken($request);
 
             //Get the response from AWS Cognito for completing passkey registration
             $response = $client->completeWebAuthnRegistration(
@@ -119,7 +96,6 @@ trait WebAuthPasskey
             $returnValue = $this->response->success($response);
         } catch (Exception $e) {
             Log::error('WebAuthPasskeyController:complete:Exception');
-            Log::error($e);
             throw $e;
         }
 
@@ -138,10 +114,6 @@ trait WebAuthPasskey
         try {
             // Initialize variables
             $returnValue = null;
-
-            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
-                $this->isJsonResponse = true;
-            } //End if
 
             if (!empty($challengeName)) {
                 $request->merge(['challenge_name' => $challengeName]);
@@ -177,7 +149,6 @@ trait WebAuthPasskey
             $returnValue = $this->response->success($response);
         } catch (Exception $e) {
             Log::error('WebAuthPasskeyController:challenge:Exception');
-            Log::error($e);
             throw $e;
         }
 
@@ -197,12 +168,6 @@ trait WebAuthPasskey
         try {
             // Initialize variables
             $returnValue = null;
-            $guard = 'web';
-
-            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
-                $this->isJsonResponse = true;
-                $guard = 'api';
-            } //End if
 
             //Validate payload
             $validator = Validator::make($request->all(), [
@@ -215,13 +180,8 @@ trait WebAuthPasskey
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
-            //Get Authenticated user
-            $authUser = Auth::guard($guard)->user();
-            if (empty($authUser)) { throw new InvalidUserException(); }
-
             //Token Object
-            $accessToken = Auth::guard($guard)->cognito()->getToken();
-            if (empty($accessToken)) { throw new HttpException(400, 'EXCEPTION_INVALID_TOKEN'); }
+            $accessToken = $this->getAccessToken($request);
 
             //Get the response from AWS Cognito for deleting the passkey authenticator
             $response = $client->deleteWebAuthnCredential(
@@ -232,9 +192,8 @@ trait WebAuthPasskey
             $returnValue = $this->response->success($response);
         } catch (Exception $e) {
             Log::error('WebAuthPasskeyController:delete:Exception');
-            Log::error($e);
             throw $e;
-        }
+        } //End try
 
         return $returnValue;
     } //Function ends

@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito\Auth;
 
+use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -74,4 +75,89 @@ trait BaseAuthTrait
     {
         $this->isRaiseException = $isRaiseException;
     }
+
+    /**
+     * Method to check if the response is to be in json format
+     *
+     * @param Request $request
+     *
+     * @return bool
+     */
+    protected function getIsJsonResponse(Request $request): bool
+    {
+        if ($this->isJsonResponse) {
+            return true;
+        }
+
+        if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
+            $this->isJsonResponse = true;
+        }
+
+        return $this->isJsonResponse;
+    } //Function ends
+
+    /**
+     * The method to get the guard to be used for authentication based on the request type
+     *
+     * @return bool
+     */
+    protected function getGuard(Request $request): string
+    {
+        $guard = 'web';
+
+        if($this->getIsJsonResponse($request)) {
+            $guard = 'api';
+        }
+
+        return $guard;
+    } //Function ends
+
+    /**
+     * Method to get the authenticated user based on the request type
+     *
+     * @param Request $request
+     *
+     * @return mixed
+     * @throws InvalidUserException
+     */
+    protected function getAuthenticatedUser(Request $request)
+    {
+        try {
+            // Determine the guard based on the request type
+            $guard = $this->getGuard($request);
+
+            // Get the authenticated user
+            $authUser = Auth::guard($guard)->user();
+            if (empty($authUser)) { throw new InvalidUserException(); }
+            return $authUser;
+        } catch (Exception $e) {
+            Log::error('BaseAuthTrait:getAuthenticatedUser:Exception');
+            throw $e;
+        }
+    } //Function ends
+
+    /**
+     * Method to get the access token of the authenticated user based on the request type
+     *
+     * @param Request $request
+     *
+     * @return string
+     * @throws HttpException
+     */
+    protected function getAccessToken(Request $request): string
+    {
+        try {
+            // Determine the guard based on the request type
+            $guard = $this->getGuard($request);
+
+            // Get the access token for the authenticated user
+            $accessToken = Auth::guard($guard)->cognito()->getToken();
+            if (empty($accessToken)) { throw new HttpException(400, 'EXCEPTION_INVALID_TOKEN'); }
+            return $accessToken;
+        } catch (Exception $e) {
+            Log::error('BaseAuthTrait:getAccessToken:Exception');
+            throw $e;
+        }
+    } //Function ends
+
 } //End trait
