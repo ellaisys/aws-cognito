@@ -38,7 +38,7 @@
             <button type="button" id="auth-magic-link-button" class="btn btn-outline-secondary"
                 formAction="{{ route('cognito.form.login') }}/magic-link">
                 {{ __('Login with Magic Link') }}
-            </button>            
+            </button>
         </div>
     </div>
 </form>
