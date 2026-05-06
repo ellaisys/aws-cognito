@@ -115,7 +115,7 @@ trait ConfirmsPasswords
             $client = app()->make(AwsCognitoClient::class);
 
             //Get User Data
-            $this->authData = $client->getUser($payload[$paramUsername]);
+            $this->authData = $client->adminGetUser($payload[$paramUsername]);
             if (empty($this->authData)) {
                 throw new InvalidUserException(AwsCognitoException::COGNITO_USER_INVALID);
             } //End if

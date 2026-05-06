@@ -183,41 +183,5 @@ trait AwsCognitoClientPasskeyAction
 
         return $response;
     } //Function ends
-
-    /**
-     * Responds to the passkey authentication challenges with the user's passkey credential response.
-     * TO BE DELETED
-     *
-     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html
-     * @param string $challengeName
-     * @param string $session
-     * @param string $challengeValue
-     * @param string $username
-     * @return \Aws\Result
-     */
-    public function respondToWebAuthnChallenge(
-        CognitoChallengeTypes $challengeName,
-        string $session, string $challengeValue, string $username)
-    {
-        try {
-            switch ($challengeName) {
-                case CognitoChallengeTypes::WEB_AUTHN:
-                case CognitoChallengeTypes::EMAIL_OTP:
-                case CognitoChallengeTypes::SMS_OTP:
-                     $response = $this->adminRespondToAuthChallenge(
-                        $challengeName, $session, $challengeValue, $username
-                    );
-                    break;
-
-                default:
-                    throw new HttpException(400, 'ERROR_UNSUPPORTED_MFA_CHALLENGE');
-            } //End switch
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientPasskeyAction:respondToWebAuthnChallenge:Exception');
-            throw $e;
-        } //Try-catch ends
-
-        return $response;
-    } //Function ends
     
 } //Trait ends

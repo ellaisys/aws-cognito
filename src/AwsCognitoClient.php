@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Password;
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
+use Ellaisys\Cognito\Traits\AwsCognitoClientHelper;
+use Ellaisys\Cognito\Traits\AwsCognitoClientAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientMFAAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientAdminAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientPasskeyAction;
@@ -33,6 +35,8 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class AwsCognitoClient
 {
+    use AwsCognitoClientHelper;
+    use AwsCognitoClientAction;
     use AwsCognitoClientMFAAction;
     use AwsCognitoClientAdminAction;
     use AwsCognitoClientPasskeyAction;
@@ -616,27 +620,6 @@ class AwsCognitoClient
         );
 
         return base64_encode($hash);
-    } //Function ends
-
-    /**
-     * Get user details by access token.
-     * https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#getuser
-     *
-     * @param string $accessToken
-     * @return mixed
-     */
-    public function getUserByAccessToken(string $accessToken)
-    {
-        try {
-            $result = $this->client->getUser([
-                'AccessToken' => $accessToken
-            ]);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('AwsCognitoClient:getUserByAccessToken:CognitoIdentityProviderException');
-            throw AwsCognitoException::create($e);
-        } //Try-catch ends
-
-        return $result;
     } //Function ends
 
     /**

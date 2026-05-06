@@ -90,7 +90,7 @@ trait ResetsPasswords
             $client = app()->make(AwsCognitoClient::class);
 
             //Get User Data
-            $user = $client->getUser($request[$paramUsername]);
+            $user = $client->adminGetUser($request[$paramUsername]);
 
             //Check user status and change password
             $userStatus = CognitoUserStatusTypes::from($user['UserStatus']);

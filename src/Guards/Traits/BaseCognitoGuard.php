@@ -114,7 +114,7 @@ trait BaseCognitoGuard
      * @return  mixed
      */
     public function getRemoteUserData(string $username) {
-        return $this->client->getUser($username);
+        return $this->client->adminGetUser($username);
     } //Function ends
 
     /**
@@ -152,7 +152,7 @@ trait BaseCognitoGuard
             throw $e;
         } //End try-catch
 
-        return $this->client->getUser($username);
+        return $this->client->adminGetUser($username);
     } //Function ends
 
     /**
@@ -401,8 +401,8 @@ trait BaseCognitoGuard
             $challengeValue = $challenge['challenge_value'];
             $username = $challenge['username'];
 
-            //Attempt MFA Challenge
-            $result = $this->client->adminRespondToAuthChallenge(
+            //Get response for the challenge
+            $result = $this->client->respondToAuthChallenge(
                     $challengeName, $session,
                     $challengeValue, $username
                 );
