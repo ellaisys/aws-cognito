@@ -153,39 +153,6 @@ trait AwsCognitoClientMFAAction
     } //Function ends
 
     /**
-     * Responds to MFA challenge
-     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminRespondToAuthChallenge.html
-     * TO BE DELETED
-     *
-     * @param string $challengeName
-     * @param string $session
-     * @param string $challengeValue
-     * @param string $username
-     *
-     * @return \Aws\Result|false
-     */
-    public function authMFAChallenge(
-        CognitoChallengeTypes $challengeName,
-        string $session, string $challengeValue, string $username)
-    {
-        try {
-            if (($challengeName == CognitoChallengeTypes::SMS_MFA) ||
-                ($challengeName == CognitoChallengeTypes::SOFTWARE_TOKEN_MFA)) {
-                $response = $this->adminRespondToAuthChallenge(
-                    $challengeName, $session, $challengeValue, $username
-                );
-            } else {
-                throw new HttpException(400, 'ERROR_UNSUPPORTED_MFA_CHALLENGE');
-            } //End if
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientMFAAction:authMFAChallenge:Exception');
-            throw $e;
-        } //Try-catch ends
-
-        return $response;
-    } //Function ends
-
-    /**
      * Private method for Setting MFA preference objects
      *
      * @return mixed
