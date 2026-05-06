@@ -67,6 +67,9 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except(['logout', 'logoutForced']);
 
+        //Set flag to indicate action called from controller
+        $this->setIsControllerAction(true);
+
         parent::__construct();
     }
 
@@ -93,9 +96,6 @@ class LoginController extends Controller
             //Raise Pre Auth Event
             $this->callPreAuthEvent($request);
 
-            //Convert request to collection
-            $collection = collect($request->all());
-
             //Check if request is json
             if ($this->isJson($request)) {
                 $isJsonResponse = true;
@@ -103,8 +103,8 @@ class LoginController extends Controller
             } //End if
 
             //Authenticate with Cognito Package Trait based on the guard
-            $claim = $this->attemptLogin($collection, $guard,
-                $usernameField, $passwordField, $isJsonResponse, true);
+            $claim = $this->attemptLogin($request,
+                $usernameField, $passwordField);
 
             //Process the claim response
             return $this->processClaimResponse(
@@ -122,13 +122,13 @@ class LoginController extends Controller
     } //Function ends
 
     /**
-     * Complete the MFA process proving the code sent to the user.
+     * Challenge based authentication action
      *
      * @param \Illuminate\Http\Request $request
      *
      * @throws \HttpException
      */
-    public function validateMFA(Request $request)
+    public function challenge(Request $request)
     {
         try
         {
@@ -141,9 +141,10 @@ class LoginController extends Controller
                 $isJsonResponse = true;
                 $guard = 'api';
             } //End if
+            $this->setIsJsonResponse($isJsonResponse);
 
             //Authenticate the user request
-            $claim = $this->attemptLoginMFA($request, $guard, true);
+            $claim = $this->attemptLoginChallenge($request);
 
             //Process the claim response
             return $this->processClaimResponse(
@@ -151,7 +152,7 @@ class LoginController extends Controller
                     $this->usernameField, $this->passwordField
                 );
         } catch (Exception $e) {
-            Log::error('LoginController:validateMFA:Exception');
+            Log::error('LoginController:challenge:Exception');
 
             //Rise Post Auth Failed Event
             $this->callPostAuthErrorEvent($request, $e, $this->passwordField);

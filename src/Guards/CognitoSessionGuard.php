@@ -388,13 +388,20 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
     } //Function ends
 
     /**
-     * Attempt MFA based Authentication
+     * Attempt Challenge based Authentication
+     *
+     * @param  array  $challenge
+     * @param  bool   $remember
+     *
+     * @throws
+     *
+     * @return bool
      */
-    public function attemptMFA(array $challenge=[], bool $remember=false) {
+    public function attemptChallengeAuth(array $challenge, bool $remember=false) {
         $returnValue = false;
         try {
-            //Login with MFA Challenge
-            $responseCognito = $this->attemptBaseMFA($challenge, $remember);
+            //Login with Challenge
+            $responseCognito = $this->attemptBaseChallenge($challenge, $remember);
             if ($responseCognito && (!empty($this->claim))) {
                 //Process the claim
                 if ($user = $this->processAWSClaim()) {
@@ -413,7 +420,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 throw new HttpException(400, 'ERROR_AWS_COGNITO');
             } //End if
         } catch(Exception $e) {
-            Log::error('CognitoSessionGuard:attemptMFA:Exception');
+            Log::error('CognitoSessionGuard:attemptChallengeAuth:Exception');
             throw $e;
         } //Try-catch ends
 

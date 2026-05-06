@@ -185,6 +185,7 @@ class CognitoTokenGuard extends TokenGuard
 
         //Send claim object
         $claim = $this->claim;
+
         if ($claim && is_array($claim) && $claim['status']) {
             $challengeType = CognitoChallengeTypes::from($claim['status']);
             switch ($challengeType) {
@@ -300,20 +301,20 @@ class CognitoTokenGuard extends TokenGuard
     } //Function ends
 
     /**
-     * Attempt MFA based Authentication
+     * Attempt Challenge based Authentication
      *
      * @param  array  $challenge
      * @param  bool   $remember
      *
      * @throws
      *
-     * @return bool
+     * @return claim
      */
-    public function attemptMFA(array $challenge=[], bool $remember=false)
+    public function attemptChallengeAuth(array $challenge, bool $remember=false)
     {
         $returnValue = null;
         try {
-            $responseCognito = $this->attemptBaseMFA($challenge, $remember);
+            $responseCognito = $this->attemptBaseChallenge($challenge, $remember);
             if ($responseCognito) {
                 if ($this->claim) {
                     $credentials = collect([
@@ -328,13 +329,13 @@ class CognitoTokenGuard extends TokenGuard
                 } elseif ($this->challengeName) {
                     $returnValue = $this->challengeData;
                 } else {
-                    throw new AwsCognitoException();
+                    throw new AwsCognitoException(AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED);
                 } //End if
             } else {
                 throw new InvalidUserException();
             } //End if
         } catch(AwsCognitoException | InvalidUserException | Exception $e) {
-            Log::error('CognitoTokenGuard:attemptMFA:Exception');
+            Log::error('CognitoTokenGuard:attemptChallengeAuth:Exception');
             throw $e;
         } //Try-catch ends
 

@@ -18,8 +18,11 @@ use Illuminate\Support\Facades\Password;
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
+use Ellaisys\Cognito\Traits\AwsCognitoClientHelper;
+use Ellaisys\Cognito\Traits\AwsCognitoClientAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientMFAAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientAdminAction;
+use Ellaisys\Cognito\Traits\AwsCognitoClientPasskeyAction;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
@@ -32,8 +35,11 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class AwsCognitoClient
 {
+    use AwsCognitoClientHelper;
+    use AwsCognitoClientAction;
     use AwsCognitoClientMFAAction;
     use AwsCognitoClientAdminAction;
+    use AwsCognitoClientPasskeyAction;
 
     /**
      * Constant representing the password reset required exception.
@@ -148,19 +154,41 @@ class AwsCognitoClient
      * @param string $password
      * @return \Aws\Result|bool
      */
-    public function authenticate($username, $password)
+    public function authenticate(CognitoAuthFlowTypes $authFlow,
+        string $username, ?string $password)
     {
         try {
             //Build payload
             $payload = [
-                'AuthFlow' => CognitoAuthFlowTypes::ADMIN_NO_SRP_AUTH->value,
-                'AuthParameters' => [
-                    'USERNAME' => $username,
-                    'PASSWORD' => $password
-                ],
+                'AuthFlow' => $authFlow->value,
                 'ClientId' => $this->clientId,
                 'UserPoolId' => $this->poolId,
             ];
+
+            //Set Auth Parameters based on the Auth Flow
+            switch ($authFlow) {
+                case CognitoAuthFlowTypes::USER_SRP_AUTH:
+                    $payload['AuthParameters'] = [
+                        'USERNAME' => $username,
+                        'SRP_A' => $password
+                    ];
+                    break;
+
+                case CognitoAuthFlowTypes::CUSTOM_AUTH:
+                    $payload['AuthParameters'] = [
+                        'USERNAME' => $username
+                    ];
+                    break;
+
+                case CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH:
+                case CognitoAuthFlowTypes::ADMIN_NO_SRP_AUTH:
+                default:
+                    $payload['AuthParameters'] = [
+                        'USERNAME' => $username,
+                        'PASSWORD' => $password
+                    ];
+                    break;
+            } //End switch
 
             //Add Secret Hash in case of Client Secret being configured
             if ($this->boolClientSecret) {
@@ -180,16 +208,17 @@ class AwsCognitoClient
 
     /**
      * Registers a user in the given user pool.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html
      *
-     * @param $username
-     * @param $password
+     * @param string $username
+     * @param string $password
      * @param array $attributes
      * @param array $clientMetadata (optional)
      * @return bool $groupname (optional)
      *
-     * @return bool
+     * @return \Aws\Result
      */
-    public function register($username, $password, array $attributes = [],
+    public function register(string $username, string $password, array $attributes = [],
         ?array $clientMetadata = null, ?string $groupname = null)
     {
         try {
@@ -219,15 +248,11 @@ class AwsCognitoClient
             if (!empty($groupname)) {
                 $this->adminAddUserToGroup($username, $groupname);
             } //End if
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
-                throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS, $e);
-            } //End if
-
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
-        return (bool)$response['UserConfirmed'];
+        return $response;
     } //Function ends
 
     /**
@@ -238,7 +263,7 @@ class AwsCognitoClient
      * @param array $clientMetadata (optional)
      * @return string
      */
-    public function sendResetLink($username, ?array $clientMetadata = null)
+    public function sendResetLink(string $username, ?array $clientMetadata = null)
     {
         try {
             //Build payload
@@ -279,7 +304,7 @@ class AwsCognitoClient
      * @param string $password
      * @return string
      */
-    public function resetPassword($code, $username, $password)
+    public function resetPassword(string $code, string $username, string $password)
     {
         try {
             //Initialize variables
@@ -459,65 +484,81 @@ class AwsCognitoClient
         return true;
     } //Function ends
 
-    public function confirmUserSignUp($username, $confirmationCode)
+    /**
+     * Confirm a user registration with a confirmation code for self registered
+     * users.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmSignUp.html
+     *
+     * @param string $username
+     * @param string $confirmationCode
+     * @param array|null $clientMetadata
+     * @return mixed
+     * @throws Exception
+     */
+    public function confirmUserSignUp(string $username, string $confirmationCode,
+        ?array $clientMetadata = null): mixed
     {
         try {
             //Initialize variables
             $returnValue = null;
 
-            $this->client->confirmSignUp([
+            //Generate payload
+            $payload = [
                 'ClientId' => $this->clientId,
                 'SecretHash' => $this->cognitoSecretHash($username),
                 'Username' => $username,
                 'ConfirmationCode' => $confirmationCode,
-            ]);
+                'ForceAliasCreation' => config('cognito.force_alias_creation', false),
+            ];
+
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
+            } //End if
+
+            $returnValue = $this->client->confirmSignUp($payload);
         } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
-                $returnValue = 'validation.invalid_user';
-            } //End if
-
-            if ($e->getAwsErrorCode() === self::CODE_MISMATCH || $e->getAwsErrorCode() === self::EXPIRED_CODE) {
-                $returnValue = 'validation.invalid_token';
-            } //End if
-
-            if ($e->getAwsErrorCode() === 'NotAuthorizedException' && $e->getAwsErrorMessage() === 'User cannot be confirmed. Current status is CONFIRMED') {
-                $returnValue = 'validation.confirmed';
-            } //End if
-
-            if ($e->getAwsErrorCode() === 'LimitExceededException') {
-                $returnValue = 'validation.exceeded';
-            } //End if
-
-            if (!empty($returnValue)) { return $returnValue; }
-
-            throw $e;
+            throw AwsCognitoException::create($e);
         } //Try-catch ends
+
+        return $returnValue;
     } //Function ends
 
-    public function resendToken($username)
+    /**
+     * Resend the confirmation code for a user that has not confirmed their email.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ResendConfirmationCode.html
+     *
+     * @param string $username
+     * @param array|null $clientMetadata
+     * @return mixed
+     * @throws Exception
+     */
+    public function resendConfirmationCode(string $username, ?array $clientMetadata = null): mixed
     {
         try {
-            $this->client->resendConfirmationCode([
+            //Initialize variables
+            $returnValue = null;
+
+            //Generate payload
+            $payload = [
                 'ClientId' => $this->clientId,
                 'SecretHash' => $this->cognitoSecretHash($username),
                 'Username' => $username
-            ]);
-        } catch (CognitoIdentityProviderException $e) {
+            ];
 
-            if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
-                return 'validation.invalid_user';
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
             } //End if
 
-            if ($e->getAwsErrorCode() === 'LimitExceededException') {
-                return 'validation.exceeded';
-            } //End if
-
-            if ($e->getAwsErrorCode() === 'InvalidParameterException') {
-                return 'validation.confirmed';
-            } //End if
-
-            throw $e;
+            //Execute the payload
+            $returnValue = $this->client->resendConfirmationCode($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClient:resendConfirmationCode:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
+
+        return $returnValue;
     } //Function ends
 
     /**
@@ -528,7 +569,7 @@ class AwsCognitoClient
      * @param array $attributes
      * @return bool
      */
-    public function setUserAttributes($username, array $attributes)
+    public function setUserAttributes(string $username, array $attributes): bool
     {
         try {
 
@@ -541,9 +582,9 @@ class AwsCognitoClient
 
             //Execute the payload
             $this->client->AdminUpdateUserAttributes($payload);
-        } catch (CognitoIdentityProviderException $e) {
+        } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClient:setUserAttributes:CognitoIdentityProviderException');
-            throw $e;
+            throw AwsCognitoException::create($exception);
         } //End try
 
         return true;
@@ -575,27 +616,6 @@ class AwsCognitoClient
         );
 
         return base64_encode($hash);
-    } //Function ends
-
-    /**
-     * Get user details by access token.
-     * https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#getuser
-     *
-     * @param string $token
-     * @return mixed
-     */
-    public function getUserByAccessToken(string $token)
-    {
-        try {
-            $result = $this->client->getUser([
-                'AccessToken' => $token
-            ]);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('AwsCognitoClient:getUserByAccessToken:Exception');
-            throw $e;
-        } //Try-catch ends
-
-        return $result;
     } //Function ends
 
     /**

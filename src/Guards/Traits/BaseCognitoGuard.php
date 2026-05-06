@@ -23,15 +23,19 @@ use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClientInterface;
 use Ellaisys\Cognito\AwsCognitoClientManager;
+
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Http\Parser\ClaimSession;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Ellaisys\Cognito\Validators\AwsCognitoTokenValidator;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 /**
  * Trait Base Cognito Guard
@@ -110,7 +114,7 @@ trait BaseCognitoGuard
      * @return  mixed
      */
     public function getRemoteUserData(string $username) {
-        return $this->client->getUser($username);
+        return $this->client->adminGetUser($username);
     } //Function ends
 
     /**
@@ -148,7 +152,7 @@ trait BaseCognitoGuard
             throw $e;
         } //End try-catch
 
-        return $this->client->getUser($username);
+        return $this->client->adminGetUser($username);
     } //Function ends
 
     /**
@@ -164,7 +168,11 @@ trait BaseCognitoGuard
         $this->awsResult = null;
 
         //Authenticate the user with AWS Cognito
-        $result = $this->client->authenticate($credentials['email'], $credentials['password']);
+        $result = $this->client->authenticate(
+            CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH,
+            $credentials['email'], $credentials['password']
+        );
+
         //Check if the result is an instance of AwsResult
         if (!empty($result) && $result instanceof AwsResult) {
             //Set value into class param
@@ -375,6 +383,57 @@ trait BaseCognitoGuard
         } //End if
 
         return $user;
+    } //Function ends
+
+    /**
+     * Attempt Challenge based Authentication
+     */
+    final public function attemptBaseChallenge(array $challenge, bool $remember=false) {
+        try {
+            //Reset global variables
+            $this->challengeName = null;
+            $this->challengeData = null;
+            $this->claim = null;
+            $this->awsResult = null;
+
+            $challengeName = CognitoChallengeTypes::from($challenge['challenge_name']);
+            $session = $challenge['session'];
+            $challengeValue = $challenge['challenge_value'];
+            $username = $challenge['username'];
+
+            //Get response for the challenge
+            $result = $this->client->respondToAuthChallenge(
+                    $challengeName, $session,
+                    $challengeValue, $username
+                );
+
+            //Check if the result is an instance of AwsResult
+            if (!empty($result) && $result instanceof AwsResult) {
+                //Set value into class param
+                $this->awsResult = $result;
+
+                //Check in case of any challenge
+                if (isset($result['ChallengeName'])) {
+                    $this->challengeName = $result['ChallengeName'];
+                    $this->challengeData = $this->handleCognitoChallenge($result, $username);
+                } elseif (isset($result['AuthenticationResult'])) {
+                    //Create claim token
+                    $this->claim = new AwsCognitoClaim($result, null);
+                } else {
+                    throw new HttpException(400, 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER');
+                } //End if
+            } //End if
+    
+            return $result;
+        } catch(CognitoIdentityProviderException $exception) {
+            Log::error('BaseCognitoGuard:attemptBaseChallenge:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } catch(Exception $e) {
+            Log::error('BaseCognitoGuard:attemptBaseChallenge:Exception');
+            throw $e;
+        } //Try-catch ends
+            
+        return $result;
     } //Function ends
 
 } //Trait ends

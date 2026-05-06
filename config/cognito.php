@@ -204,15 +204,93 @@ return [
     |--------------------------------------------------------------------------
     |
     | This option controls the default cognito MFA types allowed if the MFA is
-    | enabled for the user.  The options available are "SMS_MFA" and
-    | "SOFTWARE_TOKEN_MFA". The default value is set to "SOFTWARE_TOKEN_MFA".
+    | enabled for the user. The options available are "EMAIL_MFA", "SMS_MFA",
+    | "SOFTWARE_TOKEN_MFA" and "WEB_AUTHN".
+    | The default value is set to "SOFTWARE_TOKEN_MFA".
+    |
+    | You can set one or more MFA types as per your requirements.
     | In case you want to allow both the MFA types, you can set the value to
-    | "SMS_MFA,SOFTWARE_TOKEN_MFA" separated by comma.
+    | "SMS_MFA,SOFTWARE_TOKEN_MFA,WEB_AUTHN" separated by comma.
     |
     | The first MFA type in the list will be set as preferred MFA type.
     |
     */
     'mfa_type' => env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Email MFA Configurations
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito Email MFA configurations. You can set
+    | the message and subject for the Email MFA. The default message is set to
+    | 'Your authentication code is {####}'. Make sure to include the {####} in the
+    | message, as this will be replaced by the actual authentication code.
+    |
+    */
+    'email_mfa_configuration' => [
+        'Message' => env('AWS_COGNITO_EMAIL_MFA_MESSAGE', 'Your authentication code is {####}'),
+        'Subject' => env('AWS_COGNITO_EMAIL_MFA_SUBJECT', 'Your authentication code'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito SMS MFA Configurations
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito SMS MFA configurations. You can set
+    | the message for the SMS MFA. The default message is set to
+    | 'Your authentication code is {####}'. Make sure to include the {####} in the
+    | message, as this will be replaced by the actual authentication code.
+    |
+    | The SNS Caller ARN, External ID and Region are required for the SMS MFA to
+    | work. You can set these values in your environment file.
+    |
+    */
+    'sms_mfa_configuration' => [
+        'SmsAuthenticationMessage' => env('AWS_COGNITO_SMS_MFA_MESSAGE', 'Your authentication code is {####}'),
+        'SmsConfiguration' => [
+            'SnsCallerArn' => env('AWS_COGNITO_SMS_MFA_SNS_CALLER_ARN'),
+            'ExternalId' => env('AWS_COGNITO_SMS_MFA_EXTERNAL_ID'),
+            'SnsRegion' => env('AWS_COGNITO_SMS_MFA_SNS_REGION', 'us-east-1')
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito WebAuthn MFA Configurations (FIDO2 / Passkeys)
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito WebAuthn MFA configurations. You
+    | can set the factor configuration, relying party id and user verification
+    | method for the WebAuthn MFA.
+    |
+    | Use the 'allow_passkeys' configuration to enable or disable the use of
+    | passkeys as a multi-factor authentication (MFA) method. When set to true,
+    | users can register and sign in using passkeys that are capable of user
+    | verification. When set to false, passkeys will not be available for the
+    | authentication.
+    |
+    | Factor configuration is set to 'MULTI_FACTOR_WITH_USER_VERIFICATION'.
+    | Sets whether passkeys can be used as multi-factor authentication (MFA).
+    | When set to MULTI_FACTOR_WITH_USER_VERIFICATION, passkey authentication
+    | with user verification satisfies MFA requirements. When set to
+    | 'SINGLE_FACTOR' or not set, passkeys are a single authentication factor.
+    |
+    | Relying party id is set to null. The relying party is the server that
+    | verifies the authentication assertion from the passkey. This is typically
+    | the domain of your application. If not set, it defaults to the user pool
+    | domain.
+    |
+    | When 'required', users can only register and sign in users with passkeys
+    | that are capable of user verification. When 'preferred', your user pool
+    | doesn't require the use of authenticators with user verification but
+    | encourages it.
+    |
+    */
+    'allow_passkeys' => env('AWS_COGNITO_ALLOW_PASSKEYS', false),
+    'web_authn_mfa_configuration' => [
+        'FactorConfiguration' => env('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', 'MULTI_FACTOR_WITH_USER_VERIFICATION'),
+        'RelyingPartyId' => env('AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID', null),
+        'UserVerificationMethod' => env('AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD', 'preferred'),
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -348,6 +426,25 @@ return [
     |
     */
     'force_new_user_password' => env('AWS_COGNITO_FORCE_NEW_USER_PASSWORD', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Force Alias Creation
+    |--------------------------------------------------------------------------
+    | This option enables the user to force alias creation for the new user.
+    | The default value is set to false. Setting the value to true will force
+    | the alias creation for the new user.
+    |
+    | This will help in cases where the email or phone number is already
+    | associated with another user in the User Pool. Setting the value to true
+    | will allow the new user to be created and the email or phone number will
+    | be associated with the new user, while disassociating it from the previous
+    | user.
+    |
+    | Possible values: true, false
+    |
+    */
+    'force_alias_creation' => env('AWS_COGNITO_FORCE_ALIAS_CREATION', false),
 
     /*
     |--------------------------------------------------------------------------

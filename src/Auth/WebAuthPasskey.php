@@ -1,0 +1,201 @@
+<?php
+
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Ellaisys\Cognito\Auth;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+
+use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
+
+use Exception;
+use Illuminate\Validation\ValidationException;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Ellaisys\Cognito\Exceptions\InvalidUserException;
+use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+
+trait WebAuthPasskey
+{
+    use BaseAuthTrait;
+
+    /**
+     * Action to start registration of a passkey authenticator for the currently signed-in user.
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function start(Request $request)
+    {
+        try {
+            // Initialize variables
+            $returnValue = null;
+
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Token Object
+            $accessToken = $this->getAccessToken($request);
+
+            //Get the response from AWS Cognito for starting passkey registration
+            $response = $client->startWebAuthnRegistration($accessToken);
+            $returnValue = $this->response->success($response);
+        } catch (Exception $e) {
+            Log::error('WebAuthPasskeyController:start:Exception');
+            throw $e;
+        }
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Action to complete registration of a passkey authenticator for the currently signed-in user.
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function complete(Request $request)
+    {
+        try {
+            // Initialize variables
+            $returnValue = null;
+
+            //Validate payload
+            $validator = Validator::make($request->all(), [
+                'credential' => ['required']
+            ]);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Token Object
+            $accessToken = $this->getAccessToken($request);
+
+            //Get the response from AWS Cognito for completing passkey registration
+            $response = $client->completeWebAuthnRegistration(
+                $accessToken,
+                json_decode($request['credential'], true)
+            );
+
+            $returnValue = $this->response->success($response);
+        } catch (Exception $e) {
+            Log::error('WebAuthPasskeyController:complete:Exception');
+            throw $e;
+        }
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Action to authenticate by responding to the passkey authentication challenge
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function challenge(Request $request, ?string $challengeName = null)
+    {
+        try {
+            // Initialize variables
+            $returnValue = null;
+
+            if (!empty($challengeName)) {
+                $request->merge(['challenge_name' => $challengeName]);
+            } //End if
+
+            // If username present in query parameters is email, encode it before validation and processing
+            if ($request->query('username')) {
+                $email = base64_decode($request['username']);
+                if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $request->merge(['username' => $email]);
+                } //End if
+            } //End if
+
+            //Validate payload
+            $validator = Validator::make($request->all(), [
+                'username' => ['required'],
+                'challenge_name' => ['sometimes', 'in:WEB_AUTHN,EMAIL_OTP,SMS_OTP']
+            ]);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Get the response from AWS Cognito for authenticating with passkey credentials
+            $response = $client->authWebAuthnCredential(
+                CognitoAuthFlowTypes::USER_AUTH,
+                $request['username'],
+                $request['challenge_name'] ?? null
+            );
+
+            $returnValue = $this->response->success($response);
+        } catch (Exception $e) {
+            Log::error('WebAuthPasskeyController:challenge:Exception');
+            throw $e;
+        }
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Action to delete a registered passkey authenticator for the currently signed-in user.
+     * TO BE TESTED
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function delete(Request $request)
+    {
+        try {
+            // Initialize variables
+            $returnValue = null;
+
+            //Validate payload
+            $validator = Validator::make($request->all(), [
+                'credential_id' => ['required']
+            ]);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Token Object
+            $accessToken = $this->getAccessToken($request);
+
+            //Get the response from AWS Cognito for deleting the passkey authenticator
+            $response = $client->deleteWebAuthnCredential(
+                $accessToken,
+                $request['credential_id']
+            );
+
+            $returnValue = $this->response->success($response);
+        } catch (Exception $e) {
+            Log::error('WebAuthPasskeyController:delete:Exception');
+            throw $e;
+        } //End try
+
+        return $returnValue;
+    } //Function ends
+
+} //Trait ends

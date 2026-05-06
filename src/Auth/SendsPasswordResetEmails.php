@@ -88,7 +88,7 @@ trait SendsPasswordResetEmails
 
         try {
             //Get existing user data from cognito
-            $user = app()->make(AwsCognitoClient::class)->getUser($username);
+            $user = app()->make(AwsCognitoClient::class)->adminGetUser($username);
             
             if ($user) {
                 //Change the action based on user status

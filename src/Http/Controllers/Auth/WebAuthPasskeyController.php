@@ -17,63 +17,45 @@ use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
 
-use Ellaisys\Cognito\Auth\VerifiesEmails;
+use Ellaisys\Cognito\AwsCognitoClaim;
+use Ellaisys\Cognito\Auth\WebAuthPasskey;
 
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\Validator;
-
-use Ellaisys\Cognito\Events\Auth\PreRegistrationEvent;
-use Ellaisys\Cognito\Events\Auth\PostRegistrationEvent;
 
 use Exception;
 
-class VerificationController extends Controller
+class WebAuthPasskeyController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | Email Verification Controller
+    | Web Auth Passkey Controller
     |--------------------------------------------------------------------------
     |
-    | This controller is responsible for handling email verification for any
-    | user that recently registered with the application. Emails may also
-    | be re-sent if the user didn't receive the original email message.
+    | This controller handles Web Auth Passkey operations for the application.
+    | that used a session or api call. The controller uses a trait
+    | to conveniently provide its functionality to your applications.
     |
     */
 
-    use VerifiesEmails;
+    use WebAuthPasskey;
 
     /**
-     * Where to redirect users after verification.
+     * Constructor.
      *
-     * @var string
-     */
-    public $redirectTo = null;
-
-    /**
-     * Client metadata to be sent to AWS Cognito
-     *
-     * @var array|null
-     */
-    protected $clientMetadata = null;
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
      */
     public function __construct()
     {
-        $this->middleware('guest');
+        //Mandate authentication for all the API's of this controller
+        $this->middleware('aws-cognito')->except([
+                'challenge'
+            ]);
 
         //Set flag to indicate action called from controller
         $this->setIsControllerAction(true);
 
         parent::__construct();
-
-        // $this->middleware('auth');
-        // $this->middleware('signed')->only('verify');
-        // $this->middleware('throttle:6,1')->only('verify', 'resend');
-    } //Function ends
+    }
 
     /**
      * Get the post register / login redirect path.
@@ -88,6 +70,6 @@ class VerificationController extends Controller
         } //End if
 
         return config('cognito.routes.web.login_page', 'cognito.form.login');
-    }
+    } //Function ends
 
 } //Class ends

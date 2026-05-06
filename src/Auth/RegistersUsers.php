@@ -30,23 +30,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait RegistersUsers
 {
-    /**
-     * Private variable to indicate if the action
-     * is called from controller
-     */
-    private bool $isControllerAction = false;
-
-    /**
-     * Private variable to indicate if the response
-     * is to be in json format
-     */
-    private bool $isJsonResponse = false;
-
-    /**
-     * Private variable to indicate if the response
-     * is to be raised as an exception
-     */
-    private bool $isRaiseException = false;
+    use BaseAuthTrait;
 
     /**
      * Private variable for Registration Type
@@ -96,10 +80,6 @@ trait RegistersUsers
             $cognitoRegistered=false;
             $user = [];
 
-            if(!$this->isJsonResponse) {
-                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
-            } //End if
-
             //Set the registration type
             if (!$ignoreConfigRegistrationType) {
                 $this->registrationType = config('cognito.registration_type', 'register');
@@ -128,30 +108,39 @@ trait RegistersUsers
                 $collection, $clientMetadata,
                 config('cognito.default_user_group', null)
             );
-            if ($cognitoRegistered) {
+
+            if (!empty($cognitoRegistered)) {
                 //Remove the password
                 if(!empty($payload[$this->paramPassword])) {
                     unset($payload[$this->paramPassword]);
                 } //End if
 
                 //Add cognito data to user data
-                $cognitoUser = $cognitoRegistered['User'];
-                if ($cognitoUser) {
-                    $cognitoAttributes = $cognitoUser['Attributes'];
-                    if ($cognitoAttributes && is_array($cognitoAttributes) && count($cognitoAttributes)>0) {
-                        foreach ($cognitoAttributes as $cognitoAttribute) {
-                            $payload[$cognitoAttribute['Name']] = $cognitoAttribute['Value'];
-                        } //End foreach
+                if ($this->registrationType=='invite') {
+                    $cognitoUser = $cognitoRegistered['User'];
+                    if ($cognitoUser) {
+                        $cognitoAttributes = $cognitoUser['Attributes'];
+                        if ($cognitoAttributes && is_array($cognitoAttributes) && count($cognitoAttributes)>0) {
+                            foreach ($cognitoAttributes as $cognitoAttribute) {
+                                $payload[$cognitoAttribute['Name']] = $cognitoAttribute['Value'];
+                            } //End foreach
+                        } //End if
                     } //End if
+                } else {
+                    $payload = array_merge($payload, [
+                        config('cognito.user_subject_uuid') => $cognitoRegistered['UserSub'],
+                    ]);
                 } //End if
 
                 //Create user in local store
                 $user = $this->create($payload);
+            } else {
+                throw new AwsCognitoException('User registration failed in Cognito.');
             } //End if
 
             //Return response
-            if ($this->isJsonResponse) {
-                $returnValue = $this->isControllerAction ? new JsonResponse($user, 200) : $user;
+            if ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->isControllerAction ? $user : $this->response->success($user);
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
@@ -302,37 +291,5 @@ trait RegistersUsers
             throw $e;
         } //End try
     } //Function ends
-
-    /**
-     * Set flag for action method called from controller
-     *
-     * @param bool $isControllerAction
-     */
-    protected function setIsControllerAction(bool $isControllerAction): void
-    {
-        $this->isControllerAction = $isControllerAction;
-
-    }
-
-    /**
-     * Set flag if the response is to be in json format
-     *
-     * @param bool $isJsonResponse
-     */
-    protected function setIsJsonResponse(bool $isJsonResponse): void
-    {
-        $this->isJsonResponse = $isJsonResponse;
-    }
-
-    /**
-     * Set flag if the response is to be raised as an exception
-     * in case of errors
-     *
-     * @param bool $isRaiseException
-     */
-    protected function setIsRaiseException(bool $isRaiseException): void
-    {
-        $this->isRaiseException = $isRaiseException;
-    }
 
 } //Trait ends

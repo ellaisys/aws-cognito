@@ -5,14 +5,15 @@ use Illuminate\Support\Facades\Route;
 
 use Ellaisys\Cognito\Http\Controllers\Auth\LoginController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RegisterController;
+use Ellaisys\Cognito\Http\Controllers\Auth\VerificationController;
 use Ellaisys\Cognito\Http\Controllers\Auth\MFAController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController;
+use Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
-use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,8 +27,14 @@ use Ellaisys\Cognito\Http\Controllers\Api\AuthController;
 */
 Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
     //Route to register a new user
-    Route::get('/register',  function () { return view('cognito::pages.auth.register'); })->name('form.register');
-    Route::post('/register', [RegisterController::class, 'register'])->name('action.register.submit');
+    Route::group(['prefix' => 'register'], function() {
+        Route::get('/',  function () { return view('cognito::pages.auth.registers.register'); })->name('form.register');
+        Route::post('/', [RegisterController::class, 'actionRegister'])->name('action.register.submit');
+        Route::get('/verify',  function () { return view('cognito::pages.auth.registers.verify'); })->name('form.register.verify');
+        Route::post('/verify', [VerificationController::class, 'verify'])->name('action.register.verify');
+        Route::get('/resend-code',  function () { return view('cognito::pages.auth.registers.resend'); })->name('form.register.resend_code');
+        Route::post('/resend-code', [VerificationController::class, 'resend'])->name('action.register.resend_code');
+    });
 
     //Forgot password
     Route::group(['prefix' => 'password'], function() {
@@ -41,7 +48,11 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
     Route::group(['prefix' => 'login'], function() {
         Route::get('/', function () { return view('cognito::pages.auth.login'); })->name('form.login');
         Route::post('/', [LoginController::class, 'login'])->name('action.login.submit');
-        Route::post('/mfa', [LoginController::class, 'validateMFA'])->name('action.mfa.code.submit');
+        Route::post('/auth-challenge', [LoginController::class, 'challenge'])->name('action.auth.challenge.submit');
+        Route::any('/{step}', function (string $step) {
+            return view('cognito::pages.auth.login', ['step' => $step]);
+        });
+        Route::post('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge'])->name('action.auth.passkey.challenge');
     });
 
     //Authenticated routes
@@ -61,7 +72,7 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
             Route::get('/changepassword', function () { return view('cognito::pages.auth.passwords.change'); })->name('form.change.password');
             Route::post('/changepassword', [ConfirmPasswordController::class, 'change'])->name('action.change.password');
             Route::get('/invite', function () { return view('cognito::pages.auth.invite'); })->name('form.user.invite');
-            Route::post('/invite', [RegisterController::class, 'invite'])->name('action.invite.submit');
+            Route::post('/invite', [RegisterController::class, 'actionInvite'])->name('action.invite.submit');
 
             Route::group(['prefix' => 'mfa', 'controller' => MFAController::class], function() {
                 Route::get('/activate', 'activate')->name('form.user.mfa.activate');
@@ -69,6 +80,13 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
                 Route::get('/deactivate', 'deactivate')->name('action.user.mfa.deactivate');
                 Route::get('/enable', 'enable')->name('action.mfa.enable');
                 Route::get('/disable', 'disable')->name('action.mfa.disable');
+            });
+
+            //Route to passkeys
+            Route::group(['prefix' => 'passkey', 'controller' => WebAuthPasskeyController::class], function() {
+                Route::post('/start', 'start')->name('action.user.passkey.start');
+                Route::post('/complete', 'complete')->name('action.user.passkey.complete');
+                Route::delete('/', 'delete')->name('action.user.passkey.delete');
             });
         });
     });

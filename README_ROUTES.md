@@ -35,7 +35,7 @@ You can change the API prefix by configuring **AWS_COGNITO_API_PREFIX** in the .
 
 ```php
     POST      api/cognito/login ............................... Ellaisys\Cognito\Http\Controllers\Auth\LoginController@login
-    POST      api/cognito/login/mfa ..................... Ellaisys\Cognito\Http\Controllers\Auth\LoginController@validateMFA
+    POST      api/cognito/login/challenge ................. Ellaisys\Cognito\Http\Controllers\Auth\LoginController@challenge
     PUT       api/cognito/logout ............................. Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout
     PUT       api/cognito/logout/forced ................ Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logoutForced
     POST      api/cognito/password/forgot .... Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLink
@@ -64,7 +64,7 @@ You can change the API prefix by configuring **AWS_COGNITO_WEB_PREFIX** in the .
     GET|HEAD  cognito/home ................................................................................................................. cognito.home
     GET|HEAD  cognito/login .......................................................................................................... cognito.form.login
     POST      cognito/login .................................. cognito.action.login.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@login
-    POST      cognito/login/mfa ..................... cognito.action.mfa.code.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@validateMFA
+    POST      cognito/login/auth-challenge ...... cognito.action.auth.challenge.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@challenge
     POST      cognito/logout ............................................. cognito.logout › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout
     POST      cognito/logout/forced ......................... cognito.logout_forced › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logoutForced
     GET|HEAD  cognito/password/forgot ...................................................................................... cognito.form.password.forgot
