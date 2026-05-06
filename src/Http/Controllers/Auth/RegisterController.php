@@ -26,6 +26,8 @@ use Ellaisys\Cognito\Events\Auth\PreRegistrationEvent;
 use Ellaisys\Cognito\Events\Auth\PostRegistrationEvent;
 
 use Exception;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class RegisterController extends Controller
 {
@@ -150,7 +152,7 @@ class RegisterController extends Controller
                 } //End if
                 return $returnValue;
             } else {
-                throw new Exception('User registration failed.');
+                throw new BadRequestHttpException('User registration failed.');
             } //End if
         } catch (Exception $e) {
             Log::error('RegisterController:actionRegister:Exception');
