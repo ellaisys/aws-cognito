@@ -20,9 +20,11 @@
 
     <div class="row mb-0">
         <div class="col-md-6 offset-md-4">
+            @if (config('cognito.allow_passkeys'))
             <button type="submit" class="btn btn-primary" formaction="{{ route('cognito.form.login') }}/options">
                 {{ __('Next >') }}
             </button>
+            @endif
 
             <button type="submit" class="btn btn-outline-primary" formaction="{{ route('cognito.form.login') }}/password">
                 {{ __('Login with password') }}

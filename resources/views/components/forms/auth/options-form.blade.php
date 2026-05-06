@@ -25,9 +25,17 @@
     </div>
 
     @if (config('cognito.allow_passkeys'))
-        <div class="col-md-6 offset-md-4 list-group" id="available-challenges-list">
+        <div class="row mb-3">
+            <div class="col-md-6 offset-md-4 list-group p-4" id="available-challenges-list">
+            </div>
         </div>
     @endif
+
+    <div class="row mb-0">
+        <div class="col-md-6 offset-md-4">
+            <a href="{{ url()->previous() }}" class="btn btn-outline-primary float-end">Go Back</a>
+        </div>
+    </div>
 </form>
 
 <script>

@@ -6,11 +6,15 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">{{ __('Login') }}{{request()->route('step')}}</div>
+                <div class="card-header">{{ __('Login') }}</div>
 
                 <div class="card-body">
                     <x-cognito::common.alert />
-                    @switch(request()->route('step'))
+                    @php
+                        $step = request()->route('step');
+                        $step = (bool) config('cognito.allow_passkeys', false) ? $step : 'password';
+                    @endphp
+                    @switch($step)
                         @case('options')
                             <x-cognito::forms.auth.options-form />
                             @break

@@ -5,7 +5,12 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card mb-2">
-                <div class="card-header">{{ __('Dashboard') }}</div>
+                <div class="card-header">
+                    {{ __('Dashboard') }}
+                    @if (config('cognito.allow_passkeys'))
+                    <button id="enable-passkeys-button" class="btn btn-outline-primary float-end">Enable Passkeys</button>
+                    @endif
+                </div>
 
                 <div class="card-body">
                     <x-cognito::common.alert />
@@ -43,9 +48,7 @@
         </div>
     </div>
 </div>
-
-<button id="enable-passkeys-button" class="btn btn-primary">Enable Passkeys</button>
-
+@if (config('cognito.allow_passkeys'))
 <script>
     const urlPasskeyStartEndpoint = "{{Route::has('cognito.action.user.passkey.start') ? (route('cognito.action.user.passkey.start')) : 'null'}}";
     const urlPasskeyCompleteEndpoint = "{{Route::has('cognito.action.user.passkey.complete') ? (route('cognito.action.user.passkey.complete')) : 'null'}}";
@@ -189,6 +192,28 @@
             },
             clientExtensionResults: credential.getClientExtensionResults()
         }, null, 2);
+    }
+</script>
+@endif
+
+<script>
+    function successAlert(message) {
+        this.alertbox('Success', message, 'success');
+    }
+
+    function errorAlert(message) {
+        this.alertbox('Error', message, 'error');
+    }
+
+    function alertbox(title, text, icon = 'success', timer = 3000, showConfirmButton = false) {
+        Swal.fire({
+            title: title,
+            text: text,
+            icon: icon,
+            confirmButtonText: 'Cool',
+            showConfirmButton: showConfirmButton,
+            timer: timer
+        });
     }
 </script>
 @endsection
