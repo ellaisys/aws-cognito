@@ -216,7 +216,7 @@ class AwsCognitoClient
      * @param array $clientMetadata (optional)
      * @return bool $groupname (optional)
      *
-     * @return bool
+     * @return \Aws\Result
      */
     public function register(string $username, string $password, array $attributes = [],
         ?array $clientMetadata = null, ?string $groupname = null)
@@ -248,15 +248,11 @@ class AwsCognitoClient
             if (!empty($groupname)) {
                 $this->adminAddUserToGroup($username, $groupname);
             } //End if
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
-                throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS, $e);
-            } //End if
-
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
-        return (bool)$response['UserConfirmed'];
+        return $response;
     } //Function ends
 
     /**

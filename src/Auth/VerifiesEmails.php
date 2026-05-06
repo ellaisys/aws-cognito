@@ -26,23 +26,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait VerifiesEmails
 {
-    /**
-     * Private variable to indicate if the action
-     * is called from controller
-     */
-    private bool $isControllerAction = false;
-
-    /**
-     * Private variable to indicate if the response
-     * is to be in json format
-     */
-    private bool $isJsonResponse = false;
-
-    /**
-     * Private variable to indicate if the response
-     * is to be raised as an exception
-     */
-    private bool $isRaiseException = false;
+    use BaseAuthTrait;
 
     /**
      * Mark the authenticated user's email address as verified.
@@ -60,16 +44,9 @@ trait VerifiesEmails
             // Initialize variables
             $returnValue = null;
 
-            if(!$this->isJsonResponse) {
-                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
-            } //End if
-
             // If email is present in query parameters, encode it before validation and processing
-            if ($request->query('email') ) {
-                $email = urlencode($request->input('email'));
-    
-                //find %40 and replace with @ to avoid validation error
-                $email = str_replace('%40', '@', $email);
+            $email = $this->getEmailFromQuery($request);
+            if (!empty($email)) {
                 $request->merge(['email' => $email]);
             } //End if
 
@@ -92,7 +69,7 @@ trait VerifiesEmails
                 );
 
             //Return response
-            if ($this->isJsonResponse) {
+            if ($this->getIsJsonResponse($request)) {
                 $returnValue = $this->isControllerAction ? $this->response->success($response) : $response;
             } else {
                 $returnValue = redirect()
@@ -120,16 +97,9 @@ trait VerifiesEmails
             // Initialize variables
             $returnValue = null;
 
-            if(!$this->isJsonResponse) {
-                $this->isJsonResponse = ($request->expectsJson() || $request->isJson());
-            } //End if
-
             // If email is present in query parameters, encode it before validation and processing
-            if ($request->query('email') ) {
-                $email = urlencode($request->input('email'));
-    
-                //find %40 and replace with @ to avoid validation error
-                $email = str_replace('%40', '@', $email);
+            $email = $this->getEmailFromQuery($request);
+            if (!empty($email)) {
                 $request->merge(['email' => $email]);
             } //End if
 
@@ -151,7 +121,7 @@ trait VerifiesEmails
                 );
 
             //Return response
-            if ($this->isJsonResponse) {
+            if ($this->getIsJsonResponse($request)) {
                 $returnValue = $this->isControllerAction ? $this->response->success($response) : $response;
             } else {
                 $returnValue = redirect()
@@ -180,41 +150,9 @@ trait VerifiesEmails
 
         if ($moreRules) {
             $rules = array_merge($rules, $moreRules);
-        }
+        } //End if
 
         return $rules;
     } //Function ends
-
-    /**
-     * Set flag for action method called from controller
-     *
-     * @param bool $isControllerAction
-     */
-    protected function setIsControllerAction(bool $isControllerAction): void
-    {
-        $this->isControllerAction = $isControllerAction;
-
-    }
-
-    /**
-     * Set flag if the response is to be in json format
-     *
-     * @param bool $isJsonResponse
-     */
-    protected function setIsJsonResponse(bool $isJsonResponse): void
-    {
-        $this->isJsonResponse = $isJsonResponse;
-    }
-
-    /**
-     * Set flag if the response is to be raised as an exception
-     * in case of errors
-     *
-     * @param bool $isRaiseException
-     */
-    protected function setIsRaiseException(bool $isRaiseException): void
-    {
-        $this->isRaiseException = $isRaiseException;
-    }
 
 } //Trait ends

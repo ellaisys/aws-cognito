@@ -29,7 +29,7 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
     //Route to register a new user
     Route::group(['prefix' => 'register'], function() {
         Route::get('/',  function () { return view('cognito::pages.auth.registers.register'); })->name('form.register');
-        Route::post('/', [RegisterController::class, 'register'])->name('action.register.submit');
+        Route::post('/', [RegisterController::class, 'actionRegister'])->name('action.register.submit');
         Route::get('/verify',  function () { return view('cognito::pages.auth.registers.verify'); })->name('form.register.verify');
         Route::post('/verify', [VerificationController::class, 'verify'])->name('action.register.verify');
         Route::get('/resend-code',  function () { return view('cognito::pages.auth.registers.resend'); })->name('form.register.resend_code');
@@ -72,7 +72,7 @@ Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
             Route::get('/changepassword', function () { return view('cognito::pages.auth.passwords.change'); })->name('form.change.password');
             Route::post('/changepassword', [ConfirmPasswordController::class, 'change'])->name('action.change.password');
             Route::get('/invite', function () { return view('cognito::pages.auth.invite'); })->name('form.user.invite');
-            Route::post('/invite', [RegisterController::class, 'invite'])->name('action.invite.submit');
+            Route::post('/invite', [RegisterController::class, 'actionInvite'])->name('action.invite.submit');
 
             Route::group(['prefix' => 'mfa', 'controller' => MFAController::class], function() {
                 Route::get('/activate', 'activate')->name('form.user.mfa.activate');

@@ -30,7 +30,7 @@ Route::group(['prefix' => config('cognito.api_prefix', ''),
     'headers' => ['Accept' => 'application/json']], function () {
     //Route to register a new user
     Route::group(['prefix' => 'register'], function() {
-        Route::post('/', [RegisterController::class, 'register']);
+        Route::post('/', [RegisterController::class, 'actionRegister']);
         Route::post('/verify', [VerificationController::class, 'verify']);
         Route::post('/resend-code', [VerificationController::class, 'resend']);
     });

@@ -46,6 +46,13 @@ trait BaseAuthTrait
     public bool $isRaiseException = false;
 
     /**
+     * Where to redirect users after registration.
+     *
+     * @var string
+     */
+    public $redirectTo = null;
+
+    /**
      * Set flag for action method called from controller
      *
      * @param bool $isControllerAction
@@ -87,11 +94,11 @@ trait BaseAuthTrait
     {
         if ($this->isJsonResponse) {
             return true;
-        }
+        } //End if
 
         if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
             $this->isJsonResponse = true;
-        }
+        } //End if
 
         return $this->isJsonResponse;
     } //Function ends
@@ -157,6 +164,25 @@ trait BaseAuthTrait
         } catch (Exception $e) {
             Log::error('BaseAuthTrait:getAccessToken:Exception');
             throw $e;
+        }
+    } //Function ends
+
+    protected function getEmailFromQuery(Request $request, string $paramEmailName='email'): string|null
+    {
+        try {
+            $email = null;
+
+             // If email is present in query parameters, encode it before validation and processing
+            if ($request->query($paramEmailName)) {
+                $email = urlencode($request->input($paramEmailName));
+                // Find %40 and replace with @ to avoid validation error
+                $email = str_replace('%40', '@', $email);
+            } //End if
+
+            return $email;
+        } catch (Exception $e) {
+            Log::error('BaseAuthTrait:getEmailFromQuery:Exception');
+            return null;
         }
     } //Function ends
 
