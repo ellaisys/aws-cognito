@@ -102,11 +102,10 @@
             }
 
             var completePayload = await completeResponse.json();
-            console.log('Passkey registration completed:', completePayload);
-            alert('Passkey registered successfully.');
+            this.successAlert('Passkey registered successfully.');
         } catch (error) {
             console.error('Error enabling passkey:', error);
-            alert('Passkey registration failed. Check the console for details.');
+            this.errorAlert('Passkey registration failed. Check the console for details.');
         }
     }
 
@@ -206,14 +205,20 @@
     }
 
     function alertbox(title, text, icon = 'success', timer = 3000, showConfirmButton = false) {
-        Swal.fire({
-            title: title,
-            text: text,
-            icon: icon,
-            confirmButtonText: 'Cool',
-            showConfirmButton: showConfirmButton,
-            timer: timer
-        });
+        try {
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: icon,
+                confirmButtonText: 'Cool',
+                showConfirmButton: showConfirmButton,
+                timer: timer
+            });
+        } catch (error) {
+            console.error('Error showing alert:', error);
+            // Fallback to default alert if SweetAlert2 fails
+            alert(`${title}: ${text}`);
+        }
     }
 </script>
 @endsection

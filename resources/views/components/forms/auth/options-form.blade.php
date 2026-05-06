@@ -34,6 +34,11 @@
     <div class="row mb-0">
         <div class="col-md-6 offset-md-4">
             <a href="{{ url()->previous() }}" class="btn btn-outline-primary float-end">Go Back</a>
+
+            <button type="button" id="auth-magic-link-button" class="btn btn-outline-secondary"
+                formAction="{{ route('cognito.form.login') }}/magic-link">
+                {{ __('Login with Magic Link') }}
+            </button>            
         </div>
     </div>
 </form>

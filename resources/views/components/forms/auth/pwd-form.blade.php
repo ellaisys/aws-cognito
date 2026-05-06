@@ -82,14 +82,9 @@
     @if (config('cognito.allow_passkeys'))
     <div class="row mb-0">
         <div class="col-md-6 offset-md-4">
-            <button type="button" id="auth-passkeys-button" class="btn btn-outline-primary"
+            <button type="button" id="auth-passkeys-button" class="btn btn-outline-dark btn-block"
                 onclick="redirectToPasskeyOptions('options');">
-                {{ __('Other ways to login') }}
-            </button>
-
-            <button type="button" id="auth-magic-link-button" class="btn btn-outline-primary float-end"
-                onclick="redirectToPasskeyOptions('magic-link');">
-                {{ __('Login with Magic Link') }}
+                {{ __('Other ways to login ?') }}
             </button>
         </div>
     </div>
