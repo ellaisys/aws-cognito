@@ -48,13 +48,6 @@ class LoginController extends Controller
 
     use AuthenticatesUsers;
 
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
-    public $redirectTo = 'home';
-
     private $usernameField = 'username';
     private $passwordField = 'password';
 
@@ -240,7 +233,7 @@ class LoginController extends Controller
                         //Raise Post Auth Success Event
                         $this->callPostAuthSuccessEvent($request, $guard);
 
-                        $returnValue = redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
+                        $returnValue = redirect(route(config('cognito.redirect_to_route_name')));
                     } elseif ($claim===false) {
                         $returnValue = redirect()
                             ->back()

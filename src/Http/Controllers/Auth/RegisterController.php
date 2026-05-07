@@ -45,13 +45,6 @@ class RegisterController extends Controller
     use RegistersUsers;
 
     /**
-     * Where to redirect users after registration.
-     *
-     * @var string
-     */
-    public $redirectTo = null;
-
-    /**
      * Client metadata to be sent to AWS Cognito
      *
      * @var array|null
@@ -98,21 +91,6 @@ class RegisterController extends Controller
     {
         $user = Auth::getProvider()->getModel();
         return $user::create($data);
-    } //Function ends
-
-    /**
-     * Get the post register / login redirect path.
-     *
-     * @return string
-     */
-    public function redirectPath()
-    {
-        //Check if property exists and not null
-        if (property_exists($this, 'redirectTo') && !is_null($this->redirectTo)) {
-            return $this->redirectTo;
-        } //End if
-
-        return config('cognito.routes.web.login_page', 'cognito.form.login');
     } //Function ends
 
     /**

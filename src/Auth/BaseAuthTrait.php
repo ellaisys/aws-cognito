@@ -48,9 +48,9 @@ trait BaseAuthTrait
     /**
      * Where to redirect users after registration.
      *
-     * @var string
+     * @var string|null
      */
-    public $redirectTo = null;
+    public string|null $redirectTo = null;
 
     /**
      * Set flag for action method called from controller
@@ -101,6 +101,35 @@ trait BaseAuthTrait
         } //End if
 
         return $this->isJsonResponse;
+    } //Function ends
+
+    /**
+     * Get the redirect path.
+     *
+     * @return string
+     */
+    protected function redirectPath(?string $redirect=null): string
+    {
+        try {
+            $returnValue = null;
+
+            //Check if property exists and not null
+            if (property_exists($this, 'redirectTo') && !is_null($this->redirectTo)) {
+                $returnValue = $this->redirectTo;
+            } elseif (!is_null($redirect)) {
+                $returnValue = $redirect;
+            } else {
+                $returnValue = config('cognito.routes.web.login_page', 'cognito.form.login');
+            } //End if
+
+            if(empty($returnValue)) {
+                throw new HttpException(400, 'Invalid redirect path value.');
+            } //End if
+        } catch (Exception $e) {
+            Log::error('BaseAuthTrait:redirectPath:Exception');
+            $returnValue = config('cognito.routes.web.login_page', 'cognito.form.login');
+        }
+        return $returnValue;
     } //Function ends
 
     /**
