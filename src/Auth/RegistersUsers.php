@@ -139,8 +139,10 @@ trait RegistersUsers
             } //End if
 
             //Return response
-            if ($this->getIsJsonResponse($request)) {
-                $returnValue = $this->isControllerAction ? $user : $this->response->success($user);
+            if ($this->isControllerAction) {
+                $returnValue = $user;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($user);
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
