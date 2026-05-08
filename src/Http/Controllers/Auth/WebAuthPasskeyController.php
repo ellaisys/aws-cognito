@@ -52,7 +52,7 @@ class WebAuthPasskeyController extends Controller
             ]);
 
         //Set flag to indicate action called from controller
-        $this->setIsControllerAction(true);
+        $this->setIsControllerAction(false);
 
         parent::__construct();
     }

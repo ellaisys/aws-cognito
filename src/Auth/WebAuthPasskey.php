@@ -51,7 +51,17 @@ trait WebAuthPasskey
 
             //Get the response from AWS Cognito for starting passkey registration
             $response = $client->startWebAuthnRegistration($accessToken);
-            $returnValue = $this->response->success($response);
+
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('data', $response);
+            } //Return response
         } catch (Exception $e) {
             Log::error('WebAuthPasskeyController:start:Exception');
             throw $e;
@@ -93,7 +103,16 @@ trait WebAuthPasskey
                 json_decode($request['credential'], true)
             );
 
-            $returnValue = $this->response->success($response);
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('data', $response);
+            } //Return response
         } catch (Exception $e) {
             Log::error('WebAuthPasskeyController:complete:Exception');
             throw $e;
@@ -119,14 +138,12 @@ trait WebAuthPasskey
                 $request->merge(['challenge_name' => $challengeName]);
             } //End if
 
-            // If username present in query parameters is email, encode it before validation and processing
-            if ($request->query('username')) {
-                $email = base64_decode($request['username']);
-                if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    $request->merge(['username' => $email]);
-                } //End if
+            // If username present in query parameters is email, decode it before validation and processing
+            $email = $this->getDataFromQueryParam($request, 'username', EncryptionTypes::URL_ENCODE, true);
+            if (!empty($email)) {
+                $request->merge(['username' => $email]);
             } //End if
-
+        
             //Validate payload
             $validator = Validator::make($request->all(), [
                 'username' => ['required'],
@@ -146,7 +163,16 @@ trait WebAuthPasskey
                 $request['challenge_name'] ?? null
             );
 
-            $returnValue = $this->response->success($response);
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('data', $response);
+            } //Return response
         } catch (Exception $e) {
             Log::error('WebAuthPasskeyController:challenge:Exception');
             throw $e;
@@ -189,7 +215,16 @@ trait WebAuthPasskey
                 $request['credential_id']
             );
 
-            $returnValue = $this->response->success($response);
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('data', $response);
+            } //Return response
         } catch (Exception $e) {
             Log::error('WebAuthPasskeyController:delete:Exception');
             throw $e;

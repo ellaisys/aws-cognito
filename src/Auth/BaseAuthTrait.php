@@ -25,6 +25,17 @@ use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
+
+enum EncryptionTypes: string
+{
+    case DEFAULT = 'DEFAULT';
+    case NONE = 'NONE';
+    case URL_ENCODE = 'URL_ENCODE';
+    case URL_DECODE = 'URL_DECODE';
+    case BASE64_ENCODE = 'BASE64_ENCODE';
+    case BASE64_DECODE = 'BASE64_DECODE';
+}
+
 trait BaseAuthTrait
 {
     /**
@@ -196,21 +207,53 @@ trait BaseAuthTrait
         }
     } //Function ends
 
-    protected function getEmailFromQuery(Request $request, string $paramEmailName='email'): string|null
+    protected function getDataFromQueryParam(Request $request,
+        string $paramName='email',
+        EncryptionTypes $encryptionType=EncryptionTypes::DEFAULT,
+        bool $filterEmail=false): string|null
     {
         try {
-            $email = null;
+            $returnValue = null;
 
-             // If email is present in query parameters, encode it before validation and processing
-            if ($request->query($paramEmailName)) {
-                $email = urlencode($request->input($paramEmailName));
-                // Find %40 and replace with @ to avoid validation error
-                $email = str_replace('%40', '@', $email);
+            // If email is present in query parameters, encode it before validation and processing
+            if ($request->query($paramName)) {
+                $data = $request[$paramName];
+
+                switch ($encryptionType) {
+                    case EncryptionTypes::BASE64_ENCODE:
+                        $returnValue = base64_decode($data);
+                        break;
+
+                    case EncryptionTypes::URL_DECODE:
+                        $returnValue = urldecode($data);
+                        break;
+
+                    case EncryptionTypes::DEFAULT:
+                    case EncryptionTypes::URL_ENCODE:
+                        $data = urlencode($data);
+                        // Find %40 and replace with @ to avoid validation error
+                        $returnValue = str_replace('%40', '@', $data);
+                        break;                        
+
+                    case EncryptionTypes::NONE:
+                    default:
+                        $returnValue = $data;
+                } //End switch
+
+                // If filter email flag is true, validate the email and
+                // return value only if valid email, else return null
+                if($filterEmail && !empty($returnValue) && (filter_var($returnValue, FILTER_VALIDATE_EMAIL))) {
+                    $returnValue = $returnValue;
+                } else {
+                    $returnValue = null;
+                } //End if
+            } else {
+                $returnValue = null;
             } //End if
 
-            return $email;
+            return $returnValue;
         } catch (Exception $e) {
-            Log::error('BaseAuthTrait:getEmailFromQuery:Exception');
+            Log::error('BaseAuthTrait:getDataFromQueryParam:Exception');
             return null;
         }
     } //Function ends

@@ -135,12 +135,7 @@ trait AuthenticatesUsers
         try {
             // Initialize variables
             $returnValue = null;
-            $guard = 'web';
-
-            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
-                $this->isJsonResponse = true;
-                $guard = 'api';
-            } //End if
+            $guard = $this->getGuard($request);
 
             //Validate payload
             $validator = Validator::make($request->all(), $this->rulesChallenge());
