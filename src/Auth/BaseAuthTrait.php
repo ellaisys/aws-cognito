@@ -233,7 +233,7 @@ trait BaseAuthTrait
                         $data = urlencode($data);
                         // Find %40 and replace with @ to avoid validation error
                         $returnValue = str_replace('%40', '@', $data);
-                        break;                        
+                        break;
 
                     case EncryptionTypes::NONE:
                     default:
@@ -242,9 +242,9 @@ trait BaseAuthTrait
 
                 // If filter email flag is true, validate the email and
                 // return value only if valid email, else return null
-                if($filterEmail && !empty($returnValue) && (filter_var($returnValue, FILTER_VALIDATE_EMAIL))) {
-                    $returnValue = $returnValue;
-                } else {
+                if(!($filterEmail && !empty($returnValue) 
+                    && (filter_var($returnValue, FILTER_VALIDATE_EMAIL))))
+                {
                     $returnValue = null;
                 } //End if
             } else {
