@@ -43,13 +43,6 @@ class VerificationController extends Controller
     use VerifiesEmails;
 
     /**
-     * Where to redirect users after verification.
-     *
-     * @var string
-     */
-    public $redirectTo = null;
-
-    /**
      * Client metadata to be sent to AWS Cognito
      *
      * @var array|null
@@ -66,28 +59,11 @@ class VerificationController extends Controller
         $this->middleware('guest');
 
         //Set flag to indicate action called from controller
-        $this->setIsControllerAction(true);
+        $this->setIsControllerAction(false);
 
         parent::__construct();
 
-        // $this->middleware('auth');
         // $this->middleware('signed')->only('verify');
-        // $this->middleware('throttle:6,1')->only('verify', 'resend');
     } //Function ends
-
-    /**
-     * Get the post register / login redirect path.
-     *
-     * @return string
-     */
-    public function redirectPath()
-    {
-        //Check if property exists and not null
-        if (property_exists($this, 'redirectTo') && !is_null($this->redirectTo)) {
-            return $this->redirectTo;
-        } //End if
-
-        return config('cognito.routes.web.login_page', 'cognito.form.login');
-    }
 
 } //Class ends

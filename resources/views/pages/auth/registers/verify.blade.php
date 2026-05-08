@@ -11,7 +11,7 @@
 
                 <div class="card-body">
                     <x-cognito::common.alert />
-                    <x-cognito::forms.register-verify-form />
+                    <x-cognito::forms.register.verify-form />
                 </div>
             </div>
         </div>

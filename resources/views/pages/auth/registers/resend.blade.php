@@ -10,7 +10,7 @@
 
                 <div class="card-body">
                     <x-cognito::common.alert />
-                    <x-cognito::forms.register-resendcode-form />
+                    <x-cognito::forms.register.resendcode-form />
                 </div>
             </div>
         </div>

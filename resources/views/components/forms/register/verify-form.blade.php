@@ -11,6 +11,9 @@
         if (str_contains($emailValue, '%40')) {
             $emailValue = str_replace('%40', '@', $emailValue);
         }
+        
+        // In case of resend code, email is sent via session
+        $emailValue = (session($userEmailField))? session($userEmailField) : $emailValue;
 
         $codeValue = (request()->has('code'))? request()->get('code') : null;
     @endphp

@@ -44,8 +44,8 @@ trait VerifiesEmails
             // Initialize variables
             $returnValue = null;
 
-            // If email is present in query parameters, encode it before validation and processing
-            $email = $this->getEmailFromQuery($request);
+            // If email is present in query parameters, decode it before validation and processing
+            $email = $this->getDataFromQueryParam($request, 'email', EncryptionTypes::DEFAULT, true);
             if (!empty($email)) {
                 $request->merge(['email' => $email]);
             } //End if
@@ -69,12 +69,16 @@ trait VerifiesEmails
                 );
 
             //Return response
-            if ($this->getIsJsonResponse($request)) {
-                $returnValue = $this->isControllerAction ? $this->response->success($response) : $response;
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
                     ->with('status', 'Verification successful. Please login to continue.')
+                    ->with('username', $payload['email'])
+                    ->with('session', $response['Session'] ?? null)
                     ->with('message', trans('messages.auth.registration_verification_success'));
             } //End if
         } catch (Exception $e) {
@@ -97,8 +101,8 @@ trait VerifiesEmails
             // Initialize variables
             $returnValue = null;
 
-            // If email is present in query parameters, encode it before validation and processing
-            $email = $this->getEmailFromQuery($request);
+            // If email is present in query parameters, decode it before validation and processing
+            $email = $this->getDataFromQueryParam($request, 'email', EncryptionTypes::DEFAULT, true);
             if (!empty($email)) {
                 $request->merge(['email' => $email]);
             } //End if
@@ -121,12 +125,15 @@ trait VerifiesEmails
                 );
 
             //Return response
-            if ($this->getIsJsonResponse($request)) {
-                $returnValue = $this->isControllerAction ? $this->response->success($response) : $response;
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
                     ->with('status', 'Resend code request successful. Please verify your email.')
+                    ->with('username', $payload['email'])
                     ->with('message', trans('messages.auth.registration_code_resend_success'));
             } //End if
         } catch (Exception $e) {
