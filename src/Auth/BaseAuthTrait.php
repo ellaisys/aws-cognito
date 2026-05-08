@@ -31,9 +31,8 @@ enum EncryptionTypes: string
     case DEFAULT = 'DEFAULT';
     case NONE = 'NONE';
     case URL_ENCODE = 'URL_ENCODE';
-    case URL_DECODE = 'URL_DECODE';
     case BASE64_ENCODE = 'BASE64_ENCODE';
-    case BASE64_DECODE = 'BASE64_DECODE';
+    case RAW_URL_ENCODE = 'RAW_URL_ENCODE';
 }
 
 trait BaseAuthTrait
@@ -224,8 +223,8 @@ trait BaseAuthTrait
                         $returnValue = base64_decode($data);
                         break;
 
-                    case EncryptionTypes::URL_DECODE:
-                        $returnValue = urldecode($data);
+                    case EncryptionTypes::RAW_URL_ENCODE:
+                        $returnValue = rawurldecode($data);
                         break;
 
                     case EncryptionTypes::DEFAULT:
