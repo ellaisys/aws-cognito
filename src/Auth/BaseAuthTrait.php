@@ -242,7 +242,7 @@ trait BaseAuthTrait
 
                 // If filter email flag is true, validate the email and
                 // return value only if valid email, else return null
-                if(!($filterEmail && !empty($returnValue) 
+                if(!($filterEmail && !empty($returnValue)
                     && (filter_var($returnValue, FILTER_VALIDATE_EMAIL))))
                 {
                     $returnValue = null;
