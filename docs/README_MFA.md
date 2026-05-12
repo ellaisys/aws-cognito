@@ -127,7 +127,7 @@ The response that you will get for the API call would look this
 ```
 and the web response, you can design a page like this to show the code for activating the Software MFA token.
 
-<img src="./assets/images/web_application_activate.png" width="50%" alt="cognito mfa activate for web"/>
+<img src="../assets/images/web_application_activate.png" width="50%" alt="cognito mfa activate for web"/>
 
 >[!IMPORTANT]
 >In case you want to change the QR Generator library, you can change the value in the configuration file with the key **mfa_qr_library**. Alternately, you can set the string in the environment file identified by **AWS_COGNITO_MFA_QR_LIBRARY**. 
