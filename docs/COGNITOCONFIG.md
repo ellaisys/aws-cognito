@@ -3,7 +3,7 @@ This document is shared for those requiring assistance or clarification in confi
   
 ------------
 ## Step 1: Select the User Pool
-<img  src="./assets/images/aws_cognito_flow1.png"  width="100%"  alt="AWS Cognito Step1"/>
+<img  src="/assets/images/aws_cognito_flow1.png"  width="100%"  alt="AWS Cognito Step1"/>
 
 ------------
 ## Step 2: Create the new pool
