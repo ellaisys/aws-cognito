@@ -45,7 +45,7 @@ Also, configure below keys into the .env file to change the default setting.
 >We are releasing the API predefined routes as a new feature from V1.3.0.
 > php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
 
-For the list of published routes and configurations, please refer [API Routes](./README_ROUTES.md#api-routes)
+For the list of published routes and configurations, please refer [API Routes](./docs/README_ROUTES.md#api-routes)
 
 ### **Passkey Registration with FIDO Authenticator**
 The passkey registration process involves two steps.

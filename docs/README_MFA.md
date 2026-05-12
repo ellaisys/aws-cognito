@@ -31,7 +31,7 @@ Also, configure below keys into the .env file to change the default setting.
 >We are releasign the API predefined routes as a new feature from V1.3.0.
 > php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
 
-For the list of published routes and configurations, please refer [API Routes](/README_ROUTES.md#api-routes)
+For the list of published routes and configurations, please refer [API Routes](./docs/README_ROUTES.md#api-routes)
 
 ### **Login**
 The login shall require two steps for implementation of the overall authentication using the MFA approach. The first step shall generate the challenge, identified as a session token. The second step involves the OTP/TOTP code against that session token.
