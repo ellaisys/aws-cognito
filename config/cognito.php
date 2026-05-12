@@ -288,7 +288,7 @@ return [
     'allow_passkeys' => env('AWS_COGNITO_ALLOW_PASSKEYS', false),
     'web_authn_mfa_configuration' => [
         'FactorConfiguration' => env('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', 'MULTI_FACTOR_WITH_USER_VERIFICATION'),
-        'RelyingPartyId' => env('AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID', null),
+        'RelyingPartyId' => env('AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID', 'localhost'),
         'UserVerificationMethod' => env('AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD', 'preferred'),
     ],
 
