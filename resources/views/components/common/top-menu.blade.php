@@ -1,24 +1,24 @@
 <ul class="navbar-nav ms-auto">
     <!-- Authentication Links -->
     @guest
-        @if (Route::has(config('cognito.web_prefix', '').'.form.login'))
+        @if (Route::has('cognito.form.login'))
             <li class="nav-item">
-                @if(Route::is(config('cognito.web_prefix', '').'.form.login'))
+                @if(Route::is('cognito.form.login'))
                     <button class="nav-link active disabled" aria-disabled="true">{{ __('Login') }}</button>
                 @else
                 <a class="nav-link"
-                    href="{{ route(config('cognito.web_prefix', '').'.form.login') }}">{{ __('Login') }}</a>
+                    href="{{ route('cognito.form.login') }}">{{ __('Login') }}</a>
                 @endif
             </li>
         @endif
 
-        @if (Route::has(config('cognito.web_prefix', '').'.form.register'))
+        @if (Route::has('cognito.form.register'))
             <li class="nav-item">
-                @if(Route::is(config('cognito.web_prefix', '').'.form.register'))
+                @if(Route::is('cognito.form.register'))
                     <button class="nav-link active disabled" aria-disabled="true">{{ __('Register') }}</button>
                 @else
                     <a class="nav-link"
-                        href="{{ route(config('cognito.web_prefix', '').'.form.register') }}">{{ __('Register') }}</a>
+                        href="{{ route('cognito.form.register') }}">{{ __('Register') }}</a>
                 @endif
             </li>
         @endif

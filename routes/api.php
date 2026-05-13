@@ -26,7 +26,7 @@ use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 |
 */
 
-Route::group(['prefix' => config('cognito.api_prefix', ''),
+Route::group([
     'headers' => ['Accept' => 'application/json']], function () {
     //Route to register a new user
     Route::group(['prefix' => 'register'], function() {

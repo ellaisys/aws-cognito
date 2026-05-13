@@ -25,7 +25,7 @@ use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 | is assigned the "web" middleware group.
 |
 */
-Route::group(['prefix' => config('cognito.web_prefix', '')], function () {
+Route::group([], function () {
     //Route to register a new user
     Route::group(['prefix' => 'register'], function() {
         Route::get('/',  function () { return view('cognito::pages.auth.registers.register'); })->name('form.register');

@@ -155,19 +155,27 @@ class AwsCognitoServiceProvider extends ServiceProvider
             return;
         } //End if
 
+        $apiCognitoPrefix = config('cognito.api_prefix', '');
+
         if (AwsCognito::$registersRoutes) {
             Route::group([
-                'prefix' => 'api',
+                'prefix' => 'api' . (empty($apiCognitoPrefix) ? '' : '/' . $apiCognitoPrefix),
                 'namespace' => 'Ellaisys\Cognito\Http\Controllers',
-                'middleware' => ['api'],
+                'middleware' => [
+                    'api',
+                    'throttle:' . config('cognito.throttle.all.limit', '60,1')
+                ],
             ], function () {
                 $this->loadRoutesFrom(__DIR__.'/../../routes/api.php');
             });
 
             Route::group([
-                'prefix' => config('cognito.path'),
+                'prefix' => config('cognito.web_prefix', ''),
                 'namespace' => 'Ellaisys\Cognito\Http\Controllers',
-                'middleware' => ['web'],
+                'middleware' => [
+                    'web',
+                    'throttle:' . config('cognito.throttle.all.limit', '60,1')
+                ],
                 'as' => 'cognito.',
             ], function () {
                 $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
