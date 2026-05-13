@@ -22,6 +22,8 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClaim;
+
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Guards\Traits\BaseCognitoGuard;
@@ -111,7 +113,8 @@ class CognitoTokenGuard extends TokenGuard
      * @return bool
      */
     public function attempt(array $request = [], $remember = false,
-        string $paramUsername='email', string $paramPassword='password')
+        string $paramUsername='email', string $paramPassword='password',
+        ?CognitoAuthFlowTypes $authFlowType = CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH)
     {
         $returnValue = null;
         try {
@@ -122,7 +125,7 @@ class CognitoTokenGuard extends TokenGuard
             $payloadCognito = $this->buildCognitoPayload($request, $paramUsername, $paramPassword);
 
             //Check if the payload has valid AWS credentials
-            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito));
+            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlowType));
             if ($responseCognito) {
                 if ($this->claim) {
                     $credentials = collect([

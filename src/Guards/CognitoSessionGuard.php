@@ -29,6 +29,8 @@ use Ellaisys\Cognito\Http\Parser\ClaimSession;
 use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClaim;
+
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Guards\Traits\BaseCognitoGuard;
@@ -130,7 +132,8 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      * @return bool
      */
     public function attempt(array $credentials = [], $remember = false,
-        string $paramUsername='email', string $paramPassword='password')
+        string $paramUsername='email', string $paramPassword='password',
+        ?CognitoAuthFlowTypes $authFlowType = CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH)
     {
         try {
             $returnValue = false;
@@ -146,7 +149,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             $this->fireAttemptEvent($request->toArray(), $remember);
 
             //Check if the payload has valid AWS credentials
-            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito));
+            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlowType));
             if ($responseCognito && (!empty($this->claim))) {
                 //Process the claim
                 if ($user = $this->processAWSClaim()) {

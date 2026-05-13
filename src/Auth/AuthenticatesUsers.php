@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Validator;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoUserPool;
 
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
+
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -67,11 +69,9 @@ trait AuthenticatesUsers
     /**
      * Attempt to log the user into the application.
      *
-     * @param  \Illuminate\Support\Collection  $request
-     * @param  \string  $guard (optional)
+     * @param  \Illuminate\Http\Request  $request
      * @param  \string  $paramUsername (optional)
      * @param  \string  $paramPassword (optional)
-     * @param  \bool  $isJsonResponse (optional)
      *
      * @return mixed
      */
@@ -82,12 +82,7 @@ trait AuthenticatesUsers
         try {
             // Initialize variables
             $returnValue = null;
-            $guard = 'web';
-
-            if(!$this->isJsonResponse && ($request->expectsJson() || $request->isJson())) {
-                $this->isJsonResponse = true;
-                $guard = 'api';
-            } //End if
+            $guard = $this->getGuard($request);
 
             //Get the password policy
             $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
@@ -106,7 +101,8 @@ trait AuthenticatesUsers
             //Authenticate User
             $returnValue = Auth::guard($guard)->attempt(
                     $request->all(), false,
-                    $paramUsername, $paramPassword
+                    $paramUsername, $paramPassword,
+                    CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH
                 );
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLogin:Exception');
@@ -119,6 +115,47 @@ trait AuthenticatesUsers
             }
 
             $returnValue = $this->sendFailedLoginResponse($e, $this->isJsonResponse, $paramUsername);
+        } //Try-catch ends
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Attempt to log the user into the application using SRP authentication flow.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \string  $paramUsername (optional)
+     * @param  \string  $paramPassword (optional)
+     *
+     * @return mixed
+     */
+    protected function attemptLoginSRP(Request $request,
+        string $paramUsername='email',
+        string $paramPassword='password')
+    {
+        try {
+            // Initialize variables
+            $returnValue = null;
+            $guard = $this->getGuard($request);
+
+            //Validate request
+            $validator = Validator::make($request->only([$paramPassword]), [
+                $paramPassword => 'required'
+            ]);
+            if ($validator->fails()) {
+                Log::error($validator->errors());
+                throw new ValidationException($validator);
+            } //End if
+
+            //Authenticate User
+            $returnValue = Auth::guard($guard)->attempt(
+                    $request->all(), false,
+                    $paramUsername, $paramPassword,
+                    CognitoAuthFlowTypes::USER_SRP_AUTH
+                );
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:attemptLoginSRP:Exception');
+            throw $e;
         } //Try-catch ends
 
         return $returnValue;

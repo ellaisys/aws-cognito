@@ -158,9 +158,10 @@ trait BaseCognitoGuard
     /**
      * Validate the user credentials with AWS Cognito
      *
-     * @return \Ellaisys\Cognito\AwsCognitoClient
+     * @return mixed
      */
-    protected function hasValidAWSCredentials(Collection $credentials) {
+    protected function hasValidAWSCredentials(Collection $credentials,
+        CognitoAuthFlowTypes $authFlowType): mixed {
         //Reset global variables
         $this->challengeName = null;
         $this->challengeData = null;
@@ -169,7 +170,7 @@ trait BaseCognitoGuard
 
         //Authenticate the user with AWS Cognito
         $result = $this->client->authenticate(
-            CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH,
+            $authFlowType,
             $credentials['email'], $credentials['password']
         );
 
@@ -207,6 +208,15 @@ trait BaseCognitoGuard
                 $returnValue = [
                     'status' => $result['ChallengeName'],
                     'session_token' => $result['Session'],
+                    'username' => $username
+                ];
+                break;
+
+            case CognitoChallengeTypes::PASSWORD_VERIFIER:
+                $returnValue = [
+                    'status' => $result['ChallengeName'],
+                    'session_token' => Str::random(),
+                    'challenge_params' => $result['ChallengeParameters'],
                     'username' => $username
                 ];
                 break;

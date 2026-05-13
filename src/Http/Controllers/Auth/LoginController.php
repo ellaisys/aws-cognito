@@ -20,6 +20,8 @@ use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
 use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\Auth\AuthenticatesUsers;
 
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
+
 use Ellaisys\Cognito\Events\Auth\PreAuthEvent;
 use Ellaisys\Cognito\Events\Auth\PostAuthSuccessEvent;
 use Ellaisys\Cognito\Events\Auth\PostAuthFailedEvent;
@@ -77,10 +79,12 @@ class LoginController extends Controller
      * @return mixed
      */
     public function login(Request $request,
-        string $usernameField='username', string $passwordField='password')
+        string $usernameField='username', string $passwordField='password',
+        ?CognitoAuthFlowTypes $authFlowType = CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH)
     {
         try {
             //Initialize parameters
+            $claim = null;
             $guard = 'web';
             $isJsonResponse = false;
             $this->usernameField = $usernameField;
@@ -96,8 +100,13 @@ class LoginController extends Controller
             } //End if
 
             //Authenticate with Cognito Package Trait based on the guard
-            $claim = $this->attemptLogin($request,
-                $usernameField, $passwordField);
+            if ($authFlowType === CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH) {
+                $claim = $this->attemptLogin($request,
+                    $usernameField, $passwordField);
+            } else {
+                $claim = $this->attemptLoginSRP($request,
+                    $usernameField, $passwordField);
+            } //End if
 
             //Process the claim response
             return $this->processClaimResponse(
@@ -105,11 +114,36 @@ class LoginController extends Controller
                     $usernameField, $passwordField
                 );
         } catch(Exception $e) {
-            Log::error('LoginController:actionLogin:Exception');
+            Log::error('LoginController:login:Exception');
 
             //Rise Post Auth Failed Event
             $this->callPostAuthErrorEvent($request, $e, $passwordField);
 
+            throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+    /**
+     * Authenticate User with SRP authentication flow
+     * @param \Illuminate\Http\Request $request
+     * @param string $usernameField
+     * @param string $passwordField
+     *
+     * @throws \HttpException
+     *
+     * @return mixed
+     */
+    public function loginSRP(Request $request,
+        string $usernameField='username', string $passwordField='password')
+    {
+        try {
+            return $this->login(
+                    $request,
+                    $usernameField, $passwordField,
+                    CognitoAuthFlowTypes::USER_SRP_AUTH
+                );
+        } catch(Exception $e) {
+            Log::error('LoginController:loginSRP:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends
