@@ -143,6 +143,11 @@ trait WebAuthPasskey
             if (!empty($email)) {
                 $request->merge(['username' => $email]);
             } //End if
+
+            //Convert challenge name to upper case if present in the request
+            if ($request->has('challenge_name')) {
+                $request->merge(['challenge_name' => strtoupper($request['challenge_name'])]);
+            } //End if
         
             //Validate payload
             $validator = Validator::make($request->all(), [

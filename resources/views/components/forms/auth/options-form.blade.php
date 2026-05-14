@@ -97,7 +97,7 @@
                     if (challenge === 'PASSWORD') {
                         item.formAction = "{{ route('cognito.form.login') }}/password";
                     } else {
-                        item.formAction = "{{ route('cognito.form.login') }}/challenge?" + new URLSearchParams({ challenge: challenge }).toString();
+                        item.formAction = "{{ route('cognito.form.login') }}/challenge?" + new URLSearchParams({ challenge: challenge.toLowerCase() }).toString();
                     }
                     challengesList.appendChild(item);
                 });
