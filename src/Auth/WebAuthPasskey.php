@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Validator;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 
+use Ellaisys\Cognito\Events\Auth\PostPasskeyCompleteEvent;
+
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -102,6 +104,9 @@ trait WebAuthPasskey
                 $accessToken,
                 json_decode($request['credential'], true)
             );
+
+            //Fire PostPasskeyCompleteEvent
+            event(new PostPasskeyCompleteEvent($this->getUser($request), $response, $request->ip()));
 
             //Return response
             if ($this->isControllerAction) {
