@@ -137,7 +137,7 @@ class JsonResponseService
         if (!is_array($resource)) {
             $merged = array_merge($resource->additional ?? [], $meta);
         } else {
-            $merged = array_merge($resource, $meta);
+            $merged = $meta;
         } //End if
 
         if ($resource instanceof JsonResource) {

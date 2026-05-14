@@ -9,6 +9,7 @@ use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 use Illuminate\Support\Facades\Log;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -16,11 +17,11 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 use Aws\CognitoIdentityProvider\Exception\InvalidPasswordException;
-use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException ;
+use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 /**
- * WS Cognito Client for AWS Admin Users
+ * AWS Cognito Client for AWS Admin Users
  */
 trait AwsCognitoClientAdminAction
 {
@@ -32,7 +33,7 @@ trait AwsCognitoClientAdminAction
      * @param string $username
      * @return bool
      */
-    public function confirmSignUp($username): bool
+    public function adminConfirmSignUp($username): bool
     {
         try {
             $this->client->adminConfirmSignUp([
@@ -187,13 +188,14 @@ trait AwsCognitoClientAdminAction
     } //Function ends
 
     /**
-     * Get user details.
+     * Get user details with username
      * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminGetUser.html
      *
      * @param string $username
+     *
      * @return mixed
      */
-    public function getUser($username): mixed
+    public function adminGetUser(string $username): mixed
     {
         try {
             return $this->client->adminGetUser([
@@ -201,7 +203,7 @@ trait AwsCognitoClientAdminAction
                 'UserPoolId' => $this->poolId,
             ]);
         } catch (CognitoIdentityProviderException $e) {
-            Log::error('AwsCognitoClientAdminAction:getUser:CognitoIdentityProviderException');
+            Log::error('AwsCognitoClientAdminAction:adminGetUser:CognitoIdentityProviderException');
             throw $e;
         } //Try-catch ends
     } //Function ends
@@ -314,7 +316,7 @@ trait AwsCognitoClientAdminAction
      *
      * @return \Aws\Result
      */
-    protected function adminRespondToAuthChallenge(
+    public function adminRespondToAuthChallenge(
         CognitoChallengeTypes $challengeName, string $session,
         string $challengeValue, string $username)
     {
@@ -342,69 +344,12 @@ trait AwsCognitoClientAdminAction
 
             //Execute the payload
             $response = $this->client->adminRespondToAuthChallenge($payload);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('AwsCognitoClientAdminAction:adminRespondToAuthChallenge:Exception');
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminRespondToAuthChallenge:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $response;
-    } //Function ends
-
-    private function buildChallengePayload(CognitoChallengeTypes $challengeName,
-        string $challengeValue, string $username): array
-    {
-        try {
-            //Set challenge response
-            $challengeResponse=['USERNAME' => $username];
-            switch ($challengeName) {
-                case CognitoChallengeTypes::SELECT_MFA_TYPE:
-                    if (!in_array($challengeValue, ['SMS_MFA','EMAIL_MFA','SOFTWARE_TOKEN_MFA'], true)) {
-                        throw new BadRequestHttpException('Invalid challenge value');
-                    } //End if
-
-                    $challengeResponse = array_merge($challengeResponse, [
-                        'ANSWER' => $challengeValue
-                    ]);
-                    break;
-
-                case CognitoChallengeTypes::SMS_MFA:
-                    $challengeResponse = array_merge($challengeResponse, [
-                        'SMS_MFA_CODE' => $challengeValue
-                    ]);
-                    break;
-
-                case CognitoChallengeTypes::SMS_OTP:
-                    $challengeResponse = array_merge($challengeResponse, [
-                        'SMS_OTP_CODE' => $challengeValue
-                    ]);
-                    break;
-
-                case CognitoChallengeTypes::EMAIL_OTP:
-                    $challengeResponse = array_merge($challengeResponse, [
-                        'EMAIL_OTP_CODE' => $challengeValue
-                    ]);
-                    break;
-
-                case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
-                    $challengeResponse = array_merge($challengeResponse, [
-                        'SOFTWARE_TOKEN_MFA_CODE' => $challengeValue
-                    ]);
-                    break;
-                
-                case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
-                    $challengeResponse = array_merge($challengeResponse, [
-                        'NEW_PASSWORD' => $challengeValue
-                    ]);
-                    break;
-                default:
-                    # code...
-                    break;
-            } //End Switch
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientAdminAction:buildChallengePayload:Exception');
-        } //Try-catch ends
-
-        return $challengeResponse;
     } //Function ends
 
 } //Trait ends

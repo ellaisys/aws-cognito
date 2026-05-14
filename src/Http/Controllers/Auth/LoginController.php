@@ -20,6 +20,8 @@ use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
 use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\Auth\AuthenticatesUsers;
 
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
+
 use Ellaisys\Cognito\Events\Auth\PreAuthEvent;
 use Ellaisys\Cognito\Events\Auth\PostAuthSuccessEvent;
 use Ellaisys\Cognito\Events\Auth\PostAuthFailedEvent;
@@ -48,13 +50,6 @@ class LoginController extends Controller
 
     use AuthenticatesUsers;
 
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
-    public $redirectTo = 'home';
-
     private $usernameField = 'username';
     private $passwordField = 'password';
 
@@ -66,6 +61,9 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest')->except(['logout', 'logoutForced']);
+
+        //Set flag to indicate action called from controller
+        $this->setIsControllerAction(true);
 
         parent::__construct();
     }
@@ -81,10 +79,12 @@ class LoginController extends Controller
      * @return mixed
      */
     public function login(Request $request,
-        string $usernameField='username', string $passwordField='password')
+        string $usernameField='username', string $passwordField='password',
+        ?CognitoAuthFlowTypes $authFlowType = CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH)
     {
         try {
             //Initialize parameters
+            $claim = null;
             $guard = 'web';
             $isJsonResponse = false;
             $this->usernameField = $usernameField;
@@ -93,9 +93,6 @@ class LoginController extends Controller
             //Raise Pre Auth Event
             $this->callPreAuthEvent($request);
 
-            //Convert request to collection
-            $collection = collect($request->all());
-
             //Check if request is json
             if ($this->isJson($request)) {
                 $isJsonResponse = true;
@@ -103,8 +100,13 @@ class LoginController extends Controller
             } //End if
 
             //Authenticate with Cognito Package Trait based on the guard
-            $claim = $this->attemptLogin($collection, $guard,
-                $usernameField, $passwordField, $isJsonResponse, true);
+            if ($authFlowType === CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH) {
+                $claim = $this->attemptLogin($request,
+                    $usernameField, $passwordField);
+            } else {
+                $claim = $this->attemptLoginSRP($request,
+                    $usernameField, $passwordField);
+            } //End if
 
             //Process the claim response
             return $this->processClaimResponse(
@@ -112,7 +114,7 @@ class LoginController extends Controller
                     $usernameField, $passwordField
                 );
         } catch(Exception $e) {
-            Log::error('LoginController:actionLogin:Exception');
+            Log::error('LoginController:login:Exception');
 
             //Rise Post Auth Failed Event
             $this->callPostAuthErrorEvent($request, $e, $passwordField);
@@ -122,13 +124,38 @@ class LoginController extends Controller
     } //Function ends
 
     /**
-     * Complete the MFA process proving the code sent to the user.
+     * Authenticate User with SRP authentication flow
+     * @param \Illuminate\Http\Request $request
+     * @param string $usernameField
+     * @param string $passwordField
+     *
+     * @throws \HttpException
+     *
+     * @return mixed
+     */
+    public function loginSRP(Request $request,
+        string $usernameField='username', string $passwordField='password')
+    {
+        try {
+            return $this->login(
+                    $request,
+                    $usernameField, $passwordField,
+                    CognitoAuthFlowTypes::USER_SRP_AUTH
+                );
+        } catch(Exception $e) {
+            Log::error('LoginController:loginSRP:Exception');
+            throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+    /**
+     * Challenge based authentication action
      *
      * @param \Illuminate\Http\Request $request
      *
      * @throws \HttpException
      */
-    public function validateMFA(Request $request)
+    public function challenge(Request $request)
     {
         try
         {
@@ -141,9 +168,10 @@ class LoginController extends Controller
                 $isJsonResponse = true;
                 $guard = 'api';
             } //End if
+            $this->setIsJsonResponse($isJsonResponse);
 
             //Authenticate the user request
-            $claim = $this->attemptLoginMFA($request, $guard, true);
+            $claim = $this->attemptLoginChallenge($request);
 
             //Process the claim response
             return $this->processClaimResponse(
@@ -151,7 +179,7 @@ class LoginController extends Controller
                     $this->usernameField, $this->passwordField
                 );
         } catch (Exception $e) {
-            Log::error('LoginController:validateMFA:Exception');
+            Log::error('LoginController:challenge:Exception');
 
             //Rise Post Auth Failed Event
             $this->callPostAuthErrorEvent($request, $e, $this->passwordField);
@@ -239,7 +267,7 @@ class LoginController extends Controller
                         //Raise Post Auth Success Event
                         $this->callPostAuthSuccessEvent($request, $guard);
 
-                        $returnValue = redirect(route(config('cognito.redirect_to_route_name', $this->redirectTo)));
+                        $returnValue = redirect(route(config('cognito.redirect_to_route_name')));
                     } elseif ($claim===false) {
                         $returnValue = redirect()
                             ->back()

@@ -22,6 +22,8 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Ellaisys\Cognito\AwsCognito;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoClaim;
+
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Guards\Traits\BaseCognitoGuard;
@@ -111,7 +113,8 @@ class CognitoTokenGuard extends TokenGuard
      * @return bool
      */
     public function attempt(array $request = [], $remember = false,
-        string $paramUsername='email', string $paramPassword='password')
+        string $paramUsername='email', string $paramPassword='password',
+        ?CognitoAuthFlowTypes $authFlowType = CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH)
     {
         $returnValue = null;
         try {
@@ -122,7 +125,7 @@ class CognitoTokenGuard extends TokenGuard
             $payloadCognito = $this->buildCognitoPayload($request, $paramUsername, $paramPassword);
 
             //Check if the payload has valid AWS credentials
-            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito));
+            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlowType));
             if ($responseCognito) {
                 if ($this->claim) {
                     $credentials = collect([
@@ -185,6 +188,7 @@ class CognitoTokenGuard extends TokenGuard
 
         //Send claim object
         $claim = $this->claim;
+
         if ($claim && is_array($claim) && $claim['status']) {
             $challengeType = CognitoChallengeTypes::from($claim['status']);
             switch ($challengeType) {
@@ -300,20 +304,20 @@ class CognitoTokenGuard extends TokenGuard
     } //Function ends
 
     /**
-     * Attempt MFA based Authentication
+     * Attempt Challenge based Authentication
      *
      * @param  array  $challenge
      * @param  bool   $remember
      *
      * @throws
      *
-     * @return bool
+     * @return claim
      */
-    public function attemptMFA(array $challenge=[], bool $remember=false)
+    public function attemptChallengeAuth(array $challenge, bool $remember=false)
     {
         $returnValue = null;
         try {
-            $responseCognito = $this->attemptBaseMFA($challenge, $remember);
+            $responseCognito = $this->attemptBaseChallenge($challenge, $remember);
             if ($responseCognito) {
                 if ($this->claim) {
                     $credentials = collect([
@@ -328,13 +332,13 @@ class CognitoTokenGuard extends TokenGuard
                 } elseif ($this->challengeName) {
                     $returnValue = $this->challengeData;
                 } else {
-                    throw new AwsCognitoException();
+                    throw new AwsCognitoException(AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED);
                 } //End if
             } else {
                 throw new InvalidUserException();
             } //End if
         } catch(AwsCognitoException | InvalidUserException | Exception $e) {
-            Log::error('CognitoTokenGuard:attemptMFA:Exception');
+            Log::error('CognitoTokenGuard:attemptChallengeAuth:Exception');
             throw $e;
         } //Try-catch ends
 

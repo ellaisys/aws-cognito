@@ -121,6 +121,7 @@ class Handler extends ExceptionHandler
         } elseif ($e instanceof ValidationException) {
             $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY; //422
             $errorMessage = 'Data validation error';
+            $errorKey = $e->getMessage();
         } elseif ($e instanceof ModelNotFoundException) {
             $statusCode = Response::HTTP_BAD_REQUEST; //400
             $errorMessage = 'Resource not found.';
@@ -183,7 +184,12 @@ class Handler extends ExceptionHandler
                 $errorMessage = 'User already exists';
                 $errorKey = AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS;
                 break;
-            
+
+            case AwsCognitoException::COGNITO_AUTH_CODE_INVALID:
+                $errorMessage = 'Invalid confirmation code';
+                $errorKey = AwsCognitoException::COGNITO_AUTH_CODE_INVALID;
+                break;
+
             default:
                 $errorMessage = $e->getMessage();
                 $errorKey = 'ERROR_COGNITO_DEFAULT';

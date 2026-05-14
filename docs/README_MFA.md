@@ -31,7 +31,7 @@ Also, configure below keys into the .env file to change the default setting.
 >We are releasign the API predefined routes as a new feature from V1.3.0.
 > php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
 
-For the list of published routes and configurations, please refer [API Routes](/README_ROUTES.md#api-routes)
+For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
 
 ### **Login**
 The login shall require two steps for implementation of the overall authentication using the MFA approach. The first step shall generate the challenge, identified as a session token. The second step involves the OTP/TOTP code against that session token.
@@ -127,7 +127,7 @@ The response that you will get for the API call would look this
 ```
 and the web response, you can design a page like this to show the code for activating the Software MFA token.
 
-<img src="./assets/images/web_application_activate.png" width="50%" alt="cognito mfa activate for web"/>
+<img src="../assets/images/web_application_activate.png" width="50%" alt="cognito mfa activate for web"/>
 
 >[!IMPORTANT]
 >In case you want to change the QR Generator library, you can change the value in the configuration file with the key **mfa_qr_library**. Alternately, you can set the string in the environment file identified by **AWS_COGNITO_MFA_QR_LIBRARY**. 

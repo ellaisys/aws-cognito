@@ -10,11 +10,13 @@ use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 /**
  * AWS Cognito Client for MFA Actions
@@ -67,7 +69,8 @@ trait AwsCognitoClientMFAAction
      *
      * @return mixed
      */
-    public function verifySoftwareTokenMFA(string $userCode, ?string $accessToken = null, ?string $session = null, ?string $deviceName = null)
+    public function verifySoftwareTokenMFA(string $userCode, ?string $accessToken = null,
+        ?string $session = null, ?string $deviceName = null)
     {
         try {
             //Build payload
@@ -150,37 +153,6 @@ trait AwsCognitoClientMFAAction
     } //Function ends
 
     /**
-     * Responds to MFA challenge
-     *
-     * @param string $challengeName
-     * @param string $session
-     * @param string $challengeValue
-     * @param string $username
-     *
-     * @return \Aws\Result|false
-     */
-    public function authMFAChallenge(
-        CognitoChallengeTypes $challengeName,
-        string $session, string $challengeValue, string $username)
-    {
-        try {
-            if (($challengeName == CognitoChallengeTypes::SMS_MFA) ||
-                ($challengeName == CognitoChallengeTypes::SOFTWARE_TOKEN_MFA)) {
-                $response = $this->adminRespondToAuthChallenge(
-                    $challengeName, $session, $challengeValue, $username
-                );
-            } else {
-                throw new HttpException(400, 'ERROR_UNSUPPORTED_MFA_CHALLENGE');
-            } //End if
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientMFAAction:authMFAChallenge:Exception');
-            throw $e;
-        } //Try-catch ends
-
-        return $response;
-    } //Function ends
-
-    /**
      * Private method for Setting MFA preference objects
      *
      * @return mixed
@@ -191,22 +163,41 @@ trait AwsCognitoClientMFAAction
             //Build payload
             $payload = [];
 
-            $mfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
+            $isMfaEnabled = (config('cognito.mfa_setup') == 'MFA_ENABLED')?true:false;
+            $listMfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
+
             $firstMfaType=null;
-            foreach ($mfaTypes as $mfaType) {
+            foreach ($listMfaTypes as $mfaType) {
                 if (empty($firstMfaType)) { $firstMfaType=$mfaType; }
+
+                //Add Email MFA configuration if enabled and selected in mfa_type
+                $payload = array_merge($payload, [
+                    'EmailMfaSettings' => [
+                        'Enabled' => ($isMfaEnabled && $isEnable)?($mfaType=='EMAIL_MFA'):false,
+                        'PreferredMfa' => (($firstMfaType=='EMAIL_MFA') && ($isEnable))
+                    ]
+                ]);
                 
+                //Add SMS MFA configuration if enabled and selected in mfa_type
                 $payload = array_merge($payload, [
                     'SMSMfaSettings' => [
-                        'Enabled' => ((config('cognito.mfa_setup', 'MFA_NONE')=='MFA_ENABLED') && ($isEnable))?($mfaType=='SMS_MFA'):false,
+                        'Enabled' => ($isMfaEnabled && $isEnable)?($mfaType=='SMS_MFA'):false,
                         'PreferredMfa' => (($firstMfaType=='SMS_MFA') && ($isEnable))
                     ]
                 ]);
 
+                //Add Software Token MFA configuration if enabled and selected in mfa_type
                 $payload = array_merge($payload, [
                     'SoftwareTokenMfaSettings' => [
-                        'Enabled' => ((config('cognito.mfa_setup', 'MFA_NONE')=='MFA_ENABLED') && ($isEnable))?($mfaType=='SOFTWARE_TOKEN_MFA'):false,
+                        'Enabled' => ($isMfaEnabled && $isEnable)?($mfaType=='SOFTWARE_TOKEN_MFA'):false,
                         'PreferredMfa' => (($firstMfaType=='SOFTWARE_TOKEN_MFA') && ($isEnable))
+                    ]
+                ]);
+
+                //Add WebAuthn configuration if enabled
+                $payload = array_merge($payload, [
+                    'WebAuthnMfaSettings' => [
+                        'Enabled' => ($isMfaEnabled && $isEnable)?($mfaType=='WEB_AUTHN'):false
                     ]
                 ]);
             } //Loop ends
@@ -214,6 +205,57 @@ trait AwsCognitoClientMFAAction
             $response = $payload;
         } catch (Exception $e) {
             Log::error('AwsCognitoClientMFAAction:setMFAPreference:Exception');
+            throw $e;
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+    /**
+     * Set user pool MFA configuration.
+      * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SetUserPoolMfaConfig.html
+      *
+      * @param string $mfaConfiguration
+      */
+    public function setUserPoolMfaConfig(?string $mfaConfiguration = 'OPTIONAL')
+    {
+        try {
+            $isMfaEnabled = (config('cognito.mfa_setup') == 'MFA_ENABLED')?true:false;
+            $listMfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
+
+            //Build payload
+            $payload = [
+                'UserPoolId' => $this->poolId,
+                'MfaConfiguration' => $mfaConfiguration,
+                'SoftwareTokenMfaConfiguration' => [
+                    'Enabled' => ($isMfaEnabled && in_array('SOFTWARE_TOKEN_MFA', $listMfaTypes))?true:false,
+                ]
+            ];
+
+            //Add Email MFA configuration if enabled and selected in mfa_type
+            if ($isMfaEnabled && in_array('EMAIL_MFA', $listMfaTypes)) {
+                $payload = array_merge($payload, [
+                    'EmailMfaConfiguration' => config('cognito.email_mfa_configuration')
+                ]);
+            } //End if
+
+            //Add SMS MFA configuration if enabled and selected in mfa_type
+            if ($isMfaEnabled && in_array('SMS_MFA', $listMfaTypes)) {
+                $payload = array_merge($payload, [
+                    'SmsMfaConfiguration' => config('cognito.sms_mfa_configuration')
+                ]);
+            } //End if
+
+            //Add WebAuthn  configuration if enabled
+            if ($isMfaEnabled && in_array('WEB_AUTHN', $listMfaTypes)) {
+                $payload = array_merge($payload, [
+                    'WebAuthnMfaConfiguration' => config('cognito.web_authn_mfa_configuration')
+                ]);
+            } //End if
+
+            $response = $this->client->setUserPoolMfaConfig($payload);
+        } catch (Exception $e) {
+            Log::error('AwsCognitoClientMFAAction:setUserPoolMfaConfig:Exception');
             throw $e;
         } //Try-catch ends
 

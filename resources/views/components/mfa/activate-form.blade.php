@@ -1,16 +1,16 @@
 @if (Route::has('cognito.action.user.mfa.activate'))
     @if ($actionActivateMFA = session()->get('actionActivateMFA'))
-        <div class="card">
-            <div class="card-header">{{ __('MFA Code') }}</div>
-
-            <div class="card-body">
+    
+        <div class="modal fade show d-block" id="modalMFAActivate" tabindex="-1"
+            aria-labelledby="modalMFAActivateLabel" aria-hidden="true">
+            <div class="card-body modal-dialog">
                 <form name="verify-mfa-code-form" id="verify-mfa-code-form"
                     method="post" action="{{route('cognito.action.user.mfa.activate')}}" autocomplete="off">
                     @csrf
 
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">Activation QR Code</h5>
+                            <h5 id="modalMFAActivateLabel" class="modal-title">{{ __('MFA Code') }}- Activation QR Code</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
                         </div>

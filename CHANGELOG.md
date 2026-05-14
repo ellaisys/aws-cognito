@@ -1,3 +1,17 @@
+Release 47 (tag v2.0.3)
+- Fix: Issue [#124](https://github.com/ellaisys/aws-cognito/issues/124)
+- Feat: FIDO2/Passkey support for AWS Cognito client configuration
+- Feat: Implemented the registration flow with verification and resending verification code.
+- Feat: Updated the user registration flow to handle both web and API routes, including appropriate validation and error handling.
+- Refactor: Improved the user registration process to ensure better security and user experience, including handling edge cases and providing clear feedback to users.
+- Refactor: Updated the MFA challenge handling to accommodate the new registration flow and ensure seamless integration with existing authentication processes. This will also enable future enhancements for authentication challenge flows.
+- Refactor: Added enumerations for Authentication Types and Challenge Types to improve code readability and maintainability across the authentication logic.
+- Fix: Addressed issues with the registration flow, including handling of edge cases and ensuring proper validation of user input to prevent errors during the registration process.
+- Fix: Updated the exception handling in the registration flow to provide clearer error messages and improve debugging capabilities for developers integrating with AWS Cognito.
+- Fix: Lint and code quality improvements across the registration and authentication logic to enhance maintainability and reduce potential bugs in future updates. SonarCloud code compliance improvements were also made to ensure adherence to best practices and coding standards.
+- Docs: Added readme with FIDO2/Passkey configuration instructions
+- Docs: Updated readme
+
 Release 46 (tag v2.0.2)
 - Feat: Issue [#129](https://github.com/ellaisys/aws-cognito/issues/129)
 - Feat: Added new enums for Cognito user statuses and auth flows; expanded challenge enum usage across guards/middleware/client.

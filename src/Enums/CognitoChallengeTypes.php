@@ -4,6 +4,7 @@ namespace Ellaisys\Cognito\Enums;
 
 /**
  * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html#API_InitiateAuth_ResponseSyntax
+ * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html
  *
  * Refer AvailableChallenges and ChallengeName section
  */

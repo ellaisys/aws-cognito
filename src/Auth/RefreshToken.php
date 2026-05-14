@@ -108,7 +108,7 @@ trait RefreshToken
         $authUser  = Auth::guard($guard)->user();
 
         //Get User Data
-        $user = $client->getUser($authUser[$this->paramUsername]);
+        $user = $client->adminGetUser($authUser[$this->paramUsername]);
 
         //Use username from AWS to refresh token, not email from login!
         if (!empty($user['Username'])) {

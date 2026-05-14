@@ -1,6 +1,6 @@
 <img src="./assets/images/banner.png" width="100%" alt="Laravel AWS Cognito Package for Web and API authentication with MFA Feature"/>
 
-# Laravel AWS Cognito Package for Web and API authentication with MFA Feature
+# Laravel AWS Cognito Package for Web and API authentication with MFA + FIDO2 (Passkey) Features
 AWS Cognito package using the AWS SDK for PHP
 
 [![Release Version](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Version)](https://packagist.org/packages/ellaisys/aws-cognito#v1.1.3)&#160;
@@ -45,11 +45,12 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Refresh Token API](#refresh-token)
 - [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
-- [MFA Implementation for Session and Token Guards](./README_MFA.md)
+- [MFA Implementation for Session and Token Guards](./docs/README_MFA.md)
 - [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
 - [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
-- [Preconfigured routes and controllers for Web and API ](/README_ROUTES.md#routes) **New Feature**
-- [Preconfigured views for Web ](/README_ROUTES.md#web-views-and-components)**New Feature**
+- [Preconfigured routes and controllers for Web and API ](./docs/README_ROUTES.md#routes)
+- [Preconfigured views for Web ](./docs/README_ROUTES.md#web-views-and-components)
+- [FIDO2 Security Keys Passkey Feature](./docs/README_FIDO2.md) **New Feature**
 
 ## Compatability
 
@@ -183,7 +184,7 @@ Add the following fields to your `.env` file and set the values according to you
 >[!IMPORTANT]
 >To sync the web session timeout with the cognito access token ttl value, set the **SESSION_LIFETIME** parameter in the .env file. This value is in minutes with the default value being 120 mins i.e. 2 hours. This will ensure that the laravel session times out at the same time as the access token.
 
-For more details on how to find AWS_COGNITO_CLIENT_ID, AWS_COGNITO_CLIENT_SECRET and AWS_COGNITO_USER_POOL_ID for your application, please refer [COGNITOCONFIG File](COGNITOCONFIG.md)
+For more details on how to find AWS_COGNITO_CLIENT_ID, AWS_COGNITO_CLIENT_SECRET and AWS_COGNITO_USER_POOL_ID for your application, please refer [COGNITOCONFIG File](docs/COGNITOCONFIG.md)
 
 ### Importing existing users into the Cognito Pool
 

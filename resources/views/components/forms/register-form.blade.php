@@ -105,6 +105,12 @@
                 {{ __('Register') }}
             </button>
 
+            @if (Route::has('cognito.form.register.verify'))
+            <a href="{{ route('cognito.form.register.verify') }}" class="btn btn-link float-end">
+                {{ __('Verify?') }}
+            </a>
+            @endif
+
             @if (Route::has('cognito.form.login'))
                 <a class="btn btn-link float-end" href="{{ route('cognito.form.login') }}">
                     {{ __('Login?') }}

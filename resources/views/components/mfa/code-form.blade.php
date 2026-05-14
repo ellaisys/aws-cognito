@@ -6,22 +6,22 @@
 
                 <div class="card-body">
                     <x-cognito::common.alert />
-                    <form method="POST" action="{{ route('cognito.action.mfa.code.submit') }}">
+                    <form method="POST" action="{{ route('cognito.action.auth.challenge.submit') }}">
                         @csrf
 
                         <input type="hidden" id="challenge_name" name="challenge_name" value="{{ request('status') }}">
                         <input type="hidden" id="session" name="session" value="{{ request('session_token') }}">
 
                         <div class="row mb-3">
-                            <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Code') }}</label>
+                            <label for="challenge_value" class="col-md-4 col-form-label text-md-end">{{ __('Code') }}</label>
 
                             <div class="col-md-6">
-                                <input type="text" id="mfa_code" name="mfa_code"
-                                    class="form-control @error('mfa_code') is-invalid @enderror"
+                                <input type="text" id="challenge_value" name="challenge_value"
+                                    class="form-control @error('challenge_value') is-invalid @enderror"
                                     value="" minlength="4"
                                     autocomplete="email" required autofocus />
 
-                                @error('mfa_code')
+                                @error('challenge_value')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
                                     </span>

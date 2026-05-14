@@ -26,6 +26,8 @@ use Ellaisys\Cognito\Events\Auth\PreRegistrationEvent;
 use Ellaisys\Cognito\Events\Auth\PostRegistrationEvent;
 
 use Exception;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class RegisterController extends Controller
 {
@@ -41,13 +43,6 @@ class RegisterController extends Controller
     */
 
     use RegistersUsers;
-
-    /**
-     * Where to redirect users after registration.
-     *
-     * @var string
-     */
-    public $redirectTo = null;
 
     /**
      * Client metadata to be sent to AWS Cognito
@@ -69,7 +64,7 @@ class RegisterController extends Controller
         $this->setIsControllerAction(true);
 
         parent::__construct();
-    }
+    } //Function ends
 
     /**
      * Get a validator for an incoming registration request.
@@ -84,7 +79,7 @@ class RegisterController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
-    }
+    } //Function ends
 
     /**
      * Create a new user instance after a valid registration.
@@ -96,41 +91,46 @@ class RegisterController extends Controller
     {
         $user = Auth::getProvider()->getModel();
         return $user::create($data);
-    }
-
-    /**
-     * Get the post register / login redirect path.
-     *
-     * @return string
-     */
-    public function redirectPath()
-    {
-        //Check if property exists and not null
-        if (property_exists($this, 'redirectTo') && !is_null($this->redirectTo)) {
-            return $this->redirectTo;
-        } //End if
-
-        return config('cognito.routes.web.login_page', 'cognito.form.login');
-    }
+    } //Function ends
 
     /**
      * Action to invite the a new user
      *
      * @param  \Illuminate\Http\Request  $request
      */
-    public function actionRegister(Request $request)
+    public function actionRegister(Request $request, bool $isInviteAction = false)
     {
         try {
+            //Initialize variables
+            $returnValue = null;
+            $user = null;
+
             //Raise pre registration event
             $this->callPreRegistrationEvent($request);
 
-            //Validate request and get registration data
-            $user = $this->register($request, $this->clientMetadata, false);
-            if ($user) {
-                //Raise post registration event
-                $this->callPostRegistrationEvent($request, $user);
+            if ($isInviteAction) {
+                //Validate request and get invite data
+                $user = $this->invite($request, $this->clientMetadata);
+            } else {
+                //Validate request and get registration data
+                $user = $this->register($request, $this->clientMetadata, false);
+            } //End if
 
-                return $this->response->success($user);
+            if (!empty($user)) {
+                //Raise post registration event
+                $this->callPostRegistrationEvent($request, $user->toArray());
+
+                if($this->getIsJsonResponse($request)) {
+                    $returnValue = $this->response->success($user);
+                } else {
+                    $returnValue = redirect()
+                        ->route($this->redirectPath())
+                        ->with('status', 'Registration successful. Please login to continue.')
+                        ->with('message', trans('messages.auth.registration_success'));
+                } //End if
+                return $returnValue;
+            } else {
+                throw new BadRequestHttpException('User registration failed.');
             } //End if
         } catch (Exception $e) {
             Log::error('RegisterController:actionRegister:Exception');
@@ -146,17 +146,7 @@ class RegisterController extends Controller
     public function actionInvite(Request $request)
     {
         try {
-            //Raise pre registration event
-            $this->callPreRegistrationEvent($request);
-
-            //Validate request and get registration data
-            $user = $this->invite($request, $this->clientMetadata);
-            if ($user) {
-                //Raise post registration event
-                $this->callPostRegistrationEvent($request, $user->toArray());
-
-                return $this->response->success($user);
-            } //End if
+            $this->actionRegister($request, true);
         } catch (Exception $e) {
             Log::error('RegisterController:actionInvite:Exception');
             throw $e;

@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoUserPool;
+
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoUserStatusTypes;
 
 use Exception;
@@ -113,7 +115,7 @@ trait ConfirmsPasswords
             $client = app()->make(AwsCognitoClient::class);
 
             //Get User Data
-            $this->authData = $client->getUser($payload[$paramUsername]);
+            $this->authData = $client->adminGetUser($payload[$paramUsername]);
             if (empty($this->authData)) {
                 throw new InvalidUserException(AwsCognitoException::COGNITO_USER_INVALID);
             } //End if
@@ -167,6 +169,7 @@ trait ConfirmsPasswords
     {
         //Authenticate user
         $login = $client->authenticate(
+            CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH,
             $payload[$paramUsername],
             $payload[$passwordOld]
         );
