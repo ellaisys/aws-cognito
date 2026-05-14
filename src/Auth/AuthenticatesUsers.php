@@ -174,6 +174,11 @@ trait AuthenticatesUsers
             $returnValue = null;
             $guard = $this->getGuard($request);
 
+            //Convert challenge name to upper case if present in the request
+            if ($request->has('challenge_name')) {
+                $request->merge(['challenge_name' => strtoupper($request['challenge_name'])]);
+            } //End if
+
             //Validate payload
             $validator = Validator::make($request->all(), $this->rulesChallenge());
             if ($validator->fails()) {
@@ -262,7 +267,7 @@ trait AuthenticatesUsers
         return [
             'username'          => 'sometimes',
             'session'           => 'required',
-            'challenge_name'    => 'required|in:WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA',
+            'challenge_name'    => 'required|in:WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD_VERIFIER',
             'challenge_value'   => 'required',
         ];
     } //Function ends
