@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito\Auth;
 
+use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -21,6 +22,9 @@ use Illuminate\Foundation\Application;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoUserPool;
+
+use Ellaisys\Cognito\Events\Auth\PreRegistrationEvent;
+use Ellaisys\Cognito\Events\Auth\PostRegistrationEvent;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -49,6 +53,14 @@ trait RegistersUsers
     private $paramPassword = 'password';
 
     /**
+     * Private variable for success message
+     *
+     * @var string
+     */
+    private string $statusMsg = 'Registration successful. Please verify your email to continue.';
+    private string $messageKey = 'messages.auth.registration_success';
+
+    /**
      * Handle a registration invite for the application.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -58,6 +70,9 @@ trait RegistersUsers
     {
         $this->registrationType = 'invite';
         $this->redirectTo = config('cognito.routes.web.home_page');
+
+        $this->statusMsg = 'User invited successfully. An invitation email has been sent to the user.';
+        $this->messageKey = 'messages.auth.invitation_success';
 
         return $this->register(
             $request, $clientMetadata, true
@@ -72,18 +87,26 @@ trait RegistersUsers
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function register(Request $request, ?array $clientMetadata = null,
-        bool $ignoreConfigRegistrationType = false)
+        bool $usePassedRegistrationType = false)
     {
         try {
             // Initialize variables
             $returnValue = null;
             $cognitoRegistered=false;
-            $user = [];
+            $user = null;
 
             //Set the registration type
-            if (!$ignoreConfigRegistrationType) {
+            if (!$usePassedRegistrationType) {
                 $this->registrationType = config('cognito.registration_type', 'register');
             } //End if
+
+            //Redirect to verification page if registration type is register
+            if ($this->registrationType=='register') {
+                $this->redirectTo = config('cognito.routes.web.register_verify_page');
+            } //End if
+
+            //Raise pre registration event
+            $this->callPreRegistrationEvent($request);
 
             //Get the password policy
             $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
@@ -110,33 +133,13 @@ trait RegistersUsers
             );
 
             if (!empty($cognitoRegistered)) {
-                //Remove the password
-                if(!empty($payload[$this->paramPassword])) {
-                    unset($payload[$this->paramPassword]);
-                } //End if
-
-                //Add cognito data to user data
-                if ($this->registrationType=='invite') {
-                    $cognitoUser = $cognitoRegistered['User'];
-                    if ($cognitoUser) {
-                        $cognitoAttributes = $cognitoUser['Attributes'];
-                        if ($cognitoAttributes && is_array($cognitoAttributes) && count($cognitoAttributes)>0) {
-                            foreach ($cognitoAttributes as $cognitoAttribute) {
-                                $payload[$cognitoAttribute['Name']] = $cognitoAttribute['Value'];
-                            } //End foreach
-                        } //End if
-                    } //End if
-                } else {
-                    $payload = array_merge($payload, [
-                        config('cognito.user_subject_uuid') => $cognitoRegistered['UserSub'],
-                    ]);
-                } //End if
-
-                //Create user in local store
-                $user = $this->create($payload);
+                $user = $this->createLocalUser($payload, $cognitoRegistered->toArray());
             } else {
                 throw new AwsCognitoException('User registration failed in Cognito.');
             } //End if
+
+            //Raise post registration event
+            $this->callPostRegistrationEvent($request, $user);
 
             //Return response
             if ($this->isControllerAction) {
@@ -146,8 +149,8 @@ trait RegistersUsers
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
-                    ->with('status', 'Registration successful. Please login to continue.')
-                    ->with('message', trans('messages.auth.registration_success'));
+                    ->with('status', $this->statusMsg)
+                    ->with('message', trans($this->messageKey));
             } //End if
 
             return $returnValue;
@@ -248,6 +251,59 @@ trait RegistersUsers
     } //Function ends
 
     /**
+     * Method to create a new user instance after a valid registration.
+     *
+     * @param  array  $data
+     * @return mixed
+     */
+    protected function createLocalUser(array $payload, array $cognitoRegistered): array
+    {
+        try {
+            //Get the user model
+            $model = Auth::getProvider()->getModel();
+
+            //Remove the password
+            if(!empty($payload[$this->paramPassword])) {
+                unset($payload[$this->paramPassword]);
+            } //End if
+
+            //Set the register type and registered at fields
+            if (is_callable([$model, 'hasRegistrationTrait'], true)) {
+                $payload = array_merge($payload, [
+                    'register_type' => $this->registrationType,
+                    'registered_at' => now(),
+                ]);
+            } //End if
+
+            //Add cognito data to user data
+            if ($this->registrationType=='invite') {
+                $cognitoUser = $cognitoRegistered['User'];
+                if ($cognitoUser) {
+                    $cognitoAttributes = $cognitoUser['Attributes'];
+                    if ($cognitoAttributes && is_array($cognitoAttributes) && count($cognitoAttributes)>0) {
+                        foreach ($cognitoAttributes as $cognitoAttribute) {
+                            $payload[$cognitoAttribute['Name']] = $cognitoAttribute['Value'];
+                        } //End foreach
+                    } //End if
+                } //End if
+            } else {
+                if (is_callable([$model, 'hasSubTrait'], true)) {
+                    $payload = array_merge($payload, [
+                        config('cognito.user_subject_uuid') => $cognitoRegistered['UserSub']
+                    ]);
+                } //End if
+            } //End if
+
+            //Create the user in local database
+            $user = $model::create($payload);
+            return $user->toArray();
+        } catch (Exception $e) {
+            Log::error('RegistersUsers:createLocalUser:Exception');
+            throw $e;
+        } //End try
+    } //Function ends
+
+    /**
      * Get the registration validation rules.
      *
      * @return array
@@ -292,6 +348,40 @@ trait RegistersUsers
             Log::error('RegistersUsers:rulesRegisterUser:Exception');
             throw $e;
         } //End try
+    } //Function ends
+
+    /**
+     * Method to raise the pre registration event
+      *
+      * @param  \Illuminate\Http\Request  $request
+      * @return void
+      */
+    protected function callPreRegistrationEvent(Request $request): void
+    {
+        //Raise pre registration event
+        event(new PreRegistrationEvent(
+            $this->registrationType,
+            $request->except('password'),
+            $request->ip()
+        ));
+    } //Function ends
+
+    /**
+     * Method to raise the post registration event
+      *
+      * @param  \Illuminate\Http\Request  $request
+      * @param  array|null  $user
+      * @return void
+      */
+    protected function callPostRegistrationEvent(Request $request, ?array $user): void
+    {
+        //Raise post registration event
+        event(new PostRegistrationEvent(
+            $this->registrationType,
+            $user,
+            $request->except('password'),
+            $request->ip()
+        ));
     } //Function ends
 
 } //Trait ends
