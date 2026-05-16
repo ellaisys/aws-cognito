@@ -183,6 +183,16 @@ trait BaseAuthTrait
     } //Function ends
 
     /**
+     * Method to get the local provider model
+     *
+     * @return string
+     */
+    protected function getLocalProviderModel()
+    {
+        return Auth::getProvider()->getModel();
+    } //Function ends
+
+    /**
      * Method to get the access token of the authenticated user based on the request type
      *
      * @param Request $request
@@ -206,6 +216,15 @@ trait BaseAuthTrait
         }
     } //Function ends
 
+    /**
+     * Get the data from the query parameter based on the parameter name and encryption type
+     *
+     * @param  Request $request
+     * @param  string $paramName (optional)
+     * @param  EncryptionTypes $encryptionType (optional)
+     * @param  bool $filterEmail (optional)
+     * @return mixed
+     */
     protected function getDataFromQueryParam(Request $request,
         string $paramName='email',
         EncryptionTypes $encryptionType=EncryptionTypes::DEFAULT,
