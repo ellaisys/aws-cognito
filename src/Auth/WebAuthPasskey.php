@@ -105,8 +105,18 @@ trait WebAuthPasskey
                 json_decode($request['credential'], true)
             );
 
+            //Get Authenticated user
+            $model = $this->getAuthenticatedUser($request);
+            if (is_callable([$model, 'hasPasskeyTrait'], true)) {
+                $model->is_webauthn_enabled = true;
+                $model->save();
+            } //End if
+
             //Fire PostPasskeyCompleteEvent
-            event(new PostPasskeyCompleteEvent($this->getUser($request), $response, $request->ip()));
+            event(new PostPasskeyCompleteEvent(
+                    $model->toArray(),
+                    $response->toArray(), $request->ip()
+                ));
 
             //Return response
             if ($this->isControllerAction) {
