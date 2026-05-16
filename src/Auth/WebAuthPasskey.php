@@ -235,6 +235,13 @@ trait WebAuthPasskey
                 $request['credential_id']
             );
 
+            //Get Authenticated user
+            $model = $this->getAuthenticatedUser($request);
+            if (is_callable([$model, 'hasPasskeyTrait'], true)) {
+                $model->is_webauthn_enabled = false;
+                $model->save();
+            } //End if
+
             //Return response
             if ($this->isControllerAction) {
                 $returnValue = $response;
