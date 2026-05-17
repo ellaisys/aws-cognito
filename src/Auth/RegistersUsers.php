@@ -275,6 +275,28 @@ trait RegistersUsers
                 ]);
             } //End if
 
+            //Build the local user data by adding the cognito registered data to it
+            $payload = array_merge($payload, $this->buildLocalUserData($payload, $cognitoRegistered));
+
+            //Create the user in local database
+            $user = $model::create($payload);
+            return $user->toArray();
+        } catch (Exception $e) {
+            Log::error('RegistersUsers:createLocalUser:Exception');
+            throw $e;
+        } //End try
+    } //Function ends
+
+    /**
+     * Method to build the local user data by adding the cognito registered data to it
+     *
+     * @param array $payload
+     * @param array $cognitoRegistered
+     * @return array
+     */
+    private function buildLocalUserData(array $payload, array $cognitoRegistered): array
+    {
+        try {
             //Add cognito data to user data
             if ($this->registrationType=='invite') {
                 $cognitoUser = $cognitoRegistered['User'];
@@ -287,18 +309,16 @@ trait RegistersUsers
                     } //End if
                 } //End if
             } else {
-                if (is_callable([$model, 'hasSubTrait'], true)) {
+                if (is_callable([Auth::getProvider()->getModel(), 'hasSubTrait'], true)) {
                     $payload = array_merge($payload, [
                         config('cognito.user_subject_uuid') => $cognitoRegistered['UserSub']
                     ]);
                 } //End if
             } //End if
 
-            //Create the user in local database
-            $user = $model::create($payload);
-            return $user->toArray();
+            return $payload;
         } catch (Exception $e) {
-            Log::error('RegistersUsers:createLocalUser:Exception');
+            Log::error('RegistersUsers:buildLocalUserData:Exception');
             throw $e;
         } //End try
     } //Function ends
