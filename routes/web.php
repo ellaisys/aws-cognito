@@ -30,10 +30,14 @@ Route::group([], function () {
     Route::group(['prefix' => 'register'], function() {
         Route::get('/',  function () { return view('cognito::pages.auth.registers.register'); })->name('form.register');
         Route::post('/', [RegisterController::class, 'actionRegister'])->name('action.register.submit');
-        Route::get('/verify',  function () { return view('cognito::pages.auth.registers.verify'); })->name('form.register.verify');
-        Route::post('/verify', [VerificationController::class, 'verify'])->name('action.register.verify');
-        Route::get('/resend-code',  function () { return view('cognito::pages.auth.registers.resend'); })->name('form.register.resend_code');
-        Route::post('/resend-code', [VerificationController::class, 'resend'])->name('action.register.resend_code');
+        Route::group(['prefix' => 'verify'], function() {
+            Route::get('/',  function () { return view('cognito::pages.auth.registers.verify'); })->name('form.register.verify');
+            Route::post('/', [VerificationController::class, 'verify'])->name('action.register.verify');
+        });
+        Route::group(['prefix' => 'resend-code'], function() {
+            Route::get('/',  function () { return view('cognito::pages.auth.registers.resend'); })->name('form.register.resend_code');
+            Route::post('/', [VerificationController::class, 'resend'])->name('action.register.resend_code');
+        });
     });
 
     //Forgot password
