@@ -46,11 +46,10 @@
     <div class="dropdown-divider"></div>
 
     @php
-        $passkeyEnabled = config('cognito.allow_passkeys');
-        $passkeyEnabled = ($passkeyEnabled && Auth::user() && isset(Auth::user()->is_webauthn_enabled)) ? Auth::user()->is_webauthn_enabled : false;
+        $passkeyEnabled = (Auth::user() && isset(Auth::user()->is_webauthn_enabled)) ? Auth::user()->is_webauthn_enabled : false;
     @endphp
 
-    @if (Route::has('cognito.action.user.passkey.delete') && $passkeyEnabled)
+    @if (Route::has('cognito.action.user.passkey.delete') && config('cognito.allow_passkeys') && $passkeyEnabled)
     <button class="dropdown-item"
         onclick="event.preventDefault();
         frmAction=document.getElementById('form-action');

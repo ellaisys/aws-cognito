@@ -3,8 +3,7 @@
 @section('content')
 
 @php
-    $passkeyEnabled = config('cognito.allow_passkeys');
-    $passkeyEnabled = ($passkeyEnabled && Auth::user() && isset(Auth::user()->is_webauthn_enabled)) ? Auth::user()->is_webauthn_enabled : false;
+    $passkeyEnabled = (Auth::user() && isset(Auth::user()->is_webauthn_enabled)) ? Auth::user()->is_webauthn_enabled : false;
 @endphp
 
 <div class="container">
@@ -13,7 +12,7 @@
             <div class="card mb-2">
                 <div class="card-header">
                     {{ __('Dashboard') }}
-                    @if (!$passkeyEnabled)
+                    @if (config('cognito.allow_passkeys') && !$passkeyEnabled)
                     <button id="enable-passkeys-button" class="btn btn-outline-primary float-end">Enable Passkeys</button>
                     @endif
                 </div>
