@@ -23,7 +23,7 @@ return new class extends Migration
                 $output->writeln('The users table has the is_webauthn_enabled column. Skipping adding is_webauthn_enabled column.');
             } //End if
         } else {
-            throw new \RuntimeException('Laravel version is not supported. Works only with Laravel 8.37 or higher.');
+            throw new \LogicException('Laravel version is not supported. Works only with Laravel 8.37 or higher.');
         } //End if
     }
 
