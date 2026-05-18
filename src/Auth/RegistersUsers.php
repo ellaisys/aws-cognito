@@ -253,8 +253,9 @@ trait RegistersUsers
     /**
      * Method to create a new user instance after a valid registration.
      *
-     * @param  array  $data
-     * @return mixed
+     * @param  array  $payload
+     * @param  array  $cognitoRegistered
+     * @return array
      */
     protected function createLocalUser(array $payload, array $cognitoRegistered): array
     {
