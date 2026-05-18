@@ -49,6 +49,13 @@ class AwsCognito
     public static $runsMigrations = true;
 
     /**
+     * The default user model class name.
+     *
+     * @var string
+     */
+    public static $userModel = 'App\\Models\\User';
+
+    /**
      * The authentication provider.
      *
      * @var \Ellaisys\Cognito\Contracts\Providers\Auth
@@ -125,6 +132,17 @@ class AwsCognito
     public static function ignoreMigrations(): void
     {
         static::$runsMigrations = false;
+    } //Function ends
+
+    /**
+     * Set the user model class name.
+     *
+     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $userModel
+     * @return void
+     */
+    public static function setUserModel(string $userModel): void
+    {
+        static::$userModel = $userModel;
     } //Function ends
 
     /**
