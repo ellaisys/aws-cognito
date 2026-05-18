@@ -107,7 +107,7 @@ trait WebAuthPasskey
 
             //Get Authenticated user
             $model = $this->getAuthenticatedUser($request);
-            if (is_callable([$model, 'hasPasskeyTrait'], true)) {
+            if (method_exists($model, 'hasPasskeyTrait') && $model->hasPasskeyTrait()) {
                 $model->is_webauthn_enabled = true;
                 $model->save();
             } //End if
@@ -237,7 +237,7 @@ trait WebAuthPasskey
 
             //Get Authenticated user
             $model = $this->getAuthenticatedUser($request);
-            if (is_callable([$model, 'hasPasskeyTrait'], true)) {
+            if (method_exists($model, 'hasPasskeyTrait') && $model->hasPasskeyTrait()) {
                 $model->is_webauthn_enabled = false;
                 $model->save();
             } //End if
