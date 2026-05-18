@@ -19,6 +19,8 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
+use Illuminate\Support\Facades\Log;
+
 class PostRegistrationEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -52,6 +54,14 @@ class PostRegistrationEvent
         $this->user = $user;
         $this->data = $data;
         $this->ipAddress = $ipAddress;
+
+        // Log the event data for debugging purposes
+        Log::debug('PostRegistrationEvent fired', [
+            'type' => $this->type,
+            'user' => $this->user,
+            'data' => $this->data,
+            'ip_address' => $this->ipAddress,
+        ]);
     }
 
     /**

@@ -19,6 +19,8 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
+use Illuminate\Support\Facades\Log;
+
 class PostAuthSuccessEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -46,6 +48,13 @@ class PostAuthSuccessEvent
         $this->user = $user;
         $this->data = $data;
         $this->ipAddress = $ipAddress;
+
+        // Log the event data for debugging purposes
+        Log::debug('PostAuthSuccessEvent fired', [
+            'user' => $this->user,
+            'data' => $this->data,
+            'ip_address' => $this->ipAddress,
+        ]);
     }
 
     /**

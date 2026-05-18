@@ -19,6 +19,8 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
+use Illuminate\Support\Facades\Log;
+
 use Exception;
 
 class PostAuthFailedEvent
@@ -48,6 +50,13 @@ class PostAuthFailedEvent
         $this->data = $data;
         $this->error = $error;
         $this->ipAddress = $ipAddress;
+
+        // Log the event data for debugging purposes
+        Log::debug('PostAuthFailedEvent fired', [
+            'data' => $this->data,
+            'error' => $this->error,
+            'ip_address' => $this->ipAddress,
+        ]);
     }
 
     /**

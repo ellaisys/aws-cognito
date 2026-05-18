@@ -19,6 +19,8 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
+use Illuminate\Support\Facades\Log;
+
 class PreRegistrationEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -46,6 +48,13 @@ class PreRegistrationEvent
         $this->type = $type;
         $this->data = $data;
         $this->ipAddress = $ipAddress;
+
+        // Log the event data for debugging purposes
+        Log::debug('PreRegistrationEvent fired', [
+            'type' => $this->type,
+            'data' => $this->data,
+            'ip_address' => $this->ipAddress,
+        ]);
     }
 
     /**

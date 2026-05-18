@@ -19,6 +19,8 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
+use Illuminate\Support\Facades\Log;
+
 class PostLogoutEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -40,6 +42,12 @@ class PostLogoutEvent
     {
         $this->data = $data;
         $this->ipAddress = $ipAddress;
+
+        // Log the event data for debugging purposes
+        Log::debug('PostLogoutEvent fired', [
+            'data' => $this->data,
+            'ip_address' => $this->ipAddress,
+        ]);
     }
 
     /**

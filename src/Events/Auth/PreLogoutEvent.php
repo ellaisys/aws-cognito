@@ -19,6 +19,8 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
+use Illuminate\Support\Facades\Log;
+
 class PreLogoutEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -40,6 +42,12 @@ class PreLogoutEvent
     {
         $this->data = $data;
         $this->ipAddress = $ipAddress;
+
+        // Log the event data for debugging purposes
+        Log::debug('PreLogoutEvent fired', [
+            'data' => $this->data,
+            'ip_address' => $this->ipAddress,
+        ]);
     }
 
     /**
