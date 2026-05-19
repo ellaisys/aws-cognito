@@ -1,3 +1,11 @@
+Release 48 (tag v2.0.4)
+- Feat: Issue [#135](https://github.com/ellaisys/aws-cognito/issues/135)
+- Feat: Issue [#136](https://github.com/ellaisys/aws-cognito/issues/136)
+- Feat: Add new traits (ManagesPasskey, ManagesRegistration, ManagesSubject, CognitoAuthenticatable) to persist is_webauthn_enabled, register_type, registered_at, and sub (subject key) on the user model.
+- Fix: Refactor of RegistersUsers/RegisterController to centralise local-user creation, raise pre/post registration events, and parameterise status messages for register vs. invite flows.
+- Feat: WebAuthPasskey::complete/delete now toggle is_webauthn_enabled on the user, fire a new PostPasskeyCompleteEvent. 
+- Feat: The home view/nav menu gain passkey-delete UI; all event constructors gain Log::debug calls and many files get a license header.
+
 Release 47 (tag v2.0.3)
 - Fix: Issue [#124](https://github.com/ellaisys/aws-cognito/issues/124)
 - Feat: FIDO2/Passkey support for AWS Cognito client configuration
