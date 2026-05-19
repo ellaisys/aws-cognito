@@ -14,11 +14,9 @@ namespace Ellaisys\Cognito\Auth;
 use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Foundation\Application;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoUserPool;
@@ -133,7 +131,7 @@ trait RegistersUsers
             );
 
             if (!empty($cognitoRegistered)) {
-                $user = $this->createLocalUser($payload, $cognitoRegistered->toArray());
+                $user = $this->createUserInDatastore($payload, $cognitoRegistered->toArray());
             } else {
                 throw new AwsCognitoException('User registration failed in Cognito.');
             } //End if
@@ -187,27 +185,11 @@ trait RegistersUsers
     public function createCognitoUser(Collection $request,
         ?array $clientMetadata = null, ?string $groupname = null)
     {
-        //Initialize Cognito Attribute array
-        $attributes = [];
-
         //Get the configuration for new user invitation message action.
         $messageAction = config('cognito.new_user_message_action', null);
 
-        //Get the registeration fields
-        $userFields = config('cognito.cognito_user_fields');
-
-        //Iterate the fields
-        foreach ($userFields as $key => $userField) {
-            if ($userField!=null) {
-                if ($request->has($userField)) {
-                    $attributes[$key] = $request->get($userField);
-                } else {
-                    Log::error('RegistersUsers:createCognitoUser:InvalidUserFieldException');
-                    Log::error("The configured user field {$userField} is not provided in the request.");
-                    throw new InvalidUserFieldException("The configured user field {$userField} is not provided in the request.");
-                } //End if
-            } //End if
-        } //Loop ends
+        //Build the Cognito user payload
+        $attributes = $this->buildCognitoUserPayload($request);
 
         //Register the user in Cognito
         $userKey = $request->has('username')?'username':'email';
@@ -216,38 +198,53 @@ trait RegistersUsers
         $password = null;
         if (config('cognito.force_new_user_password', true)) {
             $password = $request->has($this->paramPassword)?$request[$this->paramPassword]:null;
-        }// End if
+        } // End if
 
-        switch ($this->registrationType) {
-            case 'invite':
-                //Invite User
-                return app()->make(AwsCognitoClient::class)->inviteUser(
-                    $request[$userKey], $password, $attributes,
-                    $clientMetadata, $messageAction,
-                    $groupname
-                );
-                break;
+        if ($this->registrationType == 'invite') {
+            //Invite User
+            return app()->make(AwsCognitoClient::class)->inviteUser(
+                $request[$userKey], $password, $attributes,
+                $clientMetadata, $messageAction,
+                $groupname
+            );
+        } elseif ($this->registrationType == 'register') {
+            //Password is required for register
+            if (empty($password)) {
+                $password = $this->generateRandomPassword();
+            } //End if
 
-            case 'register':
-            default:
-                //Password is required for register
-                if (empty($password)) {
-                    //Laravel versions prior to 10 do not have Str::password method
-                    if (version_compare(Application::VERSION, '10.0.0', '<')) {
-                        $password = Str::random(10).'1A!';
-                    } else {
-                        $password = Str::password(12);
-                    } //End if
-                } //End if
+            //Register User
+            return app()->make(AwsCognitoClient::class)->register(
+                $request[$userKey], $password, $attributes,
+                $clientMetadata, $groupname
+            );
+        } else {
+            throw new HttpException(400, 'Invalid registration type.');
+        } //End if
+    } //Function ends
 
-                //Register User
-                return app()->make(AwsCognitoClient::class)->register(
-                    $request[$userKey], $password, $attributes,
-                    $clientMetadata, $groupname
-                );
-                break;
-        } //End switch
+    /**
+     * Method to determine if the response should be in json format based on the request type
+     *
+     * @param Request $request
+     *
+     * @return bool
+     */
+    private function buildCognitoUserPayload(Collection $request): array
+    {
+        $attributes = [];
 
+        //Get the registeration fields
+        $userFields = config('cognito.cognito_user_fields');
+
+        //Iterate the fields
+        foreach ($userFields as $key => $userField) {
+            if ($userField!=null && $request->has($userField)) {
+                $attributes[$key] = $request->get($userField);
+            } //End if
+        } //Loop ends
+
+        return $attributes;
     } //Function ends
 
     /**
@@ -257,19 +254,14 @@ trait RegistersUsers
      * @param  array  $cognitoRegistered
      * @return array
      */
-    protected function createLocalUser(array $payload, array $cognitoRegistered): array
+    protected function createUserInDatastore(array $payload, array $cognitoRegistered): array
     {
         try {
             //Get the user model
             $model = Auth::getProvider()->getModel();
 
-            //Remove the password
-            if(!empty($payload[$this->paramPassword])) {
-                unset($payload[$this->paramPassword]);
-            } //End if
-
             //Set the register type and registered at fields
-            if (is_callable([$model, 'hasRegistrationTrait'], true)) {
+            if (method_exists($model, 'hasRegistrationTrait')) {
                 $payload = array_merge($payload, [
                     'register_type' => $this->registrationType,
                     'registered_at' => now(),
@@ -277,13 +269,13 @@ trait RegistersUsers
             } //End if
 
             //Build the local user data by adding the cognito registered data to it
-            $payload = array_merge($payload, $this->buildLocalUserData($payload, $cognitoRegistered));
+            $payload = array_merge($payload, $this->buildUserPayloadForDatastore($payload, $cognitoRegistered));
 
             //Create the user in local database
             $user = $model::create($payload);
             return $user->toArray();
         } catch (Exception $e) {
-            Log::error('RegistersUsers:createLocalUser:Exception');
+            Log::error('RegistersUsers:createUserInDatastore:Exception');
             throw $e;
         } //End try
     } //Function ends
@@ -295,33 +287,95 @@ trait RegistersUsers
      * @param array $cognitoRegistered
      * @return array
      */
-    private function buildLocalUserData(array $payload, array $cognitoRegistered): array
+    private function buildUserPayloadForDatastore(array $payload, array $cognitoRegistered): array
     {
         try {
+            //Remove the password
+            if(!empty($payload[$this->paramPassword])) {
+                unset($payload[$this->paramPassword]);
+            } //End if
+
             //Add cognito data to user data
             if ($this->registrationType=='invite') {
-                $cognitoUser = $cognitoRegistered['User'];
-                if ($cognitoUser) {
-                    $cognitoAttributes = $cognitoUser['Attributes'];
-                    if ($cognitoAttributes && is_array($cognitoAttributes) && count($cognitoAttributes)>0) {
-                        foreach ($cognitoAttributes as $cognitoAttribute) {
-                            $payload[$cognitoAttribute['Name']] = $cognitoAttribute['Value'];
-                        } //End foreach
-                    } //End if
-                } //End if
+                $payload = array_merge(
+                        $payload,
+                        $this->buildInvitePayloadForDatastore($payload, $cognitoRegistered)
+                    );
             } else {
-                if (is_callable([Auth::getProvider()->getModel(), 'hasSubTrait'], true)) {
-                    $payload = array_merge($payload, [
-                        config('cognito.user_subject_uuid') => $cognitoRegistered['UserSub']
-                    ]);
-                } //End if
+                $payload = array_merge(
+                        $payload,
+                        $this->buildRegisterPayloadForDatastore($payload, $cognitoRegistered)
+                    );
             } //End if
 
             return $payload;
         } catch (Exception $e) {
-            Log::error('RegistersUsers:buildLocalUserData:Exception');
+            Log::error('RegistersUsers:buildUserPayloadForDatastore:Exception');
             throw $e;
         } //End try
+    } //Function ends
+
+    /**
+     * Add invite attributes to payload
+     *
+     * @param array $payload
+     * @param array $cognitoRegistered
+     * @return array
+     */
+    private function buildInvitePayloadForDatastore(array $payload, array $cognitoRegistered): array
+    {
+        if (!isset($cognitoRegistered['User'])) {
+            return [];
+        } //End if
+
+        $cognitoUser = $cognitoRegistered['User'];
+        $cognitoAttributes = $cognitoUser['Attributes'] ?? [];
+
+        if (!is_array($cognitoAttributes) || count($cognitoAttributes) === 0) {
+            return [];
+        } //End if
+
+        //Get the user model
+        $model = Auth::getProvider()->getModel();
+
+        //Get the registeration fields
+        $userFields = config('cognito.cognito_user_fields');
+
+        foreach ($cognitoAttributes as $cognitoAttribute) {
+            $key = $cognitoAttribute['Name'];
+            if (strtolower($key) === 'sub' && (method_exists($model, 'hasSubTrait'))) {
+                $key = config('cognito.user_subject_uuid', 'sub');
+            } elseif (array_key_exists($key, $userFields)) {
+                $key = $userFields[$key];
+            } else {
+                continue; // Skip attributes that are not mapped
+            } //End if
+
+            $payload[$key] = $cognitoAttribute['Value'];
+        } //End foreach
+
+        return $payload;
+    } //Function ends
+
+    /**
+     * Add registration attributes to payload
+     *
+     * @param array $payload
+     * @param array $cognitoRegistered
+     * @return array
+     */
+    private function buildRegisterPayloadForDatastore(array $payload, array $cognitoRegistered): array
+    {
+        //Get the user model
+        $model = Auth::getProvider()->getModel();
+
+        if (method_exists($model, 'hasSubTrait')) {
+            $payload = array_merge($payload, [
+                config('cognito.user_subject_uuid') => $cognitoRegistered['UserSub']
+            ]);
+        } //End if
+
+        return $payload;
     } //Function ends
 
     /**
