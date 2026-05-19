@@ -21,7 +21,7 @@ use Illuminate\Queue\SerializesModels;
 
 use Illuminate\Support\Facades\Log;
 
-class PreLogoutEvent
+class PostPasskeyCompleteEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -31,6 +31,11 @@ class PreLogoutEvent
     public $data;
 
     /**
+     * Created user data
+     */
+    public $user;
+
+    /**
      * IP Address
      */
     public $ipAddress;
@@ -38,13 +43,15 @@ class PreLogoutEvent
     /**
      * Create a new event instance.
      */
-    public function __construct(array $data, string $ipAddress)
+    public function __construct(array $user, array $data, string $ipAddress)
     {
+        $this->user = $user;
         $this->data = $data;
         $this->ipAddress = $ipAddress;
 
         // Log the event data for debugging purposes
-        Log::debug('PreLogoutEvent fired', [
+        Log::debug('PostPasskeyCompleteEvent fired', [
+            'user' => $this->user,
             'data' => $this->data,
             'ip_address' => $this->ipAddress,
         ]);

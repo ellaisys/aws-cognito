@@ -304,7 +304,7 @@ return [
     'delete_user'               => env('AWS_COGNITO_DELETE_USER', false),
 
     // Package configurations
-    'sso_user_model'        => env('AWS_COGNITO_USER_MODEL', 'App\Models\User'),
+    'sso_user_model'        => env('AWS_COGNITO_USER_MODEL', 'App\\Models\\User'),
 
     /*
     |--------------------------------------------------------------------------
@@ -496,6 +496,8 @@ return [
            'default_root_page' => env('AWS_COGNITO_DEFAULT_ROOT_PAGE', ''),
            'login_page' => env('AWS_COGNITO_LOGIN_PAGE', 'cognito.form.login'),
            'home_page' => env('AWS_COGNITO_HOME_ROUTE_NAME', 'cognito.home'),
+           'register_page' => env('AWS_COGNITO_REGISTER_PAGE', 'cognito.form.register'),
+           'register_verify_page' => env('AWS_COGNITO_VERIFY_REGISTER_PAGE', 'cognito.form.register.verify'),
         ]
     ]
 ];

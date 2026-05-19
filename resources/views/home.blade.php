@@ -1,13 +1,18 @@
 @extends(config('cognito.views.layout'))
 
 @section('content')
+
+@php
+    $passkeyEnabled = (Auth::user() && isset(Auth::user()->is_webauthn_enabled)) ? Auth::user()->is_webauthn_enabled : false;
+@endphp
+
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card mb-2">
                 <div class="card-header">
                     {{ __('Dashboard') }}
-                    @if (config('cognito.allow_passkeys'))
+                    @if (config('cognito.allow_passkeys') && !$passkeyEnabled)
                     <button id="enable-passkeys-button" class="btn btn-outline-primary float-end">Enable Passkeys</button>
                     @endif
                 </div>
@@ -48,10 +53,12 @@
         </div>
     </div>
 </div>
+
 @if (config('cognito.allow_passkeys'))
 <script>
     const urlPasskeyStartEndpoint = "{{Route::has('cognito.action.user.passkey.start') ? (route('cognito.action.user.passkey.start')) : 'null'}}";
     const urlPasskeyCompleteEndpoint = "{{Route::has('cognito.action.user.passkey.complete') ? (route('cognito.action.user.passkey.complete')) : 'null'}}";
+    const urlPasskeyDeleteEndpoint = "{{Route::has('cognito.action.user.passkey.delete') ? (route('cognito.action.user.passkey.delete')) : 'null'}}";
     const CSRF_TOKEN = '{{ csrf_token() }}';
 
     const enablePasskeysButton = document.getElementById('enable-passkeys-button');
@@ -191,6 +198,35 @@
             },
             clientExtensionResults: credential.getClientExtensionResults()
         }, null, 2);
+    }
+    
+
+    async function deletePasskey(credentialId, rpId) {
+        try {
+            // Get the passkey registration options from the server
+            var deleteResponse = await fetch(urlPasskeyDeleteEndpoint, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF_TOKEN
+                },
+                body: JSON.stringify({
+                    credential_id: credentialId
+                })
+            });
+
+            if (!deleteResponse.ok) {
+                throw new Error('Failed to delete passkey');
+            }
+
+            await PublicKeyCredential.signalUnknownCredential({
+                rpId: rpId,           // The ID of the Relying Party
+                credentialId: btoa(credentialId)   // The unrecognized credential ID
+            });
+        } catch (error) {
+            console.error('Error deleting passkey:', error);
+            this.errorAlert('Passkey deletion failed. Check the console for details.');
+        }
     }
 </script>
 @endif

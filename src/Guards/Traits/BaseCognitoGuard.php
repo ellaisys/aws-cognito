@@ -381,7 +381,7 @@ trait BaseCognitoGuard
         $user = null;
         if (config('cognito.add_missing_local_user')) {
             //Get user model from configuration
-            $userModel = config('cognito.sso_user_model');
+            $userModel = AwsCognito::$userModel;
 
             //Remove password from credentials if exists
             if (array_key_exists($keyPassword, $dataUser)) {

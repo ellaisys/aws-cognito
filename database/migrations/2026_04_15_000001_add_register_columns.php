@@ -14,13 +14,14 @@ return new class extends Migration
     public function up(): void
     {
         if (version_compare(app()->version(), '8.37', '>=')) {
-            if (!Schema::hasColumn('users', 'sub')) {
+            if (!Schema::hasColumn('users', 'register_type')) {
                 Schema::table('users', function (Blueprint $table) {
-                    $table->string('sub')->nullable()->index();
+                    $table->string('register_type')->nullable();
+                    $table->timestamp('registered_at')->nullable();
                 });
             } else {
                 $output = new ConsoleOutput();
-                $output->writeln('The users table has the sub column. Skipping adding sub column.');
+                $output->writeln('The users table has the register_type column. Skipping adding register_type column.');
             } //End if
         } else {
             throw new \LogicException('Laravel version is not supported. Works only with Laravel 8.37 or higher.');
@@ -32,15 +33,16 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasColumn('users', 'sub')) {
+        if (Schema::hasColumn('users', 'register_type')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->dropColumn([
-                    'sub',
+                    'register_type',
+                    'registered_at',
                 ]);
             });
         } else {
             $output = new ConsoleOutput();
-            $output->writeln('The users table does not have the sub column. Skipping dropping sub column.');
+            $output->writeln('The users table does not have the register_type column. Skipping dropping register_type column.');
         } //End if
     }
 };

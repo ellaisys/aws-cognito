@@ -14,13 +14,13 @@ return new class extends Migration
     public function up(): void
     {
         if (version_compare(app()->version(), '8.37', '>=')) {
-            if (!Schema::hasColumn('users', 'sub')) {
+            if (!Schema::hasColumn('users', 'is_webauthn_enabled')) {
                 Schema::table('users', function (Blueprint $table) {
-                    $table->string('sub')->nullable()->index();
+                    $table->boolean('is_webauthn_enabled')->default(false);
                 });
             } else {
                 $output = new ConsoleOutput();
-                $output->writeln('The users table has the sub column. Skipping adding sub column.');
+                $output->writeln('The users table has the is_webauthn_enabled column. Skipping adding is_webauthn_enabled column.');
             } //End if
         } else {
             throw new \LogicException('Laravel version is not supported. Works only with Laravel 8.37 or higher.');
@@ -32,15 +32,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasColumn('users', 'sub')) {
+        if (Schema::hasColumn('users', 'is_webauthn_enabled')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->dropColumn([
-                    'sub',
+                    'is_webauthn_enabled',
                 ]);
             });
         } else {
             $output = new ConsoleOutput();
-            $output->writeln('The users table does not have the sub column. Skipping dropping sub column.');
+            $output->writeln('The users table does not have the is_webauthn_enabled column. Skipping dropping is_webauthn_enabled column.');
         } //End if
     }
 };

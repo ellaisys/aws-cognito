@@ -13,13 +13,17 @@
 
     <div class="dropdown-divider"></div>
 
-    @if (Route::has('cognito.form.user.mfa.activate'))
+    @php
+        $mfaEnabled = config('cognito.mfa_setup')=='MFA_NONE' ? false : true;
+    @endphp
+
+    @if (Route::has('cognito.form.user.mfa.activate') && $mfaEnabled)
     <a class="dropdown-item" href="{{ route('cognito.form.user.mfa.activate') }}">
         {{ __('Activate MFA') }}
     </a>
     @endif
 
-    @if (Route::has('cognito.action.user.mfa.deactivate'))
+    @if (Route::has('cognito.action.user.mfa.deactivate') && $mfaEnabled)
     <a class="dropdown-item" href="{{ route('cognito.action.user.mfa.deactivate') }}">
         {{ __('Deactivate MFA') }}
     </a>
@@ -27,19 +31,36 @@
 
     <div class="dropdown-divider"></div>
 
-    @if (Route::has('cognito.action.mfa.enable'))
+    @if (Route::has('cognito.action.mfa.enable') && $mfaEnabled)
     <a class="dropdown-item" href="{{ route('cognito.action.mfa.enable') }}">
         {{ __('Enable MFA') }}
     </a>
     @endif
 
-    @if (Route::has('cognito.action.mfa.disable'))
+    @if (Route::has('cognito.action.mfa.disable') && $mfaEnabled)
     <a class="dropdown-item" href="{{ route('cognito.action.mfa.disable') }}">
         {{ __('Disable MFA') }}
     </a>
     @endif
 
     <div class="dropdown-divider"></div>
+
+    @php
+        $passkeyEnabled = (Auth::user() && isset(Auth::user()->is_webauthn_enabled)) ? Auth::user()->is_webauthn_enabled : false;
+    @endphp
+
+    @if (Route::has('cognito.action.user.passkey.delete') && config('cognito.allow_passkeys') && $passkeyEnabled)
+    <button class="dropdown-item"
+        onclick="event.preventDefault();
+        frmAction=document.getElementById('form-action');
+        frmAction.action='{{ route('cognito.action.user.passkey.delete') }}';
+        frmAction.method='DELETE';
+        frmAction.submit();">
+        {{ __('Delete Passkey') }}
+    </button>
+
+    <div class="dropdown-divider"></div>
+    @endif
 
     @if (Route::has('cognito.logout'))
     <button class="dropdown-item"

@@ -228,7 +228,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
         });
 
         //Storage Provider
-        $this->app->singleton('ellaisys.aws.cognito.provider.storage', function (Application $app) {
+        $this->app->singleton('ellaisys.aws.cognito.provider.storage', function () {
             return new StorageProvider(
                 config('cognito.storage_provider')
             );
@@ -324,7 +324,6 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function extendApiAuthGuard()
     {
         Auth::extend('cognito-token', function (Application $app, $name, array $config) {
-
             $guard = new CognitoTokenGuard(
                 $app['ellaisys.aws.cognito'],
                 $app->make(AwsCognitoClient::class),

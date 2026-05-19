@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Validator;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 
+use Ellaisys\Cognito\Events\Auth\PostPasskeyCompleteEvent;
+
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -102,6 +104,19 @@ trait WebAuthPasskey
                 $accessToken,
                 json_decode($request['credential'], true)
             );
+
+            //Get Authenticated user
+            $model = $this->getAuthenticatedUser($request);
+            if (method_exists($model, 'hasPasskeyTrait')) {
+                $model->is_webauthn_enabled = true;
+                $model->save();
+            } //End if
+
+            //Fire PostPasskeyCompleteEvent
+            event(new PostPasskeyCompleteEvent(
+                    $model->toArray(),
+                    $response->toArray(), $request->ip()
+                ));
 
             //Return response
             if ($this->isControllerAction) {
@@ -219,6 +234,13 @@ trait WebAuthPasskey
                 $accessToken,
                 $request['credential_id']
             );
+
+            //Get Authenticated user
+            $model = $this->getAuthenticatedUser($request);
+            if (method_exists($model, 'hasPasskeyTrait') && $model->hasPasskeyTrait()) {
+                $model->is_webauthn_enabled = false;
+                $model->save();
+            } //End if
 
             //Return response
             if ($this->isControllerAction) {

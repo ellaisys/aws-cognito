@@ -13,9 +13,11 @@ namespace Ellaisys\Cognito\Auth;
 
 use Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Application;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
@@ -183,6 +185,16 @@ trait BaseAuthTrait
     } //Function ends
 
     /**
+     * Method to get the local provider model
+     *
+     * @return string
+     */
+    protected function getLocalProviderModel()
+    {
+        return Auth::getProvider()->getModel();
+    } //Function ends
+
+    /**
      * Method to get the access token of the authenticated user based on the request type
      *
      * @param Request $request
@@ -206,6 +218,15 @@ trait BaseAuthTrait
         }
     } //Function ends
 
+    /**
+     * Get the data from the query parameter based on the parameter name and encryption type
+     *
+     * @param  Request $request
+     * @param  string $paramName (optional)
+     * @param  EncryptionTypes $encryptionType (optional)
+     * @param  bool $filterEmail (optional)
+     * @return mixed
+     */
     protected function getDataFromQueryParam(Request $request,
         string $paramName='email',
         EncryptionTypes $encryptionType=EncryptionTypes::DEFAULT,
@@ -255,6 +276,19 @@ trait BaseAuthTrait
             Log::error('BaseAuthTrait:getDataFromQueryParam:Exception');
             return null;
         }
+    } //Function ends
+
+    /**
+     * Generate password based on configuration and Laravel version.
+     *
+     * @return string
+     */
+    protected function generateRandomPassword(int $length = 12): string
+    {
+        if (version_compare(Application::VERSION, '10.0.0', '<')) {
+            return Str::random($length-3) . '1A!';
+        }
+        return Str::password($length);
     } //Function ends
 
 } //End trait
