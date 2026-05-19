@@ -13,9 +13,11 @@ namespace Ellaisys\Cognito\Auth;
 
 use Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Application;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
@@ -274,6 +276,19 @@ trait BaseAuthTrait
             Log::error('BaseAuthTrait:getDataFromQueryParam:Exception');
             return null;
         }
+    } //Function ends
+
+    /**
+     * Generate password based on configuration and Laravel version.
+     *
+     * @return string
+     */
+    protected function generateRandomPassword(int $length = 12): string
+    {
+        if (version_compare(Application::VERSION, '10.0.0', '<')) {
+            return Str::random($length-3) . '1A!';
+        }
+        return Str::password($length);
     } //Function ends
 
 } //End trait
