@@ -136,8 +136,6 @@ trait AwsCognitoClientHelper
             } //End if
         } //End if
 
-        Log::debug('AwsCognitoClientHelper:cognitoSecretHash:Payload', $payload);
-
         return $payload;
     } //Function ends
 
