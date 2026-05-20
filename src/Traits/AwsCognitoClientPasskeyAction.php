@@ -155,10 +155,7 @@ trait AwsCognitoClientPasskeyAction
     {
         try {
             //Build payload
-            $payload = [
-                'AuthFlow' => $authFlow->value,
-                'ClientId' => $this->clientId
-            ];
+            $payload = [];
 
             //Set Auth Parameters based on the Auth Flow
             switch ($authFlow) {
@@ -177,10 +174,10 @@ trait AwsCognitoClientPasskeyAction
                     break;
             } //End switch
 
-            //Add Secret Hash in case of Client Secret being configured
-            $payload = $this->cognitoSecretHash($username, $payload);
-
-            $response = $this->client->initiateAuth($payload);
+            // Call initiateAuth with the provided auth flow to start the authentication process
+            $response = $this->initiateAuth(
+                $authFlow, $payload, $username
+            );
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientPasskeyAction:authWebAuthnCredential:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
