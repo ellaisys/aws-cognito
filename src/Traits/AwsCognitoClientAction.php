@@ -14,8 +14,10 @@ namespace Ellaisys\Cognito\Traits;
 use Config;
 use Carbon\Carbon;
 
-use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 use Illuminate\Support\Facades\Log;
+
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -27,6 +29,39 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
  */
 trait AwsCognitoClientAction
 {
+    /**
+     * Declares an authentication flow and initiates sign-in for a user in the Amazon Cognito user directory
+     *
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html
+     * @param CognitoAuthFlowTypes $authFlow
+     * @param array $payloadData
+     * @param string $username
+     * @return \Aws\Result
+     */
+    public function initiateAuth(CognitoAuthFlowTypes $authFlow,
+        array $payloadData, string $username): \Aws\Result
+    {
+        try {
+            //Build payload
+            $payload = [
+                'AuthFlow' => $authFlow->value,
+                'ClientId' => $this->clientId
+            ];
+
+            $payload = array_merge($payload, $payloadData);
+
+            //Add Secret Hash in case of Client Secret being configured
+            $payload = $this->cognitoSecretHash($username, $payload);
+
+            $response = $this->client->initiateAuth($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAction:initiateAuth:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
     /**
      * Get user details.
      * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GetUser.html
