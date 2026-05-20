@@ -25,6 +25,7 @@ use Ellaisys\Cognito\Traits\AwsCognitoClientAdminAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientPasskeyAction;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\NoTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -628,21 +629,26 @@ class AwsCognitoClient
         try {
             //Build payload
             $payload = [
-                'AuthFlow' => CognitoAuthFlowTypes::REFRESH_TOKEN_AUTH->value,
                 'AuthParameters' => [
                     'REFRESH_TOKEN' => $refreshToken,
-                ],
-                'ClientId' => $this->clientId
+                ]
             ];
 
-            //Add Secret Hash in case of Client Secret being configured
-            $payload = $this->cognitoSecretHash($username, $payload);
+            // Call initiateAuth with REFRESH_TOKEN_AUTH flow to get new tokens
+            $response = $this->initiateAuth(
+                CognitoAuthFlowTypes::REFRESH_TOKEN_AUTH,
+                $payload, $username
+            );
 
-            $response = $this->client->initiateAuth($payload);
-
-            // Reuse same refreshToken
-            $response['AuthenticationResult']['RefreshToken'] = $refreshToken;
-        } catch (CognitoIdentityProviderException $e) {
+            if (isset($response['AuthenticationResult'])) {
+                // Add the existing refresh token to the response if not present
+                if (!isset($response['AuthenticationResult']['RefreshToken'])) {
+                    $response['AuthenticationResult']['RefreshToken'] = $refreshToken;
+                } //End if
+            } else {
+                throw new NoTokenException();
+            } //End if
+        } catch (Exception $e) {
             Log::error('AwsCognitoClient:refreshToken:Exception');
             throw $e;
         } //Try-catch ends
