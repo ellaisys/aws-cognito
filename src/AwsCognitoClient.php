@@ -191,11 +191,7 @@ class AwsCognitoClient
             } //End switch
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload['AuthParameters'] = array_merge($payload['AuthParameters'], [
-                    'SECRET_HASH' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             $response = $this->client->adminInitiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
@@ -231,11 +227,7 @@ class AwsCognitoClient
             ];
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload = array_merge($payload, [
-                    'SecretHash' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             //Set Client Metadata
             if (!empty($clientMetadata)) {
@@ -276,11 +268,7 @@ class AwsCognitoClient
             ];
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload = array_merge($payload, [
-                    'SecretHash' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             $this->client->forgotPassword($payload);
         } catch (CognitoIdentityProviderException $e) {
@@ -319,11 +307,7 @@ class AwsCognitoClient
             ];
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload = array_merge($payload, [
-                    'SecretHash' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             $this->client->confirmForgotPassword($payload);
         } catch (CognitoIdentityProviderException $e) {
@@ -505,11 +489,13 @@ class AwsCognitoClient
             //Generate payload
             $payload = [
                 'ClientId' => $this->clientId,
-                'SecretHash' => $this->cognitoSecretHash($username),
                 'Username' => $username,
                 'ConfirmationCode' => $confirmationCode,
                 'ForceAliasCreation' => config('cognito.force_alias_creation', false),
             ];
+
+            //Add Secret Hash in case of Client Secret being configured
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             //Set Client Metadata
             if (!empty($clientMetadata)) {
@@ -542,9 +528,11 @@ class AwsCognitoClient
             //Generate payload
             $payload = [
                 'ClientId' => $this->clientId,
-                'SecretHash' => $this->cognitoSecretHash($username),
                 'Username' => $username
             ];
+
+            //Add Secret Hash in case of Client Secret being configured
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             //Set Client Metadata
             if (!empty($clientMetadata)) {
@@ -588,34 +576,6 @@ class AwsCognitoClient
         } //End try
 
         return true;
-    } //Function ends
-
-    /**
-     * Creates the Cognito secret hash.
-     * @param string $username
-     * @return string
-     */
-    protected function cognitoSecretHash($username)
-    {
-        return $this->hash($username . $this->clientId);
-    } //Function ends
-
-    /**
-     * Creates a HMAC from a string.
-     *
-     * @param string $message
-     * @return string
-     */
-    protected function hash($message)
-    {
-        $hash = hash_hmac(
-            'sha256',
-            $message,
-            $this->clientSecret,
-            true
-        );
-
-        return base64_encode($hash);
     } //Function ends
 
     /**
@@ -672,16 +632,11 @@ class AwsCognitoClient
                 'AuthParameters' => [
                     'REFRESH_TOKEN' => $refreshToken,
                 ],
-                'ClientId' => $this->clientId,
-                'UserPoolId' => $this->poolId,
+                'ClientId' => $this->clientId
             ];
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload['AuthParameters'] = array_merge($payload['AuthParameters'], [
-                    'SECRET_HASH' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             $response = $this->client->initiateAuth($payload);
 

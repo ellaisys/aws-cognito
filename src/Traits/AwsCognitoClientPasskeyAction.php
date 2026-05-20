@@ -178,11 +178,7 @@ trait AwsCognitoClientPasskeyAction
             } //End switch
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload['AuthParameters'] = array_merge($payload['AuthParameters'], [
-                    'SECRET_HASH' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             $response = $this->client->initiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {

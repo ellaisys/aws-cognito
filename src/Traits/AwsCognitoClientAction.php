@@ -76,12 +76,7 @@ trait AwsCognitoClientAction
             );
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload['ChallengeResponses'] = array_merge(
-                    $payload['ChallengeResponses'], [
-                        'SECRET_HASH' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             //Execute the payload
             $response = $this->client->respondToAuthChallenge($payload);

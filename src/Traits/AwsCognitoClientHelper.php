@@ -106,4 +106,57 @@ trait AwsCognitoClientHelper
         return $challengePayload;
     } //Function ends
 
+    /**
+     * Creates the Cognito secret hash.
+     * @param string $username
+     * @param array $payload The payload to which the secret hash will be added.
+     * @return array
+     */
+    protected function cognitoSecretHash(string $username, array $payload): array
+    {
+        if ($this->boolClientSecret) {
+            //Generate secret hash
+            $secretHash = $this->hash($username . $this->clientId);
+
+            if (array_key_exists('AuthParameters', $payload)) {
+                $payload['AuthParameters'] = array_merge(
+                    $payload['AuthParameters'],
+                    ['SECRET_HASH' => $secretHash]
+                );
+            } elseif (array_key_exists('ChallengeResponses', $payload)) {
+                $payload['ChallengeResponses'] = array_merge(
+                    $payload['ChallengeResponses'],
+                    ['SECRET_HASH' => $secretHash]
+                );
+            } else {
+                $payload = array_merge(
+                    $payload,
+                    ['SecretHash' => $secretHash]
+                );
+            } //End if
+        } //End if
+
+        Log::debug('AwsCognitoClientHelper:cognitoSecretHash:Payload', $payload);
+
+        return $payload;
+    } //Function ends
+
+    /**
+     * Creates a HMAC from a string.
+     *
+     * @param string $message
+     * @return string
+     */
+    protected function hash(string $message): string
+    {
+        $hash = hash_hmac(
+            'sha256',
+            $message,
+            $this->clientSecret,
+            true
+        );
+
+        return base64_encode($hash);
+    } //Function ends
+
 } //Trait ends
