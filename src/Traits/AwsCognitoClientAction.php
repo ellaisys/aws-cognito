@@ -14,6 +14,8 @@ namespace Ellaisys\Cognito\Traits;
 use Config;
 use Carbon\Carbon;
 
+use Aws\Result as AwsResult;
+
 use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
@@ -36,10 +38,10 @@ trait AwsCognitoClientAction
      * @param CognitoAuthFlowTypes $authFlow
      * @param array $payloadData
      * @param string $username
-     * @return \Aws\Result
+     * @return AwsResult
      */
     public function initiateAuth(CognitoAuthFlowTypes $authFlow,
-        array $payloadData, string $username): \Aws\Result
+        array $payloadData, string $username): AwsResult
     {
         try {
             //Build payload
@@ -68,9 +70,9 @@ trait AwsCognitoClientAction
      *
      * @param string $accessToken
      *
-     * @return mixed
+     * @return AwsResult
      */
-    public function getUser(string $accessToken): mixed
+    public function getUser(string $accessToken): AwsResult
     {
         try {
             return $this->client->getUser([
@@ -91,19 +93,23 @@ trait AwsCognitoClientAction
      * @param string $challengeValue
      * @param string $username
      *
-     * @return \Aws\Result
+     * @return AwsResult
      */
     public function respondToAuthChallenge(
         CognitoChallengeTypes $challengeName, string $session,
-        string $challengeValue, string $username)
+        string $challengeValue, string $username): AwsResult
     {
         try {
             //Build payload
             $payload = [
                 'ClientId' => $this->clientId,
-                'Session' => $session,
                 'ChallengeName' => $challengeName->value,
             ];
+
+            //Set session for challenge types that require it
+            if (!in_array($challengeName, [CognitoChallengeTypes::PASSWORD_VERIFIER], true)) {
+                $payload['Session'] = $session;
+            } //End if
 
             //Set challenge response
             $payload['ChallengeResponses'] = $this->buildChallengePayload(
@@ -117,6 +123,7 @@ trait AwsCognitoClientAction
             $response = $this->client->respondToAuthChallenge($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAction:respondToAuthChallenge:CognitoIdentityProviderException');
+            Log::error($exception);
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 

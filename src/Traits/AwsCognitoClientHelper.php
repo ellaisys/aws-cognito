@@ -94,6 +94,10 @@ trait AwsCognitoClientHelper
                     ]);
                     break;
 
+                case CognitoChallengeTypes::PASSWORD_VERIFIER:
+                    $challengePayload = json_decode($challengeValue, true);
+                    break;
+
                 default:
                     throw new BadRequestHttpException('Invalid challenge type');
                     break;
