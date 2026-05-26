@@ -114,8 +114,8 @@ class AwsCognitoSrpService
     /**
      * Build PASSWORD_VERIFIER challenge response
      */
-    public function processChallenge(string $challengeValue, string $privateEphemeral,
-        string $password = null): array
+    public function processChallenge(string $challengeValue,
+        string $privateEphemeral): array
     {
         try {
             $payload = json_decode($challengeValue, true);
@@ -195,7 +195,7 @@ class AwsCognitoSrpService
             Log::error('AwsCognitoClientHelper:processChallenge:Exception');
             throw $e;
         } //Try-catch ends
-    }
+    } //Function ends
 
     /**
      * HKDF used by Cognito

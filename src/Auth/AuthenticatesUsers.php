@@ -144,7 +144,7 @@ trait AuthenticatesUsers
                     $paramPassword => $ephemeral['public_key'], // SRP_A value
                     'session_token' => $ephemeral['private_key']
                 ]);
-            } //End if 
+            } //End if
 
             //Validate request
             $validator = Validator::make($request->only([$paramUsername, $paramPassword]), [
@@ -189,7 +189,7 @@ trait AuthenticatesUsers
             } //End if
 
             //Build the challenge data for SRP authentication flow if the challenge is PASSWORD_VERIFIER
-            $request = $this->buildSRPChallengeData($request);            
+            $request = $this->buildSRPChallengeData($request);
 
             //Validate payload
             $validator = Validator::make($request->all(), $this->rulesChallenge());
