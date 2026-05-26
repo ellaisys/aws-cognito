@@ -85,10 +85,6 @@
             challengesList.innerHTML = ''; // Clear existing list
             if (availableChallenges.length > 0) {
                 availableChallenges.forEach(challenge => {
-                    if (challenge === 'PASSWORD_SRP') {
-                        return; // Skip PASSWORD_SRP as it's handled separately
-                    }
-
                     const item = document.createElement('button');
                     item.type = 'submit';
                     item.className = 'list-group-item list-group-item-action' + ((challenge === 'PASSWORD') ? ' active' : ''); // Highlight PASSWORD option
@@ -96,6 +92,8 @@
 
                     if (challenge === 'PASSWORD') {
                         item.formAction = "{{ route('cognito.form.login') }}/password";
+                    } else if (challenge === 'PASSWORD_SRP') {
+                        item.formAction = "{{ route('cognito.form.login') }}/password_srp";
                     } else {
                         item.formAction = "{{ route('cognito.form.login') }}/challenge?" + new URLSearchParams({ challenge: challenge.toLowerCase() }).toString();
                     }
