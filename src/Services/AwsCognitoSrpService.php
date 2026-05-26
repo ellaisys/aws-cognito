@@ -101,11 +101,9 @@ class AwsCognitoSrpService
     {
         // Generate a random 128-byte integer for a
         $paramSmallA = gmp_init(bin2hex(random_bytes(128)), 16);
-        Log::debug('Generated random a: ' . gmp_strval($paramSmallA, 16));
 
         // Calculate A = g^a mod N
         $paramCapA = gmp_powm($this->paramG, $paramSmallA, $this->paramN);
-        Log::debug('Calculated A: ' . gmp_strval($paramCapA, 16));
 
         return [
             'private_key' => gmp_strval($paramSmallA, 16), // a in hex format
@@ -124,7 +122,6 @@ class AwsCognitoSrpService
 
             // Set the timestamp to the current time in the required format if not present in the payload
             $timestamp = (isset($payload['TIMESTAMP'])) ? $payload['TIMESTAMP'] : $this->generateTimestamp();
-            Log::debug('Timestamp: ' . $timestamp);
 
             //Check if the required parameters are present
             if (!isset($payload['USER_ID_FOR_SRP']) ||
@@ -137,30 +134,24 @@ class AwsCognitoSrpService
 
             //Check if the secret block is present
             $secretBlock = $payload['SECRET_BLOCK'];
-            Log::debug('Secret block: ' . $secretBlock);
 
             // Get the pool name from the pool ID
             $poolName = $this->getPoolName();
-            Log::debug('Pool name: ' . $poolName);
 
             // Get the SRP parameters and generate A and a from the client request
             $paramSmallA = gmp_init($privateEphemeral, 16);
-            Log::debug('Generated random a: ' . gmp_strval($paramSmallA, 16));
 
             // Calculate A = g^a mod N
             $paramCapA = gmp_powm($this->paramG, $paramSmallA, $this->paramN);
-            Log::debug('Calculated A: ' . gmp_strval($paramCapA, 16));
 
             // Set Hex Params
             $salt = gmp_init($payload['SALT'], 16);
             $paramCapB = gmp_init($payload['SRP_B'], 16);
             $userIdForSrp = $payload['USER_ID_FOR_SRP'];
             $userPassHash = $payload['PASSKEY_HASH'];
-            Log::debug('userPassHash: ' . $userPassHash);
 
             //Sign with the Salt
             $x = $this->hexHash($this->padHex($salt) . $userPassHash);
-            Log::debug('x: ' . gmp_strval($x, 16));
 
             /*
             * u = H(A | B)
@@ -168,16 +159,13 @@ class AwsCognitoSrpService
             $u = $this->hexHash(
                 $this->padHex($paramCapA) . $this->padHex($paramCapB)
             );
-            Log::debug('u: ' . gmp_strval($u, 16));
 
             /*
             * S = (B - k * g^x) ^ (a + ux) mod N
             */
             $gModPowXN = gmp_powm($this->paramG, $x, $this->paramN);
-            Log::debug('g^x: ' . gmp_strval($gModPowXN, 16));
 
             $kgx = gmp_mul($this->paramK, $gModPowXN);
-            Log::debug('kgxn value: ' . gmp_strval($kgx, 16));
 
             $intValue2 = gmp_sub($paramCapB, $kgx);
             Log::debug('intValue2: ' . gmp_strval($intValue2, 16));
@@ -192,12 +180,10 @@ class AwsCognitoSrpService
                 hex2bin($this->padHex($s)),
                 hex2bin($this->padHex($u))
             );
-            Log::debug('HKDF: ' . bin2hex($hkdf));
 
             // Build the challenge response
             $message = $poolName . $userIdForSrp . base64_decode($secretBlock) . $timestamp;
             $signature = hash_hmac(self::HASH_ALGO, $message, $hkdf, true);
-            Log::debug('Signature: ' . bin2hex($signature));
 
             return [
                 'TIMESTAMP' => $timestamp,
