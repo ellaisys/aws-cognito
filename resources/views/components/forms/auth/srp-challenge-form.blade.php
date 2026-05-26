@@ -45,7 +45,7 @@
     <div class="row mb-0">
         <div class="col-md-6 offset-md-4">
             <button type="submit" id="auth-srp-challenge-button" class="btn btn-primary"
-                onclick="return submitChallengeForm()">
+                onclick="submitChallengeForm();">
                 {{ __('Login') }}
             </button>
 
@@ -176,7 +176,6 @@
         let count = 60; // Initial count value (e.g., 60 seconds)
         const intervalId = setInterval(() => {
             count--; // Decrement the count
-            console.log("Count is:", count);
             
             if (count <= 0) {
                 clearInterval(intervalId); // Stops the timer
