@@ -198,9 +198,8 @@ trait BaseCognitoGuard
      * handle Cognito Challenge
      */
     protected function handleCognitoChallenge(AwsResult $result, Collection $credentials) {
-
         //Return value
-        $returnValue = null;
+        $returnValue = [];
         
         $challengeType = CognitoChallengeTypes::from($result['ChallengeName']);
         switch ($challengeType) {
