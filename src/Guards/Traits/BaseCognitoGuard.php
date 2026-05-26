@@ -367,9 +367,8 @@ trait BaseCognitoGuard
                     } //End if
                 });
             } //End if
-
         } catch (Exception $e) {
-            Log::error($e->getMessage());
+            Log::error('BaseCognitoGuard:buildLocalUserPayload:Exception');
             throw $e;
         } //End try-catch
 

@@ -123,7 +123,6 @@ trait AwsCognitoClientAction
             $response = $this->client->respondToAuthChallenge($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAction:respondToAuthChallenge:CognitoIdentityProviderException');
-            Log::error($exception);
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 

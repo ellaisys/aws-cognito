@@ -98,7 +98,6 @@ trait AuthenticatesUsers
                 'regex' => 'Must contain atleast ' . $passwordPolicy['message']
             ]);
             if ($validator->fails()) {
-                Log::error($validator->errors());
                 throw new ValidationException($validator);
             } //End if
 
@@ -282,7 +281,8 @@ trait AuthenticatesUsers
                     'USER_ID_FOR_SRP' => 'required',
                     'SALT' => 'required',
                     'SRP_B' => 'required',
-                    'SECRET_BLOCK' => 'required'
+                    'SECRET_BLOCK' => 'required',
+                    'PASSKEY_HASH' => 'required'
                 ]);
                 if ($validator->fails()) {
                     throw new ValidationException($validator);
@@ -292,8 +292,7 @@ trait AuthenticatesUsers
                 $srpService = app()->make(AwsCognitoSrpService::class);
                 $challengeValue = $srpService->processChallenge(
                         $request['challenge_value'],
-                        $request['session'],
-                        $request['password']
+                        $request['session']
                     );
 
                 //Add SRP_A and session token to the request
@@ -322,7 +321,6 @@ trait AuthenticatesUsers
             'session'           => 'required',
             'challenge_name'    => 'required|in:WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD_VERIFIER',
             'challenge_value'   => 'required',
-            'password'          => 'required_if:challenge_name,PASSWORD_VERIFIER'
         ];
     } //Function ends
 

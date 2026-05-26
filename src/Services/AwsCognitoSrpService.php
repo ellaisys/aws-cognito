@@ -18,9 +18,6 @@ use Illuminate\Support\Facades\Log;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
-use Ellaisys\Cognito\Exceptions\InvalidUserException;
-use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -92,10 +89,9 @@ class AwsCognitoSrpService
         /**
          * k = H(N | g)
          */
-        $this->paramK = gmp_init(
-            $this->hexHash(
+        $this->paramK = $this->hexHash(
                 $this->padHex($this->paramN) . $this->padHex($this->paramG)
-            ), 16);
+            );
     }
 
     /**
@@ -121,7 +117,7 @@ class AwsCognitoSrpService
      * Build PASSWORD_VERIFIER challenge response
      */
     public function processChallenge(string $challengeValue, string $privateEphemeral,
-        string $password): array
+        string $password = null): array
     {
         try {
             $payload = json_decode($challengeValue, true);
@@ -134,7 +130,8 @@ class AwsCognitoSrpService
             if (!isset($payload['USER_ID_FOR_SRP']) ||
                 !isset($payload['SALT']) ||
                 !isset($payload['SECRET_BLOCK']) ||
-                !isset($payload['SRP_B'])) {
+                !isset($payload['SRP_B']) ||
+                !isset($payload['PASSKEY_HASH'])) {
                 throw new BadRequestHttpException('Missing required parameters in challenge value');
             }
 
@@ -158,12 +155,8 @@ class AwsCognitoSrpService
             $salt = gmp_init($payload['SALT'], 16);
             $paramCapB = gmp_init($payload['SRP_B'], 16);
             $userIdForSrp = $payload['USER_ID_FOR_SRP'];
-
-            //Build user password hash
-            $userPass = $poolName . $userIdForSrp . ':' . $password;
-            Log::debug('User password hash input: ' . $userPass);
-            $userPassHash = $this->hash($userPass);
-            Log::debug('User password hash: ' . $userPassHash);
+            $userPassHash = $payload['PASSKEY_HASH'];
+            Log::debug('userPassHash: ' . $userPassHash);
 
             //Sign with the Salt
             $x = $this->hexHash($this->padHex($salt) . $userPassHash);
@@ -180,40 +173,37 @@ class AwsCognitoSrpService
             /*
             * S = (B - k * g^x) ^ (a + ux) mod N
             */
-            $gPowX = gmp_powm($this->paramG, $x, $this->paramN);
+            $gModPowXN = gmp_powm($this->paramG, $x, $this->paramN);
+            Log::debug('g^x: ' . gmp_strval($gModPowXN, 16));
 
-            $kgx = gmp_mod(
-                gmp_mul($this->paramK, $gPowX),
-                $this->paramN
-            );
+            $kgx = gmp_mul($this->paramK, $gModPowXN);
+            Log::debug('kgxn value: ' . gmp_strval($kgx, 16));
 
-            $base = gmp_mod(
-                    gmp_add(
-                        gmp_sub($paramCapB, $kgx),
-                        $this->paramN
-                    ),
-                    $this->paramN
-                );
+            $intValue2 = gmp_sub($paramCapB, $kgx);
+            Log::debug('intValue2: ' . gmp_strval($intValue2, 16));
 
             $exp = gmp_add($paramSmallA, gmp_mul($u, $x));
+            Log::debug('Exp: ' . gmp_strval($exp, 16));
 
-            $S = gmp_powm($base, $exp, $this->paramN);
+            $s = gmp_powm($intValue2, $exp, $this->paramN);
+            Log::debug('S: ' . gmp_strval($s, 16));
 
-            // Compute the HKDF
             $hkdf = $this->computeHkdf(
-                    hex2bin($this->padHex($S)),
-                    hex2bin($this->padHex($u))
-                );
+                hex2bin($this->padHex($s)),
+                hex2bin($this->padHex($u))
+            );
+            Log::debug('HKDF: ' . bin2hex($hkdf));
 
             // Build the challenge response
             $message = $poolName . $userIdForSrp . base64_decode($secretBlock) . $timestamp;
-            $signature = base64_encode(hash_hmac(self::HASH_ALGO, $message, $hkdf, true));
+            $signature = hash_hmac(self::HASH_ALGO, $message, $hkdf, true);
+            Log::debug('Signature: ' . bin2hex($signature));
 
             return [
                 'TIMESTAMP' => $timestamp,
                 'USERNAME' => $userIdForSrp,
                 'PASSWORD_CLAIM_SECRET_BLOCK' => $secretBlock,
-                'PASSWORD_CLAIM_SIGNATURE' => $signature,
+                'PASSWORD_CLAIM_SIGNATURE' => base64_encode($signature),
             ];
         } catch (Exception $e) {
             Log::error('AwsCognitoClientHelper:processChallenge:Exception');
