@@ -1,6 +1,6 @@
 <img src="./assets/images/banner.png" width="100%" alt="Laravel AWS Cognito Package for Web and API authentication with MFA Feature"/>
 
-# Laravel AWS Cognito Package for Web and API authentication with MFA + FIDO2 (Passkey) Features
+# Laravel AWS Cognito Package for Web and API authentication + MFA + FIDO2 (Passkey) + SRP Authentication Features
 AWS Cognito package using the AWS SDK for PHP
 
 [![Release Version](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Version)](https://packagist.org/packages/ellaisys/aws-cognito#v1.1.3)&#160;
@@ -51,6 +51,7 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Preconfigured routes and controllers for Web and API ](./docs/README_ROUTES.md#routes)
 - [Preconfigured views for Web ](./docs/README_ROUTES.md#web-views-and-components)
 - [FIDO2 Security Keys Passkey Feature](./docs/README_FIDO2.md) **New Feature**
+- [SRP Authentication Feature](./docs/README_SRP.md) **New Feature**
 
 ## Compatability
 
@@ -191,20 +192,22 @@ For more details on how to find AWS_COGNITO_CLIENT_ID, AWS_COGNITO_CLIENT_SECRET
 If you are already working on an existing project and want to integrate Cognito you have to [import a user csv file to your Cognito Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-using-import-tool.html).
 
 ## Usage
-Our package is providing you 6 traits you can just add to your Auth Controllers to get our package running.
+Our package is providing you 10 traits you can just add to your Auth Controllers to get our package running.
 
 - Ellaisys\Cognito\Auth\AuthenticatesUsers
+- Ellaisys\Cognito\Auth\ConfirmsPasswords
+- Ellaisys\Cognito\Auth\RefreshToken
+- Ellaisys\Cognito\Auth\RegisterMFA
 - Ellaisys\Cognito\Auth\RegistersUsers
 - Ellaisys\Cognito\Auth\ResetsPasswords
 - Ellaisys\Cognito\Auth\RespondsMFAChallenge
 - Ellaisys\Cognito\Auth\SendsPasswordResetEmails
 - Ellaisys\Cognito\Auth\VerifiesEmails
+- Ellaisys\Cognito\Auth\WebAuthPasskey
 
-
-In the simplest way you just go through your Auth Controllers and change namespaces from the traits which are currently implemented from Laravel.
+In the simplest way you just go through your Auth Controllers and use these traits which are currently implemented in Laravel. The Controllers are now also provided and preconfigured with the traits. You can use them as they are or change them to fit your needs.
 
 You can change structure to suit your needs. Please be aware of the @extend statement in the blade file to fit into your project structure.
-At the current state you need to have those 4 form fields defined in here. Those are `token`, `email`, `password`, `password_confirmation`.
 
 ## Single Sign-On
 
