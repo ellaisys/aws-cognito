@@ -147,9 +147,10 @@ trait AuthenticatesUsers
             } //End if
 
             //Validate request
-            $validator = Validator::make($request->only([$paramUsername, $paramPassword]), [
+            $validator = Validator::make($request->only([$paramUsername, $paramPassword, 'session_token']), [
                 $paramUsername => 'required',
-                $paramPassword => 'required'
+                $paramPassword => 'required',
+                'session_token' => 'required'
             ]);
             if ($validator->fails()) {
                 Log::error($validator->errors());
