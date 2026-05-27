@@ -41,11 +41,14 @@ Content-Type: application/json
 
 {
   "username": "user@example.com",
-  "srp_a": "<computed_SRP_A_value_optional>"
+  "srp_a": "<optional_computed_SRP_A_value>",
+  "session_token": "<optional_computed_random_number_a>"
 }
 ```
 
-The `srp_a` field here contains the **pre-computed SRP_A value** (not the actual user password). if you choose not to compute SRP_A on the client side, you can omit this field and the package will compute it for you on the server side. However, for better security, it is recommended to compute SRP_A on the client side and send it to the server.
+The `srp_a` field here contains the **pre-computed SRP_A value** (not the actual user password). if you choose not to compute SRP_A on the client side, you can omit this field and the package will compute it for you on the server side. However, for higher security, it is recommended to compute SRP_A on the client side and send it to the server. If you choose to compute the SRP_A value on the client side, make sure to use a secure random number generator for `a` and follow the SRP protocol specifications for generating SRP_A correctly.
+
+Send the random number `a` as part of the `session_token` so that the server can use it for the rest of the steps.
 
 ### **Step 3: Server-Side Processing**
 
