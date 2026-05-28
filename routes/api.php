@@ -12,6 +12,7 @@ use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController;
+use Ellaisys\Cognito\Http\Controllers\Auth\DeviceController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 
@@ -96,5 +97,13 @@ Route::group([
 
         //Route for refresh token
         Route::post('/token/refresh', [RefreshTokenController::class, 'revalidate']);
+
+        //Route for device operations
+        Route::group(['prefix' => 'device', 'controller' => DeviceController::class], function() {
+            Route::get('/', 'list');
+            Route::post('/', 'create');
+            Route::put('/', 'update');
+            Route::delete('/{deviceKey}', 'delete');
+        });
     });
 });

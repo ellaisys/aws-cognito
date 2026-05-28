@@ -99,6 +99,40 @@ trait AwsCognitoClientDeviceAction
     } //Function ends
 
     /**
+     * List all the devices.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ListDevices.html
+     *
+     * @param string $accessToken
+     * @param int $limit (default: 10)
+     * @param string|null $paginationToken
+     *
+     * @return AwsResult
+     */
+    public function listDevices(string $accessToken, int $limit=10,
+        ?string $paginationToken=null): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'AccessToken' => $accessToken,
+                'Limit' => $limit,
+            ];
+
+            if (!empty($paginationToken)) {
+                $payload['PaginationToken'] = $paginationToken;
+            } //End if
+
+            //Execute the payload
+            $response = $this->client->listDevices($payload);
+        } catch (CognitoIdentityProviderException $e) {
+            Log::error('AwsCognitoClientDeviceAction:listDevices:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($e);
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+    /**
      * Get the device details.
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GetDevice.html
      *
