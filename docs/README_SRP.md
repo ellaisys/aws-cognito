@@ -42,13 +42,15 @@ Content-Type: application/json
 {
   "username": "user@example.com",
   "srp_a": "<optional_computed_SRP_A_value>",
-  "session_token": "<optional_computed_random_number_a>"
+  "session_token": "<optional_computed_random_number>"
 }
 ```
 
-The `srp_a` field here contains the **pre-computed SRP_A value** (not the actual user password). if you choose not to compute SRP_A on the client side, you can omit this field and the package will compute it for you on the server side. However, for higher security, it is recommended to compute SRP_A on the client side and send it to the server. If you choose to compute the SRP_A value on the client side, make sure to use a secure random number generator for `a` and follow the SRP protocol specifications for generating SRP_A correctly.
+The `srp_a` field here contains the **pre-computed SRP_A value** (not the actual user password). if you choose not to compute SRP_A on the client side, you can omit this field and the package will compute it for you on the server side. 
 
-Send the random number `a` as part of the `session_token` so that the server can use it for the rest of the steps.
+However, for **higher security**, it is recommended to compute SRP_A on the client side and send it to the server. If you choose to compute the SRP_A value on the client side, make sure to use a secure random number generator for calculating the private ephemeral value `a` as per the SRP protocol specifications.
+
+Store the random number `a` securely on the client side (e.g., in memory) and do not transmit it to the server. Share a unique session token (e.g., a UUID) with the server so that responses from the server can be correlated with the correct authentication session. This session value is can be used to recover the private ephemeral value `a` on the client side when processing the server's challenge response in the next step.
 
 ### **Step 3: Server-Side Processing**
 
@@ -87,7 +89,7 @@ Content-Type: application/json
 
 {
   "challenge_name": "PASSWORD_VERIFIER",
-  "session": "<session_token_from_step-2>",
+  "session": "<session_token_as_private_ephemeral_value_a>",
   "username": "<username_for_srp>",
   "challenge_value": "<computed_challenge_value>"
 }

@@ -153,7 +153,6 @@ trait AuthenticatesUsers
                 'session_token' => 'required'
             ]);
             if ($validator->fails()) {
-                Log::error($validator->errors());
                 throw new ValidationException($validator);
             } //End if
 
@@ -189,8 +188,8 @@ trait AuthenticatesUsers
                 $request->merge(['challenge_name' => strtoupper($request['challenge_name'])]);
             } //End if
 
-            //Build the challenge data for SRP authentication flow if the challenge is PASSWORD_VERIFIER
-            $request = $this->buildSRPChallengeData($request);
+            //Build the challenge data based on the challenge type
+            $request = $this->buildChallengeRequestData($request);
 
             //Validate payload
             $validator = Validator::make($request->all(), $this->rulesChallenge());
@@ -270,40 +269,67 @@ trait AuthenticatesUsers
         return $username;
     } //Function ends
 
-    private function buildSRPChallengeData(Request &$request): Request
+    /**
+     * Build the challenge request data based on the challenge type
+     *
+     * @param Request $request
+     * @return Request
+     * @throws ValidationException
+     */
+    private function buildChallengeRequestData(Request &$request): Request
     {
         try {
-            if ($request->has('challenge_name') &&
-                $request['challenge_name'] == CognitoChallengeTypes::PASSWORD_VERIFIER->value) {
-
-                //Validate challenge payload
-                $payload = json_decode($request['challenge_value'], true);
-                $validator = Validator::make($payload, [
-                    'USER_ID_FOR_SRP' => 'required',
-                    'SALT' => 'required',
-                    'SRP_B' => 'required',
-                    'SECRET_BLOCK' => 'required',
-                    'PASSKEY_HASH' => 'required'
-                ]);
-                if ($validator->fails()) {
-                    throw new ValidationException($validator);
+            if ($request->has('challenge_name')) {
+                $challangeName = CognitoChallengeTypes.from($request['challenge_name']);
+                if ($challangeName === CognitoChallengeTypes::PASSWORD_VERIFIER) {
+                    $request = $this->buildChallengeRequestDataForSRP($request);
                 } //End if
+            } //End if
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:buildChallengeRequestData:Exception');
+            throw $e;
+        } //Try-catch ends
 
-                //Get the SRP parameters and generate A and a
-                $srpService = app()->make(AwsCognitoSrpService::class);
-                $challengeValue = $srpService->processChallenge(
-                        $request['challenge_value'],
-                        $request['session']
-                    );
+        return $request;
+    } //Function ends
 
-                //Add SRP_A and session token to the request
-                $request->merge([
-                    'challenge_value' => json_encode($challengeValue)
-                ]);
+    /**
+     * Build the challenge request data for SRP authentication flow when
+     * the challenge name is PASSWORD_VERIFIER
+     *
+     * @param Request $request
+     * @return Request
+     * @throws ValidationException
+     */
+    private function buildChallengeRequestDataForSRP(Request &$request): Request
+    {
+        try {
+            //Validate challenge payload
+            $payload = json_decode($request['challenge_value'], true);
+            $validator = Validator::make($payload, [
+                'USER_ID_FOR_SRP' => 'required',
+                'SALT' => 'required',
+                'SRP_B' => 'required',
+                'SECRET_BLOCK' => 'required',
+                'PASSKEY_HASH' => 'required'
+            ]);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
             } //End if
 
+            //Get the SRP parameters and generate A and a
+            $srpService = app()->make(AwsCognitoSrpService::class);
+            $challengeValue = $srpService->processChallenge(
+                    $request['challenge_value'],
+                    $request['session']
+                );
+
+            //Add SRP_A and session token to the request
+            $request->merge([
+                'challenge_value' => json_encode($challengeValue)
+            ]);
         } catch (Exception $e) {
-            Log::error('AuthenticatesUsers:buildSRPChallengeData:Exception');
+            Log::error('AuthenticatesUsers:buildChallengeRequestDataForSRP:Exception');
             throw $e;
         } //Try-catch ends
 
