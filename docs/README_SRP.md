@@ -50,7 +50,16 @@ The `srp_a` field here contains the **pre-computed SRP_A value** (not the actual
 
 However, for **higher security**, it is recommended to compute SRP_A on the client side and send it to the server. If you choose to compute the SRP_A value on the client side, make sure to use a secure random number generator for calculating the private ephemeral value `a` as per the SRP protocol specifications.
 
-Store the random number `a` securely on the client side (e.g., in memory) and do not transmit it to the server. Share a unique session token (e.g., a UUID) with the server so that responses from the server can be correlated with the correct authentication session. This session value is can be used to recover the private ephemeral value `a` on the client side when processing the server's challenge response in the next step.
+Store the private ephemeral value `a` securely on the client side (e.g., in memory) and do not transmit it to the server. Share a unique session token (e.g., a UUID) with the server so that responses from the server can be correlated with the correct authentication session. This session value is can be used to recover the private ephemeral value `a` on the client side when processing the server's challenge response in the next step.
+
+Example:
+1. Client generates a private ephemeral value `a` and computes `SRP_A` using the formula above.
+2. Client also generates a unique session token (e.g., UUID) to correlate the authentication session.
+3. Client stores the session token and the private ephemeral value `a` securely on the client side (e.g., in memory) as a key-value pair, where the session token is the key and the private ephemeral value `a` is the value.
+4. Client sends the username, computed `SRP_A`, and session token to the server.
+5. The server responds with the authentication challenge, which includes the salt, secret block, and SRP_B values needed for the next step of the authentication process. The server also includes the same session token in its response so that the client can correlate the response with the correct authentication session and retrieve the corresponding private ephemeral value `a` for processing the challenge response.
+6. The client uses the session token to retrieve the private ephemeral value `a` from memory and processes the server's challenge response to compute the password proof, which is then sent back to the server for verification.
+7. The client also sends the private ephemeral value `a` back to the now as a session value in the next step when responding to the server's challenge, so that the server can use it to verify the password proof and authenticate the user.
 
 ### **Step 3: Server-Side Processing**
 

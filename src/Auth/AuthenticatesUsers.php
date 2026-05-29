@@ -280,8 +280,8 @@ trait AuthenticatesUsers
     {
         try {
             if ($request->has('challenge_name')) {
-                $challangeName = CognitoChallengeTypes.from($request['challenge_name']);
-                if ($challangeName === CognitoChallengeTypes::PASSWORD_VERIFIER) {
+                $challangeName = CognitoChallengeTypes::from($request['challenge_name']);
+                if ($challangeName == CognitoChallengeTypes::PASSWORD_VERIFIER) {
                     $request = $this->buildChallengeRequestDataForSRP($request);
                 } //End if
             } //End if
