@@ -25,6 +25,7 @@ use Ellaisys\Cognito\Traits\AwsCognitoClientAdminAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientPasskeyAction;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\NoTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -191,11 +192,7 @@ class AwsCognitoClient
             } //End switch
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload['AuthParameters'] = array_merge($payload['AuthParameters'], [
-                    'SECRET_HASH' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             $response = $this->client->adminInitiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
@@ -231,11 +228,7 @@ class AwsCognitoClient
             ];
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload = array_merge($payload, [
-                    'SecretHash' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             //Set Client Metadata
             if (!empty($clientMetadata)) {
@@ -276,11 +269,7 @@ class AwsCognitoClient
             ];
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload = array_merge($payload, [
-                    'SecretHash' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             $this->client->forgotPassword($payload);
         } catch (CognitoIdentityProviderException $e) {
@@ -319,11 +308,7 @@ class AwsCognitoClient
             ];
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload = array_merge($payload, [
-                    'SecretHash' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             $this->client->confirmForgotPassword($payload);
         } catch (CognitoIdentityProviderException $e) {
@@ -505,11 +490,13 @@ class AwsCognitoClient
             //Generate payload
             $payload = [
                 'ClientId' => $this->clientId,
-                'SecretHash' => $this->cognitoSecretHash($username),
                 'Username' => $username,
                 'ConfirmationCode' => $confirmationCode,
                 'ForceAliasCreation' => config('cognito.force_alias_creation', false),
             ];
+
+            //Add Secret Hash in case of Client Secret being configured
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             //Set Client Metadata
             if (!empty($clientMetadata)) {
@@ -542,9 +529,11 @@ class AwsCognitoClient
             //Generate payload
             $payload = [
                 'ClientId' => $this->clientId,
-                'SecretHash' => $this->cognitoSecretHash($username),
                 'Username' => $username
             ];
+
+            //Add Secret Hash in case of Client Secret being configured
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             //Set Client Metadata
             if (!empty($clientMetadata)) {
@@ -588,34 +577,6 @@ class AwsCognitoClient
         } //End try
 
         return true;
-    } //Function ends
-
-    /**
-     * Creates the Cognito secret hash.
-     * @param string $username
-     * @return string
-     */
-    protected function cognitoSecretHash($username)
-    {
-        return $this->hash($username . $this->clientId);
-    } //Function ends
-
-    /**
-     * Creates a HMAC from a string.
-     *
-     * @param string $message
-     * @return string
-     */
-    protected function hash($message)
-    {
-        $hash = hash_hmac(
-            'sha256',
-            $message,
-            $this->clientSecret,
-            true
-        );
-
-        return base64_encode($hash);
     } //Function ends
 
     /**
@@ -668,26 +629,26 @@ class AwsCognitoClient
         try {
             //Build payload
             $payload = [
-                'AuthFlow' => CognitoAuthFlowTypes::REFRESH_TOKEN_AUTH->value,
                 'AuthParameters' => [
                     'REFRESH_TOKEN' => $refreshToken,
-                ],
-                'ClientId' => $this->clientId,
-                'UserPoolId' => $this->poolId,
+                ]
             ];
 
-            //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload['AuthParameters'] = array_merge($payload['AuthParameters'], [
-                    'SECRET_HASH' => $this->cognitoSecretHash($username)
-                ]);
+            // Call initiateAuth with REFRESH_TOKEN_AUTH flow to get new tokens
+            $response = $this->initiateAuth(
+                CognitoAuthFlowTypes::REFRESH_TOKEN_AUTH,
+                $payload, $username
+            );
+
+            if (isset($response['AuthenticationResult'])) {
+                // Add the existing refresh token to the response if not present
+                if (!isset($response['AuthenticationResult']['RefreshToken'])) {
+                    $response['AuthenticationResult']['RefreshToken'] = $refreshToken;
+                } //End if
+            } else {
+                throw new NoTokenException();
             } //End if
-
-            $response = $this->client->initiateAuth($payload);
-
-            // Reuse same refreshToken
-            $response['AuthenticationResult']['RefreshToken'] = $refreshToken;
-        } catch (CognitoIdentityProviderException $e) {
+        } catch (Exception $e) {
             Log::error('AwsCognitoClient:refreshToken:Exception');
             throw $e;
         } //Try-catch ends

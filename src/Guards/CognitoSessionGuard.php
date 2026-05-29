@@ -143,7 +143,8 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             $request = collect($credentials);
 
             //Build the payload
-            $payloadCognito = $this->buildCognitoPayload($request, $paramUsername, $paramPassword);
+            $payloadCognito = $this->buildCognitoPayload($request, $paramUsername,
+                $paramPassword, $authFlowType);
 
             //Fire event for authenticating
             $this->fireAttemptEvent($request->toArray(), $remember);
@@ -174,13 +175,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             $returnValue = $this->handleCognitoException($e);
         } catch (NoLocalUserException | AwsCognitoException | Exception $e) {
             $exceptionClass = basename(str_replace('\\', DIRECTORY_SEPARATOR, get_class($e)));
-            $exceptionCode = $e->getCode();
-            $exceptionMessage = $e->getMessage().':(code:'.$exceptionCode.', line:'.$e->getLine().')';
-            if ($e instanceof CognitoIdentityProviderException) {
-                $exceptionCode = $e->getAwsErrorCode();
-                $exceptionMessage = $e->getAwsErrorMessage().':'.$exceptionCode;
-            } //End if
-            Log::error('CognitoSessionGuard:attempt:'.$exceptionClass.':'.$exceptionMessage);
+            Log::error('CognitoSessionGuard:attempt:'.$exceptionClass);
 
             //Find SQL Exception
             if (strpos($e->getMessage(), 'SQLSTATE') !== false) {

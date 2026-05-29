@@ -18,6 +18,7 @@ use Ellaisys\Cognito\AwsCognitoUserPool;
 use Ellaisys\Cognito\Guards\CognitoSessionGuard;
 use Ellaisys\Cognito\Guards\CognitoTokenGuard;
 use Ellaisys\Cognito\Services\AwsCognitoJwksService;
+use Ellaisys\Cognito\Services\AwsCognitoSrpService;
 use Ellaisys\Cognito\Services\JsonResponseService;
 
 use Ellaisys\Cognito\Http\Parser\Parser;
@@ -253,6 +254,14 @@ class AwsCognitoServiceProvider extends ServiceProvider
             return new AwsCognitoJwksService(
                 config('cognito.region'),
                 config('cognito.user_pool_id')
+            );
+        });
+
+        //AWS SRP Service
+        $this->app->singleton(AwsCognitoSrpService::class, function () {
+            return new AwsCognitoSrpService(
+                config('cognito.user_pool_id'),
+                config('cognito.app_client_id')
             );
         });
     } //Function ends

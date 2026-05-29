@@ -22,6 +22,10 @@ use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoUserPool;
 
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
+
+use Ellaisys\Cognito\Services\AwsCognitoJwksService;
+use Ellaisys\Cognito\Services\AwsCognitoSrpService;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -94,7 +98,6 @@ trait AuthenticatesUsers
                 'regex' => 'Must contain atleast ' . $passwordPolicy['message']
             ]);
             if ($validator->fails()) {
-                Log::error($validator->errors());
                 throw new ValidationException($validator);
             } //End if
 
@@ -106,15 +109,7 @@ trait AuthenticatesUsers
                 );
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLogin:Exception');
-            if ($e instanceof ValidationException || ($this->isRaiseException)) {
-                throw $e;
-            } //End if
-
-            if ($e instanceof CognitoIdentityProviderException) {
-                $this->sendFailedCognitoResponse($e, $paramUsername);
-            }
-
-            $returnValue = $this->sendFailedLoginResponse($e, $this->isJsonResponse, $paramUsername);
+            throw $e;
         } //Try-catch ends
 
         return $returnValue;
@@ -138,12 +133,26 @@ trait AuthenticatesUsers
             $returnValue = null;
             $guard = $this->getGuard($request);
 
+            //Generate the SRP_A parameter if not present in the request
+            if (!$request->has($paramPassword)) {
+                // Generate public and private ephemeral values
+                $srpService = app()->make(AwsCognitoSrpService::class);
+                $ephemeral = $srpService->generateEphemeral();
+
+                //Request password authentication using SRP flow
+                $request->merge([
+                    $paramPassword => $ephemeral['public_key'], // SRP_A value
+                    'session_token' => $ephemeral['private_key']
+                ]);
+            } //End if
+
             //Validate request
-            $validator = Validator::make($request->only([$paramPassword]), [
-                $paramPassword => 'required'
+            $validator = Validator::make($request->only([$paramUsername, $paramPassword, 'session_token']), [
+                $paramUsername => 'required',
+                $paramPassword => 'required',
+                'session_token' => 'required'
             ]);
             if ($validator->fails()) {
-                Log::error($validator->errors());
                 throw new ValidationException($validator);
             } //End if
 
@@ -178,6 +187,9 @@ trait AuthenticatesUsers
             if ($request->has('challenge_name')) {
                 $request->merge(['challenge_name' => strtoupper($request['challenge_name'])]);
             } //End if
+
+            //Build the challenge data based on the challenge type
+            $request = $this->buildChallengeRequestData($request);
 
             //Validate payload
             $validator = Validator::make($request->all(), $this->rulesChallenge());
@@ -258,6 +270,73 @@ trait AuthenticatesUsers
     } //Function ends
 
     /**
+     * Build the challenge request data based on the challenge type
+     *
+     * @param Request $request
+     * @return Request
+     * @throws ValidationException
+     */
+    private function buildChallengeRequestData(Request &$request): Request
+    {
+        try {
+            if ($request->has('challenge_name')) {
+                $challangeName = CognitoChallengeTypes::from($request['challenge_name']);
+                if ($challangeName == CognitoChallengeTypes::PASSWORD_VERIFIER) {
+                    $request = $this->buildChallengeRequestDataForSRP($request);
+                } //End if
+            } //End if
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:buildChallengeRequestData:Exception');
+            throw $e;
+        } //Try-catch ends
+
+        return $request;
+    } //Function ends
+
+    /**
+     * Build the challenge request data for SRP authentication flow when
+     * the challenge name is PASSWORD_VERIFIER
+     *
+     * @param Request $request
+     * @return Request
+     * @throws ValidationException
+     */
+    private function buildChallengeRequestDataForSRP(Request &$request): Request
+    {
+        try {
+            //Validate challenge payload
+            $payload = json_decode($request['challenge_value'], true);
+            $validator = Validator::make($payload, [
+                'USER_ID_FOR_SRP' => 'required',
+                'SALT' => 'required',
+                'SRP_B' => 'required',
+                'SECRET_BLOCK' => 'required',
+                'PASSKEY_HASH' => 'required'
+            ]);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
+            //Get the SRP parameters and generate A and a
+            $srpService = app()->make(AwsCognitoSrpService::class);
+            $challengeValue = $srpService->processChallenge(
+                    $request['challenge_value'],
+                    $request['session']
+                );
+
+            //Add SRP_A and session token to the request
+            $request->merge([
+                'challenge_value' => json_encode($challengeValue)
+            ]);
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:buildChallengeRequestDataForSRP:Exception');
+            throw $e;
+        } //Try-catch ends
+
+        return $request;
+    } //Function ends
+
+    /**
      * Get the challenge validation rules.
      *
      * @return array
@@ -270,59 +349,6 @@ trait AuthenticatesUsers
             'challenge_name'    => 'required|in:WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD_VERIFIER',
             'challenge_value'   => 'required',
         ];
-    } //Function ends
-
-    /**
-     * Handle Failed Cognito Exception
-     *
-     * @param CognitoIdentityProviderException $exception
-     */
-    private function sendFailedCognitoResponse(
-        CognitoIdentityProviderException $exception,
-        string $paramName='email')
-    {
-        throw ValidationException::withMessages([
-            $paramName => $exception->getAwsErrorMessage(),
-        ]);
-    } //Function ends
-
-    /**
-     * Handle Generic Exception
-     *
-     * @param  \Collection $request
-     * @param  \Exception $exception
-     */
-    private function sendFailedLoginResponse($exception,
-        bool $isJsonResponse=false, string $paramName='email')
-    {
-        $errorCode = 400;
-        $errorMessageCode = 'cognito.validation.auth.failed';
-        $message = 'FailedLoginResponse';
-        if (!empty($exception)) {
-            if ($exception instanceof CognitoIdentityProviderException) {
-                $errorMessageCode = $exception->getAwsErrorCode();
-                $message = $exception->getAwsErrorMessage();
-            } elseif ($exception instanceof ValidationException) {
-                throw $exception;
-            } else {
-                $errorCode = $exception->getStatusCode();
-                $message = $exception->getMessage();
-            } //End if
-        } //End if
-
-        if ($isJsonResponse) {
-            return response()->json([
-                'error' => $errorMessageCode,
-                'message' => $message
-            ], $errorCode);
-        } else {
-            return redirect()
-                ->back()
-                ->withErrors([
-                    'error' => $errorMessageCode,
-                    $paramName => $message,
-                ]);
-        } //End if
     } //Function ends
 
 } //Trait ends

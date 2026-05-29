@@ -38,11 +38,10 @@ class AwsCognitoJwksService
      */
     protected $poolId;
 
-
     /**
      * Constructor.
-     *
-     * @param  \Illuminate\Contracts\Cache\Repository  $cache
+     * @param string $region
+     * @param string $poolId
      *
      * @return void
      */
@@ -51,7 +50,6 @@ class AwsCognitoJwksService
         $this->region = $region;
         $this->poolId = $poolId;
     }
-
 
     /**
      * @param string $region
@@ -67,7 +65,6 @@ class AwsCognitoJwksService
         $keys = json_decode($json, true);
         return JWK::parseKeySet($keys);
     } //Function ends
-
 
     /**
      * Download the jwks for the configured user pool

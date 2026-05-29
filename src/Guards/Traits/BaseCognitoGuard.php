@@ -182,7 +182,7 @@ trait BaseCognitoGuard
             //Check in case of any challenge
             if (isset($result['ChallengeName'])) {
                 $this->challengeName = $result['ChallengeName'];
-                $this->challengeData = $this->handleCognitoChallenge($result, $credentials['email']);
+                $this->challengeData = $this->handleCognitoChallenge($result, $credentials);
             } elseif (isset($result['AuthenticationResult'])) {
                 //Create claim token
                 $this->claim = new AwsCognitoClaim($result, null);
@@ -197,27 +197,24 @@ trait BaseCognitoGuard
     /**
      * handle Cognito Challenge
      */
-    protected function handleCognitoChallenge(AwsResult $result, string $username) {
-
+    protected function handleCognitoChallenge(AwsResult $result, Collection $credentials) {
         //Return value
-        $returnValue = null;
+        $returnValue = [];
         
         $challengeType = CognitoChallengeTypes::from($result['ChallengeName']);
         switch ($challengeType) {
             case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
                 $returnValue = [
                     'status' => $result['ChallengeName'],
-                    'session_token' => $result['Session'],
-                    'username' => $username
+                    'session_token' => $result['Session']
                 ];
                 break;
 
             case CognitoChallengeTypes::PASSWORD_VERIFIER:
                 $returnValue = [
                     'status' => $result['ChallengeName'],
-                    'session_token' => Str::random(),
-                    'challenge_params' => $result['ChallengeParameters'],
-                    'username' => $username
+                    'session_token' => $credentials['session_token']??null,
+                    'challenge_params' => $result['ChallengeParameters']
                 ];
                 break;
 
@@ -226,8 +223,7 @@ trait BaseCognitoGuard
                 $returnValue = [
                     'status' => $result['ChallengeName'],
                     'session_token' => $result['Session'],
-                    'challenge_params' => $result['ChallengeParameters'],
-                    'username' => $username
+                    'challenge_params' => $result['ChallengeParameters']
                 ];
                 break;
 
@@ -236,12 +232,17 @@ trait BaseCognitoGuard
                     $returnValue = [
                         'status' => $result['ChallengeName'],
                         'session_token' => isset($result['Session']) ? $result['Session'] : null,
-                        'challenge_params' => isset($result['ChallengeParameters']) ? $result['ChallengeParameters'] : null,
-                        'username' => $username
+                        'challenge_params' => isset($result['ChallengeParameters']) ? $result['ChallengeParameters'] : null
                     ];
                 } //End if
                 break;
         } //End switch
+
+        //Add username and challenge name into return value
+        $returnValue = array_merge($returnValue, [
+            'username' => $credentials['email'],
+            'challenge_name' => $challengeType->value
+        ]);
 
         return $returnValue;
     } //Function ends
@@ -254,15 +255,16 @@ trait BaseCognitoGuard
      * @param  string  $paramPassword
      * @return array
      */
-    final public function buildCognitoPayload(Collection $request, $paramUsername='email', $paramPassword='password', bool $isCredential=false): Collection
+    final public function buildCognitoPayload(Collection $request,
+        string $paramUsername, string $paramPassword,
+        CognitoAuthFlowTypes $authFlowType): Collection
     {
         $payload = [];
 
-        //Get key fields
-        if ($isCredential) {
-            $rememberMe = $request->has('remember')?$request['remember']:false;
-            $payload = array_merge($payload, ['remember' => $rememberMe]);
-        } //End if
+        //Add key fields
+        $payload = array_merge($payload, [
+            'remember' => $request->has('remember')?$request['remember']:false
+            ]);
         
         //Get the configuration fields
         $userFields = array_filter(config('cognito.cognito_user_fields'), function($value) {
@@ -271,7 +273,8 @@ trait BaseCognitoGuard
 
         if ($userFields) {
             //Iterate all the keys in the request
-            $request->each(function($value, $key) use ($userFields, $paramUsername, $paramPassword, &$payload, $isCredential) {
+            $request->each(function($value, $key) use ($userFields, $paramUsername,
+                $paramPassword, &$payload, $authFlowType) {
                 switch ($key) {
                     case $paramUsername:
                         $payload = array_merge($payload, ['email' => $value]);
@@ -282,11 +285,13 @@ trait BaseCognitoGuard
                         break;
                     
                     default:
-                        if ($isCredential && array_key_exists($key, $userFields)) {
+                        if (array_key_exists($key, $userFields) ||
+                            ($authFlowType == CognitoAuthFlowTypes::USER_SRP_AUTH))
+                        {
                             $payload = array_merge($payload, [$key => $value]);
-                        }
+                        } //End if
                         break;
-                } //Switch ends
+                } //Switch end
             });
         } //End if
 
@@ -361,9 +366,8 @@ trait BaseCognitoGuard
                     } //End if
                 });
             } //End if
-
         } catch (Exception $e) {
-            Log::error($e->getMessage());
+            Log::error('BaseCognitoGuard:buildLocalUserPayload:Exception');
             throw $e;
         } //End try-catch
 
@@ -425,7 +429,9 @@ trait BaseCognitoGuard
                 //Check in case of any challenge
                 if (isset($result['ChallengeName'])) {
                     $this->challengeName = $result['ChallengeName'];
-                    $this->challengeData = $this->handleCognitoChallenge($result, $username);
+                    $this->challengeData = $this->handleCognitoChallenge(
+                            $result, collect(['email' => $username])
+                        );
                 } elseif (isset($result['AuthenticationResult'])) {
                     //Create claim token
                     $this->claim = new AwsCognitoClaim($result, null);

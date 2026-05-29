@@ -103,9 +103,11 @@ class LoginController extends Controller
             if ($authFlowType === CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH) {
                 $claim = $this->attemptLogin($request,
                     $usernameField, $passwordField);
-            } else {
+            } elseif ($authFlowType === CognitoAuthFlowTypes::USER_SRP_AUTH) {
                 $claim = $this->attemptLoginSRP($request,
                     $usernameField, $passwordField);
+            } else {
+                throw new HttpException(400, 'Invalid authentication flow type specified');
             } //End if
 
             //Process the claim response
@@ -134,7 +136,7 @@ class LoginController extends Controller
      * @return mixed
      */
     public function loginSRP(Request $request,
-        string $usernameField='username', string $passwordField='password')
+        string $usernameField='username', string $passwordField='srp_a')
     {
         try {
             return $this->login(
@@ -236,11 +238,27 @@ class LoginController extends Controller
         } //End try-catch
         return $returnValue;
     } //Function ends
+
+    /**
+     * Forced logout action for the API based approach.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
     public function logoutForced(Request $request)
     {
         return $this->logout($request, true);
     } //Function ends
 
+    /**
+     * Process the claim response from Cognito authentication.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param mixed $claim
+     * @param string $guard
+     * @param bool $isJsonResponse
+     * @return mixed
+     */
     private function processClaimResponse(Request $request, $claim,
         string $guard, bool $isJsonResponse): mixed
     {
@@ -289,6 +307,12 @@ class LoginController extends Controller
         }
     } //Function ends
 
+    /**
+     * Call the pre-authentication event.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return void
+     */
     private function callPreAuthEvent(Request $request): void
     {
         //Raise pre registration event
@@ -298,6 +322,13 @@ class LoginController extends Controller
         ));
     } //Function ends
 
+    /**
+     * Call the post-authentication success event.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param string $guard
+     * @return void
+     */
     private function callPostAuthSuccessEvent(
         Request $request, string $guard): void
     {
@@ -310,8 +341,15 @@ class LoginController extends Controller
         ));
     } //Function ends
 
+    /**
+     * Call the post-authentication error event.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \Exception $e
+     * @return void
+     */
     private function callPostAuthErrorEvent(
-        Request $request, $e): void
+        Request $request, Exception $e): void
     {
         //Rise Post Auth Failed Event
         event(new PostAuthFailedEvent(

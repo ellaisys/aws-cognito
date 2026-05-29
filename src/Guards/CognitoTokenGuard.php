@@ -122,7 +122,8 @@ class CognitoTokenGuard extends TokenGuard
             $request = collect($request);
 
             //Build the payload
-            $payloadCognito = $this->buildCognitoPayload($request, $paramUsername, $paramPassword);
+            $payloadCognito = $this->buildCognitoPayload($request, $paramUsername,
+                $paramPassword, $authFlowType);
 
             //Check if the payload has valid AWS credentials
             $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlowType));

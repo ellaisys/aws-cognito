@@ -44,6 +44,15 @@ class JsonResponseService
             } //End if
         } //End if
 
+        //In case of AWS Cognito response, log the metadata for debugging
+        if (array_key_exists('@metadata', $resource)) {
+            $metadata = $resource['@metadata'];
+            $statusCode = $metadata['statusCode'] ?? $statusCode;
+
+            //Remove metadata from the response
+            unset($resource['@metadata']);
+        } //End if
+
         return $this->putAdditionalMeta(
                 $resource, 'success', null,
                 $statusCode, $message

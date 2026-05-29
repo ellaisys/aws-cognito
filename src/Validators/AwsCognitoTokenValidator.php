@@ -35,7 +35,6 @@ class AwsCognitoTokenValidator
         return $this->validateToken($value);
     }
 
-
     /**
      * Decode the JWT token.
      *
@@ -47,7 +46,6 @@ class AwsCognitoTokenValidator
     {
         return $this->validateToken($token, true);
     }
-
 
     /**
      * @param  string  $token
@@ -80,7 +78,6 @@ class AwsCognitoTokenValidator
         
         return ($isDecodedToken)?$decodedToken:$token;
     } //Function ends
-
 
     /**
      * @param  string  $token
