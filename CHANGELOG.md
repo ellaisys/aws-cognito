@@ -1,6 +1,6 @@
 Release 49 (tag v2.0.5)
 - Feat: Issue [#132](https://github.com/ellaisys/aws-cognito/issues/132)
-- Feat: Implement the SRP Protocal based authentication and routes for api and web gaurds.
+- Feat: Implement the SRP Protocol based authentication and routes for api and web guards.
 - Fix: Refactor of the authentication flow to centralise challenge handling and parameterise status messages.
 - Refactor: Centralized the initiateAuth and secret-hash injection across auth calls.
 - Doc: Update readme with SRP authentication instructions and details.
