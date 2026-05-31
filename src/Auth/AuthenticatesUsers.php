@@ -74,14 +74,18 @@ trait AuthenticatesUsers
      * Attempt to log the user into the application.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  \CognitoAuthFlowTypes  $authFlow (optional)
      * @param  \string  $paramUsername (optional)
      * @param  \string  $paramPassword (optional)
+     * @param  \string  $deviceKeyParam (optional)
      *
      * @return mixed
      */
     protected function attemptLogin(Request $request,
+        CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH,
         string $paramUsername='email',
-        string $paramPassword='password')
+        string $paramPassword='password',
+        string $deviceKeyParam = 'device_key')
     {
         try {
             // Initialize variables
@@ -92,11 +96,19 @@ trait AuthenticatesUsers
             $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
-            $validator = Validator::make($request->only([$paramPassword]), [
-                $paramPassword => 'required|regex:'.$passwordPolicy['regex']
-            ], [
-                'regex' => 'Must contain atleast ' . $passwordPolicy['message']
-            ]);
+            $validator = Validator::make(
+                $request->only([
+                    $paramUsername,
+                    $paramPassword,
+                    $deviceKeyParam
+                ]),
+                [
+                    $paramUsername => 'required|string',
+                    $paramPassword => 'required|regex:' . $passwordPolicy['regex'],
+                    $deviceKeyParam => 'sometimes|string'
+                ], [
+                    'regex' => 'Must contain atleast ' . $passwordPolicy['message']
+                ]);
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
@@ -105,7 +117,7 @@ trait AuthenticatesUsers
             $returnValue = Auth::guard($guard)->attempt(
                     $request->all(), false,
                     $paramUsername, $paramPassword,
-                    CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH
+                    $authFlow
                 );
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLogin:Exception');
@@ -119,14 +131,20 @@ trait AuthenticatesUsers
      * Attempt to log the user into the application using SRP authentication flow.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  \CognitoAuthFlowTypes  $authFlow (optional)
      * @param  \string  $paramUsername (optional)
      * @param  \string  $paramPassword (optional)
+     * @param  \string  $sessionTokenParam (optional)
+     * @param  \string  $deviceKeyParam (optional)
      *
      * @return mixed
      */
     protected function attemptLoginSRP(Request $request,
-        string $paramUsername='email',
-        string $paramPassword='password')
+        CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_SRP_AUTH,
+        string $paramUsername = 'email',
+        string $paramPassword = 'password',
+        string $sessionTokenParam = 'session_token',
+        string $deviceKeyParam = 'device_key')
     {
         try {
             // Initialize variables
@@ -142,16 +160,19 @@ trait AuthenticatesUsers
                 //Request password authentication using SRP flow
                 $request->merge([
                     $paramPassword => $ephemeral['public_key'], // SRP_A value
-                    'session_token' => $ephemeral['private_key']
+                    $sessionTokenParam => $ephemeral['session_token']
                 ]);
             } //End if
 
             //Validate request
-            $validator = Validator::make($request->only([$paramUsername, $paramPassword, 'session_token']), [
-                $paramUsername => 'required',
-                $paramPassword => 'required',
-                'session_token' => 'required'
-            ]);
+            $validator = Validator::make(
+                $request->only([$paramUsername, $paramPassword, $sessionTokenParam, $deviceKeyParam]),
+                [
+                    $paramUsername  => 'required|string',
+                    $paramPassword  => 'required|string',
+                    $sessionTokenParam => 'required|string',
+                    $deviceKeyParam    => 'sometimes|string'
+                ]);
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
@@ -160,7 +181,7 @@ trait AuthenticatesUsers
             $returnValue = Auth::guard($guard)->attempt(
                     $request->all(), false,
                     $paramUsername, $paramPassword,
-                    CognitoAuthFlowTypes::USER_SRP_AUTH
+                    $authFlow
                 );
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLoginSRP:Exception');
@@ -282,8 +303,12 @@ trait AuthenticatesUsers
             if ($request->has('challenge_name')) {
                 $challangeName = CognitoChallengeTypes::from($request['challenge_name']);
                 if ($challangeName == CognitoChallengeTypes::PASSWORD_VERIFIER) {
-                    $request = $this->buildChallengeRequestDataForSRP($request);
-                } //End if
+                    $request = $this->buildChallengeRequestDataForSRP($request, false);
+                } elseif ($challangeName == CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER) {
+                    $request = $this->buildChallengeRequestDataForSRP($request, true);
+                } else{
+                    // Do Nothing
+                }
             } //End if
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:buildChallengeRequestData:Exception');
@@ -298,33 +323,40 @@ trait AuthenticatesUsers
      * the challenge name is PASSWORD_VERIFIER
      *
      * @param Request $request
+     * @param bool $isDeviceAuth (optional)
      * @return Request
      * @throws ValidationException
      */
-    private function buildChallengeRequestDataForSRP(Request &$request): Request
+    private function buildChallengeRequestDataForSRP(Request &$request,
+        bool $isDeviceAuth = false): Request
     {
         try {
             //Validate challenge payload
             $payload = json_decode($request['challenge_value'], true);
-            $validator = Validator::make($payload, [
-                'USER_ID_FOR_SRP' => 'required',
-                'SALT' => 'required',
-                'SRP_B' => 'required',
-                'SECRET_BLOCK' => 'required',
-                'PASSKEY_HASH' => 'required'
-            ]);
+            $validator = Validator::make(
+                    $payload,
+                    $this->rulesChallengeValue($isDeviceAuth)
+                );
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
 
             //Get the SRP parameters and generate A and a
             $srpService = app()->make(AwsCognitoSrpService::class);
+
+            /**
+             * Set the device authentication flag in the SRP service to
+             * indicate if this is a device authentication challenge
+             */
+            $srpService->setIsDeviceAuth($isDeviceAuth);
+
+            // Process the challenge and get the response parameters
             $challengeValue = $srpService->processChallenge(
                     $request['challenge_value'],
                     $request['session']
                 );
 
-            //Add SRP_A and session token to the request
+            //Add challenge response parameters to the request
             $request->merge([
                 'challenge_value' => json_encode($challengeValue)
             ]);
@@ -346,9 +378,34 @@ trait AuthenticatesUsers
         return [
             'username'          => 'sometimes',
             'session'           => 'required',
-            'challenge_name'    => 'required|in:WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD_VERIFIER',
+            'challenge_name'    => 'required|string|in:WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER',
             'challenge_value'   => 'required',
         ];
+    } //Function ends
+
+    /**
+     * Get the challenge validation rules.
+     *
+     * @return array
+     */
+    protected function rulesChallengeValue(bool $isDeviceAuth = false)
+    {
+        $rules = [
+            'PASSWORD_CLAIM_SIGNATURE'      => 'sometimes|string',
+            'PASSWORD_CLAIM_SECRET_BLOCK'   => 'required_with:PASSWORD_CLAIM_SIGNATURE|string',
+            'TIMESTAMP'                     => 'required_with:PASSWORD_CLAIM_SIGNATURE|string',
+            'USERNAME'                      => 'required_with:PASSWORD_CLAIM_SIGNATURE|string',
+
+            'PASSKEY_HASH'                  => 'required_without:PASSWORD_CLAIM_SIGNATURE|string',
+            'CHALLENGE_PARAMS'              => 'required_without:PASSWORD_CLAIM_SIGNATURE|string',
+        ];
+
+        // Add device authentication specific rules
+        if ($isDeviceAuth) {
+            $rules['DEVICE_GROUP_KEY'] = 'required_without:PASSWORD_CLAIM_SIGNATURE|string';
+        } //End if
+
+        return $rules;
     } //Function ends
 
 } //Trait ends
