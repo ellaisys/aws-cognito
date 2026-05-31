@@ -133,7 +133,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     public function attempt(array $credentials = [], $remember = false,
         string $paramUsername='email', string $paramPassword='password',
-        ?CognitoAuthFlowTypes $authFlowType = CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH)
+        ?CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH)
     {
         try {
             $returnValue = false;
@@ -144,13 +144,13 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
             //Build the payload
             $payloadCognito = $this->buildCognitoPayload($request, $paramUsername,
-                $paramPassword, $authFlowType);
+                $paramPassword, $authFlow);
 
             //Fire event for authenticating
             $this->fireAttemptEvent($request->toArray(), $remember);
 
             //Check if the payload has valid AWS credentials
-            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlowType));
+            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlow));
             if ($responseCognito && (!empty($this->claim))) {
                 //Process the claim
                 if ($user = $this->processAWSClaim()) {

@@ -114,7 +114,7 @@ class CognitoTokenGuard extends TokenGuard
      */
     public function attempt(array $request = [], $remember = false,
         string $paramUsername='email', string $paramPassword='password',
-        ?CognitoAuthFlowTypes $authFlowType = CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH)
+        ?CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH)
     {
         $returnValue = null;
         try {
@@ -123,10 +123,10 @@ class CognitoTokenGuard extends TokenGuard
 
             //Build the payload
             $payloadCognito = $this->buildCognitoPayload($request, $paramUsername,
-                $paramPassword, $authFlowType);
+                $paramPassword, $authFlow);
 
             //Check if the payload has valid AWS credentials
-            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlowType));
+            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlow));
             if ($responseCognito) {
                 if ($this->claim) {
                     $credentials = collect([
@@ -251,7 +251,7 @@ class CognitoTokenGuard extends TokenGuard
                 } //End if
 
                 //Remove the token from application storage
-                return $this->cognito->unsetToken($forceForever);
+                return $this->cognito->unsetToken();
             } //End if
         } catch (Exception $e) {
             Log::error('CognitoTokenGuard:invalidate:Exception');
