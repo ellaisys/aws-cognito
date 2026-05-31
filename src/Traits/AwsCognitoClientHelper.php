@@ -163,4 +163,92 @@ trait AwsCognitoClientHelper
         return base64_encode($hash);
     } //Function ends
 
+    /**
+     * Builds the payload for inviting a user, including attributes,
+     * client metadata, and message action.
+     * @param array $payload The initial payload to be built upon.
+     * @param string|null $password (optional)
+     * @param array|null $attributes (optional)
+     * @param array|null $clientMetadata (optional)
+     * @param string|null $messageAction (optional)
+     * @return array The constructed payload for inviting a user.
+     */
+    protected function buildInviteUserPayload(
+        array $payload, ?string $password = null,
+        ?array $attributes = [], ?array $clientMetadata = null,
+        ?string $messageAction = null): array
+    {
+        try {
+            //Validate phone for MFA
+            if (config('cognito.mfa_setup')=="MFA_ENABLED" && empty($attributes['phone_number'])) {
+                throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING');
+            } //End if
+            
+            //Force validate email
+            if (!empty($attributes['email'])) {
+                $attributes['email_verified'] = config('cognito.force_new_user_email_verified', false)? 'true' : 'false';
+            } //End if
+
+            // Add user attributes
+            if (!empty($attributes)) {
+                $payload['UserAttributes'] = $this->formatAttributes($attributes);
+            } //End if
+
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
+            } //End if
+
+            //Set Temporary password
+            if (!empty($password)) {
+                $payload['TemporaryPassword'] = $password;
+            } //End if
+
+            //Set Message Action
+            if (!empty($messageAction) && in_array($messageAction, ['RESEND', 'SUPPRESS'])) {
+                $payload['MessageAction'] = $messageAction;
+            } //End If
+
+            //Set Delivery Mediums
+            if (config('cognito.add_user_delivery_mediums')!="NONE") {
+                if (config('cognito.add_user_delivery_mediums')=="BOTH") {
+                    $payload['DesiredDeliveryMediums'] = ['EMAIL', 'SMS'];
+                } else {
+                    $defaultDeliveryMedium = config('cognito.add_user_delivery_mediums', "EMAIL");
+                    $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
+                } //End if
+            } //End if
+            
+            if (config('cognito.mfa_setup')=="MFA_ENABLED") {
+                $defaultDeliveryMedium = 'SMS';
+                $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
+            } //End if
+        } catch (Exception $e) {
+            Log::error('AwsCognitoClientHelper:buildInviteUserPayload:Exception');
+            throw $e;
+        } //Try-catch ends
+
+        return $payload;
+    } //Function ends
+
+    /**
+     * Format attributes in Name/Value array.
+     *
+     * @param array $attributes
+     * @return array
+     */
+    protected function formatAttributes(array $attributes): array
+    {
+        $userAttributes = [];
+
+        foreach ($attributes as $key => $value) {
+            $userAttributes[] = [
+                'Name' => $key,
+                'Value' => $value,
+            ];
+        } //Loop ends
+
+        return $userAttributes;
+    } //Function ends
+
 } //Trait ends
