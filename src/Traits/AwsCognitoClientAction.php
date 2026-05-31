@@ -107,7 +107,11 @@ trait AwsCognitoClientAction
             ];
 
             //Set session for challenge types that require it
-            if (!in_array($challengeName, [CognitoChallengeTypes::PASSWORD_VERIFIER], true)) {
+            if (!in_array($challengeName, [
+                    CognitoChallengeTypes::PASSWORD_VERIFIER,
+                    CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER
+                ], true))
+            {
                 $payload['Session'] = $session;
             } //End if
 

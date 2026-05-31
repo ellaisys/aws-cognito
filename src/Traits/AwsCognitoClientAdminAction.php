@@ -443,4 +443,40 @@ trait AwsCognitoClientAdminAction
         return $response;
     } //Function ends
 
+    /**
+     * Declares an authentication flow and initiates sign-in for a user
+     * in the Amazon Cognito user directory as an administrator.
+     *
+     * @see http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html
+     * @param CognitoAuthFlowTypes $authFlow
+     * @param array $payloadData
+     * @param string $username
+     * @return AwsResult
+     */
+    public function adminInitiateAuth(CognitoAuthFlowTypes $authFlow,
+        array $payloadData, string $username): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'AuthFlow' => $authFlow->value,
+                'ClientId' => $this->clientId,
+                'UserPoolId' => $this->poolId,
+            ];
+
+            //Add other payload data
+            $payload = array_merge($payload, $payloadData);
+
+            //Add Secret Hash in case of Client Secret being configured
+            $payload = $this->cognitoSecretHash($username, $payload);
+
+            $response = $this->client->adminInitiateAuth($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminInitiateAuth:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
 } //Trait ends
