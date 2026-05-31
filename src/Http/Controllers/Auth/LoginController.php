@@ -80,7 +80,7 @@ class LoginController extends Controller
      */
     public function login(Request $request,
         string $usernameField='username', string $passwordField='password',
-        ?CognitoAuthFlowTypes $authFlowType = CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH)
+        ?CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH)
     {
         try {
             //Initialize parameters
@@ -100,11 +100,13 @@ class LoginController extends Controller
             } //End if
 
             //Authenticate with Cognito Package Trait based on the guard
-            if ($authFlowType === CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH) {
-                $claim = $this->attemptLogin($request,
+            if (in_array($authFlow, [CognitoAuthFlowTypes::USER_PASSWORD_AUTH,
+                CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH])) 
+            {
+                $claim = $this->attemptLogin($request, $authFlow,
                     $usernameField, $passwordField);
-            } elseif ($authFlowType === CognitoAuthFlowTypes::USER_SRP_AUTH) {
-                $claim = $this->attemptLoginSRP($request,
+            } elseif ($authFlow === CognitoAuthFlowTypes::USER_SRP_AUTH) {
+                $claim = $this->attemptLoginSRP($request, $authFlow,
                     $usernameField, $passwordField);
             } else {
                 throw new HttpException(400, 'Invalid authentication flow type specified');
