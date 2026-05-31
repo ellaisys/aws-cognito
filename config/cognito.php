@@ -319,6 +319,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cache Prefix
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the cache prefix used for storing values such that
+    | it does not cause any conflict with your existing cache keys. This is
+    | particularly useful when you have multiple applications sharing the same
+    | cache store.
+    | In most cases, you will not need to change this value, but you can set
+    | it as per your requirements.
+    |
+    */
+    'cache_prefix' => [
+        'srp' => env('AWS_COGNITO_CACHE_PREFIX_SRP', 'aws.cognito.srp')
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cognito Challenge Status Names for Forced Password Change.
     |--------------------------------------------------------------------------
     |
