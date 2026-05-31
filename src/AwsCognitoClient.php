@@ -124,14 +124,14 @@ class AwsCognitoClient
      * @param string $clientId
      * @param string $clientSecret
      * @param string $poolId
-     * @param bool boolClientSecret
+     * @param bool $boolClientSecret
      */
     public function __construct(
         CognitoIdentityProviderClient $client,
-        $clientId,
-        $clientSecret,
-        $poolId,
-        $boolClientSecret
+        string $clientId,
+        string $clientSecret,
+        string $poolId,
+        bool $boolClientSecret
     )
     {
         $this->client = $client;
@@ -158,15 +158,15 @@ class AwsCognitoClient
      * @return \Aws\Result|bool
      */
     public function authenticate(CognitoAuthFlowTypes $authFlow,
-        string $username, ?string $password)
+        string $username, ?string $password, ?string $deviceKey = null)
     {
         try {
-            //Build payload
-            $payload = [
-                'AuthFlow' => $authFlow->value,
-                'ClientId' => $this->clientId,
-                'UserPoolId' => $this->poolId,
-            ];
+            //Initialize variables
+            $payload = [];
+            $isAdminAuthFlow = in_array($authFlow, [
+                CognitoAuthFlowTypes::ADMIN_NO_SRP_AUTH,
+                CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH
+            ]);
 
             //Set Auth Parameters based on the Auth Flow
             switch ($authFlow) {
@@ -183,6 +183,7 @@ class AwsCognitoClient
                     ];
                     break;
 
+                case CognitoAuthFlowTypes::USER_PASSWORD_AUTH:
                 case CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH:
                 case CognitoAuthFlowTypes::ADMIN_NO_SRP_AUTH:
                 default:
@@ -193,13 +194,25 @@ class AwsCognitoClient
                     break;
             } //End switch
 
-            //Add Secret Hash in case of Client Secret being configured
-            $payload = $this->cognitoSecretHash($username, $payload);
+            /**
+             * @see https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-device-tracking.html#user-pools-remembered-devices-signing-in-with-a-device
+             * Add DEVICE_KEY in the AuthParameters for authentication if device
+             * tracking is enabled and device key is provided. This will help in
+             * tracking the device and also trigger MFA if device is not remembered.
+             */
+            if ($deviceKey !== null) {
+                $payload['AuthParameters']['DEVICE_KEY'] = $deviceKey;
+            } //End if
 
-            $response = $this->client->adminInitiateAuth($payload);
-        } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClient:authenticate:CognitoIdentityProviderException');
-            throw AwsCognitoException::create($exception);
+            // Call appropriate method based on the auth flow type
+            if ($isAdminAuthFlow) {
+                $response = $this->adminInitiateAuth($authFlow, $payload, $username);
+            } else {
+                $response = $this->initiateAuth($authFlow, $payload, $username);
+            } //End if
+        } catch (Exception $exception) {
+            Log::error('AwsCognitoClient:authenticate:Exception');
+            throw $exception;
         } //Try-catch ends
 
         return $response;
