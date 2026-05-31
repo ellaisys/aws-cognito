@@ -258,10 +258,12 @@ class AwsCognitoServiceProvider extends ServiceProvider
         });
 
         //AWS SRP Service
-        $this->app->singleton(AwsCognitoSrpService::class, function () {
+        $this->app->singleton(AwsCognitoSrpService::class, function (Application $app) {
             return new AwsCognitoSrpService(
-                config('cognito.user_pool_id'),
-                config('cognito.app_client_id')
+                $app['ellaisys.aws.cognito.provider.storage'],
+                config('cognito.cache_prefix.srp'),
+                config('cognito.app_client_id'),
+                config('cognito.user_pool_id')
             );
         });
     } //Function ends
