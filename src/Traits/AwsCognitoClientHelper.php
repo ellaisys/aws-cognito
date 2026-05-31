@@ -95,6 +95,8 @@ trait AwsCognitoClientHelper
                     break;
 
                 case CognitoChallengeTypes::PASSWORD_VERIFIER:
+                case CognitoChallengeTypes::DEVICE_SRP_AUTH:
+                case CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER:
                     $challengePayload = json_decode($challengeValue, true);
                     break;
 
@@ -144,7 +146,7 @@ trait AwsCognitoClientHelper
     } //Function ends
 
     /**
-     * Creates a HMAC from a string.
+     * Creates a HMAC from a string for the Cognito secret hash.
      *
      * @param string $message
      * @return string
