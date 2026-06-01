@@ -102,7 +102,7 @@ Route::group([
         Route::group(['prefix' => 'device', 'controller' => DeviceController::class], function() {
             Route::get('/', 'list');
             Route::post('/', 'create');
-            Route::put('/', 'update');
+            Route::put('/{deviceKey}', 'update');
             Route::delete('/{deviceKey}', 'delete');
         });
     });
