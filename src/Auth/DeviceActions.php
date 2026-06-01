@@ -146,14 +146,20 @@ trait DeviceActions
      * Action to update a device for the currently signed-in user.
      *
      * @param Request $request
+     * @param string|null $deviceKey (optional)
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $request)
+    public function update(Request $request, ?string $deviceKey=null)
     {
         try {
             // Initialize variables
             $returnValue = null;
+
+            //Merge device key from route parameter if present
+            if (!empty($deviceKey)) {
+                $request->merge(['device_key' => $deviceKey]);
+            } //End if
 
             //Validate payload
             $validator = Validator::make($request->all(), [
@@ -180,10 +186,10 @@ trait DeviceActions
 
             //Get the response from AWS Cognito for updating the device
             $response = $client->updateDeviceStatus(
-                $accessToken,
-                $request['device_key'],
-                $rememberedStatus
-            );
+                    $accessToken,
+                    $request['device_key'],
+                    $rememberedStatus
+                );
 
             //Return response
             if ($this->isControllerAction) {
@@ -270,9 +276,9 @@ trait DeviceActions
 
     /**
      * Action to delete a device for the currently signed-in user.
-     * TO BE TESTED
      *
      * @param Request $request
+     * @param string|null $deviceKey (optional)
      *
      * @return \Illuminate\Http\JsonResponse
      */
