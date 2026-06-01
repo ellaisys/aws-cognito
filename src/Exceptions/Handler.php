@@ -199,6 +199,11 @@ class Handler extends ExceptionHandler
                 $errorKey = AwsCognitoException::COGNITO_AUTH_CODE_INVALID;
                 break;
 
+            case AwsCognitoException::COGNITO_AUTH_POOL_CONFIG_INVALID:
+                $errorMessage = 'Cognito pool configuration error';
+                $errorKey = AwsCognitoException::COGNITO_AUTH_POOL_CONFIG_INVALID;
+                break;
+
             default:
                 $errorMessage = $e->getMessage();
                 $errorKey = 'ERROR_COGNITO_DEFAULT';

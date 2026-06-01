@@ -29,6 +29,7 @@ class AwsCognitoException extends HttpException
     const COGNITO_USER_INVALID = 'ERROR_COGNITO_USER_INVALID';
     const COGNITO_RESET_PWD_REQ_INVALID = 'ERROR_COGNITO_RESET_PWD_REQ_INVALID';
     const COGNITO_RESET_PWD_FAILED = 'ERROR_COGNITO_RESET_PWD_FAILED';
+    const COGNITO_AUTH_POOL_CONFIG_INVALID = 'ERROR_COGNITO_AUTH_POOL_CONFIG_INVALID';
     const COGNITO_THROTTLING_LIMIT = 'ERROR_COGNITO_THROTTLING_LIMIT';
     const COGNITO_WEB_AUTH_INVALID = 'ERROR_COGNITO_WEB_AUTH_INVALID';
 
@@ -104,6 +105,10 @@ class AwsCognitoException extends HttpException
             case 'WebAuthnClientMismatchException':
             case 'WebAuthnOriginNotAllowedException':
                 $errorCode = self::COGNITO_WEB_AUTH_INVALID;
+                break;
+
+            case 'InvalidUserPoolConfigurationException':
+                $errorCode = self::COGNITO_AUTH_POOL_CONFIG_INVALID;
                 break;
             
             case 'InvalidParameterException':
