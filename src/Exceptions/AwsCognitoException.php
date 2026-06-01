@@ -58,21 +58,21 @@ class AwsCognitoException extends HttpException
     /**
      * Static constructor / factory
      */
-    public static function create(CognitoIdentityProviderException $e): self {
-        return new self(self::processAwsCognitoError($e), $e);
+    public static function create(CognitoIdentityProviderException $exception): self {
+        return new self(self::processAwsCognitoError($exception), $exception);
     }
 
     /**
      * Process AWS Cognito error and return proper error code
      *
-     * @param  CognitoIdentityProviderException  $e
+     * @param  CognitoIdentityProviderException  $exception
      *
      * @return string
      */
-    private static function processAwsCognitoError(CognitoIdentityProviderException $e): string
+    private static function processAwsCognitoError(CognitoIdentityProviderException $exception): string
     {
         //Set proper route
-        switch ($e->getAwsErrorCode()) {
+        switch ($exception->getAwsErrorCode()) {
             case 'PasswordResetRequiredException':
                 $errorCode = self::COGNITO_AUTH_USER_RESET_PASS;
                 break;
@@ -114,7 +114,7 @@ class AwsCognitoException extends HttpException
             case 'InvalidParameterException':
             case 'InternalErrorException':
             default:
-                $errorCode = $e->getAwsErrorCode();
+                $errorCode = $exception->getAwsErrorCode();
                 break;
         } //End switch
         return $errorCode;
