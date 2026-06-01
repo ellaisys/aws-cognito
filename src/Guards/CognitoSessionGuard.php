@@ -40,6 +40,7 @@ use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
+use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Ellaisys\Cognito\Exceptions\DBConnectionException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
@@ -343,13 +344,13 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
             //Get the claim from session
             $claim = $session->has(ClaimSession::SESSION_KEY)?$session->get(ClaimSession::SESSION_KEY):null;
-            if (empty($claim)) { $session->invalidate(); throw new HttpException(400, 'EXCEPTION_INVALID_CLAIM'); }
+            if (empty($claim)) { $session->invalidate(); throw new InvalidTokenException('EXCEPTION_INVALID_CLAIM'); }
 
             $accessToken = (!empty($claim))?$claim['token']:null;
-            if (empty($accessToken)) { throw new HttpException(400, 'EXCEPTION_INVALID_TOKEN'); }
-
-            //Check if the token is empty
-            if (!empty($accessToken)) {
+            if (empty($accessToken)) {
+                $session->invalidate();
+                throw new InvalidTokenException('EXCEPTION_INVALID_TOKEN');
+            } else {
                 //Revoke the token from AWS Cognito
                 if ($this->client->signOut($accessToken)) {
 
@@ -372,9 +373,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                     //Remove the token from application storage
                     $returnValue = $session->invalidate();
                 } //End if
-            } else {
-                //Remove the token from application storage
-                $returnValue = $session->invalidate();
             } //End if
         } catch (Exception $e) {
             if ($forceForever) { return $session->invalidate(); }

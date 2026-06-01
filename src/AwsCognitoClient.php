@@ -654,22 +654,18 @@ class AwsCognitoClient
      * @param string $accessToken
      * @return bool
      */
-    public function signOut(string $accessToken)
+    public function signOut(string $accessToken): bool
     {
         try {
             $this->client->globalSignOut([
                 'AccessToken' => $accessToken
             ]);
 
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::COGNITO_NOT_AUTHORIZED_ERROR) {
-                return true;
-            } //End if
-
-            throw AwsCognitoException::create($e);
-        } catch (Exception $e) {
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClient:signOut:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
+
         return true;
     } //Function ends
 

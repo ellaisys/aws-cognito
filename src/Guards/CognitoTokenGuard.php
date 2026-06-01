@@ -33,6 +33,7 @@ use Exception;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
+use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
@@ -233,6 +234,9 @@ class CognitoTokenGuard extends TokenGuard
         try {
             //Get authentication token from request
             $accessToken = $this->cognito->getToken();
+            if (empty($accessToken)) {
+                throw new InvalidTokenException();
+            } //End if
 
             //Revoke the token from AWS Cognito
             if ($this->client->signOut($accessToken)) {
