@@ -58,9 +58,25 @@
         frmAction.submit();">
         {{ __('Delete Passkey') }}
     </button>
+    @endif
 
     <div class="dropdown-divider"></div>
+
+    @if (Route::has('cognito.action.user.device.create'))
+    <button id="create-device" class="dropdown-item"
+        onclick="event.preventDefault(); confirmDevice();">
+        {{ __('Create Device') }}
+    </button>
     @endif
+
+    @if (Route::has('cognito.action.user.device.delete'))
+    <button id="delete-device" class="dropdown-item"
+        onclick="event.preventDefault(); deleteDevice();">
+        {{ __('Delete Device') }}
+    </button>
+    @endif
+
+    <div class="dropdown-divider"></div>
 
     @if (Route::has('cognito.logout'))
     <button class="dropdown-item"

@@ -55,6 +55,22 @@
         </div>
     </div>
 
+    <div class="row mb-3">
+        <div class="col-md-6 offset-md-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox"
+                    name="device_key_checkbox" id="device_key_checkbox"
+                    value="checked" checked/>
+
+                <input type="hidden" name="device_key" id="device_key" value="" />
+
+                <label class="form-check-label" for="device_key_checkbox" id="device_key_checkbox_label">
+                    {{ __('Device Security Disabled') }}
+                </label>
+            </div>
+        </div>
+    </div>
+
     <div class="row mb-0">
         <div class="col-md-6 offset-md-4">
             <button type="submit" class="btn btn-primary">
@@ -94,6 +110,17 @@
 <script>
     const urlAuthStep = "{{ route('cognito.form.login') }}";
 
+    const deviceKeyCheckbox = document.getElementById('device_key_checkbox');
+    const deviceKeyInput = document.getElementById('device_key');
+    const deviceKeyCheckboxLabel = document.getElementById('device_key_checkbox_label');
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        toggleDeviceKey();
+    });
+    deviceKeyCheckbox.addEventListener('change', function() {
+        toggleDeviceKey();
+    });
+
     function redirectToPasskeyOptions(urlEndpoint) {
         if (urlEndpoint != null || urlEndpoint != undefined) {
             var password = document.getElementById('password')
@@ -107,5 +134,17 @@
         form.method = 'POST';
         form.action = urlAuthStep + '/' + urlEndpoint;
         form.submit();
+    }
+
+    function toggleDeviceKey() {
+        if (deviceKeyCheckbox.checked && localStorage.getItem('d-secret')) {
+            deviceKeyInput.value = localStorage.getItem('d-key');
+            deviceKeyInput.disabled = false;
+            deviceKeyCheckboxLabel.innerText = '{{ __('Device Security Enabled') }}';
+        } else {
+            deviceKeyInput.value = '';
+            deviceKeyInput.disabled = true;
+            deviceKeyCheckboxLabel.innerText = '{{ __('Device Security Disabled') }}';
+        }
     }
 </script>
