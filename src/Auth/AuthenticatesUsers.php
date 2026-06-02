@@ -114,11 +114,22 @@ trait AuthenticatesUsers
             } //End if
 
             //Authenticate User
-            $returnValue = Auth::guard($guard)->attempt(
+            $response = Auth::guard($guard)->attempt(
                     $request->all(), false,
                     $paramUsername, $paramPassword,
                     $authFlow
                 );
+
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('data', $response);
+            } //Return response
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLogin:Exception');
             throw $e;
@@ -231,7 +242,18 @@ trait AuthenticatesUsers
             } //End if
 
             //Authenticate User
-            $returnValue = Auth::guard($guard)->attemptChallengeAuth($challenge);
+            $response = Auth::guard($guard)->attemptChallengeAuth($challenge);
+
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('data', $response);
+            } //Return response
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:attemptLoginChallenge:Exception');
             throw $e;
