@@ -272,9 +272,12 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                         ->with('messaage', $this->challengeName);
                 } //End if
                 break;
-            
-            default:
-                //Do nothing
+
+            case CognitoChallengeTypes::DEVICE_SRP_AUTH:
+            case CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER:
+            case CognitoChallengeTypes::PASSWORD_VERIFIER:
+            default:    
+                $returnValue = $this->challengeData;
                 break;
         } //End switch
 
