@@ -12,6 +12,7 @@ use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController;
+use Ellaisys\Cognito\Http\Controllers\Auth\DeviceController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 
@@ -56,7 +57,7 @@ Route::group([], function () {
         Route::post('/auth-challenge', [LoginController::class, 'challenge'])->name('action.auth.challenge.submit');
         Route::any('/{step}', function (string $step) {
             return view('cognito::pages.auth.login', ['step' => $step]);
-        });
+        })->name('form.login.step');
         Route::post('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge'])->name('action.auth.passkey.challenge');
     });
 
@@ -93,7 +94,14 @@ Route::group([], function () {
                 Route::post('/complete', 'complete')->name('action.user.passkey.complete');
                 Route::delete('/', 'delete')->name('action.user.passkey.delete');
             });
+
+            //Route to device management
+            Route::group(['prefix' => 'device', 'controller' => DeviceController::class], function() {
+                Route::get('/', 'list')->name('form.user.device.list');
+                Route::post('/', 'create')->name('action.user.device.create');
+                Route::put('/{deviceKey}', 'update')->name('action.user.device.update');
+                Route::delete('/', 'delete')->name('action.user.device.delete');
+            });
         });
     });
-
 });
