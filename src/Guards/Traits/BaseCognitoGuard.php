@@ -207,17 +207,14 @@ trait BaseCognitoGuard
         switch ($challengeType) {
             case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
                 $returnValue = [
-                    'status' => $result['ChallengeName'],
-                    'session_token' => $result['Session']
+                    'session_token' => $result['Session'],
                 ];
                 break;
 
             case CognitoChallengeTypes::PASSWORD_VERIFIER:
             case CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER:
                 $returnValue = [
-                    'status' => $result['ChallengeName'],
                     'session_token' => $credentials['session_token']??null,
-                    'challenge_params' => $result['ChallengeParameters']
                 ];
                 break;
 
@@ -225,18 +222,14 @@ trait BaseCognitoGuard
             case CognitoChallengeTypes::SELECT_MFA_TYPE:
             case CognitoChallengeTypes::DEVICE_SRP_AUTH:
                 $returnValue = [
-                    'status' => $result['ChallengeName'],
-                    'session_token' => $result['Session'],
-                    'challenge_params' => $result['ChallengeParameters']
+                    'session_token' => $result['Session']
                 ];
                 break;
 
             default:
                 if (in_array($challengeType, config('cognito.forced_challenge_names'))) {
                     $returnValue = [
-                        'status' => $result['ChallengeName'],
                         'session_token' => isset($result['Session']) ? $result['Session'] : null,
-                        'challenge_params' => isset($result['ChallengeParameters']) ? $result['ChallengeParameters'] : null
                     ];
                 } //End if
                 break;
@@ -244,8 +237,10 @@ trait BaseCognitoGuard
 
         //Add username and challenge name into return value
         $returnValue = array_merge($returnValue, [
+            'status' => 'challenge',
             'username' => $credentials['email'],
-            'challenge_name' => $challengeType->value
+            'challenge_name' => $challengeType->value,
+            'challenge_params' => isset($result['ChallengeParameters']) ? $result['ChallengeParameters'] : null
         ]);
 
         return $returnValue;
