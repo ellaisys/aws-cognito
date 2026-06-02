@@ -101,7 +101,7 @@ class LoginController extends Controller
 
             //Authenticate with Cognito Package Trait based on the guard
             if (in_array($authFlow, [CognitoAuthFlowTypes::USER_PASSWORD_AUTH,
-                CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH])) 
+                CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH]))
             {
                 $claim = $this->attemptLogin($request, $authFlow,
                     $usernameField, $passwordField);
@@ -296,6 +296,13 @@ class LoginController extends Controller
                             ->withErrors([
                                 $this->usernameField => 'Incorrect username and/or password !!',
                             ]);
+                    } elseif (is_array($claim)) { // Challenge generated
+                        $returnValue = redirect()
+                            ->route('cognito.form.login.step', [
+                                    'step' => 'challenge',
+                                    'challenge' => $claim['challenge_name']
+                                ])
+                            ->with('data', $claim);
                     } else {
                         $returnValue = $claim;
                     }
