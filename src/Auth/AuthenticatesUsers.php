@@ -400,7 +400,7 @@ trait AuthenticatesUsers
         return [
             'username'          => 'sometimes',
             'session'           => 'required',
-            'challenge_name'    => 'required|string|in:WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER',
+            'challenge_name'    => 'required|string|in:WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER,SELECT_CHALLENGE',
             'challenge_value'   => 'required',
         ];
     } //Function ends
