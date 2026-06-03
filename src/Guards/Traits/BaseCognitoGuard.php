@@ -220,6 +220,7 @@ trait BaseCognitoGuard
             case CognitoChallengeTypes::SELECT_CHALLENGE:
             case CognitoChallengeTypes::SMS_OTP:
             case CognitoChallengeTypes::EMAIL_OTP:
+            case CognitoChallengeTypes::WEB_AUTHN:
                 $returnValue = [
                     'session_token' => isset($result['Session']) ? $result['Session'] : null
                 ];

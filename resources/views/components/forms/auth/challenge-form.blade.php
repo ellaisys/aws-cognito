@@ -17,6 +17,8 @@
             $usernameValue = (request()->has('username'))? request()->get('username') : null;
             $sessionValue = (request()->has('session'))? request()->get('session') : null;
             $challengeNameValue = (request()->has('challenge'))? strtoupper(request()->get('challenge')) : null;
+            $challengeParamsValue = '';
+            $challengeValueText = '';
         }
 
         //PoolName without region prefix (e.g., "us-east-1_XXXXXXXXX:app/clientid" => "app/clientid")
@@ -310,7 +312,7 @@
             const usernameValue = document.getElementById('username');
 
             let objChallengeParams = challengeParams.value ? JSON.parse(challengeParams.value) : null;
-            if (!objChallengeParams) {
+            if (objChallengeParams) {
 
                 // Build the options for navigator.credentials.get() based on the challenge parameters received from the server
                 let signinOptions = JSON.parse(objChallengeParams.CREDENTIAL_REQUEST_OPTIONS);
