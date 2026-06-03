@@ -114,7 +114,7 @@ class CognitoTokenGuard extends TokenGuard
      * @return bool
      */
     public function attempt(array $request = [], $remember = false,
-        string $paramUsername='email', string $paramPassword='password',
+        string $paramUsername='email', ?string $paramPassword='password',
         ?CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH)
     {
         $returnValue = null;
@@ -191,8 +191,8 @@ class CognitoTokenGuard extends TokenGuard
         //Send claim object
         $claim = $this->claim;
 
-        if ($claim && is_array($claim) && $claim['status']) {
-            $challengeType = CognitoChallengeTypes::from($claim['status']);
+        if ($claim && is_array($claim) && $claim['challenge_name']) {
+            $challengeType = CognitoChallengeTypes::from($claim['challenge_name']);
             switch ($challengeType) {
                 case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
                 case CognitoChallengeTypes::SMS_MFA:
@@ -322,7 +322,7 @@ class CognitoTokenGuard extends TokenGuard
     {
         $returnValue = null;
         try {
-            $responseCognito = $this->attemptBaseChallenge($challenge, $remember);
+            $responseCognito = $this->attemptBaseChallenge($challenge);
             if ($responseCognito) {
                 if ($this->claim) {
                     $credentials = collect([

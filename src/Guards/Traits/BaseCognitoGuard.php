@@ -172,8 +172,9 @@ trait BaseCognitoGuard
         $result = $this->client->authenticate(
             $authFlow,
             $credentials['email'],
-            $credentials['password'],
-            $credentials['device_key'] ?? null
+            $credentials['password'] ?? null,
+            $credentials['device_key'] ?? null,
+            $credentials['challenge_name'] ?? null
         );
 
         //Check if the result is an instance of AwsResult
@@ -205,24 +206,22 @@ trait BaseCognitoGuard
         
         $challengeType = CognitoChallengeTypes::from($result['ChallengeName']);
         switch ($challengeType) {
-            case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
-                $returnValue = [
-                    'session_token' => $result['Session'],
-                ];
-                break;
-
             case CognitoChallengeTypes::PASSWORD_VERIFIER:
             case CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER:
                 $returnValue = [
-                    'session_token' => $credentials['session_token']??null,
+                    'session_token' => $credentials['session_token'] ?? null,
                 ];
                 break;
 
+            case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
             case CognitoChallengeTypes::SMS_MFA:
             case CognitoChallengeTypes::SELECT_MFA_TYPE:
             case CognitoChallengeTypes::DEVICE_SRP_AUTH:
+            case CognitoChallengeTypes::SELECT_CHALLENGE:
+            case CognitoChallengeTypes::SMS_OTP:
+            case CognitoChallengeTypes::EMAIL_OTP:
                 $returnValue = [
-                    'session_token' => $result['Session']
+                    'session_token' => isset($result['Session']) ? $result['Session'] : null
                 ];
                 break;
 
@@ -240,7 +239,8 @@ trait BaseCognitoGuard
             'status' => 'challenge',
             'username' => $credentials['email'],
             'challenge_name' => $challengeType->value,
-            'challenge_params' => isset($result['ChallengeParameters']) ? $result['ChallengeParameters'] : null
+            'challenge_params' => isset($result['ChallengeParameters']) ? $result['ChallengeParameters'] : null,
+            'available_challenges' => isset($result['AvailableChallenges']) ? $result['AvailableChallenges'] : null
         ]);
 
         return $returnValue;
@@ -286,6 +286,10 @@ trait BaseCognitoGuard
 
                     case 'device_key':
                         $payload = array_merge($payload, ['device_key' => $value]);
+                        break;
+
+                    case 'challenge_name':
+                        $payload = array_merge($payload, ['challenge_name' => $value]);
                         break;
                     
                     default:
@@ -410,7 +414,7 @@ trait BaseCognitoGuard
     /**
      * Attempt Challenge based Authentication
      */
-    final public function attemptBaseChallenge(array $challenge, bool $remember=false) {
+    final public function attemptBaseChallenge(array $challenge) {
         try {
             //Reset global variables
             $this->challengeName = null;

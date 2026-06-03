@@ -133,7 +133,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      * @return bool
      */
     public function attempt(array $credentials = [], $remember = false,
-        string $paramUsername='email', string $paramPassword='password',
+        string $paramUsername='email', ?string $paramPassword='password',
         ?CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH)
     {
         try {
@@ -242,22 +242,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
         $challengeType = CognitoChallengeTypes::from($this->challengeName);
         switch ($challengeType) {
-            case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
-            case CognitoChallengeTypes::SMS_MFA:
-                //Get Session and store details
-                $session = $this->getSession();
-                $session->invalidate();
-                $session->put($this->challengeData['session_token'], json_decode(json_encode($this->challengeData), true));
-
-                $returnValue = redirect(route(config('cognito.force_mfa_code_route_name'), [
-                    'session_token' => $this->challengeData['session_token'],
-                    'status' => $this->challengeData['status'],
-                ]))
-                    ->with('success', true)
-                    ->with('force', true)
-                    ->with('messaage', $this->challengeName);
-                break;
-
             case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
             case CognitoChallengeTypes::RESET_REQUIRED:
                 if (config('cognito.force_password_change_web', false)) {
@@ -273,10 +257,16 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 } //End if
                 break;
 
+            case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
+            case CognitoChallengeTypes::SMS_MFA:
             case CognitoChallengeTypes::DEVICE_SRP_AUTH:
             case CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER:
             case CognitoChallengeTypes::PASSWORD_VERIFIER:
-            default:    
+            default:
+                //Invalidate the session
+                $session = $this->getSession();
+                $session->invalidate();
+
                 $returnValue = $this->challengeData;
                 break;
         } //End switch
@@ -400,7 +390,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         $returnValue = false;
         try {
             //Login with Challenge
-            $responseCognito = $this->attemptBaseChallenge($challenge, $remember);
+            $responseCognito = $this->attemptBaseChallenge($challenge);
             if ($responseCognito && (!empty($this->claim))) {
                 //Process the claim
                 if ($user = $this->processAWSClaim()) {
