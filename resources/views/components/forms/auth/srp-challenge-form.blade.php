@@ -2,9 +2,16 @@
     @csrf
 
     @php
-        $usernameValue = (request()->has('username'))? request()->get('username') : null;
-        $sessionValue = (request()->has('session'))? request()->get('session') : null;
-        $challengeNameValue = (request()->has('challenge'))? request()->get('challenge') : null;
+        $data = (session('data')) ?? null;
+        if ($data && isset($data['status']) && $data['status'] == 'challenge') {
+            $usernameValue = $data['username'] ?? null;
+            $sessionValue = $data['session_token'] ?? null;
+            $challengeNameValue = $data['challenge_name'] ?? null;
+        } else {
+            $usernameValue = (request()->has('username'))? request()->get('username') : null;
+            $sessionValue = (request()->has('session'))? request()->get('session') : null;
+            $challengeNameValue = (request()->has('challenge'))? request()->get('challenge') : null;
+        }
 
         //PoolName without region prefix (e.g., "us-east-1_XXXXXXXXX:app/clientid" => "app/clientid")
         $namePool = config('cognito.user_pool_id');
@@ -17,6 +24,8 @@
         <div class="col-md-6">
             <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue }}" />
             <input type="hidden" id="session" name="session" value="{{ $sessionValue }}" />
+            <input type="hidden" id="challenge_params" name="challenge_params"
+                value="{{ ($data && isset($data['challenge_params'])) ? json_encode($data['challenge_params']) : '' }}" />
             <input id="challenge_value" type="hidden" name="challenge_value" />
             <input id="username" type="email"
                 class="form-control @error('username') is-invalid @enderror @if($usernameValue) is-valid @endif"
