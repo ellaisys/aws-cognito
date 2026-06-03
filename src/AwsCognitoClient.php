@@ -223,7 +223,6 @@ class AwsCognitoClient
             } else {
                 $response = $this->initiateAuth($authFlow, $payload, $username);
             } //End if
-            Log::info($response);
         } catch (Exception $exception) {
             Log::error('AwsCognitoClient:authenticate:Exception');
             throw $exception;
