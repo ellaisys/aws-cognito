@@ -1,4 +1,4 @@
-<form method="POST" id="auth-passkey-challenges-form">
+<form method="POST" id="auth-passkey-challenges-form" action="{{ route('cognito.action.auth.challenge.submit') }}">
     @csrf
 
     @php
@@ -10,7 +10,11 @@
         <label for="username" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
 
         <div class="col-md-6">
+            <input type="hidden" id="challenge_name" name="challenge_name" value="" />
             <input type="hidden" id="session" name="session" value="{{ $sessionValue }}" />
+            <input type="hidden" id="challenge_params" name="challenge_params" value="" />
+            <input type="hidden" id="challenge_value"  name="challenge_value" />
+
             <input id="username" type="email"
                 class="form-control @error('username') is-invalid @enderror @if($usernameValue) is-valid @endif"
                 name="username" value="{{ old('username', $usernameValue) }}"
@@ -54,8 +58,12 @@
     // Function to handle the passkey authentication process
     async function getAvailableChallenges() {
         try {
+            const challengeNameValue = document.getElementById('challenge_name');
+            const challengeParamsValue = document.getElementById('challenge_params');
+            const challengeValue = document.getElementById('challenge_value');
+            const sessionValue = document.getElementById('session');
+
             const challengesList = document.getElementById('available-challenges-list');
-            const sessionInput = document.getElementById('session');
 
             var response = await fetch(urlPasskeyAuthChallenge, {
                 method: 'POST',
@@ -75,11 +83,14 @@
 
             responseData = await response.json();
             responseData = responseData.data || {};
-            sessionValue = responseData.Session || null;
-            sessionInput.value = sessionValue; // Update the session input field with the new value
+
+            // Update hidden fields with session and challenge parameters
+            challengeNameValue.value = responseData?.challenge_name || '';
+            sessionValue.value = responseData?.session_token || null;
+            challengeParamsValue.value = JSON.stringify((responseData?.challenge_params) || {});
 
             // Collect available challenges and update the UI
-            availableChallenges = responseData.AvailableChallenges || [];
+            availableChallenges = responseData?.available_challenges || [];
 
             // Fill the challenges list in the UI
             challengesList.innerHTML = ''; // Clear existing list
@@ -92,10 +103,13 @@
 
                     if (challenge === 'PASSWORD') {
                         item.formAction = "{{ route('cognito.form.login') }}/password";
-                    } else if (challenge === 'PASSWORD_SRP') {
-                        item.formAction = "{{ route('cognito.form.login') }}/password_srp";
+                    // } else if (challenge === 'PASSWORD_SRP') {
+                    //     item.formAction = "{{ route('cognito.form.login') }}/password_srp";
                     } else {
-                        item.formAction = "{{ route('cognito.form.login') }}/challenge?" + new URLSearchParams({ challenge: challenge.toLowerCase() }).toString();
+                        item.addEventListener('click', () => {
+                            challengeValue.value = challenge; // Set the selected challenge name
+                            document.getElementById('auth-passkey-challenges-form').submit(); // Submit the form to the server for processing the selected challenge
+                        });
                     }
                     challengesList.appendChild(item);
                 });
