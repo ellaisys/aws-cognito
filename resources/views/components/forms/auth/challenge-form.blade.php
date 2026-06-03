@@ -64,9 +64,9 @@
         <label for="username" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
 
         <div class="col-md-6">
-            <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue }}" />
-            <input type="hidden" id="session" name="session" value="{{ $sessionValue }}" />
-            <input type="hidden" id="challenge_params" name="challenge_params" value="{{ $challengeParamsValue }}" />
+            <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue ?? '' }}" />
+            <input type="hidden" id="session" name="session" value="{{ $sessionValue ?? '' }}" />
+            <input type="hidden" id="challenge_params" name="challenge_params" value="{{ $challengeParamsValue ?? '' }}" />
             <input id="username" type="email"
                 class="form-control @error('username') is-invalid @enderror @if($usernameValue) is-valid @endif"
                 name="username" value="{{ old('username', $usernameValue) }}"
@@ -144,7 +144,7 @@
 
     document.addEventListener("DOMContentLoaded", function(event) {
         if (challengeNameValue.value == 'DEVICE_SRP_AUTH') {
-            generateDeviceSRPAuth();
+            generateDeviceSRPAuthChallenge();
         }
 
         if (challengeNameValue.value == 'DEVICE_PASSWORD_VERIFIER') {
@@ -165,7 +165,7 @@
      * device challenge. Build a random secret ephemeral value 'a',
      * compute the corresponding 'A' value, and construct the response.
      */
-    function generateDeviceSRPAuth() {
+    function generateDeviceSRPAuthChallenge() {
         // 1. Generate a random secret ephemeral 'a' (at least 32 bytes recommended)
         const randomBytes = CryptoJS.lib.WordArray.random(128);
         const a = BigInt("0x" + randomBytes.toString(CryptoJS.enc.Hex));
