@@ -163,7 +163,8 @@ class AwsCognitoClient
      * @return \Aws\Result|bool
      */
     public function authenticate(CognitoAuthFlowTypes $authFlow,
-        string $username, ?string $password, ?string $deviceKey = null)
+        string $username, ?string $password, ?string $deviceKey = null,
+        ?string $challenge = null)
     {
         try {
             //Initialize variables
@@ -175,6 +176,13 @@ class AwsCognitoClient
 
             //Set Auth Parameters based on the Auth Flow
             switch ($authFlow) {
+                case CognitoAuthFlowTypes::USER_AUTH:
+                    $payload['AuthParameters'] = [
+                        'USERNAME' => $username,
+                        'PREFERRED_CHALLENGE' => $challenge
+                    ];
+                    break;
+
                 case CognitoAuthFlowTypes::USER_SRP_AUTH:
                     $payload['AuthParameters'] = [
                         'USERNAME' => $username,
@@ -215,6 +223,7 @@ class AwsCognitoClient
             } else {
                 $response = $this->initiateAuth($authFlow, $payload, $username);
             } //End if
+            Log::info($response);
         } catch (Exception $exception) {
             Log::error('AwsCognitoClient:authenticate:Exception');
             throw $exception;
