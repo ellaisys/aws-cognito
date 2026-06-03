@@ -64,6 +64,12 @@ trait AwsCognitoClientHelper
                     ]);
                     break;
 
+                case CognitoChallengeTypes::SELECT_CHALLENGE:
+                    $challengePayload = array_merge($challengePayload, [
+                        'ANSWER' => $challengeValue
+                    ]);
+                    break;
+
                 case CognitoChallengeTypes::SMS_OTP:
                     $challengePayload = array_merge($challengePayload, [
                         'SMS_OTP_CODE' => $challengeValue
