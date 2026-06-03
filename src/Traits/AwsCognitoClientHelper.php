@@ -48,6 +48,18 @@ trait AwsCognitoClientHelper
 
             //Build challenge payload based on the challenge type
             switch ($challengeName) {
+                case CognitoChallengeTypes::PASSWORD:
+                     $challengePayload = array_merge($challengePayload, [
+                        'PASSWORD' => $challengeValue
+                    ]);
+                    break;
+
+                case CognitoChallengeTypes::PASSWORD_SRP:
+                     $challengePayload = array_merge($challengePayload, [
+                        'SRP_A' => $challengeValue
+                    ]);
+                    break;
+
                 case CognitoChallengeTypes::SELECT_MFA_TYPE:
                     if (!in_array($challengeValue, ['SMS_MFA','EMAIL_MFA','SOFTWARE_TOKEN_MFA'], true)) {
                         throw new BadRequestHttpException('Invalid challenge value');
@@ -61,6 +73,12 @@ trait AwsCognitoClientHelper
                 case CognitoChallengeTypes::SMS_MFA:
                     $challengePayload = array_merge($challengePayload, [
                         'SMS_MFA_CODE' => $challengeValue
+                    ]);
+                    break;
+
+                case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
+                    $challengePayload = array_merge($challengePayload, [
+                        'SOFTWARE_TOKEN_MFA_CODE' => $challengeValue
                     ]);
                     break;
 
@@ -82,21 +100,15 @@ trait AwsCognitoClientHelper
                     ]);
                     break;
 
-                case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
-                    $challengePayload = array_merge($challengePayload, [
-                        'SOFTWARE_TOKEN_MFA_CODE' => $challengeValue
-                    ]);
-                    break;
-                
-                case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
-                    $challengePayload = array_merge($challengePayload, [
-                        'NEW_PASSWORD' => $challengeValue
-                    ]);
-                    break;
-
                 case CognitoChallengeTypes::WEB_AUTHN:
                     $challengePayload = array_merge($challengePayload, [
                         'CREDENTIAL' => $challengeValue
+                    ]);
+                    break;                    
+
+                case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
+                    $challengePayload = array_merge($challengePayload, [
+                        'NEW_PASSWORD' => $challengeValue
                     ]);
                     break;
 
