@@ -54,7 +54,7 @@ Route::group([], function () {
         Route::get('/', function () { return view('cognito::pages.auth.login'); })->name('form.login');
         Route::post('/', [LoginController::class, 'login'])->name('action.login.submit');
         Route::post('/srp', [LoginController::class, 'loginSRP'])->name('action.auth.srp.challenge');
-        Route::post('/auth-challenge', [LoginController::class, 'challenge'])->name('action.auth.challenge.submit');
+        Route::post('/auth-challenge', [LoginController::class, 'actionChallenge'])->name('action.auth.challenge.submit');
         Route::any('/{step}', function (string $step) {
             return view('cognito::pages.auth.login', ['step' => $step]);
         })->name('form.login.step');
@@ -70,8 +70,8 @@ Route::group([], function () {
 
         //Route group logout
         Route::group(['prefix' => 'logout', 'controller' => LoginController::class], function() {
-            Route::post('/', 'logout')->name('logout');
-            Route::post('/forced', 'logoutForced')->name('logout_forced');
+            Route::post('/', 'actionLogout')->name('logout');
+            Route::post('/forced', 'actionLogoutForced')->name('logout_forced');
         });
 
         Route::group(['prefix' => 'user'], function() {

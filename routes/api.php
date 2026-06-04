@@ -40,7 +40,7 @@ Route::group([
     Route::group(['prefix' => 'login'], function() {
         Route::post('/', [LoginController::class, 'login']);
         Route::post('/srp', [LoginController::class, 'loginSRP']);
-        Route::post('/challenge', [LoginController::class, 'challenge']);
+        Route::post('/challenge', [LoginController::class, 'actionChallenge']);
         Route::get('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge']);
         Route::get('/passkey/challenge/{challengeName}', [WebAuthPasskeyController::class, 'challenge']);
         Route::post('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge']);
@@ -85,8 +85,8 @@ Route::group([
 
         //Route group logout
         Route::group(['prefix' => 'logout', 'controller' => LoginController::class], function() {
-            Route::put('/', 'logout');
-            Route::put('/forced', 'logoutForced');
+            Route::put('/', 'actionLogout');
+            Route::put('/forced', 'actionLogoutForced');
         });
 
         //Route group for MFA

@@ -27,6 +27,9 @@ use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 use Ellaisys\Cognito\Services\AwsCognitoJwksService;
 use Ellaisys\Cognito\Services\AwsCognitoSrpService;
 
+use Ellaisys\Cognito\Events\Auth\PreLogoutEvent;
+use Ellaisys\Cognito\Events\Auth\PostLogoutEvent;
+
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -203,16 +206,63 @@ trait AuthenticatesUsers
     } //Function ends
 
     /**
+     * Logout action for the API based approach.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public function logout(Request $request, bool $forced = false)
+    {
+        $returnValue = null;
+        try {
+            //Initialize parameters
+            $guard = $this->getGuard($request);
+
+            //Raise Pre Logout Event
+            event(new PreLogoutEvent(
+                    $request->toArray(),
+                    $request->ip()
+                ));
+
+            //Logout user
+            Auth::guard($guard)->logout($forced);
+            $response = ['message' => 'Successfully logged out'];
+
+            //Raise Post Logout Event
+            event(new PostLogoutEvent(
+                    $request->toArray(),
+                    $request->ip()
+                ));
+
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $request->session()->invalidate();
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('data', $response);
+            } //Return response
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:logout:Exception');
+            throw $e;
+        } //End try-catch
+        return $returnValue;
+    } //Function ends
+
+    /**
      * Authenticate by responding to the authentication challenge
      * @param Request $request
      *
      * @return mixed
      */
-    protected function attemptLoginChallenge(Request $request): mixed
+    protected function challenge(Request $request): mixed
     {
+        $returnValue = null;
         try {
             // Initialize variables
-            $returnValue = null;
             $guard = $this->getGuard($request);
 
             //Convert challenge name to upper case if present in the request
@@ -241,6 +291,8 @@ trait AuthenticatesUsers
                 $challenge['username'] = $username;
             } //End if
 
+            Log::info('AuthenticatesUsers:challenge:ChallengeRequest', ['challenge' => $challenge]);
+
             //Authenticate User
             $response = Auth::guard($guard)->attemptChallengeAuth($challenge);
 
@@ -255,7 +307,7 @@ trait AuthenticatesUsers
                     ->with('data', $response);
             } //Return response
         } catch (Exception $e) {
-            Log::error('AuthenticatesUsers:attemptLoginChallenge:Exception');
+            Log::error('AuthenticatesUsers:challenge:Exception');
             throw $e;
         }
         return $returnValue;
@@ -305,7 +357,7 @@ trait AuthenticatesUsers
                 } //End switch
             } //End if
         } catch (Exception $e) {
-            Log::error('AuthenticatesUsers:getUserNameFromChallengeSession:Exception');
+            Log::error('AuthenticatesUsers:getUsernameFromChallengeSession:Exception');
             throw $e;
         } //Try-catch ends
 
@@ -324,10 +376,12 @@ trait AuthenticatesUsers
         try {
             if ($request->has('challenge_name')) {
                 $challangeName = CognitoChallengeTypes::from($request['challenge_name']);
-                if ($challangeName == CognitoChallengeTypes::PASSWORD_VERIFIER) {
-                    $request = $this->buildChallengeRequestDataForSRP($request, false);
+                if ($challangeName == CognitoChallengeTypes::PASSWORD_SRP) {
+                    $request = $this->buildChallengeRequestDataForSRP($request);
+                } elseif ($challangeName == CognitoChallengeTypes::PASSWORD_VERIFIER) {
+                    $request = $this->buildChallengeRequestDataForPasswordVerifier($request, false);
                 } elseif ($challangeName == CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER) {
-                    $request = $this->buildChallengeRequestDataForSRP($request, true);
+                    $request = $this->buildChallengeRequestDataForPasswordVerifier($request, true);
                 } else{
                     // Do Nothing
                 }
@@ -342,14 +396,44 @@ trait AuthenticatesUsers
 
     /**
      * Build the challenge request data for SRP authentication flow when
-     * the challenge name is PASSWORD_VERIFIER
+     * the challenge name is PASSWORD_SRP
+     *
+     * @param Request $request
+     * @return Request
+     * @throws ValidationException
+     */
+    private function buildChallengeRequestDataForSRP(Request &$request): Request
+    {
+        try {
+            // Get the SRP parameters and generate A and a
+            $srpService = app()->make(AwsCognitoSrpService::class);
+
+            // Generate the SRP parameters and get the challenge response parameters
+            $ephemeral = $srpService->generateEphemeral();
+
+            // Add challenge response parameters to the request
+            $request->merge([
+                'session' => $ephemeral['session_token'],
+                'challenge_value' => $ephemeral['public_key'] // SRP_A value
+            ]);
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:buildChallengeRequestDataForSRP:Exception');
+            throw $e;
+        } //Try-catch ends
+
+        return $request;
+    } //Function ends
+
+    /**
+     * Build the challenge request data for SRP authentication flow when
+     * the challenge name is PASSWORD_VERIFIER or DEVICE_PASSWORD_VERIFIER
      *
      * @param Request $request
      * @param bool $isDeviceAuth (optional)
      * @return Request
      * @throws ValidationException
      */
-    private function buildChallengeRequestDataForSRP(Request &$request,
+    private function buildChallengeRequestDataForPasswordVerifier(Request &$request,
         bool $isDeviceAuth = false): Request
     {
         try {
@@ -383,7 +467,7 @@ trait AuthenticatesUsers
                 'challenge_value' => json_encode($challengeValue)
             ]);
         } catch (Exception $e) {
-            Log::error('AuthenticatesUsers:buildChallengeRequestDataForSRP:Exception');
+            Log::error('AuthenticatesUsers:buildChallengeRequestDataForPasswordVerifier:Exception');
             throw $e;
         } //Try-catch ends
 
@@ -401,7 +485,7 @@ trait AuthenticatesUsers
             'username'          => 'sometimes',
             'session'           => 'required',
             'challenge_name'    => 'required|string|in:SELECT_CHALLENGE,WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD,PASSWORD_SRP,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER',
-            'challenge_value'   => 'required',
+            'challenge_value'   => 'required|string',
         ];
     } //Function ends
 
