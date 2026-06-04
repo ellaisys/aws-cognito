@@ -133,11 +133,13 @@ class AwsCognitoSrpService
     /**
      * Generate SRP_A(public ephemeral value) and a (private ephemeral value)
      */
-    public function generateEphemeral(): array
+    public function generateEphemeral(?string $sessionKey=null): array
     {
         // Generate a random 20-byte integer for session key
-        $sessionKey = gmp_init(bin2hex(random_bytes(20)), 16);
-        $sessionKey = gmp_strval($sessionKey, 16);
+        if ($sessionKey === null) {
+            $sessionKey = gmp_init(bin2hex(random_bytes(20)), 16);
+            $sessionKey = gmp_strval($sessionKey, 16);
+        } //End if
 
         // Generate a random 128-byte integer for a
         $paramSmallA = gmp_init(bin2hex(random_bytes(128)), 16);

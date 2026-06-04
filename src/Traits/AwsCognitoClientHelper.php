@@ -83,9 +83,13 @@ trait AwsCognitoClientHelper
                     break;
 
                 case CognitoChallengeTypes::SELECT_CHALLENGE:
-                    $challengePayload = array_merge($challengePayload, [
-                        'ANSWER' => $challengeValue
-                    ]);
+                    if (!in_array($challengeValue, ['EMAIL_OTP','SMS_OTP','WEB_AUTHN'], true)) {
+                        $challengePayload = json_decode($challengeValue, true);
+                    } else{
+                        $challengePayload = array_merge($challengePayload, [
+                            'ANSWER' => $challengeValue
+                        ]);
+                    }
                     break;
 
                 case CognitoChallengeTypes::SMS_OTP:
