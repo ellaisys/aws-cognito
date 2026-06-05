@@ -135,14 +135,23 @@
 
 @if (in_array($challengeNameValue, ['DEVICE_SRP_AUTH', 'DEVICE_PASSWORD_VERIFIER', 'PASSWORD_SRP', 'PASSWORD_VERIFIER', 'WEB_AUTHN']))
 <script>
-    const challengeNameValue = document.getElementById('challenge_name');
-
     const poolKey = "{{ base64_encode($namePool) }}";
     const AUTH_CSRF_TOKEN = '{{ csrf_token() }}';
 
     const N = BigInt("5809605995369958062791915965639201402176612226902900533702900882779736177890990861472094774477339581147373410185646378328043729800750470098210924487866935059164371588168047540943981644516632755067501626434556398193186628990071248660819361205119793693985433297036118232914410171876807536457391277857011849897410207519105333355801121109356897459426271845471397952675959440793493071628394122780510124618488232602464649876850458861245784240929258426287699705312584509625419513463605155428017165714465363094021609290561084025893662561222573202082865797821865270991145082200656978177192827024538990239969175546190770645685893438011714430426409338676314743571154537142031573004276428701433036381801705308659830751190352946025482059931306571004727362479688415574702596946457770284148435989129632853918392117997472632693078113129886487399347796982772784615865232621289656944284216824611318709764535152507354116344703769998514148343807");
     const g = BigInt("2");
 
+    const challengeNameValue = document.getElementById('challenge_name');
+    const challengeValue = document.getElementById('challenge_value');
+    const challengeParamsValue = document.getElementById('challenge_params');
+    const sessionValue = document.getElementById('session');
+    const usernameValue = document.getElementById('username');
+    const frmChallenge = document.getElementById('auth-challenge-form');
+
+    /**
+     * Event listener for DOMContentLoaded to trigger the appropriate challenge response
+     * generation based on the challenge name received from the server.
+     */
     document.addEventListener("DOMContentLoaded", function(event) {
         if (challengeNameValue.value == 'DEVICE_SRP_AUTH') {
             generateDeviceSRPAuthChallenge();
@@ -161,15 +170,19 @@
         }
     });
 
+    /**
+     * Form submission handler for the authentication challenge form. It
+     * checks the type of challenge and processes the steps ahead.
+     * @param {*} event
+     */
     async function handleFormSubmit(event) {
-        const frmChallenge = document.getElementById('auth-challenge-form');
         event.preventDefault(); // Prevent the default form submission
 
         if (challengeNameValue.value == 'PASSWORD_VERIFIER') {
             let response = await generatePasswordVerifier(); // Call the function to handle the PASSWORD_VERIFIER challenge
         }
         frmChallenge.submit(); // Submit the form for other challenge types without additional processing
-    }
+    } // Function ends
 
     /**
      * Function to generate the SRP authentication response for the
@@ -180,27 +193,26 @@
         // 1. Generate a random secret ephemeral 'a' (at least 32 bytes recommended)
         const randomBytes = CryptoJS.lib.WordArray.random(128);
         const a = BigInt("0x" + randomBytes.toString(CryptoJS.enc.Hex));
-    
+
         // 2. Calculate A = g^a % N
         // Note: BigInt modular exponentiation is needed here.
         // For browser/node: A = BigInt(g)**BigInt(a) % BigInt(N)
         const A = modPow(g, a, N);
 
         // 3. Generate a random number to store private ephemeral
-        let session = document.getElementById('session');
-        session = session.value || null;
+        let session = sessionValue.value || null;
         if (session) {
             localStorage.setItem(session, a.toString(16));
         }
 
         // Get the challenge parameters
-        let challengeParams = document.getElementById('challenge_params');
-        challengeParams = JSON.parse(challengeParams?.value || '{}');
+        let challengeParams = challengeParamsValue.value || '{}';
+        challengeParams = JSON.parse(challengeParams);
         if (!challengeParams) {
             console.error('Challenge parameters not found');
             return;
         }
-    
+
         // Build the response object to be sent back to the server
         let responseData = {
             'USERNAME': challengeParams?.USER_ID_FOR_SRP,
@@ -209,9 +221,8 @@
         };
 
         // After computing the response, set it in the hidden input field and submit the form
-        const challengeValue = document.getElementById('challenge_value');
         challengeValue.value = JSON.stringify(responseData);
-        document.getElementById('auth-challenge-form').submit();
+        frmChallenge.submit();
     } // Function ends
 
     /**
@@ -229,16 +240,14 @@
         let passKeyHash = CryptoJS.SHA256(passKey).toString(CryptoJS.enc.Hex);
 
         // Get the session value
-        let session = document.getElementById('session');
-        session = session.value || null;
+        let session = sessionValue.value || null;
 
         // Step 2: Get the private ephemeral value from localStorage
         let privateEphemeral = (session) ? localStorage.getItem(session) : null;
         if (privateEphemeral) { localStorage.removeItem(session); }
 
         // Get the challenge parameters
-        let challengeParams = document.getElementById('challenge_params');
-        if (!challengeParams?.value) {
+        if (!challengeParamsValue?.value) {
             console.error('Challenge parameters not found');
             return;
         }
@@ -251,9 +260,8 @@
         };
 
         // After computing the response, set it in the hidden input field and submit the form
-        const challengeValue = document.getElementById('challenge_value');
         challengeValue.value = JSON.stringify(responseData);
-        document.getElementById('auth-challenge-form').submit();
+        frmChallenge.submit();
     } // Function ends
 
     /**
@@ -266,14 +274,7 @@
      **/
     async function generatePasswordSRPAuth() {
         try {
-            const challengeNameValue = document.getElementById('challenge_name');
-            const challengeValue = document.getElementById('challenge_value');
-            const challengeParams = document.getElementById('challenge_params');
-            const sessionValue = document.getElementById('session');
-            const usernameValue = document.getElementById('username');
-            const urlFrmChallenge = document.getElementById('auth-challenge-form').action;
-
-            let response = await fetch(urlFrmChallenge, {
+            let response = await fetch(frmChallenge.action, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -299,9 +300,9 @@
             } // End if
 
             //Set the session value received from the server
-            sessionValue.value = responseData.session_token || '';
-            challengeNameValue.value = responseData.challenge_name || '';
-            challengeParams.value = JSON.stringify(responseData.challenge_params || {});
+            sessionValue.value = responseData?.session_token || '';
+            challengeNameValue.value = responseData?.challenge_name || '';
+            challengeParamsValue.value = JSON.stringify(responseData?.challenge_params || {});
         } catch (error) {
             console.error('Error authenticating SRP:', error);
         } // End try-catch
@@ -315,16 +316,12 @@
      **/
     async function validateWebAuthnChallenge() {
         try {
-            const challengeNameValue = document.getElementById('challenge_name');
-            const challengeValue = document.getElementById('challenge_value');
-            const challengeParams = document.getElementById('challenge_params');
-            const sessionValue = document.getElementById('session');
-            const usernameValue = document.getElementById('username');
-
-            let objChallengeParams = challengeParams.value ? JSON.parse(challengeParams.value) : null;
+            let objChallengeParams = challengeParamsValue.value ? JSON.parse(challengeParamsValue.value) : null;
             if (objChallengeParams) {
-
-                // Build the options for navigator.credentials.get() based on the challenge parameters received from the server
+                /**
+                 * Build the options for navigator.credentials.get() based
+                 * on the challenge parameters received from the server
+                 */
                 let signinOptions = JSON.parse(objChallengeParams.CREDENTIAL_REQUEST_OPTIONS);
                 signinOptions.challenge = Uint8Array.from(atob(signinOptions.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
                 signinOptions.allowCredentials = signinOptions.allowCredentials.map(cred => {
@@ -342,7 +339,7 @@
                 });
 
                 challengeValue.value = credential ? JSON.stringify(credential) : '';
-                document.getElementById('auth-challenge-form').submit();
+                frmChallenge.submit();
             } else {
                 throw new Error("Missing challenge params");
             } // End if
@@ -359,9 +356,6 @@
      *
      **/
     async function generatePasswordVerifier() {
-        const challengeValue = document.getElementById('challenge_value');
-        const challengeParams = document.getElementById('challenge_params');
-        const usernameValue = document.getElementById('username');
         const passwordInput = document.getElementById('password_code');
         
         // Set the actual password value in the hidden challenge value input
@@ -403,6 +397,15 @@
             .join('');
     } //Function ends
 
+    /**
+     * Utility function to perform modular exponentiation (base^exponent mod modulus)
+     * This function is essential for the SRP protocol calculations, where we need
+     * to compute values like A = g^a mod N.
+     * @param {BigInt} base - The base value (e.g., g in SRP)
+     * @param {BigInt} exponent - The exponent value (e.g., a in SRP)
+     * @param {BigInt} modulus - The modulus value (e.g., N in SRP)
+     * @returns {BigInt} - The result of (base^exponent) mod modulus
+     **/
     function modPow(base, exponent, modulus) {
         if (modulus === 1n) {
             return 0n;
@@ -442,6 +445,6 @@
                 window.location.reload(); // Reloads the page when the count reaches 0
             }
         }, 1000);
-    } // Function ends
+} // Function ends
 </script>
 @endif
