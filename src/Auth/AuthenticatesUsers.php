@@ -291,8 +291,6 @@ trait AuthenticatesUsers
                 $challenge['username'] = $username;
             } //End if
 
-            Log::info('AuthenticatesUsers:challenge:ChallengeRequest', ['challenge' => $challenge]);
-
             //Authenticate User
             $response = Auth::guard($guard)->attemptChallengeAuth($challenge);
 
@@ -376,7 +374,11 @@ trait AuthenticatesUsers
         try {
             if ($request->has('challenge_name')) {
                 $challangeName = CognitoChallengeTypes::from($request['challenge_name']);
-                if ($challangeName == CognitoChallengeTypes::PASSWORD_SRP) {
+                if ($challangeName == CognitoChallengeTypes::SELECT_CHALLENGE &&
+                    $request->has('challenge_value') &&
+                    $request['challenge_value'] == 'PASSWORD_SRP') {
+                    $request = $this->buildChallengeRequestDataForSRP($request);
+                } elseif ($challangeName == CognitoChallengeTypes::PASSWORD_SRP) {
                     $request = $this->buildChallengeRequestDataForSRP($request);
                 } elseif ($challangeName == CognitoChallengeTypes::PASSWORD_VERIFIER) {
                     $request = $this->buildChallengeRequestDataForPasswordVerifier($request, false);
@@ -409,12 +411,24 @@ trait AuthenticatesUsers
             $srpService = app()->make(AwsCognitoSrpService::class);
 
             // Generate the SRP parameters and get the challenge response parameters
-            $ephemeral = $srpService->generateEphemeral();
+            $ephemeral = $srpService->generateEphemeral($request['session'] ?? null);
+
+            // Append to existing challenge value if present as PASSWORD_SRP
+            $challengeValue = null;
+            if ($request->has('challenge_value') && $request['challenge_value'] == 'PASSWORD_SRP') {
+                $challengeValue = json_encode([
+                    'ANSWER' => $request['challenge_value'],
+                    'SRP_A' => $ephemeral['public_key'],
+                    'USERNAME' => $request['username'] ?? null
+                ]);
+            } else {
+                $challengeValue = $ephemeral['public_key']; // SRP_A value
+            } //End if
 
             // Add challenge response parameters to the request
             $request->merge([
                 'session' => $ephemeral['session_token'],
-                'challenge_value' => $ephemeral['public_key'] // SRP_A value
+                'challenge_value' => $challengeValue
             ]);
         } catch (Exception $e) {
             Log::error('AuthenticatesUsers:buildChallengeRequestDataForSRP:Exception');
@@ -439,6 +453,11 @@ trait AuthenticatesUsers
         try {
             //Validate challenge payload
             $payload = json_decode($request['challenge_value'], true);
+            if ($payload === null) {
+                throw ValidationException::withMessages([
+                        'challenge_value' => 'Missing or invalid challenge value'
+                    ]);
+            } //End if
             $validator = Validator::make(
                     $payload,
                     $this->rulesChallengeValue($isDeviceAuth)
@@ -459,7 +478,8 @@ trait AuthenticatesUsers
             // Process the challenge and get the response parameters
             $challengeValue = $srpService->processChallenge(
                     $request['challenge_value'],
-                    $request['session']
+                    $request['session'],
+                    $request['challenge_params'] ?? null
                 );
 
             //Add challenge response parameters to the request
@@ -486,6 +506,7 @@ trait AuthenticatesUsers
             'session'           => 'required',
             'challenge_name'    => 'required|string|in:SELECT_CHALLENGE,WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD,PASSWORD_SRP,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER',
             'challenge_value'   => 'required|string',
+            'challenge_params'  => 'sometimes|string'
         ];
     } //Function ends
 
@@ -503,7 +524,6 @@ trait AuthenticatesUsers
             'USERNAME'                      => 'required_with:PASSWORD_CLAIM_SIGNATURE|string',
 
             'PASSKEY_HASH'                  => 'required_without:PASSWORD_CLAIM_SIGNATURE|string',
-            'CHALLENGE_PARAMS'              => 'required_without:PASSWORD_CLAIM_SIGNATURE|string',
         ];
 
         // Add device authentication specific rules

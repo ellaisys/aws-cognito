@@ -7,7 +7,7 @@
             $usernameValue = $data['username'] ?? null;
             $sessionValue = $data['session_token'] ?? null;
             $challengeNameValue = isset($data['challenge_name']) ? strtoupper($data['challenge_name']) : null;
-            $challengeParamsValue = isset($data['challenge_params']) ? json_encode($data['challenge_params']) : '';
+            $challengeParamsValue = isset($data['challenge_params']) ? json_encode($data['challenge_params'], JSON_UNESCAPED_SLASHES) : '';
 
             if (in_array($challengeNameValue, ['EMAIL_OTP', 'SMS_OTP'])) {
                 $challengeValueText = $data['challenge_params']['CODE_DELIVERY_DELIVERY_MEDIUM'] ?? '';
@@ -64,9 +64,14 @@
         <label for="username" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
 
         <div class="col-md-6">
-            <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue ?? '' }}" />
+            <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue ?? '' }}" required />
             <input type="hidden" id="session" name="session" value="{{ $sessionValue ?? '' }}" />
             <input type="hidden" id="challenge_params" name="challenge_params" value="{{ $challengeParamsValue ?? '' }}" />
+
+            @if (in_array($challengeNameValue, ['WEB_AUTHN', 'DEVICE_SRP_AUTH', 'DEVICE_PASSWORD_VERIFIER', 'PASSWORD_SRP', 'PASSWORD_VERIFIER']))
+                <input type="hidden" id="challenge_value"  name="challenge_value" required />
+            @endif
+
             <input id="username" type="email"
                 class="form-control @error('username') is-invalid @enderror @if($usernameValue) is-valid @endif"
                 name="username" value="{{ old('username', $usernameValue) }}"
@@ -75,16 +80,12 @@
         </div>
     </div>
 
-    @if (in_array($challengeNameValue, ['WEB_AUTHN', 'DEVICE_SRP_AUTH', 'DEVICE_PASSWORD_VERIFIER']))
-        <input type="hidden" id="challenge_value"  name="challenge_value" />
-
-    @elseif (in_array($challengeNameValue, ['PASSWORD_VERIFIER']))
+    @if (in_array($challengeNameValue, ['PASSWORD_VERIFIER', 'PASSWORD']))
         <div class="row mb-3">
             <label for="password_code" class="col-md-4 col-form-label text-md-end"
                 id="challenge_value_label">{{ __('Password') }}</label>
 
             <div class="col-md-6">
-                <input type="hidden" id="challenge_value"  name="challenge_value" />
                 <input id="password_code" type="password"
                     class="form-control @error('password_code') is-invalid @enderror"
                     name="password_code" required autocomplete="off" />
@@ -96,8 +97,7 @@
                 @enderror
             </div>
         </div>
-
-    @else
+    @elseif (in_array($challengeNameValue, ['SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'SMS_OTP', 'EMAIL_OTP']))
         <div class="row mb-3">
             <label for="challenge_value" class="col-md-4 col-form-label text-md-end" id="challenge_value_label">{{ __('Code') }}</label>
 
@@ -118,7 +118,8 @@
     <div class="row mb-0">
         <div class="col-md-6 offset-md-4">
             @if (!in_array($challengeNameValue, ['WEB_AUTHN', 'DEVICE_SRP_AUTH', 'DEVICE_PASSWORD_VERIFIER']))
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" id="auth-challenge-form-submit-button" class="btn btn-primary"
+                onclick="handleFormSubmit(event);">
                 {{ __('Login') }}
             </button>
             @endif
@@ -159,6 +160,16 @@
             validateWebAuthnChallenge();
         }
     });
+
+    async function handleFormSubmit(event) {
+        const frmChallenge = document.getElementById('auth-challenge-form');
+        event.preventDefault(); // Prevent the default form submission
+
+        if (challengeNameValue.value == 'PASSWORD_VERIFIER') {
+            let response = await generatePasswordVerifier(); // Call the function to handle the PASSWORD_VERIFIER challenge
+        }
+        frmChallenge.submit(); // Submit the form for other challenge types without additional processing
+    }
 
     /**
      * Function to generate the SRP authentication response for the
@@ -236,8 +247,7 @@
         let responseData = {
             'PASSKEY_HASH':passKeyHash,
             'PRIVATE_KEY':privateEphemeral,
-            'DEVICE_GROUP_KEY':localStorage.getItem('d-grp'),
-            'CHALLENGE_PARAMS':challengeParams?.value
+            'DEVICE_GROUP_KEY':localStorage.getItem('d-grp')
         };
 
         // After computing the response, set it in the hidden input field and submit the form
@@ -331,8 +341,6 @@
                     publicKey: signinOptions
                 });
 
-                console.log('Passkey authentication response:', credential);
-
                 challengeValue.value = credential ? JSON.stringify(credential) : '';
                 document.getElementById('auth-challenge-form').submit();
             } else {
@@ -344,29 +352,33 @@
     } // Function ends
 
     /**
-     * Function to handle the form submission for the SRP challenge.
+     * Function to handle the form submission for the PASSWORD_VERIFIER
+     * challenge.
      * It hashes the password using SHA-256 and updates the hidden
      * challenge value input before allowing the form to submit.
      *
-     * @returns {Promise<boolean>} - Returns true to allow the form to submit.
      **/
-    async function submitChallengeForm() {
-        const usernameInput = document.getElementById('username');
+    async function generatePasswordVerifier() {
+        const challengeValue = document.getElementById('challenge_value');
+        const challengeParams = document.getElementById('challenge_params');
+        const usernameValue = document.getElementById('username');
         const passwordInput = document.getElementById('password_code');
-        const challengeValueInput = document.getElementById('challenge_value');
         
         // Set the actual password value in the hidden challenge value input
-        let passKey = atob(poolKey) + usernameInput.value + ':' + passwordInput.value;
+        let passKey = atob(poolKey) + usernameValue.value + ':' + passwordInput.value;
 
         // Hash with SHA256 and set the hashed value in the challenge value input
         let passKeyHash = await hashEncrypt(passKey, 'SHA-256');
 
         // Update the challenge value input with the hashed password
-        let challengeValue = challengeValueInput.value ? JSON.parse(challengeValueInput.value) : {};
-        challengeValue.PASSKEY_HASH = passKeyHash;
-        challengeValueInput.value = JSON.stringify(challengeValue);// Add the hashed password to the challenge value input
+        let payload = {
+            'PASSKEY_HASH': passKeyHash
+        };
+        challengeValue.value = JSON.stringify(payload);// Add the hashed password to the challenge value input
+        passwordInput.value = ''; // Clear the password input for security reasons
+        passwordInput.disabled = true; // Disable the password input
 
-        return true; // Allow the form to submit
+        return true; // Allow the form to submit after handling the challenge
     } // Function ends
 
     /**

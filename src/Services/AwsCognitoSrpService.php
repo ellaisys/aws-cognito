@@ -166,7 +166,7 @@ class AwsCognitoSrpService
      * Build PASSWORD_VERIFIER challenge response
      */
     public function processChallenge(string $challengeValue,
-        string $sessionKey): array
+        string $sessionKey, ?string $challengeParams = null): array
     {
         try {
             $payload = json_decode($challengeValue, true);
@@ -187,7 +187,10 @@ class AwsCognitoSrpService
                 ];
             } else {
                 //Build challenge response on the server side
-                return $this->buildChallengeResponse($challengeValue, $sessionKey);
+                return $this->buildChallengeResponse(
+                        $challengeValue, $sessionKey,
+                        $challengeParams
+                    );
             } //End if
         } catch (Exception $e) {
             Log::error('AwsCognitoSrpService:processChallenge:Exception');
@@ -201,18 +204,16 @@ class AwsCognitoSrpService
      * provider
      */
     private function buildChallengeResponse(string $challengeValue,
-        string $sessionKey): array
+        string $sessionKey, ?string $challengeParams = null): array
     {
         try {
             $payload = json_decode($challengeValue, true);
 
             //Check if the required parameters are present
-            if (!isset($payload['PASSKEY_HASH']) ||
-                !isset($payload['PRIVATE_KEY']) ||
-                !isset($payload['CHALLENGE_PARAMS'])) {
+            if (!isset($payload['PASSKEY_HASH'])) {
                 throw new BadRequestHttpException('Missing required parameters in challenge value');
             } else {
-                $paramsData = json_decode($payload['CHALLENGE_PARAMS'], true);
+                $paramsData = json_decode($challengeParams, true);
                 $payload = array_merge($payload, $paramsData);
             } //End if
 
@@ -231,6 +232,9 @@ class AwsCognitoSrpService
                 $privateEphemeral = $this->provider->get($this->cachePrefix . $sessionKey);
             } else {
                 $privateEphemeral = $payload['PRIVATE_KEY'];
+            } //End if
+            if (empty($privateEphemeral)) {
+                throw new HttpException(400, 'Invalid session key or private key not found');
             } //End if
 
             // Get the SRP parameters and generate A and a from the client request

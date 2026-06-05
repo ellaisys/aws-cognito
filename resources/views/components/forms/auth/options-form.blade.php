@@ -128,8 +128,6 @@
 
     const toDisplayName = (str) => {
         return str
-            .toLowerCase()
-            .replace(/[-_ ]+/g, ' ')
-            .replace(/^./, (char) => char.toUpperCase());
+            .replace(/[-_ ]+/g, ' ');
     };
 </script>
