@@ -103,8 +103,6 @@
 
                     if (challenge === 'PASSWORD') {
                         item.formAction = "{{ route('cognito.form.login') }}/password";
-                    // } else if (challenge === 'PASSWORD_SRP') {
-                    //     item.formAction = "{{ route('cognito.form.login') }}/password_srp";
                     } else {
                         item.addEventListener('click', () => {
                             challengeValue.value = challenge; // Set the selected challenge name

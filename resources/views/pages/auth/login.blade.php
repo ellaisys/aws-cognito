@@ -21,9 +21,6 @@
                         @case('challenge')
                             <x-cognito::forms.auth.challenge-form />
                             @break
-                        @case('password_srp')
-                            <x-cognito::forms.auth.srp-challenge-form />
-                            @break
                         @case('password')
                             <x-cognito::forms.auth.pwd-form />
                             @break
