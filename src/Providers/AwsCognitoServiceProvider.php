@@ -25,6 +25,8 @@ use Ellaisys\Cognito\Http\Parser\Parser;
 use Ellaisys\Cognito\Http\Parser\AuthHeaders;
 use Ellaisys\Cognito\Http\Parser\ClaimSession;
 
+use Ellaisys\Cognito\View\Components\CognitoChallenge;
+
 use Ellaisys\Cognito\Providers\StorageProvider;
 
 use Illuminate\Support\Arr;
@@ -378,8 +380,11 @@ class AwsCognitoServiceProvider extends ServiceProvider
      */
     protected function registerBladeComponents()
     {
-        //Provision to register blade components and directives
+        //Provision to register all blade components and directives
         Blade::componentNamespace('Ellaisys\\Cognito\\Views\\Components', 'cognito');
+
+        //Register individual blade components
+        Blade::component('cognito-challenge', CognitoChallenge::class);
 
     } //Function ends
 

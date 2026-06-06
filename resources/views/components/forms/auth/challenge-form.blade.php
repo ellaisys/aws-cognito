@@ -1,7 +1,12 @@
 <form method="POST" id="auth-challenge-form" action="{{ route('cognito.action.auth.challenge.submit') }}">
     @csrf
 
-    @php
+    <x-cognito-challenge 
+        :challenge-data="session('data')"
+        :csrf-token="csrf_token()"
+        :challenge-form-name="'auth-challenge-form'" />
+        
+    {{-- @php
         $data = (session('data')) ?? null;
         if ($data && isset($data['status']) && $data['status'] == 'challenge') {
             $usernameValue = $data['username'] ?? null;
@@ -24,9 +29,9 @@
         //PoolName without region prefix (e.g., "us-east-1_XXXXXXXXX:app/clientid" => "app/clientid")
         $namePool = config('cognito.user_pool_id');
         $namePool = strpos($namePool, '_') !== false ? explode('_', $namePool, 2)[1] : $namePool;
-    @endphp
+    @endphp --}}
 
-    @if($data && isset($data['status']) && $data['status'] == 'challenge')
+    {{-- @if($data)
     <div class="row mb-3">
         <div class="col-md-6 offset-md-4">
         @php
@@ -58,71 +63,37 @@
         <span class="text-muted d-none">{{ $data ? json_encode($data) : '' }}</span><br/>
         </div>
     </div>
-    @endif
+    @endif --}}
 
-    <div class="row mb-3">
+    {{-- <div class="row mb-3">
         <label for="username" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
 
         <div class="col-md-6">
-            <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue ?? '' }}" required />
-            <input type="hidden" id="session" name="session" value="{{ $sessionValue ?? '' }}" />
-            <input type="hidden" id="challenge_params" name="challenge_params" value="{{ $challengeParamsValue ?? '' }}" />
-
-            @if (in_array($challengeNameValue, ['WEB_AUTHN', 'DEVICE_SRP_AUTH', 'DEVICE_PASSWORD_VERIFIER', 'PASSWORD_SRP', 'PASSWORD_VERIFIER']))
-                <input type="hidden" id="challenge_value"  name="challenge_value" required />
-            @endif
-
             <input id="username" type="email"
                 class="form-control @error('username') is-invalid @enderror @if($usernameValue) is-valid @endif"
                 name="username" value="{{ old('username', $usernameValue) }}"
                 @if($usernameValue) readonly autocomplete="off" @else required autocomplete="email" autofocus @endif
                 />
         </div>
+    </div> --}}
+
+
+    <div class="row mb-3">
+        @stack('cognito-challenge-passcode')
     </div>
-
-    @if (in_array($challengeNameValue, ['PASSWORD_VERIFIER', 'PASSWORD']))
-        <div class="row mb-3">
-            <label for="password_code" class="col-md-4 col-form-label text-md-end"
-                id="challenge_value_label">{{ __('Password') }}</label>
-
-            <div class="col-md-6">
-                <input id="password_code" type="password"
-                    class="form-control @error('password_code') is-invalid @enderror"
-                    name="password_code" required autocomplete="off" />
-
-                @error('password_code')
-                    <span class="invalid-feedback" role="alert">
-                        <strong>{{ $message }}</strong>
-                    </span>
-                @enderror
-            </div>
-        </div>
-    @elseif (in_array($challengeNameValue, ['SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'SMS_OTP', 'EMAIL_OTP']))
-        <div class="row mb-3">
-            <label for="challenge_value" class="col-md-4 col-form-label text-md-end" id="challenge_value_label">{{ __('Code') }}</label>
-
-            <div class="col-md-6">
-                <input id="challenge_value" type="text"
-                    class="form-control @error('challenge_value') is-invalid @enderror"
-                    name="challenge_value" placeholder="{{ $challengeValueText ?? '' }}" required autocomplete="off" />
-
-                @error('challenge_value')
-                    <span class="invalid-feedback" role="alert">
-                        <strong>{{ $message }}</strong>
-                    </span>
-                @enderror
-            </div>
-        </div>
-    @endif
 
     <div class="row mb-0">
         <div class="col-md-6 offset-md-4">
-            @if (!in_array($challengeNameValue, ['WEB_AUTHN', 'DEVICE_SRP_AUTH', 'DEVICE_PASSWORD_VERIFIER']))
+            {{-- @if (!in_array($challengeNameValue, ['WEB_AUTHN', 'DEVICE_SRP_AUTH', 'DEVICE_PASSWORD_VERIFIER']))
             <button type="submit" id="auth-challenge-form-submit-button" class="btn btn-primary"
                 onclick="handleFormSubmit(event);">
                 {{ __('Login') }}
             </button>
-            @endif
+            @endif --}}
+
+            <button type="submit" class="btn btn-primary">
+                {{ __('Login') }}
+            </button>
 
             @if (Route::has('cognito.form.register'))
                 <a class="btn btn-link float-end" href="{{ route('cognito.form.register') }}">
@@ -133,7 +104,9 @@
     </div>
 </form>
 
-@if (in_array($challengeNameValue, ['DEVICE_SRP_AUTH', 'DEVICE_PASSWORD_VERIFIER', 'PASSWORD_SRP', 'PASSWORD_VERIFIER', 'WEB_AUTHN']))
+@stack('cognito-challenge-scripts')
+
+{{-- @if (in_array($challengeNameValue, ['DEVICE_SRP_AUTH', 'DEVICE_PASSWORD_VERIFIER', 'PASSWORD_SRP', 'PASSWORD_VERIFIER', 'WEB_AUTHN']))
 <script>
     const poolKey = "{{ base64_encode($namePool) }}";
     const AUTH_CSRF_TOKEN = '{{ csrf_token() }}';
@@ -447,4 +420,4 @@
         }, 1000);
 } // Function ends
 </script>
-@endif
+@endif --}}
