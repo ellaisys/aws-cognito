@@ -21,10 +21,9 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 class CognitoChallenge extends Component
 {   
     public array|null $challengeData;
-    public string $csrfToken;
 
     private string $cognitoPoolName = '';
-    public string $challengeNameValue = '';
+    private string $challengeNameValue = 'NONE';
     private string $sessionValue = '';
     private string $challengeParamsValue = '';
     private string $usernameValue = '';
@@ -34,17 +33,15 @@ class CognitoChallenge extends Component
      * Create a new component instance.
      */
     public function __construct(
-        array|null $challengeData = null,
-        string $csrfToken,
         public string|null $challengeFormName = null
     )
     {
         try {
+            $challengeData = session('data') ?? null;
             if (is_null($challengeData)) {
                 throw new HttpException(400, 'The data for the challenge component is required.');
             }
             $this->challengeData = $challengeData;
-            $this->csrfToken = $csrfToken;
             
             $this->processData($challengeData);
         } catch (Exception $e) {
@@ -65,7 +62,7 @@ class CognitoChallenge extends Component
         if ($data && isset($data['status']) && $data['status'] == 'challenge') {
             $this->usernameValue = $data['username'] ?? '';
             $this->sessionValue = $data['session_token'] ?? '';
-            $this->challengeNameValue = isset($data['challenge_name']) ? strtoupper($data['challenge_name']) : '';
+            $this->challengeNameValue = isset($data['challenge_name']) ? strtoupper($data['challenge_name']) : 'NONE';
             $this->challengeParamsValue = isset($data['challenge_params']) ? json_encode($data['challenge_params'], JSON_UNESCAPED_SLASHES) : '';
 
             if (in_array($this->challengeNameValue, ['EMAIL_OTP', 'SMS_OTP'])) {
@@ -85,8 +82,8 @@ class CognitoChallenge extends Component
     public function render(): View|Closure|string
     {
         return view('cognito::components.challenge.main', [
+            'srpParameters' => config('cognito.srp_parameters'),
             'data' => $this->challengeData,
-            'csrfToken' => $this->csrfToken,
             'cognitoPoolName' => $this->cognitoPoolName,
             'challengeNameValue' => $this->challengeNameValue,
             'sessionValue' => $this->sessionValue,
