@@ -361,6 +361,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
         if (AwsCognito::$registersViews) {
             $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cognito');
         }
+
+        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'cognito');
     } //Function ends
 
     /**
