@@ -1,10 +1,12 @@
 @csrf
 
-<input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue ?? '' }}" required />
-<input type="hidden" id="session" name="session" value="{{ $sessionValue ?? '' }}" />
-<input type="hidden" id="challenge_params" name="challenge_params" value="{{ $challengeParamsValue ?? '' }}" />
-<input type="hidden" id="challenge_value"  name="challenge_value" required />
-<input type="hidden" id="username" name="username" value="{{ old('username', $usernameValue) }}" required />
+@if((isset($challengeNameValue) && ($challengeNameValue != 'NONE')))
+    <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue ?? '' }}" required />
+    <input type="hidden" id="session" name="session" value="{{ $sessionValue ?? '' }}" />
+    <input type="hidden" id="challenge_params" name="challenge_params" value="{{ $challengeParamsValue ?? '' }}" />
+    <input type="hidden" id="challenge_value"  name="challenge_value" required />
+    <input type="hidden" id="username" name="username" value="{{ old('username', $usernameValue) }}" required />
+@endif
 
 @if((isset($challengeNameValue) && ($challengeNameValue != 'NONE')))
     <div class="row mb-3">
@@ -35,10 +37,10 @@
 @pushif((isset($challengeNameValue) && ($challengeNameValue != 'NONE')),'cognito-challenge-scripts')
     <script>
         // Large prime number
-        const N = BigInt("{{ $srpParameters['N_Hex'] }}", 16);
+        const N = BigInt("{{ '0x' . $srpParameters['N_HEX'] }}");
         
         //Generator value
-        const g = BigInt("{{ $srpParameters['G_Hex'] }}", 16);
+        const g = BigInt("{{ '0x' . $srpParameters['G_HEX'] }}");
 
         const poolKey = "{{ base64_encode($cognitoPoolName) }}";
         const AUTH_CSRF_TOKEN = '{{ csrf_token() }}';
@@ -160,20 +162,32 @@
 
             // Get the session value
             let session = sessionValue.value || null;
+            if (!session) {
+                console.error('Session parameters not found');
+                return;
+            }
 
             // Step 2: Get the private ephemeral value from localStorage
             let privateEphemeral = (session) ? localStorage.getItem(session) : null;
             if (privateEphemeral) { localStorage.removeItem(session); }
 
-            // Get the challenge parameters
-            if (!challengeParamsValue?.value) {
+            // Get the challenge parameters value and parse it as JSON
+            let challengeParams = challengeParamsValue.value ? JSON.parse(challengeParamsValue.value) : null;
+            if (!challengeParams) {
                 console.error('Challenge parameters not found');
                 return;
             }
 
+            console.log('message:', computedMessageVerifier(true, false));
+
             // Build the response object to be sent back to the server
             let responseData = {
+                'PASSWORD_CLAIM_SECRET_BLOCK': challengeParams?.SECRET_BLOCK || '',
+                'TIMESTAMP': getCognitoTimestamp(),
+                'DEVICE_KEY': challengeParams?.DEVICE_KEY || '',
+
                 'PASSKEY_HASH':passKeyHash,
+                'MESSAGE_BASE64': computedMessageVerifier(true),
                 'PRIVATE_KEY':privateEphemeral,
                 'DEVICE_GROUP_KEY':localStorage.getItem('d-grp')
             };
@@ -275,23 +289,75 @@
          *
          **/
         async function generatePasswordVerifier() {
-            const elemPasscode = document.getElementById('pass_code');
-            
-            // Set the actual password value in the hidden challenge value input
-            let passKey = atob(poolKey) + usernameValue.value + ':' + elemPasscode.value;
+            try {
+                const elemPasscode = document.getElementById('pass_code');
+                
+                // Set the actual password value in the hidden challenge value input
+                let passKey = atob(poolKey) + usernameValue.value + ':' + elemPasscode.value;
 
-            // Hash with SHA256 and set the hashed value in the challenge value input
-            let passKeyHash = await hashEncrypt(passKey, 'SHA-256');
+                // Hash with SHA256 and set the hashed value in the challenge value input
+                let passKeyHash = await hashEncrypt(passKey, 'SHA-256');
 
-            // Update the challenge value input with the hashed password
-            let payload = {
-                'PASSKEY_HASH': passKeyHash
-            };
-            challengeValue.value = JSON.stringify(payload);// Add the hashed password to the challenge value input
-            elemPasscode.value = ''; // Clear the password input for security reasons
-            elemPasscode.disabled = true; // Disable the password input
+                // Get the challenge parameters value and parse it as JSON
+                let challengeParams = challengeParamsValue.value ? JSON.parse(challengeParamsValue.value) : null;
+                if (!challengeParams) {
+                    throw new Error("Challenge parameters not found");
+                }
 
-            return true; // Allow the form to submit after handling the challenge
+                // Update the challenge value input with the hashed password
+                let payload = {
+                    'PASSWORD_CLAIM_SECRET_BLOCK': challengeParams?.SECRET_BLOCK || '',
+                    'TIMESTAMP': getCognitoTimestamp(),
+                    'PASSKEY_HASH': passKeyHash,
+                    'MESSAGE_BASE64': computedMessageVerifier(false)
+                };
+                challengeValue.value = JSON.stringify(payload);// Add the hashed password to the challenge value input
+                elemPasscode.value = ''; // Clear the password input for security reasons
+                elemPasscode.disabled = true; // Disable the password input
+
+                return true; // Allow the form to submit after handling the challenge
+            } catch (error) {
+                console.error('Error generating password verifier:', error);
+                return false; // Prevent form submission if there was an error
+            }
+        } // Function ends
+
+        function computedMessageVerifier(isDeviceAuth = false, isBase64 = true) {
+            try{
+                // Get Base64 encoded Secret Block
+                let challengeParams = challengeParamsValue.value ? JSON.parse(challengeParamsValue.value) : null;
+                if (!challengeParams) {
+                    throw new Error("Challenge parameters not found");
+                }
+                let secretBlock = challengeParams?.SECRET_BLOCK || null;
+                let secretBlockBase64 = secretBlock ? atob(secretBlock) : null;
+                if (!secretBlockBase64) {
+                    throw new Error("Secret block not found in challenge parameters");
+                }
+
+                //Build the message
+                let message = '';
+                if (isDeviceAuth) {
+                    let deviceGroupKey = localStorage.getItem('d-grp');
+                    if (!deviceGroupKey) {
+                        throw new Error("Device group key not found in localStorage");
+                    }
+                    let deviceKey = challengeParams?.DEVICE_KEY || localStorage.getItem('d-key');
+                    if (!deviceKey) {
+                        throw new Error("Device key not found in localStorage");
+                    }
+                    message += deviceGroupKey + deviceKey;
+                } else {
+                    message += atob(poolKey) + challengeParams?.USER_ID_FOR_SRP;
+                }
+                message += secretBlockBase64;
+                message += getCognitoTimestamp();
+
+                return isBase64 ? btoa(message) : message;
+            } catch (error) {
+                console.error('Error computing message verifier:', error);
+                return null;
+            }
         } // Function ends
 
         /**
@@ -344,6 +410,41 @@
             }
 
             return result;
+        } // Function ends
+
+        /**
+         * Utility function to get the current timestamp in the format required by AWS Cognito.
+         * Cognito expects the timestamp to be in the format: "EEE MMM d HH:mm:ss 'UTC' yyyy"
+         * For example: "Wed Mar 3 12:34:56 UTC 2021"
+         * This function constructs the timestamp string by getting the current date and time in UTC,
+         * and formatting it according to the required structure.
+         * @return {string} - The current timestamp formatted for AWS Cognito
+         **/
+        function getCognitoTimestamp() {
+            // Get the current date and time in UTC
+            const now = new Date();
+
+            const weekdays = [
+                    'Sun', 'Mon', 'Tue', 'Wed',
+                    'Thu', 'Fri', 'Sat'
+                ];
+
+            const months = [
+                    'Jan', 'Feb', 'Mar', 'Apr',
+                    'May', 'Jun', 'Jul', 'Aug',
+                    'Sep', 'Oct', 'Nov', 'Dec'
+                ];
+
+            // Build the timestamp string in the format required by Cognito
+            let weekday = weekdays[now.getUTCDay()];
+            let month = months[now.getUTCMonth()];
+            let day = now.getUTCDate();
+            let hours = String(now.getUTCHours()).padStart(2, '0');
+            let minutes = String(now.getUTCMinutes()).padStart(2, '0');
+            let seconds = String(now.getUTCSeconds()).padStart(2, '0');
+            let year = now.getUTCFullYear();
+
+            return `${weekday} ${month} ${day} ${hours}:${minutes}:${seconds} UTC ${year}`;
         } // Function ends
 
         /**

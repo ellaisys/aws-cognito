@@ -20,8 +20,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class CognitoChallenge extends Component
 {   
-    public array|null $challengeData;
-
     private string $cognitoPoolName = '';
     private string $challengeNameValue = 'NONE';
     private string $sessionValue = '';
@@ -38,12 +36,10 @@ class CognitoChallenge extends Component
     {
         try {
             $challengeData = session('data') ?? null;
-            if (is_null($challengeData)) {
-                throw new HttpException(400, 'The data for the challenge component is required.');
+            if (!is_null($challengeData)) {
+                // Process the data to extract necessary information for the view
+                $this->processData($challengeData);
             }
-            $this->challengeData = $challengeData;
-            
-            $this->processData($challengeData);
         } catch (Exception $e) {
             throw $e;
         }
@@ -83,7 +79,6 @@ class CognitoChallenge extends Component
     {
         return view('cognito::components.challenge.main', [
             'srpParameters' => config('cognito.srp_parameters'),
-            'data' => $this->challengeData,
             'cognitoPoolName' => $this->cognitoPoolName,
             'challengeNameValue' => $this->challengeNameValue,
             'sessionValue' => $this->sessionValue,

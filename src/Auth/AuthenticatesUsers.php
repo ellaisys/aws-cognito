@@ -418,8 +418,7 @@ trait AuthenticatesUsers
             if ($request->has('challenge_value') && $request['challenge_value'] == 'PASSWORD_SRP') {
                 $challengeValue = json_encode([
                     'ANSWER' => $request['challenge_value'],
-                    'SRP_A' => $ephemeral['public_key'],
-                    'USERNAME' => $request['username'] ?? null
+                    'SRP_A' => $ephemeral['public_key']
                 ]);
             } else {
                 $challengeValue = $ephemeral['public_key']; // SRP_A value
@@ -519,16 +518,17 @@ trait AuthenticatesUsers
     {
         $rules = [
             'PASSWORD_CLAIM_SIGNATURE'      => 'sometimes|string',
-            'PASSWORD_CLAIM_SECRET_BLOCK'   => 'required_with:PASSWORD_CLAIM_SIGNATURE|string',
-            'TIMESTAMP'                     => 'required_with:PASSWORD_CLAIM_SIGNATURE|string',
-            'USERNAME'                      => 'required_with:PASSWORD_CLAIM_SIGNATURE|string',
+            'PASSWORD_CLAIM_SECRET_BLOCK'   => 'required|string',
+            'TIMESTAMP'                     => 'required|string',
 
             'PASSKEY_HASH'                  => 'required_without:PASSWORD_CLAIM_SIGNATURE|string',
+            'MESSAGE_BASE64'                => 'sometimes|string',
         ];
 
         // Add device authentication specific rules
         if ($isDeviceAuth) {
-            $rules['DEVICE_GROUP_KEY'] = 'required_without:PASSWORD_CLAIM_SIGNATURE|string';
+            $rules['DEVICE_KEY'] = 'required|string';
+            $rules['DEVICE_GROUP_KEY'] = 'required_with:PASSKEY_HASH|required_without:MESSAGE_BASE64|string';
         } //End if
 
         return $rules;
