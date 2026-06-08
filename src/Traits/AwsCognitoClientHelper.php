@@ -83,12 +83,14 @@ trait AwsCognitoClientHelper
                     break;
 
                 case CognitoChallengeTypes::SELECT_CHALLENGE:
-                    if (!in_array($challengeValue, ['EMAIL_OTP','SMS_OTP','WEB_AUTHN'], true)) {
-                        $challengePayload = json_decode($challengeValue, true);
-                    } else{
+                    if (in_array($challengeValue, ['EMAIL_OTP','SMS_OTP','WEB_AUTHN'], true)) {
                         $challengePayload = array_merge($challengePayload, [
                             'ANSWER' => $challengeValue
                         ]);
+                    } else{
+                        $challengePayload = array_merge($challengePayload,
+                            json_decode($challengeValue, true)
+                        );
                     }
                     break;
 
@@ -119,7 +121,9 @@ trait AwsCognitoClientHelper
                 case CognitoChallengeTypes::PASSWORD_VERIFIER:
                 case CognitoChallengeTypes::DEVICE_SRP_AUTH:
                 case CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER:
-                    $challengePayload = json_decode($challengeValue, true);
+                    $challengePayload = array_merge($challengePayload,
+                        json_decode($challengeValue, true)
+                    );
                     break;
 
                 default:
@@ -130,6 +134,7 @@ trait AwsCognitoClientHelper
             Log::error('AwsCognitoClientHelper:buildChallengePayload:Exception');
             throw $e;
         } //Try-catch ends
+        Log::debug($challengePayload);
 
         return $challengePayload;
     } //Function ends
