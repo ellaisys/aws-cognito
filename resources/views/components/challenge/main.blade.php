@@ -30,7 +30,10 @@
     @if (in_array($challengeNameValue, [
         'SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'SMS_OTP',
         'EMAIL_OTP', 'PASSWORD_VERIFIER', 'PASSWORD']))
-        <x-cognito::challenge.password />
+        <x-cognito::challenge.password 
+            :challengeNameValue="$challengeNameValue"
+            :challengeValuePlaceholder="$challengeValuePlaceholder"
+        />
     @endif
 @endPush
 
