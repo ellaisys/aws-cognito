@@ -21,14 +21,15 @@ use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class CognitoPasskeyWebAuthn extends Component
-{   
+{
     /**
      * Create a new component instance.
      */
     public function __construct(
         public string|null $urlPasskeyStartEndpoint = null,
         public string|null $urlPasskeyCompleteEndpoint = null,
-        public string|null $urlPasskeyDeleteEndpoint = null
+        public string|null $urlPasskeyDeleteEndpoint = null,
+        public string $secureCode = 'webauthn-passkey-',
     )
     {
         try {

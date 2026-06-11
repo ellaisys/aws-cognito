@@ -16,7 +16,10 @@
                 <div class="card-header">
                     {{ __('Dashboard') }}
                     @if (config('cognito.allow_passkeys') && !$passkeyEnabled)
-                    <button id="enable-passkeys-button" class="btn btn-outline-primary float-end">Enable Passkeys</button>
+                    <button id="enable-passkeys-button" class="btn btn-outline-primary float-end"
+                        data-role="passkey-webauthn" data-action="register">
+                        Enable Passkeys
+                    </button>
                     @endif
                 </div>
 
