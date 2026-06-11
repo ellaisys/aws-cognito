@@ -1,10 +1,33 @@
 @pushif((config('cognito.allow_passkeys')),'cognito-passkey-webauthn-scripts')
     <script>
-        const enablePasskeysButton = document.getElementById('enable-passkeys-button');
+        // Add event listeners to all buttons with the data-role attribute set to "passkey-webauthn"
+        const btnsPasskeyWebAuthn = document.querySelectorAll('[data-role="passkey-webauthn"]');
+        btnsPasskeyWebAuthn.forEach(button => {
+            button.addEventListener('click', async function() {
+                // Disable the button to prevent multiple clicks
+                this.disabled = true;
 
-        enablePasskeysButton.addEventListener('click', function() {
-            let webAuthn = new WebAuthnRegistration();
-            webAuthn.register();
+                if (this.attributes['data-action'].value === 'register') { // Register a new passkey
+                    let webAuthn = new WebAuthnRegistration();
+                    let response = await webAuthn.register();
+
+                    // Disable on success, re-enable on failure
+                    this.disabled = response;
+                } else if (this.attributes['data-action'].value === 'delete') { // Delete an existing passkey
+                    // Get the user key from the data attribute
+                    let userkeyB64encoded = this.attributes['data-userkey'].value;
+                    let webAuthn = new WebAuthnRegistration();
+                    await webAuthn.delete(userkeyB64encoded);
+
+                    // Re-enable the button after deletion
+                    this.disabled = false;
+                } else { // Handle unknown action
+                    console.warn('Unknown action for passkey button. Use "register" or "delete" as data-action value.');
+
+                    // Re-enable the button if action is unknown
+                    this.disabled = false;
+                } //End if
+            });
         });
 
         /**
@@ -21,6 +44,7 @@
              */
             constructor() {
                 this.csrfToken = "{{ csrf_token() }}";
+                this.secureCode = "{{ $secureCode ?? '' }}";
             }
 
             /**
@@ -42,13 +66,48 @@
                     });
 
                     // Save the created credential back to the server to complete registration
-                    let completePayload = await this.#completeRegistration(credential);
+                    let completePayload = await this.#completeRegistration(credential, publicKeyOptions);
                     if (completePayload) {
                         this.#alert('Passkey registered successfully.', 'success');
+                        return true;
                     }
+                    return false;
                 } catch (error) {
                     console.error('Error registering passkey:', error);
                     this.#alert('Passkey registration failed. Check the console for details.', 'error');
+                    return false;
+                }
+            } //Function end
+
+            /**
+             * Function to delete an existing passkey for the user. It communicates
+             * with the server to delete the passkey and signals the authenticator
+             * about the deleted credential.
+             */
+            async delete(userkeyB64encoded) {
+                try {
+                    // Read the data to local store
+                    let userData = localStorage.getItem(this.secureCode + userkeyB64encoded);
+                    if (!userData) {
+                        throw new Error('No passkey data found for the user in local storage');
+                    }
+                    userData = JSON.parse(userData);
+
+                    // Signal the authenticator about the deleted credential
+                    let deletePayload = await this.#deleteRegistration(userData?.credential_id, userData?.rp_id);
+                    if(deletePayload) {
+                        // Remove the data from local store
+                        localStorage.removeItem(this.secureCode + userkeyB64encoded);
+
+                        this.#alert('Passkey deleted successfully.', 'success');
+                        return true;
+                    } //End if
+
+                    return false;
+                } catch (error) {
+                    console.error('Error deleting passkey data:', error);
+                    this.#alert('Passkey deletion failed. Check the console for details.', 'error');
+                    return false;
                 }
             } //Function end
 
@@ -82,8 +141,12 @@
              * Function to complete the passkey registration process by
              * sending the created credential back to the server
              */
-            async #completeRegistration(credential) {
+            async #completeRegistration(credential, publicKeyOptions) {
                 try {
+                    if (!credential && (typeof credential !== 'object') && (credential?.type !== 'public-key')) {
+                        throw new Error('No credential created by WebAuthn API');
+                    } //End if
+
                     // Save the created credential back to the server to complete registration
                     let completeResponse = await fetch("{{ $urlPasskeyCompleteEndpoint ?? '' }}", {
                         method: 'POST',
@@ -99,7 +162,18 @@
 
                     if (!completeResponse.ok) {
                         throw new Error('Failed to complete passkey registration');
-                    }
+                    } //End if
+
+                    // Save the data to local store
+                    let userData = {
+                            credential_id: credential?.id,
+                            rp_id: publicKeyOptions?.rp?.id,
+                            user_name: publicKeyOptions?.user?.name
+                        };
+                    localStorage.setItem(
+                            this.secureCode + btoa(userData?.user_name),
+                            JSON.stringify(userData)
+                        );
 
                     return await completeResponse.json();
                 } catch (error) {
@@ -108,7 +182,7 @@
                 }
             } //Function end
 
-            async deleteRegistration(credentialId, rpId) {
+            async #deleteRegistration(credentialId, rpId) {
                 try {
                     // Get the passkey registration options from the server
                     let deleteResponse = await fetch("{{ $urlPasskeyDeleteEndpoint ?? '' }}", {
@@ -126,13 +200,20 @@
                         throw new Error('Failed to delete passkey');
                     }
 
-                    await PublicKeyCredential.signalUnknownCredential({
-                        rpId: rpId,           // The ID of the Relying Party
-                        credentialId: btoa(credentialId)   // The unrecognized credential ID
-                    });
+                    // Signal the authenticator about the deleted credential
+                    if (PublicKeyCredential.signalUnknownCredential) {
+                        await PublicKeyCredential.signalUnknownCredential({
+                            rpId: rpId,
+                            credentialId: credentialId
+                        });
+                    } else {
+                        this.#alert('PublicKeyCredential.signalUnknownCredential is not supported in this browser. Please delete the credential manually.', 'info');
+                    } //End if
+
+                    return await deleteResponse.json();
                 } catch (error) {
                     console.error('Error deleting passkey:', error);
-                    this.#alert('Passkey deletion failed. Check the console for details.', 'error');
+                    throw error;
                 }
             } //Function end
 
@@ -225,7 +306,7 @@
             #alert(message, type = 'info') {
 
                 let alertBox = new CognitoAlert();
-                if (alertBox) { 
+                if (alertBox) {
                     if (type === 'success') {
                         alertBox.success(message);
                     } else if (type === 'error') {
