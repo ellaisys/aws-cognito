@@ -2,8 +2,8 @@
 
 @section('content')
 
-    <x-cognito::common.js-scripts />
-    <x-cognito-passkey-webauthn />
+<x-cognito::common.js-scripts />
+<x-cognito-passkey-webauthn />
 
 @php
     $passkeyEnabled = (Auth::user() && isset(Auth::user()->is_webauthn_enabled)) ? Auth::user()->is_webauthn_enabled : false;
