@@ -1,19 +1,27 @@
 @pushif((config('cognito.allow_passkeys')),'cognito-passkey-webauthn-scripts')
     <script>
         // Add event listeners to all buttons with the data-role attribute set to "passkey-webauthn"
-        const btnsPasskeyWebAuthn = document.querySelectorAll('[data-role="passkey-webauthn"]');
-        btnsPasskeyWebAuthn.forEach(button => {
+        const elemsPasskeyWebAuthn = document.querySelectorAll('[data-role="passkey-webauthn"]');
+        elemsPasskeyWebAuthn.forEach(button => {
             button.addEventListener('click', async function() {
                 // Disable the button to prevent multiple clicks
                 this.disabled = true;
 
-                if (this.attributes['data-action'].value === 'register') { // Register a new passkey
+                // Get the action from the data-action attribute and validate it
+                let dataAction = this.attributes['data-action'] ? (this.attributes['data-action'].value).toLowerCase() : null;
+                if (!dataAction || (dataAction !== 'register' && dataAction !== 'delete')) {
+                    console.warn('No action specified for passkey button. Use "register" or "delete" as data-action value.');
+                    this.disabled = false;
+                    return;
+                } //End if
+
+                if (dataAction === 'register') { // Register a new passkey
                     let webAuthn = new WebAuthnRegistration();
                     let response = await webAuthn.register();
 
                     // Disable on success, re-enable on failure
                     this.disabled = response;
-                } else if (this.attributes['data-action'].value === 'delete') { // Delete an existing passkey
+                } else if (dataAction === 'delete') { // Delete an existing passkey
                     // Get the user key from the data attribute
                     let userkeyB64encoded = this.attributes['data-userkey'].value;
                     let webAuthn = new WebAuthnRegistration();
