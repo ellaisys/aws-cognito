@@ -329,5 +329,65 @@
             }
 
         } //Class end
+
+        /**
+         * Class to handle the WebAuthn authentication challenge. It retrieves the
+         * challenge parameters from the server, prompts the user to authenticate
+         * using their passkey credential, and submits the authentication response
+         * back to the server.
+         */
+        class WebAuthnChallenge extends CognitoChallenge {
+            // Default constructor
+            constructor() {
+                super();
+            }
+
+            /**
+             * Function to handle the WebAuthn challenge authentication process.
+             * It retrieves the challenge parameters from the server, prompts
+             * the user to authenticate using their passkey credential, and
+             * submits the authentication response back to the server.
+             * @returns {Promise<string>} - A promise that resolves to
+             * the WebAuthn challenge verification
+             * @throws {Error} - Throws an error during the process.
+             **/
+            async verifier() {
+                try {
+                    // Get the challenge parameters value and parse it as JSON
+                    let objChallengeParams = this.ChallengeParams;
+
+                    /**
+                     * Build the options for navigator.credentials.get() based
+                     * on the challenge parameters received from the server
+                     */
+                    let signinOptions = JSON.parse(objChallengeParams.CREDENTIAL_REQUEST_OPTIONS);
+                    signinOptions.challenge = Uint8Array.from(
+                        atob(signinOptions.challenge.replace(/-/g, '+')
+                            .replace(/_/g, '/')), c => c.charCodeAt(0)
+                        );
+                    signinOptions.allowCredentials = signinOptions.allowCredentials.map(cred => {
+                            return {
+                                ...cred,
+                                id: Uint8Array.from(atob(cred.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+                            };
+                        });
+
+                    // Prompt the user to authenticate using their passkey credential
+                    let credential = await navigator.credentials.get({
+                            mediation: 'optional',
+                            password: true,
+                            publicKey: signinOptions
+                        });
+                    if (!credential) {
+                        throw new Error("No credential returned from navigator.credentials.get()");
+                    } // End if
+
+                    return JSON.stringify(credential);
+                } catch (error) {
+                    console.error('Error authenticating passkey:', error);
+                    throw error;
+                } // End try-catch
+            } // Function ends
+        } // Class ends
     </script>
 @endPushIf

@@ -1,5 +1,8 @@
 @csrf
 
+<x-cognito::common.js-scripts />
+<x-cognito-passkey-webauthn />
+
 @if((isset($challengeNameValue) && ($challengeNameValue != 'NONE')))
     <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue ?? '' }}" required />
     <input type="hidden" id="session" name="session" value="{{ $sessionValue ?? '' }}" />
@@ -38,6 +41,7 @@
 @endPush
 
 @pushif((isset($challengeNameValue) && ($challengeNameValue != 'NONE')),'cognito-challenge-scripts')
+@stack('cognito-common-scripts')
     <script>
         const challengeNameValue = document.getElementById('challenge_name');
         const challengeValue = document.getElementById('challenge_value');
@@ -167,116 +171,6 @@
             }
 
         } // Function ends
-
-        /**
-         * Utility class to handle Multiple Precision BigInt operations
-         * in JavaScript.
-         */
-        class GMP {
-            /**
-             * Utility function to perform modular exponentiation (base^exponent mod modulus)
-             * This function is essential for the SRP protocol calculations, where we need
-             * to compute values like A = g^a mod N.
-             * @param {BigInt} base - The base value (e.g., g in SRP)
-             * @param {BigInt} exponent - The exponent value (e.g., a in SRP)
-             * @param {BigInt} modulus - The modulus value (e.g., N in SRP)
-             * @returns {BigInt} - The result of (base^exponent) mod modulus
-             **/
-            static gmp_powm(base, exponent, modulus) {
-                if (modulus === 1n) {
-                    return 0n;
-                }
-
-                let result = 1n;
-                let currentBase = base % modulus;
-                let currentExponent = exponent;
-
-                while (currentExponent > 0n) {
-                    if (currentExponent % 2n === 1n) {
-                        result = (result * currentBase) % modulus;
-                    }
-
-                    currentExponent = currentExponent / 2n;
-                    currentBase = (currentBase * currentBase) % modulus;
-                } // End while
-
-                return result;
-            } // Function ends
-
-            /** 
-             * Utility function to perform addition of two BigInt values. This is a simple
-             * wrapper around the native BigInt addition operator, but it can be extended
-             * in the future to include additional checks or functionality if needed.
-             * @param {BigInt} a - The first BigInt value
-             * @param {BigInt} b - The second BigInt value
-             * @returns {BigInt} - The result of a + b
-             **/
-            static gmp_add(num1, num2) {
-                return this.#toBigInt(num1) + this.#toBigInt(num2);
-            } // Function ends
-
-            static gmp_sub(num1, num2) {
-                return this.#toBigInt(num1) - this.#toBigInt(num2);
-            } // Function ends
-
-            static gmp_mul(num1, num2) {
-                return this.#toBigInt(num1) * this.#toBigInt(num2);
-            } // Function ends
-
-            static gmp_mod(num1, num2) {
-                return this.#toBigInt(num1) % this.#toBigInt(num2);
-            } // Function ends
-
-            static gmp_init(value, base = 10) {
-                return this.#toBigInt(value, base);
-            } // Function ends
-
-            static #toBigInt(value, base = null)
-            {
-                // Already a BigInt
-                if (typeof value === 'bigint') {
-                    return value;
-                }
-
-                // Number
-                if (typeof value === 'number') {
-                    return BigInt(value);
-                }
-
-                // String
-                if (typeof value === 'string') {
-                    value = value.trim();
-
-                    // Explicit base supplied (similar to gmp_init)
-                    if (base === 16) {
-                        return BigInt('0x' + value.replace(/^0x/i, ''));
-                    }
-
-                    if (base === 2) {
-                        return BigInt('0b' + value.replace(/^0b/i, ''));
-                    }
-
-                    // Auto-detect prefixes
-                    if (/^0x[0-9a-f]+$/i.test(value)) {
-                        return BigInt(value);
-                    }
-
-                    if (/^0b[01]+$/i.test(value)) {
-                        return BigInt(value);
-                    }
-
-                    // Decimal
-                    if (/^[+-]?\d+$/.test(value)) {
-                        return BigInt(value);
-                    }
-
-                    throw new Error(`Invalid numeric string: ${value}`);
-                }
-
-                throw new TypeError(`Unsupported type: ${typeof value}`);
-            }
-
-        } // Class ends
 
         /**
          * Class to handle the various Cognito authentication challenges, including
@@ -700,65 +594,6 @@
                 }, 1000);
             } // Function ends
         } // Class ends
-
-        /**
-         * Class to handle the WebAuthn authentication challenge. It retrieves the
-         * challenge parameters from the server, prompts the user to authenticate
-         * using their passkey credential, and submits the authentication response
-         * back to the server.
-         */
-        class WebAuthnChallenge extends CognitoChallenge {
-            // Default constructor
-            constructor() {
-                super();
-            }
-
-            /**
-             * Function to handle the WebAuthn challenge authentication process.
-             * It retrieves the challenge parameters from the server, prompts
-             * the user to authenticate using their passkey credential, and
-             * submits the authentication response back to the server.
-             * @returns {Promise<string>} - A promise that resolves to
-             * the WebAuthn challenge verification
-             * @throws {Error} - Throws an error during the process.
-             **/
-            async verifier() {
-                try {
-                    // Get the challenge parameters value and parse it as JSON
-                    let objChallengeParams = this.ChallengeParams;
-
-                    /**
-                     * Build the options for navigator.credentials.get() based
-                     * on the challenge parameters received from the server
-                     */
-                    let signinOptions = JSON.parse(objChallengeParams.CREDENTIAL_REQUEST_OPTIONS);
-                    signinOptions.challenge = Uint8Array.from(
-                        atob(signinOptions.challenge.replace(/-/g, '+')
-                            .replace(/_/g, '/')), c => c.charCodeAt(0)
-                        );
-                    signinOptions.allowCredentials = signinOptions.allowCredentials.map(cred => {
-                            return {
-                                ...cred,
-                                id: Uint8Array.from(atob(cred.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
-                            };
-                        });
-
-                    // Prompt the user to authenticate using their passkey credential
-                    let credential = await navigator.credentials.get({
-                            mediation: 'optional',
-                            password: true,
-                            publicKey: signinOptions
-                        });
-                    if (!credential) {
-                        throw new Error("No credential returned from navigator.credentials.get()");
-                    } // End if
-
-                    return JSON.stringify(credential);
-                } catch (error) {
-                    console.error('Error authenticating passkey:', error);
-                    throw error;
-                } // End try-catch
-            } // Function ends
-        } // Class ends
     </script>
+@stack('cognito-passkey-webauthn-scripts')
 @endPushIf
