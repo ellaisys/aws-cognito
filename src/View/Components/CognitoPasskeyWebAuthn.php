@@ -51,31 +51,6 @@ class CognitoPasskeyWebAuthn extends Component
         } catch (Exception $e) {
             throw new HttpException(400, 'Error generating passkey endpoint URLs');
         }
-    }
-
-    private function processData(array $data): void
-    {
-        // Get the pool name from the config file
-        $namePool = config('cognito.user_pool_id');
-        if (empty($namePool)) {
-            throw new HttpException(400, 'The user pool ID is not set in the configuration.');
-        }
-        $this->cognitoPoolName = strpos($namePool, '_') !== false ? explode('_', $namePool, 2)[1] : $namePool;
-
-        // Process the data
-        if ($data && isset($data['status']) && $data['status'] == 'challenge') {
-            $this->usernameValue = $data['username'] ?? '';
-            $this->sessionValue = $data['session_token'] ?? '';
-            $this->challengeNameValue = isset($data['challenge_name']) ? strtoupper($data['challenge_name']) : 'NONE';
-            $this->challengeParamsValue = isset($data['challenge_params']) ? json_encode($data['challenge_params'], JSON_UNESCAPED_SLASHES) : '';
-
-            if (in_array($this->challengeNameValue, ['EMAIL_OTP', 'SMS_OTP'])) {
-                $this->challengeValuePlaceholder = $data['challenge_params']['CODE_DELIVERY_DELIVERY_MEDIUM'] ?? '';
-                $this->challengeValuePlaceholder .= ' sent to ' . ($data['challenge_params']['CODE_DELIVERY_DESTINATION'] ?? '');
-            }
-        } else {
-            throw new HttpException(400, 'The data provided is not valid for a challenge response.');
-        }
     } //Function end
 
     /**
