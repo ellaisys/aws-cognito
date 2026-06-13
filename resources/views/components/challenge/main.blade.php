@@ -2,6 +2,7 @@
 
 <x-cognito::common.js-scripts />
 <x-cognito-passkey-webauthn />
+<x-cognito-device-auth />
 
 @if((isset($challengeNameValue) && ($challengeNameValue != 'NONE')))
     <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue ?? '' }}" required />
@@ -270,176 +271,6 @@
         } // Class ends
 
         /**
-         * Class to handle the device authentication challenges, including
-         * DEVICE_SRP_AUTH and DEVICE_PASSWORD_VERIFIER. It extends the
-         * CognitoChallenge class to utilize common challenge handling
-         * functionality while implementing specific logic for device
-         * authentication.
-         */
-        class DeviceChallenge extends CognitoChallenge {
-            // Default constructor
-            constructor() {
-                super();
-            }
-
-            /**
-             * Function to generate the SRP authentication response for the
-             * device challenge. Build a random secret ephemeral value 'a',
-             * compute the corresponding 'A' value, and construct the response.
-             * @returns {string} - The JSON string containing the SRP
-             * authentication response to be sent to the server
-             * @throws {Error} - Throws an error during the process.
-             */
-            async DeviceSRPAuth() {
-                try {
-                    // Get the challenge parameters value and parse it as JSON
-                    let objChallengeParams = this.ChallengeParams;
-
-                    // Generate a random secret ephemeral 'a' (at least 32 bytes recommended)
-                    const randomBytes = CryptoJS.lib.WordArray.random(128);
-                    const a = BigInt("0x" + randomBytes.toString(CryptoJS.enc.Hex));
-
-                    // Calculate A = g^a % N
-                    // Note: BigInt modular exponentiation is needed here.
-                    // For browser/node: A = BigInt(g)**BigInt(a) % BigInt(N)
-                    const A = GMP.gmp_powm(CognitoChallenge.g_BigInt, a, CognitoChallenge.N_BigInt);
-
-                    // Generate a random number to store private ephemeral
-                    let session = sessionValue.value || null;
-                    if (session) {
-                        localStorage.setItem(session, a.toString(16));
-                    } // End if
-
-                    // Read the data from local store
-                    this.userkeyB64encoded = btoa(objChallengeParams?.USER_ID_FOR_SRP);
-                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
-                    if (!deviceData) {
-                        throw new Error('No passkey data found for the device in local storage');
-                    }
-                    deviceData = JSON.parse(deviceData);
-
-                    // Build the response object to be sent back to the server
-                    let responseData = {
-                        'USERNAME': objChallengeParams?.USER_ID_FOR_SRP,
-                        'DEVICE_KEY': deviceData['d-key'] || '',
-                        'SRP_A': A.toString(16).toUpperCase()
-                    };                    
-
-                    // Return the JSON string
-                    return JSON.stringify(responseData);
-                } catch (error) {
-                    console.error('Error generating device SRP auth challenge:', error);
-                    throw error;
-                }
-            } // Function ends
-
-            /**
-             * Function to generate the response for the device password
-             * verifier challenge. In a full implementation, you would
-             * need to ensure that the client-side logic correctly follows
-             * the SRP protocol and securely handles all cryptographic
-             * operations and sensitive data.
-             * @returns {string} - The JSON string containing the device
-             * password verifier response to be sent to the server
-             * @throws {Error} - Throws an error during the process.
-             */
-            async verifier() {
-                try {
-                    // Get the challenge parameters value and parse it as JSON
-                    let objChallengeParams = this.ChallengeParams;
-
-                    // Read the data from local store
-                    this.userkeyB64encoded = btoa(objChallengeParams?.USERNAME);
-                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
-                    if (!deviceData) {
-                        throw new Error('No passkey data found for the device in local storage');
-                    }
-                    deviceData = JSON.parse(deviceData);
-
-                    // Construct the passkey hash
-                    let passKey = deviceData['d-grp'] + deviceData['d-key'] + ":" + deviceData['d-secret'];
-                    let passKeyHash = CryptoJS.SHA256(passKey).toString(CryptoJS.enc.Hex);
-
-                    // Get the session value
-                    let session = sessionValue.value || null;
-                    if (!session) {
-                        throw new Error("Session parameters not found");
-                    }
-
-                    // Get the private ephemeral value from localStorage
-                    let privateEphemeral = (session) ? localStorage.getItem(session) : null;
-                    if (privateEphemeral) { localStorage.removeItem(session); }
-
-                    // Build the response object to be sent back to the server
-                    let responseData = {
-                        'PASSWORD_CLAIM_SECRET_BLOCK': objChallengeParams?.SECRET_BLOCK || '',
-                        'TIMESTAMP': this.CognitoTimestamp,
-                        'DEVICE_KEY': objChallengeParams?.DEVICE_KEY || '',
-
-                        'PASSKEY_HASH':passKeyHash,
-                        'MESSAGE_BASE64': this.#DeviceMessage,
-                        'PRIVATE_KEY':privateEphemeral,
-                        'DEVICE_GROUP_KEY':deviceData['d-grp']
-                    };
-
-                    // Return the JSON string
-                    return JSON.stringify(responseData);
-                } catch (error) {
-                    console.error('Error generating device verifier:', error);
-                    throw error;
-                }
-            } // Function ends
-
-            /**
-             * Function to compute the message verifier for the DEVICE_PASSWORD_VERIFIER
-             * challenge. It constructs the message based on the challenge parameters
-             * and encodes it in Base64 format.
-             * @returns {string} - The Base64 encoded message verifier to be sent to the server
-             * @throws {Error} - Throws an error during the process.
-             **/
-            get #DeviceMessage() {
-                try{
-                    // Read the data from local store
-                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
-                    if (!deviceData) {
-                        throw new Error('No passkey data found for the device in local storage');
-                    }
-                    deviceData = JSON.parse(deviceData);
-
-                    // Get Base64 encoded Secret Block
-                    let objChallengeParams = this.ChallengeParams;
-                    let secretBlock = objChallengeParams?.SECRET_BLOCK || null;
-                    let secretBlockBase64 = secretBlock ? atob(secretBlock) : null;
-                    if (!secretBlockBase64) {
-                        throw new Error("Secret block not found in challenge parameters");
-                    }
-
-                    let deviceGroupKey = deviceData['d-grp'];
-                    if (!deviceGroupKey) {
-                        throw new Error("Device group key not found in localStorage");
-                    }
-
-                    // Get the device key
-                    let deviceKey = objChallengeParams?.DEVICE_KEY || deviceData['d-key'];
-                    if (!deviceKey) {
-                        throw new Error("Device key not found in challenge parameters");
-                    }
-
-                    //Build the message
-                    let message = '';                        
-                    message += deviceGroupKey + deviceKey;
-                    message += secretBlockBase64;
-                    message += this.CognitoTimestamp;
-
-                    return btoa(message);
-                } catch (error) {
-                    console.error('Error computing message verifier:', error);
-                    throw error;
-                }
-            } // Function ends
-        } // Class ends
-
-        /**
          * Class to handle the PASSWORD_SRP and PASSWORD_VERIFIER
          * authentication challenges. It generates the appropriate
          * responses based on the SRP protocol and the parameters
@@ -596,4 +427,5 @@
         } // Class ends
     </script>
 @stack('cognito-passkey-webauthn-scripts')
+@stack('cognito-device-auth-scripts')
 @endPushIf
