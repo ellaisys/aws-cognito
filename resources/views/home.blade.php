@@ -60,10 +60,10 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 @stack('cognito-common-scripts')
 @stack('cognito-passkey-webauthn-scripts')
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 <script>
     const CryptoJS = window.CryptoJS;
     
@@ -184,7 +184,7 @@
         const randomSalt = CryptoJS.lib.WordArray.random(16);
         const saltHex = wordArrayToUnsignedHex(randomSalt);
         console.log('salt: ' + saltHex);
-        localStorage.setItem('d-salt', saltHex);
+        //localStorage.setItem('d-salt', saltHex);
 
         let xHash = hexHash(saltHex + fullPasswordHash);
         console.log('xHash: ' + xHash);
@@ -198,7 +198,14 @@
 
         //Save the salt to local storage to be used during device authentication
         localStorage.setItem('d-salt', CryptoJS.enc.Hex.parse(saltHex).toString(CryptoJS.enc.Base64));
-        localStorage.setItem('d-xHash', xHash);
+        //localStorage.setItem('d-xHash', xHash);
+
+        let storeData = {
+            'd-grp': deviceGroupKey,
+            'd-key': deviceKey,
+            'd-secret': devicePassword
+        };
+        localStorage.setItem('cognito-challenge-', JSON.stringify(storeData));
 
         return {
             'device_key': deviceKey,
