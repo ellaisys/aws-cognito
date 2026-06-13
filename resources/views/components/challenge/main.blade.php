@@ -39,14 +39,6 @@
 
 @pushif((isset($challengeNameValue) && ($challengeNameValue != 'NONE')),'cognito-challenge-scripts')
     <script>
-        // Large prime number
-        const N = BigInt("{{ '0x' . $srpParameters['N_HEX'] }}");
-        
-        //Generator value
-        const g = BigInt("{{ '0x' . $srpParameters['G_HEX'] }}");
-
-        const poolKey = "{{ base64_encode($cognitoPoolName) }}";
-        const AUTH_CSRF_TOKEN = '{{ csrf_token() }}';
         const challengeNameValue = document.getElementById('challenge_name');
         const challengeValue = document.getElementById('challenge_value');
         const challengeParamsValue = document.getElementById('challenge_params');
@@ -54,29 +46,56 @@
         const usernameValue = document.getElementById('username');
         const frmChallenge = document.getElementById('{{ $challengeFormName ?? 'auth-challenge-form' }}');
 
+        // Process all buttons with the data-action attribute set to "challenge-submit"
+        const elemsChallengeSubmit = document.querySelectorAll('[data-action="challenge-submit"]');
+        elemsChallengeSubmit.forEach((button) => {
+            let btnRole = button.attributes['data-role'].value || null;
+            if (!btnRole) { return; }
+            btnRole = btnRole.toUpperCase();
+
+            if (['WEB_AUTHN', 'DEVICE_SRP_AUTH',
+                'DEVICE_PASSWORD_VERIFIER', 'NONE'].includes(btnRole)) {
+                    // Disable and hide the button for these challenge
+                    // types since they are handled automatically
+                    button.disabled = true;
+                    button.style.display = 'none';
+                }
+            else if (['PASSWORD_SRP', 'PASSWORD',
+                'SOFTWARE_TOKEN_MFA', 'SMS_MFA',
+                'SMS_OTP', 'EMAIL_OTP'].includes(btnRole)) {
+                    button.addEventListener('click', function(event) {
+                        // Set passcode value to challenge_value input before form submission
+                        let elemPasscode = document.getElementById('pass_code');
+                        challengeValue.value = elemPasscode.value;
+
+                        // Clear the passcode input for security reasons
+                        elemPasscode.value = ''; 
+                        elemPasscode.disabled = true;
+
+                        // Call the form submission handler
+                        handleFormSubmit(event);
+                    });
+                }
+            else {
+                button.addEventListener('click', function(event) {
+                    // Call the form submission handler for other challenge types
+                    handleFormSubmit(event);
+                });
+            } //End if
+        });
+
         /**
          * Event listener for DOMContentLoaded to trigger the appropriate challenge response
          * generation based on the challenge name received from the server.
          */
         document.addEventListener("DOMContentLoaded", function(event) {
             // Attach the form submission handler to the challenge form
-            frmChallenge.addEventListener('submit', handleFormSubmit);
+            // frmChallenge.addEventListener('submit', handleFormSubmit);
 
-            if (challengeNameValue.value == 'DEVICE_SRP_AUTH') {
-                generateDeviceSRPAuthChallenge();
-            }
-
-            if (challengeNameValue.value == 'DEVICE_PASSWORD_VERIFIER') {
-                generateDeviceVerifier();
-            }
-
-            if (challengeNameValue.value == 'PASSWORD_SRP') {
-                generatePasswordSRPAuth();
-            }
-
-            if (challengeNameValue.value == 'WEB_AUTHN') {
-                validateWebAuthnChallenge();
-            }
+            if (['WEB_AUTHN', 'DEVICE_SRP_AUTH', 'DEVICE_PASSWORD_VERIFIER', 'NONE'].includes(challengeNameValue.value)) {
+                // Automatically process the challenge for these types without user interaction
+                handleFormSubmit(event);
+            } //End if
         });
 
         /**
@@ -85,389 +104,661 @@
          * @param {*} event
          */
         async function handleFormSubmit(event) {
-            event.preventDefault(); // Prevent the default form submission
-
-            if (challengeNameValue.value == 'PASSWORD_VERIFIER') {
-                let response = await generatePasswordVerifier(); // Call the function to handle the PASSWORD_VERIFIER challenge
-            }
-
-            if (['PASSWORD_SRP', 'PASSWORD', 'SOFTWARE_TOKEN_MFA',
-                'SMS_MFA', 'SMS_OTP', 'EMAIL_OTP'].includes(challengeNameValue.value)) {
-                let elemPasscode = document.getElementById('pass_code');
-                challengeValue.value = elemPasscode.value;
-                elemPasscode.value = ''; // Clear the passcode input for security reasons
-                elemPasscode.disabled = true; // Disable the passcode input
-            }
-
-            if (!frmChallenge.checkValidity()) {
-                frmChallenge.reportValidity(); // Show validation errors if the form is not valid
-                return; // Stop form submission if validation fails
-            } else {
-                // Submit the form
-                frmChallenge.submit();
-            } //End if
-        } // Function ends
-
-        /**
-         * Function to generate the SRP authentication response for the
-         * device challenge. Build a random secret ephemeral value 'a',
-         * compute the corresponding 'A' value, and construct the response.
-         */
-        function generateDeviceSRPAuthChallenge() {
-            // 1. Generate a random secret ephemeral 'a' (at least 32 bytes recommended)
-            const randomBytes = CryptoJS.lib.WordArray.random(128);
-            const a = BigInt("0x" + randomBytes.toString(CryptoJS.enc.Hex));
-
-            // 2. Calculate A = g^a % N
-            // Note: BigInt modular exponentiation is needed here.
-            // For browser/node: A = BigInt(g)**BigInt(a) % BigInt(N)
-            const A = modPow(g, a, N);
-
-            // 3. Generate a random number to store private ephemeral
-            let session = sessionValue.value || null;
-            if (session) {
-                localStorage.setItem(session, a.toString(16));
-            }
-
-            // Get the challenge parameters
-            let challengeParams = challengeParamsValue.value || '{}';
-            challengeParams = JSON.parse(challengeParams);
-            if (!challengeParams) {
-                console.error('Challenge parameters not found');
-                return;
-            }
-
-            // Build the response object to be sent back to the server
-            let responseData = {
-                'USERNAME': challengeParams?.USER_ID_FOR_SRP,
-                'DEVICE_KEY': localStorage.getItem('d-key') || '',
-                'SRP_A': A.toString(16).toUpperCase()
-            };
-
-            // After computing the response, set it in the hidden input field and submit the form
-            challengeValue.value = JSON.stringify(responseData);
-            frmChallenge.submit();
-        } // Function ends
-
-        /**
-         * Function to generate the response for the device password
-         * verifier challenge. In a full implementation, you would
-         * need to ensure that the client-side logic correctly follows
-         * the SRP protocol and securely handles all cryptographic
-         * operations and sensitive data.
-         */
-        function generateDeviceVerifier() {
-            // Step 1: Construct the passkey hash
-            let passKey = localStorage.getItem('d-grp');
-            passKey += localStorage.getItem('d-key') + ":";
-            passKey += localStorage.getItem('d-secret');
-            let passKeyHash = CryptoJS.SHA256(passKey).toString(CryptoJS.enc.Hex);
-
-            // Get the session value
-            let session = sessionValue.value || null;
-            if (!session) {
-                console.error('Session parameters not found');
-                return;
-            }
-
-            // Step 2: Get the private ephemeral value from localStorage
-            let privateEphemeral = (session) ? localStorage.getItem(session) : null;
-            if (privateEphemeral) { localStorage.removeItem(session); }
-
-            // Get the challenge parameters value and parse it as JSON
-            let challengeParams = challengeParamsValue.value ? JSON.parse(challengeParamsValue.value) : null;
-            if (!challengeParams) {
-                console.error('Challenge parameters not found');
-                return;
-            }
-
-            console.log('message:', computedMessageVerifier(true, false));
-
-            // Build the response object to be sent back to the server
-            let responseData = {
-                'PASSWORD_CLAIM_SECRET_BLOCK': challengeParams?.SECRET_BLOCK || '',
-                'TIMESTAMP': getCognitoTimestamp(),
-                'DEVICE_KEY': challengeParams?.DEVICE_KEY || '',
-
-                'PASSKEY_HASH':passKeyHash,
-                'MESSAGE_BASE64': computedMessageVerifier(true),
-                'PRIVATE_KEY':privateEphemeral,
-                'DEVICE_GROUP_KEY':localStorage.getItem('d-grp')
-            };
-
-            // After computing the response, set it in the hidden input field and submit the form
-            challengeValue.value = JSON.stringify(responseData);
-            frmChallenge.submit();
-        } // Function ends
-
-        /**
-         * Function to fetch the SRP authentication challenge from the server.
-         *
-         * It sends the user's email to the server and expects to receive the
-         * challenge name, challenge parameters, and session token in response.
-         * The function then updates the form with the received challenge data,
-         * allowing the user to proceed with the authentication process.
-         **/
-        async function generatePasswordSRPAuth() {
             try {
-                let response = await fetch(frmChallenge.action, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': AUTH_CSRF_TOKEN
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({
-                        username: usernameValue?.value
-                    })
-                });
+                // Prevent the default form submission
+                event.preventDefault(); 
 
-                if (!response.ok) {
-                    throw new Error('Failed to get SRP authentication challenge');
-                } //End if
+                // Process the challenge based on the challenge name
+                await processChallenge();
 
-                startTimer(); // Start the timer to reload the page after 60 seconds
-
-                let responseData = await response.json();
-                responseData = responseData.data || null;
-
-                if (!responseData) {
-                    throw new Error('Invalid response data for SRP authentication challenge');
-                } // End if
-
-                //Set the session value received from the server
-                sessionValue.value = responseData?.session_token || '';
-                challengeNameValue.value = responseData?.challenge_name || '';
-                challengeParamsValue.value = JSON.stringify(responseData?.challenge_params || {});
+                if (!frmChallenge.checkValidity()) {
+                    // Show validation errors if the form is not valid
+                    frmChallenge.reportValidity(); 
+                    return; // Stop form submission if validation fails
+                } else {
+                    // Submit the form
+                    frmChallenge.submit();
+                } //End if                
             } catch (error) {
-                console.error('Error authenticating SRP:', error);
-            } // End try-catch
+                console.error("Error handling form submission:", error);
+                throw error;
+            }
         } // Function ends
 
         /**
-         * Function to handle the WebAuthn challenge authentication process.
-         * It retrieves the challenge parameters from the server, prompts
-         * the user to authenticate using their passkey credential, and
-         * submits the authentication response back to the server.
-         **/
-        async function validateWebAuthnChallenge() {
+         * Function to process the authentication challenge based on the
+         * challenge name. It generates the appropriate response for each
+         * challenge type and updates the data before form submission.
+         */
+        async function processChallenge() {
             try {
-                let objChallengeParams = challengeParamsValue.value ? JSON.parse(challengeParamsValue.value) : null;
-                if (objChallengeParams) {
+                if (challengeNameValue.value == 'DEVICE_SRP_AUTH') {
+                    let challenge = new DeviceChallenge();
+                    let response = await challenge.DeviceSRPAuth();
+                    challengeValue.value = response;
+                }
+
+                if (challengeNameValue.value == 'DEVICE_PASSWORD_VERIFIER') {
+                    let challenge = new DeviceChallenge();
+                    let response = await challenge.verifier();
+                    challengeValue.value = response;
+                }
+
+                if (challengeNameValue.value == 'PASSWORD_SRP') {
+                    let challenge = new PasswordSRPChallenge();
+                    let response = await challenge.PasswordSRPAuth();
+                    challengeValue.value = response;
+                }
+
+                if (challengeNameValue.value == 'PASSWORD_VERIFIER') {
+                    let challenge = new PasswordSRPChallenge();
+                    let response = await challenge.verifier();
+                    challengeValue.value = response;
+                }            
+
+                if (challengeNameValue.value == 'WEB_AUTHN') {
+                    let challenge = new WebAuthnChallenge();
+                    let response = await challenge.verifier();
+                    challengeValue.value = response;
+                }                
+            } catch (error) {
+                console.error("Error processing challenge:", error);
+                throw error;
+            }
+
+        } // Function ends
+
+        /**
+         * Utility class to handle Multiple Precision BigInt operations
+         * in JavaScript.
+         */
+        class GMP {
+            /**
+             * Utility function to perform modular exponentiation (base^exponent mod modulus)
+             * This function is essential for the SRP protocol calculations, where we need
+             * to compute values like A = g^a mod N.
+             * @param {BigInt} base - The base value (e.g., g in SRP)
+             * @param {BigInt} exponent - The exponent value (e.g., a in SRP)
+             * @param {BigInt} modulus - The modulus value (e.g., N in SRP)
+             * @returns {BigInt} - The result of (base^exponent) mod modulus
+             **/
+            static gmp_powm(base, exponent, modulus) {
+                if (modulus === 1n) {
+                    return 0n;
+                }
+
+                let result = 1n;
+                let currentBase = base % modulus;
+                let currentExponent = exponent;
+
+                while (currentExponent > 0n) {
+                    if (currentExponent % 2n === 1n) {
+                        result = (result * currentBase) % modulus;
+                    }
+
+                    currentExponent = currentExponent / 2n;
+                    currentBase = (currentBase * currentBase) % modulus;
+                } // End while
+
+                return result;
+            } // Function ends
+
+            /** 
+             * Utility function to perform addition of two BigInt values. This is a simple
+             * wrapper around the native BigInt addition operator, but it can be extended
+             * in the future to include additional checks or functionality if needed.
+             * @param {BigInt} a - The first BigInt value
+             * @param {BigInt} b - The second BigInt value
+             * @returns {BigInt} - The result of a + b
+             **/
+            static gmp_add(num1, num2) {
+                return this.#toBigInt(num1) + this.#toBigInt(num2);
+            } // Function ends
+
+            static gmp_sub(num1, num2) {
+                return this.#toBigInt(num1) - this.#toBigInt(num2);
+            } // Function ends
+
+            static gmp_mul(num1, num2) {
+                return this.#toBigInt(num1) * this.#toBigInt(num2);
+            } // Function ends
+
+            static gmp_mod(num1, num2) {
+                return this.#toBigInt(num1) % this.#toBigInt(num2);
+            } // Function ends
+
+            static gmp_init(value, base = 10) {
+                return this.#toBigInt(value, base);
+            } // Function ends
+
+            static #toBigInt(value, base = null)
+            {
+                // Already a BigInt
+                if (typeof value === 'bigint') {
+                    return value;
+                }
+
+                // Number
+                if (typeof value === 'number') {
+                    return BigInt(value);
+                }
+
+                // String
+                if (typeof value === 'string') {
+                    value = value.trim();
+
+                    // Explicit base supplied (similar to gmp_init)
+                    if (base === 16) {
+                        return BigInt('0x' + value.replace(/^0x/i, ''));
+                    }
+
+                    if (base === 2) {
+                        return BigInt('0b' + value.replace(/^0b/i, ''));
+                    }
+
+                    // Auto-detect prefixes
+                    if (/^0x[0-9a-f]+$/i.test(value)) {
+                        return BigInt(value);
+                    }
+
+                    if (/^0b[01]+$/i.test(value)) {
+                        return BigInt(value);
+                    }
+
+                    // Decimal
+                    if (/^[+-]?\d+$/.test(value)) {
+                        return BigInt(value);
+                    }
+
+                    throw new Error(`Invalid numeric string: ${value}`);
+                }
+
+                throw new TypeError(`Unsupported type: ${typeof value}`);
+            }
+
+        } // Class ends
+
+        /**
+         * Class to handle the various Cognito authentication challenges, including
+         * the SRP authentication for devices, password verification, and WebAuthn
+         * challenges. This class encapsulates the logic for generating the appropriate
+         * responses to the challenges based on the parameters received from the server,
+         * and securely handling the cryptographic operations required for the SRP protocol.
+         */
+        class CognitoChallenge {
+            // Large prime number
+            static N_BigInt = BigInt("{{ '0x' . $srpParameters['N_HEX'] }}");
+            
+            //Generator value
+            static g_BigInt = BigInt("{{ '0x' . $srpParameters['G_HEX'] }}");
+
+            constructor() {
+                if (new.target === CognitoChallenge) {
+                    throw new TypeError("Cannot construct CognitoChallenge instances directly");
+                }
+
+                this.poolKey = "{{ base64_encode($cognitoPoolName) }}";
+                this.csrfToken = "{{ csrf_token() }}";
+                this.secureCode = "{{ $secureCode ?? '' }}";
+                this.userkeyB64encoded = null;
+            }
+
+            /**
+             * Utility function to hash a value using the Web Crypto API
+             *
+             * @param {string} value - The value to be hashed
+             * @param {string} key - The hashing algorithm (default is 'SHA-256')
+             *
+             * @returns {Promise<string>} - A promise that resolves to the hex string of the hash
+             **/
+            async hashEncrypt(value, key = "SHA-256")
+            {
+                let encoder = new TextEncoder();
+                let data = encoder.encode(value);
+
+                // Hash the data using the specified key (e.g., SHA-256)
+                let hashBuffer = await crypto.subtle.digest(key, data);
+
+                // Convert the hash buffer to a hex string
+                return Array.from(new Uint8Array(hashBuffer))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+            } // Function ends
+
+            /**
+             * Utility function to get the current timestamp in the format required by AWS Cognito.
+             * Cognito expects the timestamp to be in the format: "EEE MMM d HH:mm:ss 'UTC' yyyy"
+             * For example: "Wed Mar 3 12:34:56 UTC 2021"
+             * This function constructs the timestamp string by getting the current date and time in UTC,
+             * and formatting it according to the required structure.
+             * @return {string} - The current timestamp formatted for AWS Cognito
+             **/
+            get CognitoTimestamp() {
+                // Get the current date and time in UTC
+                const now = new Date();
+
+                const weekdays = [
+                        'Sun', 'Mon', 'Tue', 'Wed',
+                        'Thu', 'Fri', 'Sat'
+                    ];
+
+                const months = [
+                        'Jan', 'Feb', 'Mar', 'Apr',
+                        'May', 'Jun', 'Jul', 'Aug',
+                        'Sep', 'Oct', 'Nov', 'Dec'
+                    ];
+
+                // Build the timestamp string in the format required by Cognito
+                let weekday = weekdays[now.getUTCDay()];
+                let month = months[now.getUTCMonth()];
+                let day = now.getUTCDate();
+                let hours = String(now.getUTCHours()).padStart(2, '0');
+                let minutes = String(now.getUTCMinutes()).padStart(2, '0');
+                let seconds = String(now.getUTCSeconds()).padStart(2, '0');
+                let year = now.getUTCFullYear();
+
+                return `${weekday} ${month} ${day} ${hours}:${minutes}:${seconds} UTC ${year}`;
+            } // Function ends
+
+            get ChallengeParams() {
+                try {
+                    let challengeParams = challengeParamsValue.value ? JSON.parse(challengeParamsValue.value) : null;
+                    if (!challengeParams) {
+                        throw new Error("Challenge parameters not found");
+                    }
+                    return challengeParams;
+                } catch (error) {
+                    console.error('Error parsing challenge parameters:', error);
+                    throw error;
+                }
+            } // Function ends
+
+        } // Class ends
+
+        /**
+         * Class to handle the device authentication challenges, including
+         * DEVICE_SRP_AUTH and DEVICE_PASSWORD_VERIFIER. It extends the
+         * CognitoChallenge class to utilize common challenge handling
+         * functionality while implementing specific logic for device
+         * authentication.
+         */
+        class DeviceChallenge extends CognitoChallenge {
+            // Default constructor
+            constructor() {
+                super();
+            }
+
+            /**
+             * Function to generate the SRP authentication response for the
+             * device challenge. Build a random secret ephemeral value 'a',
+             * compute the corresponding 'A' value, and construct the response.
+             * @returns {string} - The JSON string containing the SRP
+             * authentication response to be sent to the server
+             * @throws {Error} - Throws an error during the process.
+             */
+            async DeviceSRPAuth() {
+                try {
+                    // Get the challenge parameters value and parse it as JSON
+                    let objChallengeParams = this.ChallengeParams;
+
+                    // Generate a random secret ephemeral 'a' (at least 32 bytes recommended)
+                    const randomBytes = CryptoJS.lib.WordArray.random(128);
+                    const a = BigInt("0x" + randomBytes.toString(CryptoJS.enc.Hex));
+
+                    // Calculate A = g^a % N
+                    // Note: BigInt modular exponentiation is needed here.
+                    // For browser/node: A = BigInt(g)**BigInt(a) % BigInt(N)
+                    const A = GMP.gmp_powm(CognitoChallenge.g_BigInt, a, CognitoChallenge.N_BigInt);
+
+                    // Generate a random number to store private ephemeral
+                    let session = sessionValue.value || null;
+                    if (session) {
+                        localStorage.setItem(session, a.toString(16));
+                    } // End if
+
+                    // Read the data from local store
+                    this.userkeyB64encoded = btoa(objChallengeParams?.USER_ID_FOR_SRP);
+                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
+                    if (!deviceData) {
+                        throw new Error('No passkey data found for the device in local storage');
+                    }
+                    deviceData = JSON.parse(deviceData);
+
+                    // Build the response object to be sent back to the server
+                    let responseData = {
+                        'USERNAME': objChallengeParams?.USER_ID_FOR_SRP,
+                        'DEVICE_KEY': deviceData['d-key'] || '',
+                        'SRP_A': A.toString(16).toUpperCase()
+                    };                    
+
+                    // Return the JSON string
+                    return JSON.stringify(responseData);
+                } catch (error) {
+                    console.error('Error generating device SRP auth challenge:', error);
+                    throw error;
+                }
+            } // Function ends
+
+            /**
+             * Function to generate the response for the device password
+             * verifier challenge. In a full implementation, you would
+             * need to ensure that the client-side logic correctly follows
+             * the SRP protocol and securely handles all cryptographic
+             * operations and sensitive data.
+             * @returns {string} - The JSON string containing the device
+             * password verifier response to be sent to the server
+             * @throws {Error} - Throws an error during the process.
+             */
+            async verifier() {
+                try {
+                    // Get the challenge parameters value and parse it as JSON
+                    let objChallengeParams = this.ChallengeParams;
+
+                    // Read the data from local store
+                    this.userkeyB64encoded = btoa(objChallengeParams?.USERNAME);
+                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
+                    if (!deviceData) {
+                        throw new Error('No passkey data found for the device in local storage');
+                    }
+                    deviceData = JSON.parse(deviceData);
+
+                    // Construct the passkey hash
+                    let passKey = deviceData['d-grp'] + deviceData['d-key'] + ":" + deviceData['d-secret'];
+                    let passKeyHash = CryptoJS.SHA256(passKey).toString(CryptoJS.enc.Hex);
+
+                    // Get the session value
+                    let session = sessionValue.value || null;
+                    if (!session) {
+                        throw new Error("Session parameters not found");
+                    }
+
+                    // Get the private ephemeral value from localStorage
+                    let privateEphemeral = (session) ? localStorage.getItem(session) : null;
+                    if (privateEphemeral) { localStorage.removeItem(session); }
+
+                    // Build the response object to be sent back to the server
+                    let responseData = {
+                        'PASSWORD_CLAIM_SECRET_BLOCK': objChallengeParams?.SECRET_BLOCK || '',
+                        'TIMESTAMP': this.CognitoTimestamp,
+                        'DEVICE_KEY': objChallengeParams?.DEVICE_KEY || '',
+
+                        'PASSKEY_HASH':passKeyHash,
+                        'MESSAGE_BASE64': this.#DeviceMessage,
+                        'PRIVATE_KEY':privateEphemeral,
+                        'DEVICE_GROUP_KEY':deviceData['d-grp']
+                    };
+
+                    // Return the JSON string
+                    return JSON.stringify(responseData);
+                } catch (error) {
+                    console.error('Error generating device verifier:', error);
+                    throw error;
+                }
+            } // Function ends
+
+            /**
+             * Function to compute the message verifier for the DEVICE_PASSWORD_VERIFIER
+             * challenge. It constructs the message based on the challenge parameters
+             * and encodes it in Base64 format.
+             * @returns {string} - The Base64 encoded message verifier to be sent to the server
+             * @throws {Error} - Throws an error during the process.
+             **/
+            get #DeviceMessage() {
+                try{
+                    // Read the data from local store
+                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
+                    if (!deviceData) {
+                        throw new Error('No passkey data found for the device in local storage');
+                    }
+                    deviceData = JSON.parse(deviceData);
+
+                    // Get Base64 encoded Secret Block
+                    let objChallengeParams = this.ChallengeParams;
+                    let secretBlock = objChallengeParams?.SECRET_BLOCK || null;
+                    let secretBlockBase64 = secretBlock ? atob(secretBlock) : null;
+                    if (!secretBlockBase64) {
+                        throw new Error("Secret block not found in challenge parameters");
+                    }
+
+                    let deviceGroupKey = deviceData['d-grp'];
+                    if (!deviceGroupKey) {
+                        throw new Error("Device group key not found in localStorage");
+                    }
+
+                    // Get the device key
+                    let deviceKey = objChallengeParams?.DEVICE_KEY || deviceData['d-key'];
+                    if (!deviceKey) {
+                        throw new Error("Device key not found in challenge parameters");
+                    }
+
+                    //Build the message
+                    let message = '';                        
+                    message += deviceGroupKey + deviceKey;
+                    message += secretBlockBase64;
+                    message += this.CognitoTimestamp;
+
+                    return btoa(message);
+                } catch (error) {
+                    console.error('Error computing message verifier:', error);
+                    throw error;
+                }
+            } // Function ends
+        } // Class ends
+
+        /**
+         * Class to handle the PASSWORD_SRP and PASSWORD_VERIFIER
+         * authentication challenges. It generates the appropriate
+         * responses based on the SRP protocol and the parameters
+         * received from the server, securely handling the password
+         * hashing and verifier generation.
+         */
+        class PasswordSRPChallenge extends CognitoChallenge {
+            // Default constructor
+            constructor() {
+                super();
+            }
+
+            /**
+             * Function to fetch the SRP authentication challenge from the server.
+             *
+             * It sends the user's email to the server and expects to receive the
+             * challenge name, challenge parameters, and session token in response.
+             * The function then updates the form with the received challenge data,
+             * allowing the user to proceed with the authentication process.
+             **/
+            async PasswordSRPAuth() {
+                try {
+                    let response = await fetch(frmChallenge.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': this.csrfToken
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({
+                            username: usernameValue?.value
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to get SRP authentication challenge');
+                    } //End if
+
+                    this.#startTimer(); // Start the timer to reload the page after 60 seconds
+
+                    let responseData = await response.json();
+                    responseData = responseData.data || null;
+
+                    if (!responseData) {
+                        throw new Error('Invalid response data for SRP authentication challenge');
+                    } // End if
+
+                    //Set the session value received from the server
+                    sessionValue.value = responseData?.session_token || '';
+                    challengeNameValue.value = responseData?.challenge_name || '';
+                    challengeParamsValue.value = JSON.stringify(responseData?.challenge_params || {});
+                } catch (error) {
+                    console.error('Error authenticating SRP:', error);
+                    throw error;
+                } // End try-catch
+            } // Function ends
+
+            /**
+             * Function to handle the form submission for the PASSWORD_VERIFIER
+             * challenge.
+             * It hashes the password using SHA-256 and updates the hidden
+             * challenge value input before allowing the form to submit.
+             * @returns {Promise<string>} - A promise that resolves to the JSON string
+             * containing the password verifier response to be sent to the server
+             * @throws {Error} - Throws an error during the process.
+             **/
+            async verifier() {
+                try {
+                    // Get the challenge parameters value and parse it as JSON
+                    let objChallengeParams = this.ChallengeParams;
+
+                    // Get the password input element
+                    const elemPasscode = document.getElementById('pass_code');
+                    
+                    // Set the actual password value in the hidden challenge value input
+                    let passKey = atob(this.poolKey) + objChallengeParams?.USER_ID_FOR_SRP + ':' + elemPasscode.value;
+
+                    // Hash with SHA256 and set the hashed value in the challenge value input
+                    let passKeyHash = await this.hashEncrypt(passKey);
+
+                    // Update the challenge value input with the hashed password
+                    let payload = {
+                        'PASSWORD_CLAIM_SECRET_BLOCK': objChallengeParams?.SECRET_BLOCK || '',
+                        'TIMESTAMP': this.CognitoTimestamp,
+                        'PASSKEY_HASH': passKeyHash,
+                        'MESSAGE_BASE64': this.#PasswordMessage
+                    };
+
+                    /**
+                     * Clear the password input and disable it to enhance
+                     * security, ensuring that the plaintext password is
+                     * not left in the input field and cannot be modified
+                     * after hashing.
+                     */
+                    elemPasscode.value = '';
+                    elemPasscode.disabled = true;
+
+                    return JSON.stringify(payload);
+                } catch (error) {
+                    console.error('Error generating password verifier:', error);
+                    throw error;
+                }
+            } // Function ends
+
+            /**
+             * Function to compute the message verifier for the PASSWORD_VERIFIER
+             * challenge. It constructs the message based on the challenge parameters
+             * and encodes it in Base64 format.
+             * @returns {string} - The Base64 encoded message verifier to be sent to the server
+             * @throws {Error} - Throws an error during the process.
+             **/
+            get #PasswordMessage() {
+                try{
+                    // Get Base64 encoded Secret Block
+                    let objChallengeParams = this.ChallengeParams;
+                    let secretBlock = objChallengeParams?.SECRET_BLOCK || null;
+                    let secretBlockBase64 = secretBlock ? atob(secretBlock) : null;
+                    if (!secretBlockBase64) {
+                        throw new Error("Secret block not found in challenge parameters");
+                    }
+
+                    //Build the message
+                    let message = '';
+                    message += atob(this.poolKey) + objChallengeParams?.USER_ID_FOR_SRP;
+                    message += secretBlockBase64;
+                    message += this.CognitoTimestamp;
+
+                    return btoa(message);
+                } catch (error) {
+                    console.error('Error computing message verifier:', error);
+                    throw error;
+                }
+            } // Function ends
+
+            /**
+             * Function to start a timer that reloads the page after a specified duration.
+             * In this case, the timer is set for 60 seconds. When the timer expires,
+             * the page will automatically reload, which can be useful for resetting
+             * the authentication process if the user takes too long to respond to
+             * the challenge.
+             *
+             * @param {number} counter - The duration of the timer in seconds (default is 60 seconds)
+             **/
+            #startTimer(counter = 60) {
+                const intervalId = setInterval(() => {
+                    counter--; // Decrement the count
+                    
+                    if (counter <= 0) {
+                        clearInterval(intervalId); // Stops the timer
+                        window.location.reload(); // Reloads the page when the count reaches 0
+                    }
+                }, 1000);
+            } // Function ends
+        } // Class ends
+
+        /**
+         * Class to handle the WebAuthn authentication challenge. It retrieves the
+         * challenge parameters from the server, prompts the user to authenticate
+         * using their passkey credential, and submits the authentication response
+         * back to the server.
+         */
+        class WebAuthnChallenge extends CognitoChallenge {
+            // Default constructor
+            constructor() {
+                super();
+            }
+
+            /**
+             * Function to handle the WebAuthn challenge authentication process.
+             * It retrieves the challenge parameters from the server, prompts
+             * the user to authenticate using their passkey credential, and
+             * submits the authentication response back to the server.
+             * @returns {Promise<string>} - A promise that resolves to
+             * the WebAuthn challenge verification
+             * @throws {Error} - Throws an error during the process.
+             **/
+            async verifier() {
+                try {
+                    // Get the challenge parameters value and parse it as JSON
+                    let objChallengeParams = this.ChallengeParams;
+
                     /**
                      * Build the options for navigator.credentials.get() based
                      * on the challenge parameters received from the server
                      */
                     let signinOptions = JSON.parse(objChallengeParams.CREDENTIAL_REQUEST_OPTIONS);
-                    signinOptions.challenge = Uint8Array.from(atob(signinOptions.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+                    signinOptions.challenge = Uint8Array.from(
+                        atob(signinOptions.challenge.replace(/-/g, '+')
+                            .replace(/_/g, '/')), c => c.charCodeAt(0)
+                        );
                     signinOptions.allowCredentials = signinOptions.allowCredentials.map(cred => {
-                        return {
-                            ...cred,
-                            id: Uint8Array.from(atob(cred.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
-                        };
-                    });
+                            return {
+                                ...cred,
+                                id: Uint8Array.from(atob(cred.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+                            };
+                        });
 
                     // Prompt the user to authenticate using their passkey credential
                     let credential = await navigator.credentials.get({
-                        mediation: 'optional',
-                        password: true,
-                        publicKey: signinOptions
-                    });
+                            mediation: 'optional',
+                            password: true,
+                            publicKey: signinOptions
+                        });
+                    if (!credential) {
+                        throw new Error("No credential returned from navigator.credentials.get()");
+                    } // End if
 
-                    challengeValue.value = credential ? JSON.stringify(credential) : '';
-                    frmChallenge.submit();
-                } else {
-                    throw new Error("Missing challenge params");
-                } // End if
-            } catch (error) {
-                console.error('Error authenticating passkey:', error);
-            } // End try-catch
-        } // Function ends
-
-        /**
-         * Function to handle the form submission for the PASSWORD_VERIFIER
-         * challenge.
-         * It hashes the password using SHA-256 and updates the hidden
-         * challenge value input before allowing the form to submit.
-         *
-         **/
-        async function generatePasswordVerifier() {
-            try {
-                const elemPasscode = document.getElementById('pass_code');
-                
-                // Set the actual password value in the hidden challenge value input
-                let passKey = atob(poolKey) + usernameValue.value + ':' + elemPasscode.value;
-
-                // Hash with SHA256 and set the hashed value in the challenge value input
-                let passKeyHash = await hashEncrypt(passKey, 'SHA-256');
-
-                // Get the challenge parameters value and parse it as JSON
-                let challengeParams = challengeParamsValue.value ? JSON.parse(challengeParamsValue.value) : null;
-                if (!challengeParams) {
-                    throw new Error("Challenge parameters not found");
-                }
-
-                // Update the challenge value input with the hashed password
-                let payload = {
-                    'PASSWORD_CLAIM_SECRET_BLOCK': challengeParams?.SECRET_BLOCK || '',
-                    'TIMESTAMP': getCognitoTimestamp(),
-                    'PASSKEY_HASH': passKeyHash,
-                    'MESSAGE_BASE64': computedMessageVerifier(false)
-                };
-                challengeValue.value = JSON.stringify(payload);// Add the hashed password to the challenge value input
-                elemPasscode.value = ''; // Clear the password input for security reasons
-                elemPasscode.disabled = true; // Disable the password input
-
-                return true; // Allow the form to submit after handling the challenge
-            } catch (error) {
-                console.error('Error generating password verifier:', error);
-                return false; // Prevent form submission if there was an error
-            }
-        } // Function ends
-
-        function computedMessageVerifier(isDeviceAuth = false, isBase64 = true) {
-            try{
-                // Get Base64 encoded Secret Block
-                let challengeParams = challengeParamsValue.value ? JSON.parse(challengeParamsValue.value) : null;
-                if (!challengeParams) {
-                    throw new Error("Challenge parameters not found");
-                }
-                let secretBlock = challengeParams?.SECRET_BLOCK || null;
-                let secretBlockBase64 = secretBlock ? atob(secretBlock) : null;
-                if (!secretBlockBase64) {
-                    throw new Error("Secret block not found in challenge parameters");
-                }
-
-                //Build the message
-                let message = '';
-                if (isDeviceAuth) {
-                    let deviceGroupKey = localStorage.getItem('d-grp');
-                    if (!deviceGroupKey) {
-                        throw new Error("Device group key not found in localStorage");
-                    }
-                    let deviceKey = challengeParams?.DEVICE_KEY || localStorage.getItem('d-key');
-                    if (!deviceKey) {
-                        throw new Error("Device key not found in localStorage");
-                    }
-                    message += deviceGroupKey + deviceKey;
-                } else {
-                    message += atob(poolKey) + challengeParams?.USER_ID_FOR_SRP;
-                }
-                message += secretBlockBase64;
-                message += getCognitoTimestamp();
-
-                return isBase64 ? btoa(message) : message;
-            } catch (error) {
-                console.error('Error computing message verifier:', error);
-                return null;
-            }
-        } // Function ends
-
-        /**
-         * Utility function to hash a value using the Web Crypto API
-         *
-         * @param {string} value - The value to be hashed
-         * @param {string} key - The hashing algorithm (default is 'SHA-256')
-         *
-         * @returns {Promise<string>} - A promise that resolves to the hex string of the hash
-         **/
-        async function hashEncrypt(value, key='SHA-256')
-        {
-            let encoder = new TextEncoder();
-            let data = encoder.encode(value);
-
-            // Hash the data using the specified key (e.g., SHA-256)
-            let hashBuffer = await crypto.subtle.digest(key, data);
-
-            // Convert the hash buffer to a hex string
-            return Array.from(new Uint8Array(hashBuffer))
-                .map(b => b.toString(16).padStart(2, '0'))
-                .join('');
-        } //Function ends
-
-        /**
-         * Utility function to perform modular exponentiation (base^exponent mod modulus)
-         * This function is essential for the SRP protocol calculations, where we need
-         * to compute values like A = g^a mod N.
-         * @param {BigInt} base - The base value (e.g., g in SRP)
-         * @param {BigInt} exponent - The exponent value (e.g., a in SRP)
-         * @param {BigInt} modulus - The modulus value (e.g., N in SRP)
-         * @returns {BigInt} - The result of (base^exponent) mod modulus
-         **/
-        function modPow(base, exponent, modulus) {
-            if (modulus === 1n) {
-                return 0n;
-            }
-
-            let result = 1n;
-            let currentBase = base % modulus;
-            let currentExponent = exponent;
-
-            while (currentExponent > 0n) {
-                if (currentExponent % 2n === 1n) {
-                result = (result * currentBase) % modulus;
-                }
-
-                currentExponent = currentExponent / 2n;
-                currentBase = (currentBase * currentBase) % modulus;
-            }
-
-            return result;
-        } // Function ends
-
-        /**
-         * Utility function to get the current timestamp in the format required by AWS Cognito.
-         * Cognito expects the timestamp to be in the format: "EEE MMM d HH:mm:ss 'UTC' yyyy"
-         * For example: "Wed Mar 3 12:34:56 UTC 2021"
-         * This function constructs the timestamp string by getting the current date and time in UTC,
-         * and formatting it according to the required structure.
-         * @return {string} - The current timestamp formatted for AWS Cognito
-         **/
-        function getCognitoTimestamp() {
-            // Get the current date and time in UTC
-            const now = new Date();
-
-            const weekdays = [
-                    'Sun', 'Mon', 'Tue', 'Wed',
-                    'Thu', 'Fri', 'Sat'
-                ];
-
-            const months = [
-                    'Jan', 'Feb', 'Mar', 'Apr',
-                    'May', 'Jun', 'Jul', 'Aug',
-                    'Sep', 'Oct', 'Nov', 'Dec'
-                ];
-
-            // Build the timestamp string in the format required by Cognito
-            let weekday = weekdays[now.getUTCDay()];
-            let month = months[now.getUTCMonth()];
-            let day = now.getUTCDate();
-            let hours = String(now.getUTCHours()).padStart(2, '0');
-            let minutes = String(now.getUTCMinutes()).padStart(2, '0');
-            let seconds = String(now.getUTCSeconds()).padStart(2, '0');
-            let year = now.getUTCFullYear();
-
-            return `${weekday} ${month} ${day} ${hours}:${minutes}:${seconds} UTC ${year}`;
-        } // Function ends
-
-        /**
-         * Function to start a timer that reloads the page after a specified duration.
-         * In this case, the timer is set for 60 seconds. When the timer expires,
-         * the page will automatically reload, which can be useful for resetting
-         * the authentication process if the user takes too long to respond to
-         * the challenge.
-         *
-         * @param {number} counter - The duration of the timer in seconds (default is 60 seconds)
-         **/
-        function startTimer(counter = 60) {
-            const intervalId = setInterval(() => {
-                counter--; // Decrement the count
-                
-                if (counter <= 0) {
-                    clearInterval(intervalId); // Stops the timer
-                    window.location.reload(); // Reloads the page when the count reaches 0
-                }
-            }, 1000);
-    } // Function ends
+                    return JSON.stringify(credential);
+                } catch (error) {
+                    console.error('Error authenticating passkey:', error);
+                    throw error;
+                } // End try-catch
+            } // Function ends
+        } // Class ends
     </script>
 @endPushIf

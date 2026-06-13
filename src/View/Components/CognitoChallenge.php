@@ -31,7 +31,8 @@ class CognitoChallenge extends Component
      * Create a new component instance.
      */
     public function __construct(
-        public string|null $challengeFormName = null
+        public string|null $challengeFormName = null,
+        public string $secureCode = 'cognito-challenge-',
     )
     {
         try {
