@@ -1,3 +1,7 @@
+@props([
+    'challengeNameValue' => 'NONE'
+])
+
 @pushif((config('cognito.allow_passkeys')),'cognito-passkey-webauthn-scripts')
     <script>
         // Add event listeners to all buttons with the data-role attribute set to "passkey-webauthn"
@@ -330,6 +334,7 @@
 
         } //Class end
 
+        @if ($challengeNameValue === 'WEB_AUTHN')
         /**
          * Class to handle the WebAuthn authentication challenge. It retrieves the
          * challenge parameters from the server, prompts the user to authenticate
@@ -389,5 +394,6 @@
                 } // End try-catch
             } // Function ends
         } // Class ends
+        @endif
     </script>
 @endPushIf

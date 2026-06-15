@@ -1,41 +1,78 @@
-@pushif((true),'cognito-device-auth-scripts')
+@props([
+    'challengeNameValue' => 'NONE'
+])
+
+@if ($includeGMP)
+    <x-cognito::common.js.gmp 
+        :includeGMP="$includeGMP" />
+@endif
+
+@if ($includeCryptoJS || $includeCryptoUtils)
+    <x-cognito::common.js.crypto
+        :includeCryptoJS="$includeCryptoJS"
+        :includeCryptoUtils="$includeCryptoUtils" />
+@endif
+
+@push('cognito-device-auth-scripts')
+    @if ($includeGMP)
+        @stack('cognito-common-gmp-scripts')
+    @endif
+
+    @if ($includeCryptoJS || $includeCryptoUtils)
+        @stack('cognito-common-crypto-scripts')
+    @endif
+
     <script>
-        // Add event listeners to all buttons with the data-role attribute set to "device-auth"
-        const elemsDeviceAuth = document.querySelectorAll('[data-role="device-auth"]');
-        elemsDeviceAuth.forEach(button => {
-            button.addEventListener('click', async function() {
-                // Disable the button to prevent multiple clicks
-                this.disabled = true;
-
-                // Get the action from the data-action attribute and validate it
-                let dataAction = this.attributes['data-action'] ? (this.attributes['data-action'].value).toLowerCase() : null;
-                if (!dataAction || (dataAction !== 'register' && dataAction !== 'delete')) {
-                    console.warn('No action specified for device auth button. Use "register" or "delete" as data-action value.');
-                    this.disabled = false;
-                    return;
+        /**
+         * Event listener for DOMContentLoaded to trigger the appropriate
+         * actions.
+         */
+        document.addEventListener("DOMContentLoaded", function(event) {
+            // Add event listeners to all buttons with the data-role attribute set to "device-auth"
+            const elemsDeviceAuth = document.querySelectorAll('[data-role="device-auth"]');
+            elemsDeviceAuth.forEach(button => {
+                // Initialize and check device registration status
+                let deviceService = new DeviceService();
+                if ((deviceService.isDeviceRegistered) && button?.attributes['data-action']?.value.toLowerCase() === 'register') {
+                    button.disabled = true;
+                } else if ((!deviceService.isDeviceRegistered) && button?.attributes['data-action']?.value.toLowerCase() === 'delete') {
+                    button.disabled = true;
+                } else {
+                    button.disabled = false;
                 } //End if
 
-                if (dataAction === 'register') { // Register a new device
-                    let service = new DeviceService();
-                    let response = await service.register();
+                button.addEventListener('click', async function() {
+                    // Disable the button to prevent multiple clicks
+                    this.disabled = true;
 
-                    // Disable on success, re-enable on failure
-                    this.disabled = response;
-                } else if (dataAction === 'delete') { // Delete an existing device
-                    // Get the user key from the data attribute
-                    let userkeyB64encoded = this.attributes['data-userkey'].value;
-                    let service = new DeviceService();
-                    await service.delete(userkeyB64encoded);
+                    // Get the action from the data-action attribute and validate it
+                    let dataAction = this.attributes['data-action'] ? (this.attributes['data-action'].value).toLowerCase() : null;
+                    if (!dataAction || (dataAction !== 'register' && dataAction !== 'delete')) {
+                        console.warn('No action specified for device auth button. Use "register" or "delete" as data-action value.');
+                        this.disabled = false;
+                        return;
+                    } //End if
 
-                    // Re-enable the button after deletion
-                    this.disabled = false;
-                } else { // Handle unknown action
-                    console.warn('Unknown action for device action button. Use "register" or "delete" as data-action value.');
 
-                    // Re-enable the button if action is unknown
-                    this.disabled = false;
-                } //End if
-            });
+                    const service = new DeviceService();
+                    if (dataAction === 'register') { // Register a new device
+                        let response = await service.register();
+
+                        // Disable on success, re-enable on failure
+                        this.disabled = response;
+                    } else if (dataAction === 'delete') { // Delete an existing device
+                        let response = await service.delete();
+
+                        // Re-enable the button after deletion
+                        this.disabled = response;
+                    } else { // Handle unknown action
+                        console.warn('Unknown action for device action button. Use "register" or "delete" as data-action value.');
+
+                        // Re-enable the button if action is unknown
+                        this.disabled = false;
+                    } //End if
+                });
+            });            
         });
 
         /**
@@ -54,29 +91,33 @@
                 this.csrfToken = "{{ csrf_token() }}";
                 this.secureCode = "{{ $secureCode ?? '' }}";
                 this.userkeyB64encoded = "{{ $userkeyB64encoded ?? '' }}";
+                this.newDeviceData = "{{ $newDeviceData ?? '' }}";
             }
 
             /**
-             * Main function to register passkeys for the user. It orchestrates
-             * the entire registration process by communicating with the
-             * server and using the WebAuthn API.
+             * Main function to register the device for the user. It
+             * orchestrates the entire registration process by
+             * communicating with the server and using the Device API.
              */
             async register() {
                 try {
-                    // Get the passkey registration options from the server
-                    let confirmPayload = await this.#confirmDevice();
+                    // Check if the device is already registered
+                    if (this.isDeviceRegistered) {
+                        throw new Error('This device is already registered for the user.');
+                    }
 
-                    // Convert the server response to the format required for FIDO2 registration
-                    let publicKeyOptions = this.#getPublicKeyCreationOptions(confirmPayload);
+                    // Get the device registration options from the server
+                    let confirmResponse = await this.#confirmDevice();
 
-                    if (completePayload) {
-                        this.#alert('Passkey registered successfully.', 'success');
+                    if (confirmResponse && confirmResponse.data) {
+                        this.#alert('Device registered successfully.', 'success');
                         return true;
                     }
+
                     return false;
                 } catch (error) {
-                    console.error('Error registering passkey:', error);
-                    this.#alert('Passkey registration failed. Check the console for details.', 'error');
+                    console.error('Error registering device:', error);
+                    this.#alert('Device registration failed. Check the console for details.', 'error');
                     return false;
                 }
             } //Function end
@@ -88,12 +129,13 @@
              */
             async delete() {
                 try {
-                    // Read the data from local store
-                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
-                    if (!deviceData) {
-                        throw new Error('No data found for the device in local storage');
+                    // Check if the device is already registered
+                    if (!this.isDeviceRegistered) {
+                        throw new Error('This device is not registered for the user.');
                     }
-                    deviceData = JSON.parse(deviceData);
+
+                    // Read the data from local store
+                    let deviceData = this.deviceData;
 
                     // Signal the authenticator about the deleted credential
                     let deletePayload = await this.#deleteDevice(deviceData['d-key']);
@@ -120,7 +162,7 @@
             async #confirmDevice() {
                 try {
                     //Build the device secret verifier payload
-                    let payload = this.#buildDeviceSecretVerifier();
+                    const {payload, deviceSecret} = await this.#buildConfirmDevicePayload();
 
                     // Get the passkey registration options from the server
                     let response = await fetch("{{ $urlDeviceConfirmEndpoint ?? '' }}", {
@@ -136,6 +178,9 @@
                     if (!response.ok) {
                         throw new Error('Failed to confirm device');
                     }
+
+                    // Store the device secret in local storage for later use
+                    this.#deviceSecret = deviceSecret;
 
                     return await response.json();
                 } catch (error) {
@@ -173,25 +218,173 @@
                 }
             } //Function end
 
-
-            #buildDeviceSecretVerifier() {
+            /**
+             * Function to build the payload for device confirmation,
+             * which includes generating a random device secret,
+             * computing the device hash, and constructing the verifier
+             * using the device hash and a random salt.
+             * The payload is then sent to the server to complete the
+             * device registration.
+             */
+            async #buildConfirmDevicePayload() {
                 try {
-                    // Generate a random secret verifier for the device
-                    const randomBytes = new Uint8Array(32);
-                    window.crypto.getRandomValues(randomBytes);
-                    const deviceSecretVerifier = btoa(String.fromCharCode(...randomBytes));
+                    // Get the device data from local storage
+                    let deviceData = this.deviceData;
+
+                    // Generate a secret, random salt for the device
+                    const deviceSecret = CryptoUtils.randomBase64(40);
+                    const saltHex = this.#deviceSalt;
+
+                    // Build device hash
+                    const deviceHash = await this.getDeviceHash(deviceSecret);
+
+                    // Build the verifier using the device hash and salt
+                    let xHash = await CryptoUtils.hexHash(saltHex + deviceHash);
+                    let xBigInt = CryptoUtils.convHexToBigInt(xHash);
+                    let verifierBigInt = GMP.gmp_powm(CryptoUtils.g_BigInt, xBigInt, CryptoUtils.N_BigInt);
+                    const verifierHex = CryptoUtils.convBigIntToUnsignedHex(verifierBigInt);
+
+                    // Build the payload to be sent to the server for device confirmation
+                    let payload = {
+                        'device_key': deviceData['d-key'],
+                        'device_name': this.#deviceName,
+                        'device_config': JSON.stringify({
+                            'DeviceSecretVerifierConfig': {
+                                'Salt': CryptoUtils.convHexToBase64(saltHex),
+                                'PasswordVerifier': CryptoUtils.convHexToBase64(verifierHex)
+                            }
+                        })};
     
-                    // Store the device secret verifier in local storage for later use
-                    localStorage.setItem(this.secureCode + 'device-secret-verifier', deviceSecretVerifier);
-    
-                    return {
-                        device_secret_verifier: deviceSecretVerifier
-                    };
+                    return {payload, deviceSecret};
                 } catch (error) {
-                    console.error('Error generating device secret verifier:', error);
+                    console.error('Error generating device payload:', error);
                     throw error;
-                }
+                } // Try ends
             } //Function end
+
+            /**
+             * Getter for device data stored in local storage. It retrieves
+             * the device data for the user based on the secure code and
+             * user key. If no data is found, it checks for new device data.
+             * @returns {Object} - The device data object containing keys
+             * and group information.
+             * @throws {Error} - Throws an error if no device data is found.
+             */
+            get deviceData() {
+                try {
+                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
+                    if (!deviceData) {
+                        // If not found, check if new device data is available
+                        deviceData = this.newDeviceData ? atob(this.newDeviceData) : null;
+                        if (!deviceData) {
+                            throw new Error('No device data found for the user in local storage');
+                        }
+                    } //End if
+                    return JSON.parse(deviceData);                    
+                } catch (error) {
+                    console.error('Error retrieving device data from local storage:', error);
+                    throw error;
+                } // Try ends
+            } //Function end
+
+            /**
+             * Setter for device data stored in local storage. It saves
+             * the device data for the user based on the secure code and
+             * user key. The data is stored as a JSON string.
+             * @param {Object} deviceData - The device data object to be
+             * stored in local storage.
+             * @throws {Error} - Throws an error if there is an issue
+             * saving the data to local storage.
+             */
+            set deviceData(deviceData) {
+                try {
+                    localStorage.setItem(this.secureCode + this.userkeyB64encoded, JSON.stringify(deviceData));
+                } catch (error) {
+                    console.error('Error saving device data to local storage:', error);
+                    throw error;
+                } // Try ends
+            } //Function end
+
+            /**
+             * Getter to check if the device is registered. It verifies
+             * if the device data contains the necessary keys and group
+             * information.
+             * @returns {boolean} - Returns true if the device is registered,
+             * false otherwise.
+             * @throws {Error} - Throws an error if there is an issue
+             * retrieving the device data.
+             */
+            get isDeviceRegistered() {
+                try {
+                    let deviceData = this.deviceData;
+                    return deviceData && deviceData['d-key'] && deviceData['d-secret'] && deviceData['d-grp'];
+                } catch (error) {
+                    console.error('Device not registered:', error);
+                    throw error;
+                } // Try ends
+            } //Function end
+
+            get #deviceName() {
+                try {
+                    return navigator.appCodeName || 'Unknown Device';
+                } catch (error) {
+                    throw error;
+                } // Try ends
+            } //Function end
+
+            get #deviceSalt() {
+                try {
+                    // Generate a random salt for the device of 16 bytes (128 bits)
+                    let saltHex = CryptoUtils.randomHex(16);
+
+                    // Convert to unsigned hex format to prevent negative BigInteger interpretation
+                    return CryptoUtils.convHexToUnsignedHex(saltHex);
+                } catch (error) {
+                    console.error('Error generating device salt:', error);
+                    throw error;
+                } // Try ends
+            } //Function end
+
+            set #deviceSecret(deviceSecret) {
+                try {
+                    let deviceData = this.deviceData;
+                    deviceData['d-secret'] = deviceSecret;
+
+                    // Save the updated device data back to local storage
+                    this.deviceData = deviceData;
+                } catch (error) {
+                    console.error('Error setting device secret:', error);
+                    throw error;
+                } // Try ends
+            } //Function end
+
+            /**
+             * Function to compute the device hash using the device
+             * group key, device key, and device secret. The hash is
+             * computed using SHA-256 and is used as part of the device
+             * authentication process.
+             **/
+            async getDeviceHash(deviceSecret = null) {
+                try {
+                    let deviceData = this.deviceData;
+                    let deviceGroupKey = deviceData['d-grp'];
+                    let deviceKey = deviceData['d-key'];
+                    deviceSecret = deviceSecret ?? deviceData['d-secret'];
+
+                    if (!deviceGroupKey || !deviceKey || !deviceSecret) {
+                        throw new Error('Device data is incomplete in local storage');
+                    } // End if
+
+                    let secret = `${deviceGroupKey}${deviceKey}:${deviceSecret}`;
+
+                    return await CryptoUtils.hashEncrypt(secret);
+                } catch (error) {
+                    console.error('Error computing device hash:', error);
+                    throw error;
+                } // Try ends
+            } //Function end
+
+
 
             /**
              * Function to convert the server response into the format required
@@ -279,6 +472,8 @@
                 }, null, 2);
             } //Function end
 
+
+
             #alert(message, type = 'info') {
 
                 let alertBox = new CognitoAlert();
@@ -298,6 +493,7 @@
 
         } //Class end
 
+        @if ($challengeNameValue !== 'NONE')
         /**
          * Class to handle the device authentication challenges, including
          * DEVICE_SRP_AUTH and DEVICE_PASSWORD_VERIFIER. It extends the
@@ -309,6 +505,7 @@
             // Default constructor
             constructor() {
                 super();
+                this.service = new DeviceService();
             }
 
             /**
@@ -326,31 +523,24 @@
 
                     // Generate a random secret ephemeral 'a' (at least 32 bytes recommended)
                     const randomBytes = CryptoJS.lib.WordArray.random(128);
-                    const a = BigInt("0x" + randomBytes.toString(CryptoJS.enc.Hex));
+                    //const a = BigInt("0x" + randomBytes.toString(CryptoJS.enc.Hex));
+                    let aBigInt = CryptoUtils.convHexToBigInt(randomBytes.toString(CryptoJS.enc.Hex));
 
                     // Calculate A = g^a % N
                     // Note: BigInt modular exponentiation is needed here.
                     // For browser/node: A = BigInt(g)**BigInt(a) % BigInt(N)
-                    const A = GMP.gmp_powm(CognitoChallenge.g_BigInt, a, CognitoChallenge.N_BigInt);
+                    const A = GMP.gmp_powm(CryptoUtils.g_BigInt, aBigInt, CryptoUtils.N_BigInt);
 
                     // Generate a random number to store private ephemeral
                     let session = sessionValue.value || null;
                     if (session) {
-                        localStorage.setItem(session, a.toString(16));
+                        localStorage.setItem(session, aBigInt.toString(16));
                     } // End if
-
-                    // Read the data from local store
-                    this.userkeyB64encoded = btoa(objChallengeParams?.USER_ID_FOR_SRP);
-                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
-                    if (!deviceData) {
-                        throw new Error('No passkey data found for the device in local storage');
-                    }
-                    deviceData = JSON.parse(deviceData);
 
                     // Build the response object to be sent back to the server
                     let responseData = {
                         'USERNAME': objChallengeParams?.USER_ID_FOR_SRP,
-                        'DEVICE_KEY': deviceData['d-key'] || '',
+                        'DEVICE_KEY': this.service.deviceData['d-key'] || '',
                         'SRP_A': A.toString(16).toUpperCase()
                     };                    
 
@@ -377,17 +567,8 @@
                     // Get the challenge parameters value and parse it as JSON
                     let objChallengeParams = this.ChallengeParams;
 
-                    // Read the data from local store
-                    this.userkeyB64encoded = btoa(objChallengeParams?.USERNAME);
-                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
-                    if (!deviceData) {
-                        throw new Error('No passkey data found for the device in local storage');
-                    }
-                    deviceData = JSON.parse(deviceData);
-
                     // Construct the passkey hash
-                    let passKey = deviceData['d-grp'] + deviceData['d-key'] + ":" + deviceData['d-secret'];
-                    let passKeyHash = CryptoJS.SHA256(passKey).toString(CryptoJS.enc.Hex);
+                    const deviceHash = await this.service.getDeviceHash();
 
                     // Get the session value
                     let session = sessionValue.value || null;
@@ -405,10 +586,10 @@
                         'TIMESTAMP': this.CognitoTimestamp,
                         'DEVICE_KEY': objChallengeParams?.DEVICE_KEY || '',
 
-                        'PASSKEY_HASH':passKeyHash,
+                        'PASSKEY_HASH':deviceHash,
                         'MESSAGE_BASE64': this.#DeviceMessage,
                         'PRIVATE_KEY':privateEphemeral,
-                        'DEVICE_GROUP_KEY':deviceData['d-grp']
+                        'DEVICE_GROUP_KEY':this.service.deviceData['d-grp'] || ''
                     };
 
                     // Return the JSON string
@@ -429,11 +610,7 @@
             get #DeviceMessage() {
                 try{
                     // Read the data from local store
-                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
-                    if (!deviceData) {
-                        throw new Error('No passkey data found for the device in local storage');
-                    }
-                    deviceData = JSON.parse(deviceData);
+                    let deviceData = this.service.deviceData;
 
                     // Get Base64 encoded Secret Block
                     let objChallengeParams = this.ChallengeParams;
@@ -467,5 +644,6 @@
                 }
             } // Function ends
         } // Class ends
+        @endif
     </script>
-@endPushIf
+@endpush

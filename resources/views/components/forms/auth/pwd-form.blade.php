@@ -137,8 +137,9 @@
     }
 
     function toggleDeviceKey() {
-        if (deviceKeyCheckbox.checked && localStorage.getItem('d-secret')) {
-            deviceKeyInput.value = localStorage.getItem('d-key');
+        let deviceData = localStorage.getItem('cognito-challenge-YW1pdC5kaG9uZ2RlK3Rlc3QxMzA1djAyQGdtYWlsLmNvbQ==');
+        if (deviceKeyCheckbox.checked && deviceData) {
+            deviceKeyInput.value = JSON.parse(deviceData)['d-key'];
             deviceKeyInput.disabled = false;
             deviceKeyCheckboxLabel.innerText = '{{ __('Device Security Enabled') }}';
         } else {

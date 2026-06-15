@@ -128,20 +128,27 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function registerPublishing()
     {
         if ($this->app->runningInConsole()) {
-            //Publish config
+            // Publish config
             $this->publishes([
                 __DIR__ . '/../../config/cognito.php' => $this->app->configPath('cognito.php'),
             ], 'config');
 
+            // Publish Migrations
             $this->publishes([
                 __DIR__ . '/../../database/migrations' => $this->app->databasePath('migrations'),
             ], 'migrations');
 
+            // Publish Views
             $this->publishes([
                 __DIR__ . '/../../resources/views' => $this->app->resourcePath('views/vendor/ellaisys/aws-cognito'),
             ], 'views');
 
-            //Publish Controllers
+            // Publish JavaScripts
+            $this->publishes([
+                __DIR__ . '/../../resources/assets/js' => public_path('vendor/ellaisys/aws-cognito/js'),
+            ], 'js');
+
+            // Publish Controllers
             $this->publishes([
                 __DIR__ . '/../../src/Http/Controllers/' => app_path('Http/Controllers/')
             ], 'controllers');

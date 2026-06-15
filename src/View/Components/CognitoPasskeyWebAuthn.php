@@ -29,7 +29,7 @@ class CognitoPasskeyWebAuthn extends Component
         public string|null $urlPasskeyStartEndpoint = null,
         public string|null $urlPasskeyCompleteEndpoint = null,
         public string|null $urlPasskeyDeleteEndpoint = null,
-        public string $secureCode = 'webauthn-passkey-',
+        public string $secureCode = 'webauthn-passkey-'
     )
     {
         try {

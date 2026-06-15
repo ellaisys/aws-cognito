@@ -1,8 +1,15 @@
 @csrf
 
 <x-cognito::common.js-scripts />
-<x-cognito-passkey-webauthn />
-<x-cognito-device-auth />
+<x-cognito::common.js.gmp />
+<x-cognito::common.js.crypto />
+
+<x-cognito-passkey-webauthn :challengeNameValue="$challengeNameValue" />
+<x-cognito-device-auth
+    :challengeNameValue="$challengeNameValue"
+    :includeGMP="false"
+    :includeCryptoJS="false"
+    :includeCryptoUtils="false" />
 
 @if((isset($challengeNameValue) && ($challengeNameValue != 'NONE')))
     <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue ?? '' }}" required />
@@ -42,7 +49,9 @@
 @endPush
 
 @pushif((isset($challengeNameValue) && ($challengeNameValue != 'NONE')),'cognito-challenge-scripts')
-@stack('cognito-common-scripts')
+    @stack('cognito-common-scripts')
+    @stack('cognito-common-gmp-scripts')
+    @stack('cognito-common-crypto-scripts')
     <script>
         const challengeNameValue = document.getElementById('challenge_name');
         const challengeValue = document.getElementById('challenge_value');
@@ -184,7 +193,7 @@
             // Large prime number
             static N_BigInt = BigInt("{{ '0x' . $srpParameters['N_HEX'] }}");
             
-            //Generator value
+            // Generator value
             static g_BigInt = BigInt("{{ '0x' . $srpParameters['G_HEX'] }}");
 
             constructor() {
@@ -426,6 +435,6 @@
             } // Function ends
         } // Class ends
     </script>
-@stack('cognito-passkey-webauthn-scripts')
-@stack('cognito-device-auth-scripts')
+    @stack('cognito-passkey-webauthn-scripts')
+    @stack('cognito-device-auth-scripts')
 @endPushIf
