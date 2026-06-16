@@ -428,7 +428,7 @@
              * authentication response to be sent to the server
              * @throws {Error} - Throws an error during the process.
              */
-            async DeviceSRPAuth() {
+            async authenticate() {
                 try {
                     // Get the challenge parameters value and parse it as JSON
                     let objChallengeParams = this.ChallengeParams;

@@ -4,7 +4,9 @@
 <x-cognito::common.js.gmp />
 <x-cognito::common.js.crypto />
 
-<x-cognito-passkey-webauthn :challengeNameValue="$challengeNameValue" />
+<x-cognito-passkey-webauthn
+    :challengeNameValue="$challengeNameValue" />
+
 <x-cognito-device-auth
     :challengeNameValue="$challengeNameValue"
     :includeGMP="false"
@@ -148,38 +150,37 @@
             try {
                 if (challengeNameValue.value == 'DEVICE_SRP_AUTH') {
                     let challenge = new DeviceChallenge();
-                    let response = await challenge.DeviceSRPAuth();
+                    let response = await challenge.authenticate();
                     challengeValue.value = response;
-                }
+                } // End if
 
                 if (challengeNameValue.value == 'DEVICE_PASSWORD_VERIFIER') {
                     let challenge = new DeviceChallenge();
                     let response = await challenge.verifier();
                     challengeValue.value = response;
-                }
+                } // End if
 
                 if (challengeNameValue.value == 'PASSWORD_SRP') {
                     let challenge = new PasswordSRPChallenge();
-                    let response = await challenge.PasswordSRPAuth();
+                    let response = await challenge.authenticate();
                     challengeValue.value = response;
-                }
+                } // End if
 
                 if (challengeNameValue.value == 'PASSWORD_VERIFIER') {
                     let challenge = new PasswordSRPChallenge();
                     let response = await challenge.verifier();
                     challengeValue.value = response;
-                }            
+                } // End if
 
                 if (challengeNameValue.value == 'WEB_AUTHN') {
                     let challenge = new WebAuthnChallenge();
                     let response = await challenge.verifier();
                     challengeValue.value = response;
-                }                
+                } // End if
             } catch (error) {
                 console.error("Error processing challenge:", error);
                 throw error;
-            }
-
+            } // End try-catch
         } // Function ends
 
         /**
@@ -300,7 +301,7 @@
              * The function then updates the form with the received challenge data,
              * allowing the user to proceed with the authentication process.
              **/
-            async PasswordSRPAuth() {
+            async authenticate() {
                 try {
                     let response = await fetch(frmChallenge.action, {
                         method: 'POST',
