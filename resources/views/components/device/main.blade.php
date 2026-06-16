@@ -13,6 +13,8 @@
         :includeCryptoUtils="$includeCryptoUtils" />
 @endif
 
+<input type="hidden" name="device_key" id="device_key" value="" />
+
 @push('cognito-device-auth-scripts')
     @if ($includeGMP)
         @stack('cognito-common-gmp-scripts')
@@ -33,10 +35,17 @@
             elemsDeviceAuth.forEach(button => {
                 // Initialize and check device registration status
                 let deviceService = new DeviceService();
-                if ((deviceService.isDeviceRegistered) && button?.attributes['data-action']?.value.toLowerCase() === 'register') {
+
+                // Element action attribute to determine the action to be performed
+                let dataAction = button?.attributes['data-action']?.value?.toLowerCase() ?? 'undefined';
+
+                if ((deviceService?.isDeviceRegistered) && dataAction === 'register') {
                     button.disabled = true;
-                } else if ((!deviceService.isDeviceRegistered) && button?.attributes['data-action']?.value.toLowerCase() === 'delete') {
+                } else if ((!deviceService?.isDeviceRegistered) && dataAction === 'delete') {
                     button.disabled = true;
+                } else if ((deviceService?.isDeviceRegistered) && dataAction === 'validate') {
+                    let deviceKey = deviceService?.deviceData['d-key'] ?? '';
+                    document.getElementById('device_key').value = deviceKey;
                 } else {
                     button.disabled = false;
                 } //End if
@@ -52,7 +61,6 @@
                         this.disabled = false;
                         return;
                     } //End if
-
 
                     const service = new DeviceService();
                     if (dataAction === 'register') { // Register a new device
