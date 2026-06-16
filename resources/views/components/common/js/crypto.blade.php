@@ -26,6 +26,15 @@
                 // Generator value
                 static g_BigInt = BigInt("{{ '0x' . config('cognito.srp_parameters.G_HEX') }}");
 
+                // Secure multiplier (k) is computed as H(N || g)
+                static async K_BigInt() {
+                    let K_Hex = await this.hexHash(
+                        CryptoUtils.convBigIntToUnsignedHex(CryptoUtils.N_BigInt) +
+                        CryptoUtils.convBigIntToUnsignedHex(CryptoUtils.g_BigInt)
+                    );
+                    return CryptoUtils.convHexToBigInt(K_Hex);
+                } // Function ends
+
                 static randomBytes(length) {
                     // Check if CryptoJS is available
                     if (this.isCryptoJSInstalled()) {
