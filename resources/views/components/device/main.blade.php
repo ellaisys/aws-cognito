@@ -384,8 +384,6 @@
                 } // Try ends
             } //Function end
 
-
-
             #alert(message, type = 'info') {
 
                 let alertBox = new CognitoAlert();
@@ -401,7 +399,7 @@
                     // Fallback to default alert if CognitoAlert is not available
                     alert(message);
                 }
-            }
+            } //Function end
 
         } //Class end
 
@@ -430,30 +428,25 @@
              */
             async authenticate() {
                 try {
-                    // Get the challenge parameters value and parse it as JSON
-                    let objChallengeParams = this.ChallengeParams;
-
                     // Generate a random secret ephemeral 'a' (at least 32 bytes recommended)
                     const randomBytes = CryptoJS.lib.WordArray.random(128);
-                    //const a = BigInt("0x" + randomBytes.toString(CryptoJS.enc.Hex));
-                    let aBigInt = CryptoUtils.convHexToBigInt(randomBytes.toString(CryptoJS.enc.Hex));
+                    let a_BigInt = CryptoUtils.convHexToBigInt(randomBytes.toString(CryptoJS.enc.Hex));
 
                     // Calculate A = g^a % N
                     // Note: BigInt modular exponentiation is needed here.
                     // For browser/node: A = BigInt(g)**BigInt(a) % BigInt(N)
-                    const A = GMP.gmp_powm(CryptoUtils.g_BigInt, aBigInt, CryptoUtils.N_BigInt);
+                    const A_BigInt = GMP.gmp_powm(CryptoUtils.g_BigInt, a_BigInt, CryptoUtils.N_BigInt);
 
                     // Generate a random number to store private ephemeral
                     let session = sessionValue.value || null;
                     if (session) {
-                        localStorage.setItem(session, aBigInt.toString(16));
+                        localStorage.setItem(session, a_BigInt.toString(16));
                     } // End if
 
                     // Build the response object to be sent back to the server
                     let responseData = {
-                        'USERNAME': objChallengeParams?.USER_ID_FOR_SRP,
-                        'DEVICE_KEY': this.service.deviceData['d-key'] || '',
-                        'SRP_A': A.toString(16).toUpperCase()
+                        'DEVICE_KEY': this.service?.deviceData['d-key'] || '',
+                        'SRP_A': A_BigInt.toString(16).toUpperCase()
                     };
 
                     // Return the JSON string
@@ -462,7 +455,7 @@
                     console.error('Error generating device SRP auth challenge:', error);
                     throw error;
                 } // Try ends
-            } // Function ends
+            } // Function end
 
             /**
              * Function to generate the response for the device password
@@ -479,38 +472,26 @@
                     // Get the challenge parameters value and parse it as JSON
                     let objChallengeParams = this.ChallengeParams;
 
-                    // Construct the passkey hash
-                    const deviceHash = await this.service.getDeviceHash();
-
-                    // Get the session value
-                    let session = sessionValue.value || null;
-                    if (!session) {
-                        throw new Error("Session parameters not found");
-                    }
-
-                    // Get the private ephemeral value from localStorage
-                    let privateEphemeral = (session) ? localStorage.getItem(session) : null;
-                    if (privateEphemeral) { localStorage.removeItem(session); }
-
                     // Build the response object to be sent back to the server
                     let responseData = {
                         'PASSWORD_CLAIM_SECRET_BLOCK': objChallengeParams?.SECRET_BLOCK || '',
                         'TIMESTAMP': this.CognitoTimestamp,
                         'DEVICE_KEY': objChallengeParams?.DEVICE_KEY || '',
-
-                        'PASSKEY_HASH':deviceHash,
-                        'MESSAGE_BASE64': this.#DeviceMessage,
-                        'PRIVATE_KEY':privateEphemeral,
-                        'DEVICE_GROUP_KEY':this.service.deviceData['d-grp'] || ''
                     };
 
+                    // Build the signature for the password claim.
+                    let signature = await this.buildPasswordClaimSignature();
+                    if (!signature) {
+                        throw new Error("Failed to build password claim signature");
+                    } // End if
+
                     // Return the JSON string
-                    return JSON.stringify(responseData);
+                    return JSON.stringify({...responseData, ...signature});
                 } catch (error) {
                     console.error('Error generating device verifier:', error);
                     throw error;
-                }
-            } // Function ends
+                } // Try ends
+            } // Function end
 
             /**
              * Function to compute the message verifier for the DEVICE_PASSWORD_VERIFIER
@@ -554,9 +535,46 @@
                     console.error('Error computing message verifier:', error);
                     throw error;
                 } // Try ends
-            } // Function ends
+            } // Function end
 
-        } // Class ends
+            async buildPasswordClaimSignature() {
+                try {
+                    // Initialize signature variable
+                    let signature = null;
+
+                    // Get the challenge parameters value and parse it as JSON
+                    let objChallengeParams = this.ChallengeParams;
+
+                    // Construct the passkey hash
+                    const deviceHash = await this.service?.getDeviceHash();
+
+                    // Get the session value
+                    let session = sessionValue.value || null;
+                    if (!session) {
+                        throw new Error("Session parameters not found");
+                    }
+
+                    // Get the private ephemeral value from localStorage
+                    let privateEphemeral = (session) ? localStorage.getItem(session) : null;
+                    if (privateEphemeral) { localStorage.removeItem(session); }
+
+                    if (signature) {
+                        return {'PASSWORD_CLAIM_SIGNATURE':signature};
+                    } else {
+                        return {
+                            'PASSKEY_HASH':deviceHash,
+                            'MESSAGE_BASE64': this.#DeviceMessage,
+                            'PRIVATE_KEY':privateEphemeral,
+                            'DEVICE_GROUP_KEY':this.service?.deviceData['d-grp'] || ''
+                        }
+                    } // End if
+                } catch (error) {
+                    console.error('Error building password claim signature:', error);
+                    throw error;
+                } // Try ends
+            } // Function end
+
+        } // Class end
         @endif
     </script>
 @endpush
