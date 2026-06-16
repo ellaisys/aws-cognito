@@ -550,12 +550,6 @@
                     // Initialize signature variable
                     let signature = null;
 
-                    // Get the challenge parameters value and parse it as JSON
-                    let objChallengeParams = this.ChallengeParams;
-
-                    // Construct the passkey hash
-                    const deviceHash = await this.service?.getDeviceHash();
-
                     // Get the session value
                     let session = sessionValue.value || null;
                     if (!session) {
@@ -565,6 +559,50 @@
                     // Get the private ephemeral value from localStorage
                     let privateEphemeral = (session) ? localStorage.getItem(session) : null;
                     if (privateEphemeral) { localStorage.removeItem(session); }
+                    let a_BigInt = CryptoUtils.convHexToBigInt(privateEphemeral);
+
+                    // Calculate A = g^a % N
+                    // Note: BigInt modular exponentiation is needed here.
+                    // For browser/node: A = BigInt(g)**BigInt(a) % BigInt(N)
+                    const A_BigInt = GMP.gmp_powm(CryptoUtils.g_BigInt, a_BigInt, CryptoUtils.N_BigInt);
+                    console.log('A_BigInt', A_BigInt.toString(16));
+
+                    // Get the challenge parameters value and parse it as JSON
+                    let objChallengeParams = this.ChallengeParams;
+
+                    // Get the salt value and convert it to hex format
+                    let salt = objChallengeParams?.SALT || '';
+                    let srpB = objChallengeParams?.SRP_B || '';
+                    if (!salt || !srpB) {
+                        throw new Error("Salt or SRP_B not found in challenge parameters");
+                    } // End if
+                    let saltHex = CryptoUtils.convBigIntToUnsignedHex(GMP.gmp_init(salt, 16));
+                    let B_BigInt = GMP.gmp_init(srpB, 16);
+
+                    // Calculate u = H(A || B)
+                    let uHash = await CryptoUtils.hexHash(
+                        CryptoUtils.convBigIntToUnsignedHex(A_BigInt) +
+                        CryptoUtils.convBigIntToUnsignedHex(B_BigInt)
+                    );
+
+                    // Construct the passkey hash
+                    const deviceHash = await this.service?.getDeviceHash();
+                    let xHash = await CryptoUtils.hexHash(saltHex + deviceHash);
+                    console.log('xHash: Matches PHP Code:', xHash);
+                    let xBigInt = CryptoUtils.convHexToBigInt(xHash);
+
+                    // Calculate S = (B - k * g^x) ^ (a + u * x) % N
+                    const K_BigInt = await CryptoUtils.K_BigInt();
+                    console.log('K_BigInt: Matches PHP Code: ', K_BigInt.toString(16));
+
+                    let gModPowX = GMP.gmp_powm(CryptoUtils.g_BigInt, xBigInt, CryptoUtils.N_BigInt);
+                    console.log('gModPowX', gModPowX.toString(16));
+
+                    let kgx = GMP.gmp_mul(K_BigInt, gModPowX);
+                    console.log('kgx', kgx.toString(16));
+                    
+                    let intValue2 = GMP.gmp_sub(B_BigInt, kgx);
+                    console.log('intValue2', intValue2.toString(16));
 
                     if (signature) {
                         return {'PASSWORD_CLAIM_SIGNATURE':signature};
