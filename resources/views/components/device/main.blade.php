@@ -3,7 +3,7 @@
 ])
 
 @if ($includeGMP)
-    <x-cognito::common.js.gmp 
+    <x-cognito::common.js.gmp
         :includeGMP="$includeGMP" />
 @endif
 
@@ -72,7 +72,7 @@
                         this.disabled = false;
                     } //End if
                 });
-            });            
+            });
         });
 
         /**
@@ -278,9 +278,9 @@
                         deviceData = this.newDeviceData ? atob(this.newDeviceData) : null;
                         if (!deviceData) {
                             throw new Error('No device data found for the user in local storage');
-                        }
-                    } //End if
-                    return JSON.parse(deviceData);                    
+                        } // End if
+                    } // End if
+                    return JSON.parse(deviceData);
                 } catch (error) {
                     console.error('Error retrieving device data from local storage:', error);
                     throw error;
@@ -386,94 +386,6 @@
 
 
 
-            /**
-             * Function to convert the server response into the format required
-             * for WebAuthn registration
-             */
-            #getPublicKeyCreationOptions(startPayload) {
-
-                let rawOptions = startPayload && startPayload.data
-                    ? startPayload.data.CredentialCreationOptions || startPayload.data.credentialCreationOptions || startPayload.data
-                    : null;
-
-                if (!rawOptions) {
-                    throw new Error('CredentialCreationOptions not found in start response');
-                }
-
-                if (typeof rawOptions === 'string') {
-                    rawOptions = JSON.parse(rawOptions);
-                }
-
-                let publicKeyOptions = rawOptions.publicKey ? rawOptions.publicKey : rawOptions;
-                publicKeyOptions.challenge = this.#base64urlToUint8Array(publicKeyOptions.challenge);
-
-                if (publicKeyOptions.user && publicKeyOptions.user.id) {
-                    publicKeyOptions.user.id = this.#base64urlToUint8Array(publicKeyOptions.user.id);
-                }
-
-                if (Array.isArray(publicKeyOptions.excludeCredentials)) {
-                    publicKeyOptions.excludeCredentials = publicKeyOptions.excludeCredentials.map((credentialDescriptor) => {
-                        return Object.assign({}, credentialDescriptor, {
-                            id: this.#base64urlToUint8Array(credentialDescriptor.id)
-                        });
-                    });
-                }
-
-                return publicKeyOptions;
-            } //Function end
-
-            /**
-             * Utility functions for base64url encoding/decoding and converting
-             * credentials to a format suitable for sending to the server
-             */
-            #base64urlToUint8Array(base64url) {
-                let padding = '='.repeat((4 - (base64url.length % 4)) % 4);
-                let base64 = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
-                let binaryString = window.atob(base64);
-
-                return Uint8Array.from(binaryString, c => c.charCodeAt(0));
-            } //Function end
-
-            /**
-             * Convert the credential object returned by the WebAuthn API into a format
-             * that can be sent to the server for registration completion
-             */
-            #bufferToBase64url(buffer) {
-                var bytes = new Uint8Array(buffer);
-                var binary = '';
-                bytes.forEach((byte) => {
-                    binary += String.fromCharCode(byte);
-                });
-
-                return window.btoa(binary)
-                    .replace(/\+/g, '-')
-                    .replace(/\//g, '_')
-                    .replace(/=+$/g, '');
-            } //Function end
-
-            /**
-             * Convert the credential object returned by the WebAuthn API into a format
-             * that can be sent to the server for registration completion
-             */
-            #credentialToCognitoPayload(credential) {
-                return JSON.stringify({
-                    id: credential?.id,
-                    type: credential?.type,
-                    rawId: this.#bufferToBase64url(credential?.rawId),
-                    authenticatorAttachment: credential?.authenticatorAttachment,
-                    response: {
-                        clientDataJSON: this.#bufferToBase64url(credential?.response?.clientDataJSON),
-                        attestationObject: this.#bufferToBase64url(credential?.response?.attestationObject),
-                        transports: typeof credential?.response?.getTransports === 'function'
-                            ? credential?.response?.getTransports()
-                            : []
-                    },
-                    clientExtensionResults: credential?.getClientExtensionResults()
-                }, null, 2);
-            } //Function end
-
-
-
             #alert(message, type = 'info') {
 
                 let alertBox = new CognitoAlert();
@@ -542,14 +454,14 @@
                         'USERNAME': objChallengeParams?.USER_ID_FOR_SRP,
                         'DEVICE_KEY': this.service.deviceData['d-key'] || '',
                         'SRP_A': A.toString(16).toUpperCase()
-                    };                    
+                    };
 
                     // Return the JSON string
                     return JSON.stringify(responseData);
                 } catch (error) {
                     console.error('Error generating device SRP auth challenge:', error);
                     throw error;
-                }
+                } // Try ends
             } // Function ends
 
             /**
@@ -618,21 +530,21 @@
                     let secretBlockBase64 = secretBlock ? atob(secretBlock) : null;
                     if (!secretBlockBase64) {
                         throw new Error("Secret block not found in challenge parameters");
-                    }
+                    } // End if
 
                     let deviceGroupKey = deviceData['d-grp'];
                     if (!deviceGroupKey) {
                         throw new Error("Device group key not found in localStorage");
-                    }
+                    } // End if
 
                     // Get the device key
                     let deviceKey = objChallengeParams?.DEVICE_KEY || deviceData['d-key'];
                     if (!deviceKey) {
                         throw new Error("Device key not found in challenge parameters");
-                    }
+                    } // End if
 
                     //Build the message
-                    let message = '';                        
+                    let message = '';
                     message += deviceGroupKey + deviceKey;
                     message += secretBlockBase64;
                     message += this.CognitoTimestamp;
@@ -641,8 +553,9 @@
                 } catch (error) {
                     console.error('Error computing message verifier:', error);
                     throw error;
-                }
+                } // Try ends
             } // Function ends
+
         } // Class ends
         @endif
     </script>
