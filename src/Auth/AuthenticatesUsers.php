@@ -528,7 +528,7 @@ trait AuthenticatesUsers
         // Add device authentication specific rules
         if ($isDeviceAuth) {
             $rules['DEVICE_KEY'] = 'required|string';
-            $rules['DEVICE_GROUP_KEY'] = 'required_with:PASSKEY_HASH|required_without:MESSAGE_BASE64|string';
+            $rules['DEVICE_GROUP_KEY'] = 'required_with:PASSKEY_HASH|string';
         } //End if
 
         return $rules;
