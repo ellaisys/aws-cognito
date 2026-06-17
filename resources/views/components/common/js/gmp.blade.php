@@ -19,20 +19,42 @@
              * @returns {BigInt} - The result of (base^exponent) mod modulus
              **/
             static gmp_powm(base, exponent, modulus) {
+                if (typeof base !== "bigint") {
+                    throw new TypeError("base must be a BigInt");
+                }
+
+                if (typeof exponent !== "bigint") {
+                    throw new TypeError("exponent must be a BigInt");
+                }
+
+                if (typeof modulus !== "bigint") {
+                    throw new TypeError("modulus must be a BigInt");
+                }
+
+                if (modulus <= 0n) {
+                    throw new RangeError("modulus must be greater than zero");
+                }
+
+                if (exponent < 0n) {
+                    throw new RangeError("exponent must be non-negative");
+                }
+
                 if (modulus === 1n) {
                     return 0n;
                 }
 
                 let result = 1n;
-                let currentBase = base % modulus;
+
+                // Normalize the base to the range [0, modulus - 1]
+                let currentBase = ((base % modulus) + modulus) % modulus;
                 let currentExponent = exponent;
 
                 while (currentExponent > 0n) {
-                    if (currentExponent % 2n === 1n) {
+                    if ((currentExponent & 1n) === 1n) {
                         result = (result * currentBase) % modulus;
                     }
 
-                    currentExponent = currentExponent / 2n;
+                    currentExponent >>= 1n;
                     currentBase = (currentBase * currentBase) % modulus;
                 } // End while
 
@@ -51,10 +73,26 @@
                 return this.#toBigInt(num1) + this.#toBigInt(num2);
             } // Function ends
 
+            /**
+             * Utility function to perform subtraction of two BigInt values. This is a simple
+             * wrapper around the native BigInt subtraction operator, but it can be extended
+             * in the future to include additional checks or functionality if needed.
+             * @param {BigInt} a - The first BigInt value
+             * @param {BigInt} b - The second BigInt value
+             * @returns {BigInt} - The result of a - b
+             **/
             static gmp_sub(num1, num2) {
                 return this.#toBigInt(num1) - this.#toBigInt(num2);
             } // Function ends
 
+            /**
+             * Utility function to perform multiplication of two BigInt values. This is a simple
+             * wrapper around the native BigInt multiplication operator, but it can be extended
+             * in the future to include additional checks or functionality if needed.
+             * @param {BigInt} a - The first BigInt value
+             * @param {BigInt} b - The second BigInt value
+             * @returns {BigInt} - The result of a * b
+             **/
             static gmp_mul(num1, num2) {
                 return this.#toBigInt(num1) * this.#toBigInt(num2);
             } // Function ends
@@ -63,6 +101,14 @@
                 return this.#toBigInt(num1) % this.#toBigInt(num2);
             } // Function ends
 
+            /**
+             * Utility function to initialize a BigInt value from various input types. This function
+             * can handle strings (in decimal, hexadecimal, or binary format), numbers, and already
+             * existing BigInt values. It also supports an optional base parameter for string inputs.
+             * @param {string|number|BigInt} value - The input value to be converted to BigInt
+             * @param {number} [base=10] - The base of the input string (10 for decimal, 16 for hex, 2 for binary)
+             * @returns {BigInt} - The initialized BigInt value
+             **/
             static gmp_init(value, base = 10) {
                 return this.#toBigInt(value, base);
             } // Function ends

@@ -549,6 +549,7 @@
                 try {
                     // Initialize signature variable
                     let signature = null;
+                    const deviceMessage = this.#DeviceMessage;
 
                     // Get the session value
                     let session = sessionValue.value || null;
@@ -571,8 +572,8 @@
                     let objChallengeParams = this.ChallengeParams;
 
                     // Get the salt value and convert it to hex format
-                    let salt = objChallengeParams?.SALT || '';
-                    let srpB = objChallengeParams?.SRP_B || '';
+                    const salt = objChallengeParams?.SALT ?? null;
+                    const srpB = objChallengeParams?.SRP_B ?? null;
                     if (!salt || !srpB) {
                         throw new Error("Salt or SRP_B not found in challenge parameters");
                     } // End if
@@ -584,6 +585,7 @@
                         CryptoUtils.convBigIntToUnsignedHex(A_BigInt) +
                         CryptoUtils.convBigIntToUnsignedHex(B_BigInt)
                     );
+                    console.log('uHash: Matches PHP Code:', uHash);
 
                     // Construct the passkey hash
                     const deviceHash = await this.service?.getDeviceHash();
@@ -596,20 +598,48 @@
                     console.log('K_BigInt: Matches PHP Code: ', K_BigInt.toString(16));
 
                     let gModPowX = GMP.gmp_powm(CryptoUtils.g_BigInt, xBigInt, CryptoUtils.N_BigInt);
-                    console.log('gModPowX', gModPowX.toString(16));
+                    console.log('gModPowX: Matches PHP Code:', gModPowX.toString(16));
 
                     let kgx = GMP.gmp_mul(K_BigInt, gModPowX);
-                    console.log('kgx', kgx.toString(16));
+                    console.log('kgx: Matches PHP Code:', kgx.toString(16));
                     
                     let intValue2 = GMP.gmp_sub(B_BigInt, kgx);
-                    console.log('intValue2', intValue2.toString(16));
+                    console.log('intValue2: Matches PHP Code:', intValue2.toString(16));
+
+                    let exp_BigInt = GMP.gmp_add(
+                            a_BigInt,
+                            GMP.gmp_mul(CryptoUtils.convHexToBigInt(uHash), xBigInt)
+                        );
+                    console.log('exp_BigInt: Matches PHP Code:', exp_BigInt.toString(16));
+
+                    let S_BigInt = GMP.gmp_powm(intValue2, exp_BigInt, CryptoUtils.N_BigInt);
+                    console.log('S_BigInt: 16', '0x' + S_BigInt.toString(16));
+                    console.log('S_BigInt: 10', S_BigInt.toString(10));
+                    console.log('S_BigInt:', CryptoUtils.convBigIntToUnsignedHex(S_BigInt));
+
+                    // Calculate HKDF to derive the key for signing the message
+                    let hkdfHex = await CryptoUtils.hkdf(
+                        CryptoUtils.convHexToBytes(CryptoUtils.convBigIntToUnsignedHex(S_BigInt)),
+                        CryptoUtils.convHexToBytes(CryptoUtils.convHexToUnsignedHex(uHash))
+                    );
+                    console.log('hkdfHex:', hkdfHex);
+                    console.log('hkdf Base64:', CryptoUtils.convHexToBase64(hkdfHex));
+                    console.log('deviceMessage:', deviceMessage);
+
+                    // Generate the signature using HMAC with the derived key
+                    signature = await CryptoUtils.hashHmacHex(
+                        CryptoUtils.convBase64ToUint8Array(deviceMessage),
+                        CryptoUtils.convHexToBytes(hkdfHex)
+                    );
+                    console.log('Signature:', signature);
+                    console.log('Signature:', CryptoUtils.convHexToBase64(signature));
 
                     if (signature) {
-                        return {'PASSWORD_CLAIM_SIGNATURE':signature};
+                        return {'PASSWORD_CLAIM_SIGNATURE':CryptoUtils.convHexToBase64(signature)};
                     } else {
                         return {
                             'PASSKEY_HASH':deviceHash,
-                            'MESSAGE_BASE64': this.#DeviceMessage,
+                            'MESSAGE_BASE64': deviceMessage,
                             'PRIVATE_KEY':privateEphemeral,
                             'DEVICE_GROUP_KEY':this.service?.deviceData['d-grp'] || ''
                         }

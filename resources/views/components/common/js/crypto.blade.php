@@ -1,6 +1,7 @@
 @props([
     'includeCryptoJS' => true,
     'includeCryptoUtils' => true,
+    'infobits' => 'Caldera Derived Key'
 ])
 
 @pushIf(($includeCryptoJS || $includeCryptoUtils), 'cognito-common-crypto-scripts')
@@ -25,6 +26,9 @@
                 
                 // Generator value
                 static g_BigInt = BigInt("{{ '0x' . config('cognito.srp_parameters.G_HEX') }}");
+
+                // Infobits for HKDF
+                static INFO_BITS = "{{ $infobits }}";
 
                 // Secure multiplier (k) is computed as H(N || g)
                 static async K_BigInt() {
@@ -144,6 +148,27 @@
                     return hex.toUpperCase();
                 } // Function ends
 
+                static convHexToBytes(hex) {
+                    return Uint8Array.from(
+                        hex.match(/.{2}/g).map(b => parseInt(b, 16))
+                    );
+                } // Function ends
+
+                static convBinaryToUint8Array(binary) {
+                    const bytes = new Uint8Array(binary.length);
+
+                    for (let i = 0; i < binary.length; i++) {
+                        bytes[i] = binary.charCodeAt(i);
+                    }
+
+                    return bytes;
+                }
+
+                static convBase64ToUint8Array(base64) {
+                    const binary = atob(base64);
+                    return this.convBinaryToUint8Array(binary);
+                }
+
                 /**
                  * Hashes a hex string using SHA-256.
                  *
@@ -207,6 +232,66 @@
                     return Array.from(new Uint8Array(hashBuffer))
                         .map(b => b.toString(16).padStart(2, '0'))
                         .join('');
+                } // Function ends
+
+                static async hkdf(ikm, salt, lengthInBytes=16)
+                {
+                    if (!(ikm instanceof Uint8Array)) {
+                        throw new TypeError("ikm must be a Uint8Array");
+                    }
+
+                    if (!(salt instanceof Uint8Array)) {
+                        throw new TypeError("salt must be a Uint8Array");
+                    }
+
+                    // Import the raw Input Keying Material (IKM) as an HKDF key
+                    const key = await crypto.subtle.importKey(
+                        "raw", ikm, "HKDF", false,
+                        ["deriveBits"]
+                    );
+
+                    // Prepare the info parameter for HKDF
+                    const encoder = new TextEncoder();
+                    const infoEncodeData = this.INFO_BITS ? encoder.encode(this.INFO_BITS) : null;
+
+                    // Derive the bits using HKDF with SHA-256
+                    const derivedBits = await crypto.subtle.deriveBits(
+                        {
+                            name: "HKDF",
+                            hash: "SHA-256", // Or SHA-384, SHA-512
+                            salt: salt,
+                            info: infoEncodeData
+                        },
+                        key,
+                        lengthInBytes * 8 // Length must be in bits
+                    );
+
+                    // Convert result to Hex or Uint8Array
+                    return Array.from(new Uint8Array(derivedBits))
+                        .map(b => b.toString(16).padStart(2, '0'))
+                        .join('');
+                } // Function ends
+
+                static hashHmac(message, secret)
+                {
+                    if (!(message instanceof Uint8Array)) {
+                        throw new TypeError("message must be a Uint8Array");
+                    }
+
+                    if (!(secret instanceof Uint8Array)) {
+                        throw new TypeError("salt must be a Uint8Array");
+                    }
+
+                    const messageWA = CryptoJS.lib.WordArray.create(message);
+                    const secretWA = CryptoJS.lib.WordArray.create(secret);
+
+                    return CryptoJS.HmacSHA256(messageWA, secretWA);
+                } // Function ends
+
+                static hashHmacHex(message, secret)
+                {
+                    return this.hashHmac(message, secret)
+                        .toString(CryptoJS.enc.Hex);
                 } // Function ends
 
                 static isCryptoJSInstalled () {
