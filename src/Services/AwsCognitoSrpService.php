@@ -241,26 +241,9 @@ class AwsCognitoSrpService
             );
 
             // Build the challenge response
-            $message = isset($returnValue['MESSAGE_BASE64']) ? base64_decode($returnValue['MESSAGE_BASE64'], true) : '';
-            if (empty($message)) {
-                //Check if the secret block is present
-                $secretBlock = $returnValue['PASSWORD_CLAIM_SECRET_BLOCK'];
+            $message = $this->buildMessage($returnValue, $payload);
 
-                // Get the current timestamp in the format required by Cognito
-                $timestamp = $returnValue['TIMESTAMP'] ?? $this->generateTimestamp();
-
-                if ($this->isDeviceAuth) {
-                    $message = $returnValue['DEVICE_GROUP_KEY'] . $returnValue['DEVICE_KEY'];
-                } else {
-                    // Get the pool name from the pool ID
-                    $poolName = $this->getPoolName();
-
-                    $userIdForSrp = $this->isDeviceAuth?$payload['USERNAME']:$payload['USER_ID_FOR_SRP'];
-                    $message = $poolName . $userIdForSrp;
-                }
-                $message .= base64_decode($secretBlock) . $timestamp;
-            } //End if
-
+            // Calculate the signature using HMAC-SHA256
             $signature = hash_hmac(self::HASH_ALGO, $message, $hkdf, true);
 
             $returnValue = array_merge($returnValue, [
@@ -383,6 +366,38 @@ class AwsCognitoSrpService
         $poolId = $poolId ?? $this->poolId;
         $poolIdParts = explode('_', $poolId);
         return $poolIdParts[1];
+    } //Function ends
+
+    /**
+     * Build the challenge response message
+     *
+     * @param array $returnValue
+     * @param array $payload
+     * @return string
+     */
+    private function buildMessage(array $returnValue, array $payload): string
+    {
+        // Build the challenge response
+        $message = isset($returnValue['MESSAGE_BASE64']) ? base64_decode($returnValue['MESSAGE_BASE64'], true) : '';
+        if (empty($message)) {
+            //Check if the secret block is present
+            $secretBlock = $returnValue['PASSWORD_CLAIM_SECRET_BLOCK'];
+
+            // Get the current timestamp in the format required by Cognito
+            $timestamp = $returnValue['TIMESTAMP'] ?? $this->generateTimestamp();
+
+            if ($this->isDeviceAuth) {
+                $message = $returnValue['DEVICE_GROUP_KEY'] . $returnValue['DEVICE_KEY'];
+            } else {
+                // Get the pool name from the pool ID
+                $poolName = $this->getPoolName();
+
+                $userIdForSrp = $this->isDeviceAuth?$payload['USERNAME']:$payload['USER_ID_FOR_SRP'];
+                $message = $poolName . $userIdForSrp;
+            }
+            $message .= base64_decode($secretBlock) . $timestamp;
+        } //End if
+        return $message;
     } //Function ends
 
 } //Class ends
