@@ -15,7 +15,7 @@ return [
         'sms_mfa' => 'Enter the OTP sent to your phone',
         'software_token_mfa' => 'Enter the code from your Authenticator App',
         'password_verifier' => 'Enter your password',
-        'device_srp_auth' => 'Generating the Device Challenge',
-        'device_password_verifier' => 'Validating the Device Authentication',
+        'device_srp_auth' => 'Generating the Device Token',
+        'device_password_verifier' => 'Validating the Device Token',
     ],
 ];
