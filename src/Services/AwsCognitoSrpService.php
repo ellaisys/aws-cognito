@@ -213,15 +213,11 @@ class AwsCognitoSrpService
 
             // Set Hex Params
             $salt = gmp_init($payload['SALT'], 16);
-            Log::debug('Salt: ' . gmp_strval($salt, 16));
-
             $paramCapB = gmp_init($payload['SRP_B'], 16);
-            Log::debug('SRP_B: ' . gmp_strval($paramCapB, 16));
 
             //Sign with the Salt
             $userPassHash = $returnValue['PASSKEY_HASH'];
             $x = $this->hexHash($this->padHex($salt) . $userPassHash);
-            Log::debug('x: ' . gmp_strval($x, 16));
 
             /*
             * u = H(A | B)
@@ -234,17 +230,10 @@ class AwsCognitoSrpService
             * S = (B - k * g^x) ^ (a + ux) mod N
             */
             $gModPowXN = gmp_powm($this->paramG, $x, $this->paramN);
-
             $kgx = gmp_mul($this->paramK, $gModPowXN);
-
             $intValue2 = gmp_sub($paramCapB, $kgx);
-            Log::debug('intValue2: ' . gmp_strval($intValue2, 16));
-
             $exp = gmp_add($paramSmallA, gmp_mul($u, $x));
-            Log::debug('Exp: ' . gmp_strval($exp, 16));
-
             $s = gmp_powm($intValue2, $exp, $this->paramN);
-            Log::debug('S: ' . gmp_strval($s, 16));
 
             $hkdf = $this->computeHkdf(
                 hex2bin($this->padHex($s)),
@@ -270,8 +259,6 @@ class AwsCognitoSrpService
                     $message = $poolName . $userIdForSrp;
                 }
                 $message .= base64_decode($secretBlock) . $timestamp;
-                Log::debug('Message: ' . $message);
-                Log::debug('Message base64_encode: ' . base64_encode($message));
             } //End if
 
             $signature = hash_hmac(self::HASH_ALGO, $message, $hkdf, true);

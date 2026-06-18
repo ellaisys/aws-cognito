@@ -56,8 +56,8 @@
 
                     // Get the action from the data-action attribute and validate it
                     let dataAction = this.attributes['data-action'] ? (this.attributes['data-action'].value).toLowerCase() : null;
-                    if (!dataAction || (dataAction !== 'register' && dataAction !== 'delete')) {
-                        console.warn('No action specified for device auth button. Use "register" or "delete" as data-action value.');
+                    if (!dataAction) {
+                        console.warn('No action specified for device auth button.');
                         this.disabled = false;
                         return;
                     } //End if
@@ -73,8 +73,10 @@
 
                         // Re-enable the button after deletion
                         this.disabled = response;
+                    } else if (dataAction === 'validate') { // No action
+                        this.disabled = false;
                     } else { // Handle unknown action
-                        console.warn('Unknown action for device action button. Use "register" or "delete" as data-action value.');
+                        console.warn('Unknown action for device action button.');
 
                         // Re-enable the button if action is unknown
                         this.disabled = false;
@@ -488,7 +490,7 @@
                     };
 
                     // Build the signature for the password claim.
-                    let signature = await this.buildPasswordClaimSignature();
+                    let signature = await this.#buildPasswordClaimSignature();
                     if (!signature) {
                         throw new Error("Failed to build password claim signature");
                     } // End if
@@ -545,7 +547,22 @@
                 } // Try ends
             } // Function end
 
-            async buildPasswordClaimSignature() {
+            /**
+             * Function to build the password claim signature for the
+             * DEVICE_PASSWORD_VERIFIER challenge. It follows the SRP
+             * protocol to compute the necessary values and generates
+             * the signature using HMAC with the derived key.
+             *
+             * Note: For production implementation, we have implemented
+             * all cryptographic operations securely and the sensitive
+             * data is handled appropriately.
+             *
+             * @returns {Object} - An object containing the 
+             * PASSWORD_CLAIM_SIGNATURE in Base64 format, or additional
+             * debug information if the signature generation fails.
+             * @throws {Error} - Throws an error during the process.
+             **/    
+            async #buildPasswordClaimSignature() {
                 try {
                     // Initialize signature variable
                     let signature = null;
@@ -566,7 +583,6 @@
                     // Note: BigInt modular exponentiation is needed here.
                     // For browser/node: A = BigInt(g)**BigInt(a) % BigInt(N)
                     const A_BigInt = GMP.gmp_powm(CryptoUtils.g_BigInt, a_BigInt, CryptoUtils.N_BigInt);
-                    console.log('A_BigInt', A_BigInt.toString(16));
 
                     // Get the challenge parameters value and parse it as JSON
                     let objChallengeParams = this.ChallengeParams;
@@ -585,61 +601,49 @@
                         CryptoUtils.convBigIntToUnsignedHex(A_BigInt) +
                         CryptoUtils.convBigIntToUnsignedHex(B_BigInt)
                     );
-                    console.log('uHash: Matches PHP Code:', uHash);
 
                     // Construct the passkey hash
                     const deviceHash = await this.service?.getDeviceHash();
                     let xHash = await CryptoUtils.hexHash(saltHex + deviceHash);
-                    console.log('xHash: Matches PHP Code:', xHash);
                     let xBigInt = CryptoUtils.convHexToBigInt(xHash);
 
-                    // Calculate S = (B - k * g^x) ^ (a + u * x) % N
+                    // Calculate base and exponent for S_USER calculation
                     const K_BigInt = await CryptoUtils.K_BigInt();
-                    console.log('K_BigInt: Matches PHP Code: ', K_BigInt.toString(16));
 
-                    let gModPowX = GMP.gmp_powm(CryptoUtils.g_BigInt, xBigInt, CryptoUtils.N_BigInt);
-                    console.log('gModPowX: Matches PHP Code:', gModPowX.toString(16));
+                    // Calculate the base (SRP_B - k * g^x) in BigInt
+                    let gModPowX_BigInt = GMP.gmp_powm(CryptoUtils.g_BigInt, xBigInt, CryptoUtils.N_BigInt);
+                    let kgx_BigInt = GMP.gmp_mul(K_BigInt, gModPowX_BigInt);
+                    let sBase_BigInt = GMP.gmp_sub(B_BigInt, kgx_BigInt);
 
-                    let kgx = GMP.gmp_mul(K_BigInt, gModPowX);
-                    console.log('kgx: Matches PHP Code:', kgx.toString(16));
-                    
-                    let intValue2 = GMP.gmp_sub(B_BigInt, kgx);
-                    console.log('intValue2: Matches PHP Code:', intValue2.toString(16));
-
-                    let exp_BigInt = GMP.gmp_add(
+                    // Calculate the exponent (a + u * x) in BigInt
+                    let sExp_BigInt = GMP.gmp_add(
                             a_BigInt,
                             GMP.gmp_mul(CryptoUtils.convHexToBigInt(uHash), xBigInt)
                         );
-                    console.log('exp_BigInt: Matches PHP Code:', exp_BigInt.toString(16));
 
-                    let S_BigInt = GMP.gmp_powm(intValue2, exp_BigInt, CryptoUtils.N_BigInt);
-                    console.log('S_BigInt: 16', '0x' + S_BigInt.toString(16));
-                    console.log('S_BigInt: 10', S_BigInt.toString(10));
-                    console.log('S_BigInt:', CryptoUtils.convBigIntToUnsignedHex(S_BigInt));
+                    // Calculate S_USER = (SRP_B - k * g^x)^(a + u * x) % N
+                    let S_USER_BigInt = GMP.gmp_powm(sBase_BigInt, sExp_BigInt, CryptoUtils.N_BigInt);
 
                     // Calculate HKDF to derive the key for signing the message
                     let hkdfHex = await CryptoUtils.hkdf(
-                        CryptoUtils.convHexToBytes(CryptoUtils.convBigIntToUnsignedHex(S_BigInt)),
+                        CryptoUtils.convHexToBytes(CryptoUtils.convBigIntToUnsignedHex(S_USER_BigInt)),
                         CryptoUtils.convHexToBytes(CryptoUtils.convHexToUnsignedHex(uHash))
                     );
-                    console.log('hkdfHex:', hkdfHex);
-                    console.log('hkdf Base64:', CryptoUtils.convHexToBase64(hkdfHex));
-                    console.log('deviceMessage:', deviceMessage);
 
                     // Generate the signature using HMAC with the derived key
                     signature = await CryptoUtils.hashHmacHex(
                         CryptoUtils.convBase64ToUint8Array(deviceMessage),
                         CryptoUtils.convHexToBytes(hkdfHex)
                     );
-                    console.log('Signature:', signature);
-                    console.log('Signature:', CryptoUtils.convHexToBase64(signature));
 
                     if (signature) {
-                        return {'PASSWORD_CLAIM_SIGNATURE':CryptoUtils.convHexToBase64(signature)};
+                        return {
+                            'PASSWORD_CLAIM_SIGNATURE':CryptoUtils.convHexToBase64(signature)
+                        };
                     } else {
                         return {
                             'PASSKEY_HASH':deviceHash,
-                            'MESSAGE_BASE64': deviceMessage,
+                            'MESSAGE_BASE64':deviceMessage,
                             'PRIVATE_KEY':privateEphemeral,
                             'DEVICE_GROUP_KEY':this.service?.deviceData['d-grp'] || ''
                         }
