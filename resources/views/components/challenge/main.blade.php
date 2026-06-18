@@ -278,6 +278,17 @@
                 }
             } // Function ends
 
+            setCookie(name, value, daysToLive) {
+                let cookieString = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
+                
+                if (daysToLive) {
+                    const seconds = daysToLive * 24 * 60 * 60;
+                    cookieString += `; max-age=${seconds}`;
+                }
+                
+                cookieString += "; path=/; SameSite=Lax; Secure";
+                document.cookie = cookieString;
+            } // Function ends
         } // Class ends
 
         /**
