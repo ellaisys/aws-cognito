@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class CognitoDeviceAuth extends Component
+class CognitoDeviceAuth extends CognitoBaseComponent
 {
     public string $userkeyB64encoded;
     public string $newDeviceData;
@@ -32,7 +32,7 @@ class CognitoDeviceAuth extends Component
         public string|null $urlDeviceConfirmEndpoint = null,
         public string|null $urlDeviceDeleteEndpoint = null,
         public string $challengeNameValue = 'NONE',
-        public string $secureCode = 'cognito-challenge-',
+        public string $secureCode = 'device-',
         public bool $includeGMP = true,
         public bool $includeCryptoJS = true,
         public bool $includeCryptoUtils = true,
@@ -53,6 +53,7 @@ class CognitoDeviceAuth extends Component
 
             // Generate a base64-encoded user key
             $this->userkeyB64encoded = base64_encode($this->getUsername());
+            $this->secureCode .= $this->userkeyB64encoded;
 
             // Get the new device data from the session if available
             $this->newDeviceData = $this->processNewDeviceData();
@@ -84,47 +85,6 @@ class CognitoDeviceAuth extends Component
         }
 
         return base64_encode(json_encode($newDeviceData));
-    } //Function end
-
-    /**
-     * Get the username from session or request data
-     *
-     * @return string
-     */
-    private function getUsername(): string
-    {
-        $username = 'cognito-user';
-        
-        // Check authenticated claim data
-        $claim = session() ? session()->get('claim') : null;
-
-        // Check challenge data
-        $challengeData = session('data') ?? null;
-
-        // Check request data for username
-        $requestUsername = request()->has('username') ? request()->get('username') : null;
-
-        if ($claim && isset($claim['email'])) {
-            $username = $claim['email'];
-        } elseif ($challengeData && isset($challengeData['status'])
-            && $challengeData['status'] == 'challenge') {
-            
-            // If the challenge data contains a username
-            $challengeParamsValue = $challengeData['challenge_params'] ?? null;
-            if ($challengeParamsValue && isset($challengeParamsValue['USER_ID_FOR_SRP'])) {
-                $username = $challengeParamsValue['USER_ID_FOR_SRP'];
-            } elseif ($challengeParamsValue && isset($challengeParamsValue['USERNAME'])) {
-                $username = $challengeParamsValue['USERNAME'];
-            } else {
-                $username = $challengeData['username'] ?? $username;
-            }
-        } elseif ($requestUsername) {
-                $username = $requestUsername;
-        } else {
-            $username = auth()->user() ? auth()->user()->email : $username;
-        } // End if
-
-        return $username;
     } //Function end
 
     /**

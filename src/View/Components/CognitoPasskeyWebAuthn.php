@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class CognitoPasskeyWebAuthn extends Component
+class CognitoPasskeyWebAuthn extends CognitoBaseComponent
 {
     /**
      * Create a new component instance.
@@ -29,7 +29,7 @@ class CognitoPasskeyWebAuthn extends Component
         public string|null $urlPasskeyStartEndpoint = null,
         public string|null $urlPasskeyCompleteEndpoint = null,
         public string|null $urlPasskeyDeleteEndpoint = null,
-        public string $secureCode = 'webauthn-passkey-'
+        public string $secureCode = 'webpasskey-'
     )
     {
         try {
@@ -48,6 +48,11 @@ class CognitoPasskeyWebAuthn extends Component
             if (!$this->urlPasskeyStartEndpoint || !$this->urlPasskeyCompleteEndpoint || !$this->urlPasskeyDeleteEndpoint) {
                 throw new HttpException(400, 'Passkey endpoint URLs could not be found. Please ensure the routes are defined and named correctly.');
             }
+
+            // Generate a base64-encoded user key
+            $this->userkeyB64encoded = base64_encode($this->getUsername());
+            $this->secureCode .= $this->userkeyB64encoded;
+            
         } catch (Exception $e) {
             throw new HttpException(400, 'Error generating passkey endpoint URLs');
         }
