@@ -58,7 +58,7 @@ trait AwsCognitoClientAction
             $response = $this->client->initiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAction:initiateAuth:CognitoIdentityProviderException');
-            throw AwsCognitoException::create($exception);
+            throw AwsCognitoException::create($exception, 401);
         } //Try-catch ends
 
         return $response;

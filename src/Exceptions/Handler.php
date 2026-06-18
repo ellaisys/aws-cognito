@@ -180,6 +180,7 @@ class Handler extends ExceptionHandler
         $statusCode = Response::HTTP_BAD_REQUEST; //400
         switch ($e->getMessage()) {
             case AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED:
+                $statusCode = Response::HTTP_UNAUTHORIZED; //401
                 $errorMessage = 'User authentication error';
                 $errorKey = AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED;
                 break;
@@ -205,6 +206,7 @@ class Handler extends ExceptionHandler
                 break;
 
             default:
+                $statusCode = $e->getCode();
                 $errorMessage = $e->getMessage();
                 $errorKey = 'ERROR_COGNITO_DEFAULT';
                 break;

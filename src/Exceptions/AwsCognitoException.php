@@ -58,8 +58,8 @@ class AwsCognitoException extends HttpException
     /**
      * Static constructor / factory
      */
-    public static function create(CognitoIdentityProviderException $exception): self {
-        return new self(self::processAwsCognitoError($exception), $exception);
+    public static function create(CognitoIdentityProviderException $exception, int $code = 400): self {
+        return new self(self::processAwsCognitoError($exception), $exception, [], $code);
     }
 
     /**
@@ -111,6 +111,7 @@ class AwsCognitoException extends HttpException
                 $errorCode = self::COGNITO_AUTH_POOL_CONFIG_INVALID;
                 break;
             
+            case 'ResourceNotFoundException':
             case 'InvalidParameterException':
             case 'InternalErrorException':
             default:
