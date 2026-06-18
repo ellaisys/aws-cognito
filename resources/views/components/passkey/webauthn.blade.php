@@ -27,9 +27,8 @@
                     this.disabled = response;
                 } else if (dataAction === 'delete') { // Delete an existing passkey
                     // Get the user key from the data attribute
-                    let userkeyB64encoded = this.attributes['data-userkey'].value;
                     let webAuthn = new WebAuthnRegistration();
-                    await webAuthn.delete(userkeyB64encoded);
+                    await webAuthn.delete();
 
                     // Re-enable the button after deletion
                     this.disabled = false;
@@ -96,20 +95,20 @@
              * with the server to delete the passkey and signals the authenticator
              * about the deleted credential.
              */
-            async delete(userkeyB64encoded) {
+            async delete() {
                 try {
                     // Read the data to local store
-                    let userData = localStorage.getItem(this.secureCode + userkeyB64encoded);
+                    let userData = localStorage.getItem(this.secureCode);
                     if (!userData) {
                         throw new Error('No passkey data found for the user in local storage');
                     }
-                    userData = JSON.parse(userData);
+                    userData = JSON.parse(atob(userData));
 
                     // Signal the authenticator about the deleted credential
                     let deletePayload = await this.#deleteRegistration(userData?.credential_id, userData?.rp_id);
                     if(deletePayload) {
                         // Remove the data from local store
-                        localStorage.removeItem(this.secureCode + userkeyB64encoded);
+                        localStorage.removeItem(this.secureCode);
 
                         this.#alert('Passkey deleted successfully.', 'success');
                         return true;
@@ -182,10 +181,8 @@
                             rp_id: publicKeyOptions?.rp?.id,
                             user_name: publicKeyOptions?.user?.name
                         };
-                    localStorage.setItem(
-                            this.secureCode + btoa(userData?.user_name),
-                            JSON.stringify(userData)
-                        );
+                    userData = btoa(JSON.stringify(userData));
+                    localStorage.setItem(this.secureCode, userData);
 
                     return await completeResponse.json();
                 } catch (error) {

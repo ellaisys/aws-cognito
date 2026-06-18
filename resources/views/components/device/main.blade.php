@@ -100,7 +100,6 @@
             constructor() {
                 this.csrfToken = "{{ csrf_token() }}";
                 this.secureCode = "{{ $secureCode ?? '' }}";
-                this.userkeyB64encoded = "{{ $userkeyB64encoded ?? '' }}";
                 this.newDeviceData = "{{ $newDeviceData ?? '' }}";
             }
 
@@ -151,7 +150,7 @@
                     let deletePayload = await this.#deleteDevice(deviceData['d-key']);
                     if (deletePayload) {
                         // Remove the data from local store
-                        localStorage.removeItem(this.secureCode + this.userkeyB64encoded);
+                        localStorage.removeItem(this.secureCode);
 
                         this.#alert('Device deleted successfully.', 'success');
                         return true;
@@ -282,15 +281,15 @@
              */
             get deviceData() {
                 try {
-                    let deviceData = localStorage.getItem(this.secureCode + this.userkeyB64encoded);
+                    let deviceData = localStorage.getItem(this.secureCode);
                     if (!deviceData) {
                         // If not found, check if new device data is available
-                        deviceData = this.newDeviceData ? atob(this.newDeviceData) : null;
+                        deviceData = this.newDeviceData ?? null;
                         if (!deviceData) {
                             throw new Error('No device data found for the user in local storage');
                         } // End if
                     } // End if
-                    return JSON.parse(deviceData);
+                    return JSON.parse(atob(deviceData));
                 } catch (error) {
                     console.error('Error retrieving device data from local storage:', error);
                     throw error;
@@ -308,7 +307,8 @@
              */
             set deviceData(deviceData) {
                 try {
-                    localStorage.setItem(this.secureCode + this.userkeyB64encoded, JSON.stringify(deviceData));
+                    deviceData = btoa(JSON.stringify(deviceData));
+                    localStorage.setItem(this.secureCode, deviceData);
                 } catch (error) {
                     console.error('Error saving device data to local storage:', error);
                     throw error;
