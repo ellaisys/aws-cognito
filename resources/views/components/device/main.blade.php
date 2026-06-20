@@ -13,7 +13,7 @@
         :includeCryptoUtils="$includeCryptoUtils" />
 @endif
 
-<input type="hidden" name="device_key" id="device_key" value="" />
+<input type="hidden" name="device_key" id="device_key" value="" disabled />
 
 @push('cognito-device-auth-scripts')
     @if ($includeGMP)
@@ -45,7 +45,12 @@
                     button.disabled = true;
                 } else if ((deviceService?.isDeviceRegistered) && dataAction === 'validate') {
                     let deviceKey = deviceService?.deviceData['d-key'] ?? '';
-                    document.getElementById('device_key').value = deviceKey;
+
+                    // Set the device key value in the hidden input field
+                    // and enable it for submission.
+                    let elemDeviceKey = document.getElementById('device_key');
+                    elemDeviceKey.value = deviceKey;
+                    elemDeviceKey.disabled = false;
                 } else {
                     button.disabled = false;
                 } //End if
@@ -557,11 +562,11 @@
              * all cryptographic operations securely and the sensitive
              * data is handled appropriately.
              *
-             * @returns {Object} - An object containing the 
+             * @returns {Object} - An object containing the
              * PASSWORD_CLAIM_SIGNATURE in Base64 format, or additional
              * debug information if the signature generation fails.
              * @throws {Error} - Throws an error during the process.
-             **/    
+             **/
             async #buildPasswordClaimSignature() {
                 try {
                     // Initialize signature variable

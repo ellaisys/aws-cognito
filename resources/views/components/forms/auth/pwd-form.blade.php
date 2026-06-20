@@ -124,8 +124,15 @@
         toggleDeviceKey();
     });
     deviceKeyCheckbox.addEventListener('change', function() {
-        deviceKeyInput.disabled = !deviceKeyInput.disabled;
-        toggleDeviceKey();
+        if (!deviceKeyInput.value) {
+            deviceKeyInput.disabled = true;
+            deviceKeyCheckbox.checked = false;
+            alert('Device key is not available. Please validate your device first.');
+            return;
+        } else {
+            deviceKeyInput.disabled = !deviceKeyInput.disabled;
+            toggleDeviceKey();
+        } // End if
     });
 
     function redirectToPasskeyOptions(urlEndpoint) {
@@ -147,6 +154,7 @@
         if (deviceKeyCheckbox.checked && deviceKeyInput.disabled==false) {
             deviceKeyCheckboxLabel.innerText = '{{ __('Device Security Enabled') }}';
         } else {
+            deviceKeyCheckbox.checked = false;
             deviceKeyCheckboxLabel.innerText = '{{ __('Device Security Disabled') }}';
         }
     }
