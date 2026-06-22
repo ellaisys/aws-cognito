@@ -1,10 +1,9 @@
 Release 50 (tag v2.0.6)
-- Feat: Issue [#137](https://github.com/ellaisys/aws-cognito/issues/137)
+- Feat: Issue [#139](https://github.com/ellaisys/aws-cognito/issues/139)
 - Feat: Add new components and scripts for FIDO2 Security Keys OR Passkey based MFA functionality.
 - Fix: Refactor of the authentication flow to integrate FIDO2 MFA, including handling of new challenge types and user states.
 - Refactor: Updated the user interface to include options for FIDO2 MFA during login and registration flows.
 - Doc: Update readme with FIDO2 MFA configuration instructions and details.
-
 
 Release 49 (tag v2.0.5)
 - Feat: Issue [#132](https://github.com/ellaisys/aws-cognito/issues/132)
