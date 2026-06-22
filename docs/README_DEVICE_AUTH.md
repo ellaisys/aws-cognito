@@ -2,7 +2,7 @@
 
 ## **Overview**
 
-Device authentication is a security feature that allows users to register and authenticate their devices with AWS Cognito. This feature enhances security by enabling multi-factor authentication (MFA) and device tracking, ensuring that only trusted devices can access user accounts. 
+With Amazon Cognito user pools, you can associate each of your users' devices with a unique device identifier: a device key. When you present the device key and perform device authentication at sign-in, you can configure your application with a trusted device authentication flow. Device authentication is a security feature that allows users to register and authenticate their devices with AWS Cognito. This feature enhances security by enabling multi-factor authentication (MFA) and device tracking, ensuring that only trusted devices can access user accounts. 
 
 When a user logs in from a new device, they may be prompted to register the new device. Once registered, the device can be remembered for future logins, reducing the need for repeated MFA prompts. This feature is particularly useful for applications that require high security, such as banking or healthcare apps.
 
@@ -12,15 +12,55 @@ This document explains how you can use this in the context of AWS Cognito and La
 
 ## **Configuration**
 
-Ensure your AWS Cognito User Pool is configured to allow `USER_SRP_AUTH` as an authentication flow. For that go to your User Pool in AWS Console, navigate to "App clients", select your app client, and check the option for "SRP (Secure Remote Password) authentication flow **ALLOW_USER_SRP_AUTH**" as shown below:
-<img src="../assets/images/aws_cognito_srp_flow.png" width="100%" alt="cognito app client settings"/>
+Configure your user pool to remember devices in the Sign-in menu of your user pool, under Device tracking as shown below:
+<img src="../assets/images/aws_cognito_device_flow1.png" width="100%" alt="cognito device flow"/>
 
+You can choose to always remember devices, or only remember them when the user opts in during sign-in. This setting allows you to control how devices are registered and remembered for future authentication attempts.
+<img src="../assets/images/aws_cognito_device_flow2.png" width="100%" alt="cognito device flow"/>
 
-## **SRP Authentication Flow**
+For more information on configuring device authentication in AWS Cognito, refer to the [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-device-tracking.html).
 
-For this package, a new service is provided **Ellaisys\Cognito\Services\AwsCognitoSrpService** which implements the SRP authentication flow. The flow consists of the following methods:
+## **Registering a Device**
+
+When a user logs in from a new device, they will be prompted to register the device. The registration process involves generating a unique device key and associating it with the user's account. This claim data is provided with additional **NewDeviceMetadata** having DeviceGroupKey and DeviceKey.
+
+Generate a new SRP secret for your user's device and store it securely on the client side (e.g., in local storage or secure storage). This secret will be used for future device authentication attempts.
+
+This secret is generated using the SRP protocol and is unique to the device. It should be treated as sensitive information and not shared or transmitted over insecure channels.
+
+This package provides a new component view **cognito-device-auth** which can be used to register a new device. The view is located at **resources/views/components/device/main.blade.php** within the package. You may not require to customize this view, but if you wish to do so, you can publish the package views and modify the view as needed.
+
+To use this view in your application, you can include it in your Blade templates as follows:
+
+```blade
+  @section('content')
+  <x-cognito-device-auth />
+  ...
+  ...
+  ...
+
+  @stack('cognito-device-auth-scripts')
+  @endsection
+
+```
+Add the @stack('cognito-device-auth-scripts') directive to your main layout file (e.g., home.blade.php) to ensure that the necessary JavaScript for device authentication is included in your application. This should be added after the @stack directives for other Cognito-related scripts to ensure proper loading order.
+
+for the API based implementation, exposes CRUD for you can use. The following endpoints are available for device authentication:
+
+```php
+
+  GET|HEAD  api/cognito/device ...................... Ellaisys\Cognito\Http\Controllers\Auth\DeviceController@list
+  POST      api/cognito/device .................... Ellaisys\Cognito\Http\Controllers\Auth\DeviceController@create
+  PUT       api/cognito/device/{deviceKey} ........ Ellaisys\Cognito\Http\Controllers\Auth\DeviceController@update
+  DELETE    api/cognito/device/{deviceKey} ........ Ellaisys\Cognito\Http\Controllers\Auth\DeviceController@delete
+
+```
+
+## **Device Authentication Flow**
+
+For this package, a new service is provided **Ellaisys\Cognito\Services\AwsCognitoSrpService** which implements the Device authentication flow. The flow consists of the following methods:
 1. *generateEphemeral* - Generates the SRP_A value on the client side, along with the private ephemeral value 'a'.
-2. *processChallenge* - Builds the response to the PASSWORD_VERIFIER challenge using the SRP_B, salt, and secret block received from the server.
+2. *processChallenge* - Builds the response to the DEVICE_PASSWORD_VERIFIER challenge using the SRP_B, salt, and secret block received from the server.
 
 ### **Step 1: SRP_A Generation**
 
@@ -42,13 +82,15 @@ Where:
 The client sends the following to the server:
 
 ```
-POST /login/srp
+POST /login/auth-challenge
 Content-Type: application/json
 
 {
-  "username": "user@example.com",
-  "srp_a": "<optional_computed_SRP_A_value>",
-  "session_token": "<optional_computed_random_number>"
+  "challenge_name": "DEVICE_SRP_AUTH",
+  "session": "<session_token_from_the_server>",
+  "username": "<username_for_srp>",
+  "challenge_value": "<computed_challenge_value>",
+  "challenge_params": "<returned_challenge_params_from_the_server>"
 }
 ```
 
