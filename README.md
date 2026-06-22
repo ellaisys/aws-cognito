@@ -1,4 +1,4 @@
-<img src="./assets/images/banner.png" width="100%" alt="Laravel AWS Cognito Package for Web and API authentication with MFA Feature"/>
+<img src="./assets/images/banner.png" width="100%" alt="Laravel AWS Cognito Package for IAM"/>
 
 # Laravel AWS Cognito Package for Web and API authentication
 Features:  MFA + FIDO2 (Passkey) + SRP Authentication Features
