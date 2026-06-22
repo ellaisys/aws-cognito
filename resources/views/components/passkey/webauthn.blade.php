@@ -7,6 +7,17 @@
         // Add event listeners to all buttons with the data-role attribute set to "passkey-webauthn"
         const elemsPasskeyWebAuthn = document.querySelectorAll('[data-role="passkey-webauthn"]');
         elemsPasskeyWebAuthn.forEach(button => {
+            //Check the data-action and enable the button
+            let btnDataAction = button.attributes['data-action'] ? (button.attributes['data-action'].value).toLowerCase() : null;
+            let isPasskeyEnabled = {{ $passkeyEnabled ? 'true' : 'false' }};
+            if (btnDataAction && (btnDataAction === 'register')) {
+                button.disabled = isPasskeyEnabled; // Enable the register button only if passkeys are not enabled
+            } else if (btnDataAction && (btnDataAction === 'delete')) {
+                button.disabled = !isPasskeyEnabled; // Enable the delete button only if passkeys are enabled
+            } else {
+                return;
+            } //End if
+
             button.addEventListener('click', async function() {
                 // Disable the button to prevent multiple clicks
                 this.disabled = true;
