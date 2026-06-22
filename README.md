@@ -45,14 +45,14 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Refresh Token API](#refresh-token)
 - [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
-- [MFA Implementation for Session and Token Guards](./docs/README_MFA.md)
+- [MFA Implementation for Session and Token Guards](./docs/README_MFA.md) **Updated**
 - [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
 - [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
 - [Preconfigured routes and controllers for Web and API ](./docs/README_ROUTES.md#routes)
 - [Preconfigured views for Web ](./docs/README_ROUTES.md#web-views-and-components)
-- [FIDO2 Security Keys Passkey Feature](./docs/README_FIDO2.md) **New Feature**
+- [FIDO2 Security Keys Passkey Feature](./docs/README_FIDO2.md) **Updated**
 - [SRP Authentication Feature](./docs/README_SRP.md) **New Feature**
-- [Device Authentication and Remembering Devices](./docs/README_DEVICE_AUTH.md) **New Feature**
+- [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
 
 ## Compatability
 
