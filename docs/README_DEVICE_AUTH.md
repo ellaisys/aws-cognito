@@ -59,10 +59,55 @@ for the API based implementation, exposes CRUD for you can use. The following en
 ## **Device Authentication Flow**
 
 For this package, a new service is provided **Ellaisys\Cognito\Services\AwsCognitoSrpService** which implements the Device authentication flow. The flow consists of the following methods:
-1. *generateEphemeral* - Generates the SRP_A value on the client side, along with the private ephemeral value 'a'.
-2. *processChallenge* - Builds the response to the DEVICE_PASSWORD_VERIFIER challenge using the SRP_B, salt, and secret block received from the server.
+1. *loginWithDevice* - Initiates the device authentication process by sending the device key and receiving the authentication challenge from AWS Cognito.
+2. *generateAuthSRP_A* - Generates the SRP_A value on the client side, along with the private ephemeral value 'a'.
+3. *verifier* - Builds the response to the DEVICE_PASSWORD_VERIFIER challenge using the SRP_B, salt, and secret block received from the server.
 
-### **Step 1: SRP_A Generation**
+### **Step 1: Login with Device**
+The client initiates the device authentication process by sending the device key to the server. The server then calls AWS Cognito's endpoint to initiate the authentication process and receives the authentication challenge.
+
+The package provides the component to be added to your login view, which will handle the device authentication flow. When the user submits their username and password, the component will check if the device is already registered. If not, it will not send the device key to the server and will proceed with the normal authentication flow.
+
+```blade
+
+  <form method="POST" id="auth-password-form" ... >
+      @csrf
+
+      <x-cognito-device-auth
+          :includeGMP="false"
+          :includeCryptoJS="false"
+          :includeCryptoUtils="false" />
+      ...
+      ...
+      <input type="email" id="username" name="username"
+        data-role="device-auth" data-action="username"
+        required autocomplete="email" autofocus />
+      ...
+      ...
+      <button type="submit" 
+        data-role="device-auth" data-action="validate">Login</button>
+  </form>
+
+  @stack('cognito-device-auth-scripts')
+
+```
+
+If you are using the API based implementation, you can call the standard login endpoint method from your controller to initiate the device authentication process. This method will handle the communication with AWS Cognito and return the necessary challenge parameters for the next step of the authentication flow. It just requires an additional parameter **device_key** to be sent along with the username and password in the request body. The device key is a unique identifier for the registered device and is used to authenticate the device during the login process.
+
+```
+POST /login
+Content-Type: application/json
+
+{
+  "username": "<username_for_login>",
+  "password": "<password_for_login>",
+  "device_key": "<device_key_of_registered_device>"
+}
+```
+
+The server will then process this request and call AWS Cognito's endpoint to initiate the authentication process. If the device key is valid and the user credentials are correct, AWS Cognito will respond with an authentication challenge **DEVICE_SRP_AUTH** that includes the necessary parameters for the next step of the authentication flow.
+
+### **Step 2: SRP_A Generation**
 
 The package expects the client (browser/mobile app) to compute the SRP_A value before sending it to the server. This is a critical part of the SRP protocol, as it ensures that the actual password is never transmitted. However, for ease you can have the package compute SRP_A on the server side as well, but this is not recommended for security reasons.
 **IMPORTANT: SRP_A is calculated BEFORE receiving the salt from the server.**
@@ -76,8 +121,6 @@ Where:
 - **g** = Generator (provided by AWS Cognito)
 - **N** = Large prime modulus (provided by AWS Cognito)
 - **mod** = Modulo operation
-
-### **Step 2: Initiate Authentication**
 
 The client sends the following to the server:
 
@@ -121,20 +164,20 @@ AWS Cognito responds with:
 - **Session**: Session token for the ongoing authentication process
 - **ChallengeName**: Typically "PASSWORD_VERIFIER" indicating the next step in the authentication process
 
-### **Step 4: Password Proof Calculation**
+### **Step 4: Device Proof Calculation**
 
-Generate the password hash (with SHA256 encryption) using the pool name (without region), username and the user's password. You can use the following formula to calculate the password proof:
+Generate the device hash (with SHA256 encryption) using the device group id, device key and the device secret. You can use the following formula to calculate the device proof:
 
 ```javascript
 
-    // Set the actual password value in the hidden challenge value input
-    let passKey = atob(poolName) + username+ ':' + password;
+    // Set the actual device secret value in the hidden challenge value input
+    let deviceKey = deviceGroupId + deviceKey+ ':' + deviceSecret;
 
     // Hash with SHA256 and set the hashed value in the challenge value input
     let passKeyHash = await hashEncrypt(passKey, 'SHA-256');
 ```
 
-Send that value back to the server in response to the challenge with **PASSKEY_HASH** as the key.
+Send that value back to the server in response to the challenge with **PASSKEY_HASH** as the key OR you can generate the **PASSWORD_CLAIM_SIGNATURE** using the blade component provided in the package and send that value back to the server in response to the challenge with **PASSWORD_CLAIM_SIGNATURE** as the key. The package will handle the generation of the PASSWORD_CLAIM_SIGNATURE using the device proof and other parameters received from the server.
 
 ### **Step 5: Respond to the Auth Challenge**
 
@@ -145,30 +188,39 @@ POST /login/auth-challenge
 Content-Type: application/json
 
 {
-  "challenge_name": "PASSWORD_VERIFIER",
+  "challenge_name": "DEVICE_PASSWORD_VERIFIER",
   "session": "<session_token_as_private_ephemeral_value_a>",
   "username": "<username_for_srp>",
-  "challenge_value": "<computed_challenge_value>"
+  "challenge_value": "<computed_challenge_value>",
+  "challenge_params": "<returned_challenge_params_from_the_server>"
 }
 ```
 
-The `challenge_value` field contains the stringified JSON object with the following structure. Do not change the keys or the case as they are expected by the server for calculating the **PASSWORD_CLAIM_SIGNATURE** and authenticating the user:
+The `challenge_value` field contains the stringified JSON object with the following structure. If you are using the provided package, it will handle the generation of the **PASSWORD_CLAIM_SIGNATURE** and other values automatically. 
+
+If you are not using the package, you must manually generate these values, then you can either send the PASSWORD_CLAIM_SIGNATURE and omit (PASSKEY_HASH, MESSAGE_BASE64, PRIVATE_KEY, DEVICE_GROUP_KEY) or omit (PASSWORD_CLAIM_SIGNATURE) and send (PASSKEY_HASH, MESSAGE_BASE64, PRIVATE_KEY, DEVICE_GROUP_KEY) such that the server can compute the PASSWORD_CLAIM_SIGNATURE and verify the device proof.
+
+Do not change the keys or the case as they are expected by the server for calculating the **PASSWORD_CLAIM_SIGNATURE** and authenticating the user:
 
 ```
 {
-  "SALT": "<salt_from_step-2>",
-  "SECRET_BLOCK": "<secret_block_from_step-2>",
-  "SRP_B": "<SRP_B_from_step-2>",
-  "USER_ID_FOR_SRP": "<username_for_srp_from_step-2>",
-  "PASSKEY_HASH": "<computed_password_proof_hash>"
+  "PASSWORD_CLAIM_SECRET_BLOCK": "<secret_block_from_step-2>",
+  "TIMESTAMP": "<current_timestamp_in_ISO_format>",
+  "DEVICE_KEY": "<device_key_of_registered_device>",
+  "PASSWORD_CLAIM_SIGNATURE": "<computed_password_proof_signature>",
+
+  "PASSKEY_HASH": "<computed_password_proof_hash>",
+  "MESSAGE_BASE64": "<base64_encoded_message_for_password_proof>"
+  "PRIVATE_KEY": "<private_ephemeral_value_a>"
+  "DEVICE_GROUP_KEY": "<device_group_id>",
 }
 ```
 
-The server side, the package will process this challenge response and call AWS Cognito's endpoint to verify the password proof. If the proof is correct, AWS Cognito will authenticate the user and return an authentication token.
+The server side, the package will process this challenge response and call AWS Cognito's endpoint to verify the device proof. If the proof is correct, AWS Cognito will authenticate the user and return an authentication token.
 
 ## **Key Points:**
 - **Phase 1 (calculateSrpA)**: Uses only `N` and `g`. Generates a random `a`. NO password, username, or salt needed.
-- **Phase 2 (calculatePasswordProof)**: Uses `salt`, `password`, and `username` received from server
+- **Phase 2 (calculateDeviceProof)**: Uses `salt`, `password`, and `username` received from server
 - **a** must be generated using cryptographically secure random number generator
 - **N** and **g** are negotiated during the initial handshake with AWS Cognito
 - The values must be converted to appropriate formats (hex, base64) for transmission
@@ -241,8 +293,5 @@ AWS Cognito typically uses **RFC 2409 (1024-bit) with g=2**.
 
 ## **References**
 
-- [AWS Cognito Authentication Flow Documentation](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html)
-- [SRP Protocol Specification (RFC 2945)](https://tools.ietf.org/html/rfc2945)
-- [SRP Protocol Version 6 (RFC 5054)](https://tools.ietf.org/html/rfc5054)
-- [Amazon Cognito Identity JS GitHub](https://github.com/aws-amplify/amplify-js/tree/main/packages/amazon-cognito-identity-js)
+- [AWS Cognito - Working with user devices in your user pool](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-device-tracking.html)
 
