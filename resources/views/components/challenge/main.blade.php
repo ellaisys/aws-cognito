@@ -43,10 +43,11 @@
     @if (in_array($challengeNameValue, [
         'SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'SMS_OTP',
         'EMAIL_OTP', 'PASSWORD_VERIFIER', 'PASSWORD']))
-        <x-cognito::challenge.password 
+
+        <x-cognito::challenge.password
             :challengeNameValue="$challengeNameValue"
-            :challengeValuePlaceholder="$challengeValuePlaceholder"
-        />
+            :challengeValuePlaceholder="$challengeValuePlaceholder" />
+
     @endif
 @endPush
 
@@ -85,7 +86,7 @@
                         challengeValue.value = elemPasscode.value;
 
                         // Clear the passcode input for security reasons
-                        elemPasscode.value = ''; 
+                        elemPasscode.value = '';
                         elemPasscode.disabled = true;
 
                         // Call the form submission handler
@@ -122,19 +123,19 @@
         async function handleFormSubmit(event) {
             try {
                 // Prevent the default form submission
-                event.preventDefault(); 
+                event.preventDefault();
 
                 // Process the challenge based on the challenge name
                 await processChallenge();
 
                 if (!frmChallenge.checkValidity()) {
                     // Show validation errors if the form is not valid
-                    frmChallenge.reportValidity(); 
+                    frmChallenge.reportValidity();
                     return; // Stop form submission if validation fails
                 } else {
                     // Submit the form
                     frmChallenge.submit();
-                } //End if                
+                } //End if
             } catch (error) {
                 console.error("Error handling form submission:", error);
                 throw error;
