@@ -19,7 +19,7 @@ use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class CognitoChallenge extends Component
-{   
+{
     private string $cognitoPoolName = '';
     private string $challengeNameValue = 'NONE';
     private string $sessionValue = '';

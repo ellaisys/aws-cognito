@@ -33,7 +33,7 @@ enum CognitoChallengeTypes: string
    case MFA_SETUP = 'MFA_SETUP';
    case SELECT_MFA_TYPE = 'SELECT_MFA_TYPE';
    case SMS_MFA = 'SMS_MFA';
-   case SOFTWARE_TOKEN_MFA = 'SOFTWARE_TOKEN_MFA';   
+   case SOFTWARE_TOKEN_MFA = 'SOFTWARE_TOKEN_MFA';
 
    // FIDO2 / Passkey authentication challenges
    case WEB_AUTHN = 'WEB_AUTHN';
