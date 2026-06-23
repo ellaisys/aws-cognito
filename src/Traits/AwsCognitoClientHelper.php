@@ -110,7 +110,7 @@ trait AwsCognitoClientHelper
                     $challengePayload = array_merge($challengePayload, [
                         'CREDENTIAL' => $challengeValue
                     ]);
-                    break;                    
+                    break;
 
                 case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
                     $challengePayload = array_merge($challengePayload, [
