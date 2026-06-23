@@ -155,12 +155,10 @@ trait AwsCognitoClientPasskeyAction
     {
         try {
             return $this->authenticate($authFlow, $username, null, null, $challenge);
-        } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClientPasskeyAction:authWebAuthnCredential:CognitoIdentityProviderException');
+        } catch (Exception $exception) {
+            Log::error('AwsCognitoClientPasskeyAction:authWebAuthnCredential:Exception');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
     
 } //Trait ends
