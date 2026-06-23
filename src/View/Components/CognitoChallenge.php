@@ -14,6 +14,7 @@ namespace Ellaisys\Cognito\View\Components;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
+use Illuminate\Support\Facades\Log;
 
 use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -41,8 +42,12 @@ class CognitoChallenge extends Component
                 // Process the data to extract necessary information for the view
                 $this->processData($challengeData);
             }
-        } catch (Exception $e) {
-            throw $e;
+        } catch (HttpException $exception) {
+            Log::error('CognitoChallenge:constructor:HttpException');
+            throw $exception;
+        } catch (Exception $exception) {
+            Log::error('CognitoChallenge:constructor:Exception');
+            throw new HttpException(400, $exception->getMessage());
         }
     }
 
