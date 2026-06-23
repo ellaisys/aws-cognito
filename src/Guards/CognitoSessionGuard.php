@@ -213,9 +213,11 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             //Set Token
             $this->setToken();
 
-            //Get Session and store details
+            //Get Session and store details. Regenerate the session id (to keep
+            //session-fixation protection) without flushing the session, so that
+            //other guards sharing this session are not logged out on sign-in.
             $session = $this->getSession();
-            $session->invalidate();
+            $session->migrate(true);
             $session->put(
                 ClaimSession::SESSION_KEY,
                 json_decode(json_encode($this->claim), true)
@@ -243,9 +245,11 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         switch ($challengeType) {
             case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
             case CognitoChallengeTypes::SMS_MFA:
-                //Get Session and store details
+                //Get Session and store details. Regenerate the session id without
+                //flushing the session (see processAWSClaim), so kicking off an MFA
+                //challenge does not log out other guards sharing this session.
                 $session = $this->getSession();
-                $session->invalidate();
+                $session->migrate(true);
                 $session->put($this->challengeData['session_token'], json_decode(json_encode($this->challengeData), true));
 
                 $returnValue = redirect(route(config('cognito.force_mfa_code_route_name'), [
