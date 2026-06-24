@@ -656,8 +656,7 @@ class AwsCognitoClient
 
     /**
      * Revoke the access-token from AWS Cognito in a user pool.
-     *
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#globalsignout
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GlobalSignOut.html
      *
      * @param string $accessToken
      * @return bool
@@ -671,6 +670,9 @@ class AwsCognitoClient
 
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClient:signOut:CognitoIdentityProviderException');
+            if ($exception->getAwsErrorCode() === self::COGNITO_NOT_AUTHORIZED_ERROR) {
+                return true;
+            } //End if
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
