@@ -191,7 +191,7 @@ class CognitoTokenGuard extends TokenGuard
         //Send claim object
         $claim = $this->claim;
 
-        if ($claim && is_array($claim) && $claim['challenge_name']) {
+        if ($claim && is_array($claim) && isset($claim['challenge_name'])) {
             $challengeType = CognitoChallengeTypes::from($claim['challenge_name']);
             switch ($challengeType) {
                 case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
