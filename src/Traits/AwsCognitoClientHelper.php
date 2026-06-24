@@ -88,9 +88,11 @@ trait AwsCognitoClientHelper
                             'ANSWER' => $challengeValue
                         ]);
                     } else{
-                        $challengePayload = array_merge($challengePayload,
-                            json_decode($challengeValue, true)
-                        );
+                        $challengeValueJson = json_decode($challengeValue, true);
+                        if (!is_array($challengeValueJson)) {
+                            throw new BadRequestHttpException('Invalid challenge value');
+                        } //End if
+                        $challengePayload = array_merge($challengePayload, $challengeValueJson);
                     }
                     break;
 
@@ -121,9 +123,11 @@ trait AwsCognitoClientHelper
                 case CognitoChallengeTypes::PASSWORD_VERIFIER:
                 case CognitoChallengeTypes::DEVICE_SRP_AUTH:
                 case CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER:
-                    $challengePayload = array_merge($challengePayload,
-                        json_decode($challengeValue, true)
-                    );
+                    $challengeValueJson = json_decode($challengeValue, true);
+                    if (!is_array($challengeValueJson)) {
+                        throw new BadRequestHttpException('Invalid challenge value');
+                    } //End if
+                    $challengePayload = array_merge($challengePayload, $challengeValueJson);
                     break;
 
                 default:
@@ -134,7 +138,6 @@ trait AwsCognitoClientHelper
             Log::error('AwsCognitoClientHelper:buildChallengePayload:Exception');
             throw $e;
         } //Try-catch ends
-        Log::debug($challengePayload);
 
         return $challengePayload;
     } //Function ends
