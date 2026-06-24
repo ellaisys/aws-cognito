@@ -51,7 +51,7 @@
     @endif
 @endPush
 
-@pushif((isset($challengeNameValue) && ($challengeNameValue != 'NONE')),'cognito-challenge-scripts')
+@pushIf((isset($challengeNameValue) && ($challengeNameValue != 'NONE')),'cognito-challenge-scripts')
     @stack('cognito-common-scripts')
     @stack('cognito-common-gmp-scripts')
     @stack('cognito-common-crypto-scripts')

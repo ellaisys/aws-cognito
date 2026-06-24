@@ -2,7 +2,7 @@
     'challengeNameValue' => 'NONE'
 ])
 
-@pushif((config('cognito.allow_passkeys')),'cognito-passkey-webauthn-scripts')
+@pushIf((config('cognito.allow_passkeys')),'cognito-passkey-webauthn-scripts')
     <script>
         // Add event listeners to all buttons with the data-role attribute set to "passkey-webauthn"
         const elemsPasskeyWebAuthn = document.querySelectorAll('[data-role="passkey-webauthn"]');
