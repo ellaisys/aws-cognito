@@ -165,7 +165,7 @@
              */
             async #completeRegistration(credential, publicKeyOptions) {
                 try {
-                    if (!credential && (typeof credential !== 'object') && (credential?.type !== 'public-key')) {
+                    if (!credential || typeof credential !== 'object' || credential?.type !== 'public-key') {
                         throw new Error('No credential created by WebAuthn API');
                     } //End if
 
