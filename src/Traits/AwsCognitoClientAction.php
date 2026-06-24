@@ -58,7 +58,7 @@ trait AwsCognitoClientAction
             $response = $this->client->initiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAction:initiateAuth:CognitoIdentityProviderException');
-            throw AwsCognitoException::create($exception, 401);
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $response;
@@ -78,9 +78,9 @@ trait AwsCognitoClientAction
             return $this->client->getUser([
                 'AccessToken' => $accessToken
             ]);
-        } catch (CognitoIdentityProviderException $e) {
+        } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAction:getUser:CognitoIdentityProviderException');
-            throw $e;
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
     } //Function ends
 
