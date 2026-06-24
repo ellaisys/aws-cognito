@@ -191,6 +191,9 @@ class AwsCognitoSrpService
                 throw new BadRequestHttpException('Missing required parameters in challenge value');
             } else {
                 $paramsData = json_decode($challengeParams, true);
+                if (!is_array($paramsData)) {
+                    throw new BadRequestHttpException('Invalid challenge parameters');
+                } //End if
                 $payload = array_merge($returnValue, $paramsData);
             } //End if
 
@@ -268,7 +271,6 @@ class AwsCognitoSrpService
             throw $e;
         } //Try-catch ends
 
-        Log::debug($returnValue);
         return $returnValue;
     } //Function ends
 
