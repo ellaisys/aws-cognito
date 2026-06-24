@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\View\Components;
+namespace Ellaisys\Cognito\Views\Components;
 
 use Closure;
 use Illuminate\Contracts\View\View;
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Log;
 use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class CognitoChallenge extends Component
+class Challenge extends Component
 {
     private string $cognitoPoolName = '';
     private string $challengeNameValue = 'NONE';

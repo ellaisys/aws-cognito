@@ -4,10 +4,10 @@
 <x-cognito::common.js.gmp />
 <x-cognito::common.js.crypto />
 
-<x-cognito-passkey-webauthn
+<x-cognito::passkey-webauthn
     :challengeNameValue="$challengeNameValue" />
 
-<x-cognito-device-auth
+<x-cognito::device-auth
     :challengeNameValue="$challengeNameValue"
     :includeGMP="false"
     :includeCryptoJS="false"

@@ -1,6 +1,6 @@
 <form id="auth-challenge-form" method="POST" action="{{ route('cognito.action.auth.challenge.submit') }}">
 
-    <x-cognito-challenge
+    <x-cognito::challenge
         :challenge-form-name="'auth-challenge-form'" />
         
     @php

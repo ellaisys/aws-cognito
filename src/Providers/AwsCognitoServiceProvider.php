@@ -25,9 +25,9 @@ use Ellaisys\Cognito\Http\Parser\Parser;
 use Ellaisys\Cognito\Http\Parser\AuthHeaders;
 use Ellaisys\Cognito\Http\Parser\ClaimSession;
 
-use Ellaisys\Cognito\View\Components\CognitoChallenge;
-use Ellaisys\Cognito\View\Components\CognitoDeviceAuth;
-use Ellaisys\Cognito\View\Components\CognitoPasskeyWebAuthn;
+use Ellaisys\Cognito\Views\Components\Challenge;
+use Ellaisys\Cognito\Views\Components\DeviceAuth;
+use Ellaisys\Cognito\Views\Components\PasskeyWebAuthn;
 
 use Ellaisys\Cognito\Providers\StorageProvider;
 
@@ -395,9 +395,9 @@ class AwsCognitoServiceProvider extends ServiceProvider
         Blade::componentNamespace('Ellaisys\\Cognito\\Views\\Components', 'cognito');
 
         //Register individual blade components
-        Blade::component('cognito-challenge', CognitoChallenge::class);
-        Blade::component('cognito-passkey-webauthn', CognitoPasskeyWebAuthn::class);
-        Blade::component('cognito-device-auth', CognitoDeviceAuth::class);
+        Blade::component('challenge', Challenge::class);
+        Blade::component('passkey-webauthn', PasskeyWebAuthn::class);
+        Blade::component('device-auth', DeviceAuth::class);
     } //Function ends
 
     /**

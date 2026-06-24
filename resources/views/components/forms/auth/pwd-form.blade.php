@@ -1,7 +1,7 @@
 <form method="POST" action="{{ route('cognito.action.login.submit') }}" id="auth-password-form">
     @csrf
 
-    <x-cognito-device-auth
+    <x-cognito::device-auth
         :includeGMP="false"
         :includeCryptoJS="false"
         :includeCryptoUtils="false" />

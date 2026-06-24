@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\View\Components;
+namespace Ellaisys\Cognito\Views\Components;
 
 use Closure;
 use Illuminate\Contracts\View\View;

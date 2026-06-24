@@ -3,8 +3,8 @@
 @section('content')
 
 <x-cognito::common.js-scripts />
-<x-cognito-passkey-webauthn />
-<x-cognito-device-auth />
+<x-cognito::passkey-webauthn />
+<x-cognito::device-auth />
 
 <div class="container">
     <div class="row justify-content-center">

@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\View\Components;
+namespace Ellaisys\Cognito\Views\Components;
 
 use Closure;
 use Illuminate\Contracts\View\View;
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class CognitoDeviceAuth extends CognitoBaseComponent
+class DeviceAuth extends CognitoBaseComponent
 {
     public string $userkeyB64encoded;
     public string $newDeviceData;
