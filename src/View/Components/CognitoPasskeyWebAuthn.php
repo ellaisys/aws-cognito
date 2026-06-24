@@ -52,8 +52,7 @@ class CognitoPasskeyWebAuthn extends CognitoBaseComponent
             }
 
             // Generate a base64-encoded user key
-            $this->userkeyB64encoded = base64_encode($this->getUsername());
-            $this->secureCode .= $this->userkeyB64encoded;
+            $this->secureCode .= base64_encode($this->getUsername());
 
             // Check if WebAuthn is enabled for the authenticated user
             $this->passkeyEnabled = $this->isWebAuthEnabled();
