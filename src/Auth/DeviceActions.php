@@ -116,12 +116,21 @@ trait DeviceActions
             //Token Object
             $accessToken = $this->getAccessToken($request);
 
+            // Get the device configuration from the request if present
+            $deviceConfig = [];
+            if ($request->has('device_config')) {
+                $deviceConfig = json_decode($request['device_config'], true);
+                if (!$deviceConfig) {
+                    throw new HttpException(400, 'Invalid JSON in device_config');
+                }
+            } //End if
+
             //Get the response from AWS Cognito for confirming the device
             $response = $client->confirmDevice(
                 $accessToken,
                 $request['device_key'],
                 $request['device_name'] ?? null,
-                $request['device_config'] ? json_decode($request['device_config'], true) : []
+                $deviceConfig
             );
 
             //Return response
