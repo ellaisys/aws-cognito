@@ -46,20 +46,21 @@ class AwsCognitoException extends HttpException
      * @return void
      */
     public function __construct(string $message="AWS Cognito Error",
-        ?Throwable $previous=null, array $headers=[], int $code=400)
+        ?Throwable $previous=null, array $headers=[], int $statusCode=400, int $code=0)
     {
         if ($previous instanceof CognitoIdentityProviderException && (!empty($previous->getAwsErrorCode()))) {
-            $message = self::processAwsCognitoError($previous);
+            [$message, $statusCode, $headers, $code] = self::processAwsCognitoError($previous);
         } //End if
 
-        parent::__construct(400, $message, $previous, $headers, $code);
+        parent::__construct($statusCode, $message, $previous, $headers, $code);
     }
 
     /**
      * Static constructor / factory
      */
-    public static function create(CognitoIdentityProviderException $exception, int $code = 400): self {
-        return new self(self::processAwsCognitoError($exception), $exception, [], $code);
+    public static function create(CognitoIdentityProviderException $exception): self {
+        [$message, $statusCode, $headers, $code] = self::processAwsCognitoError($exception);
+        return new self($message, $exception, $headers, $statusCode, $code);
     }
 
     /**
@@ -67,9 +68,9 @@ class AwsCognitoException extends HttpException
      *
      * @param  CognitoIdentityProviderException  $exception
      *
-     * @return string
+     * @return array [string $message, int $statusCode, array $headers, int $code]
      */
-    private static function processAwsCognitoError(CognitoIdentityProviderException $exception): string
+    private static function processAwsCognitoError(CognitoIdentityProviderException $exception): array
     {
         //Set proper route
         switch ($exception->getAwsErrorCode()) {
@@ -118,7 +119,13 @@ class AwsCognitoException extends HttpException
                 $errorCode = $exception->getAwsErrorCode();
                 break;
         } //End switch
-        return $errorCode;
+        
+        return [
+                $errorCode,
+                $exception->getStatusCode(),
+                [],
+                0
+            ];
     } //Function ends
     
 } //Class ends
