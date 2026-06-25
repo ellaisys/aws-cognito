@@ -2,7 +2,7 @@
 >We have released the **laravel components** for the FIDO2 Security Keys OR Passkey based MFA functionality as a new feature from V2.0.6. The component had php blade components and javascript functions to implement the FIDO2 Security Keys OR Passkey based MFA functionality in your application. The component provides the necessary methods to implement this functionality in your application. All FIDO2 Security features are supported.
 
 ## **FIDO2 Security Keys OR Passkey Functionality**
-The library currently provides the FIDO2 Security Keys OR Passkey based MFA functionality. This is a passwordless authentication approach, where the user can use the security key or passkey to authenticate. The security key can be a physical device or a virtual device (i.e. mobile device). The passkey is a software-based credential that is stored on the user's device and can be used for authentication.
+The library currently provides the FIDO2 Security Keys OR Passkey based MFA functionality. This is a passwordless authentication approach, where the user can use the security key or passkey to authenticate. This is a **Zero-Knowledge Authentication** method.The security key can be a physical device or a virtual device (i.e. mobile device). The passkey is a software-based credential that is stored on the user's device and can be used for authentication.
 
 AWS Cognito provides the FIDO2 Security Keys OR Passkey based MFA functionality, which can be enabled for the user pool. The user can then use the security key or passkey to authenticate. The library provides the necessary methods to implement this functionality in your application. The supported FIDO2 Security Keys OR Passkey based types are as follows:
 - EMAIL OTP

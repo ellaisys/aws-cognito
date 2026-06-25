@@ -1,7 +1,7 @@
 <img src="./assets/images/banner.png" width="100%" alt="Laravel AWS Cognito Package for IAM"/>
 
-# Laravel AWS Cognito Package for Web and API authentication
-Features:  MFA + FIDO2 (Passkey) + SRP Authentication Features
+# Laravel Authentication using AWS Cognito (Web + API)
+Supports: Multi-Factor Authentication (MFA) + FIDO2 (Passkey) + SRP Authentication + Device Authentication
 
 [![Release Version](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Version)](https://packagist.org/packages/ellaisys/aws-cognito#v1.1.3)&#160;
 [![Release Date](https://img.shields.io/github/release-date/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Date)](https://packagist.org/packages/ellaisys/aws-cognito)&#160;
@@ -50,8 +50,8 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
 - [Preconfigured routes and controllers for Web and API ](./docs/README_ROUTES.md#routes)
 - [Preconfigured views for Web ](./docs/README_ROUTES.md#web-views-and-components)
-- [FIDO2 Security Keys Passkey Feature](./docs/README_FIDO2.md) **Updated**
-- [SRP Authentication Feature](./docs/README_SRP.md) **New Feature**
+- [FIDO2 Security Keys Passkey](./docs/README_FIDO2.md) **Updated**
+- [SRP Authentication](./docs/README_SRP.md) **New Feature**
 - [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
 
 ## Compatability
