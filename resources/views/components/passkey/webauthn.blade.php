@@ -7,6 +7,7 @@
         // Add event listeners to all buttons with the data-role attribute set to "passkey-webauthn"
         const elemsPasskeyWebAuthn = document.querySelectorAll('[data-role="passkey-webauthn"]');
         elemsPasskeyWebAuthn.forEach(button => {
+
             //Check the data-action and enable the button
             let btnDataAction = button.attributes['data-action'] ? (button.attributes['data-action'].value).toLowerCase() : null;
             let isPasskeyEnabled = {{ $passkeyEnabled ? 'true' : 'false' }};
@@ -202,6 +203,11 @@
                 }
             } //Function end
 
+            /**
+             * Function to delete an existing passkey for the user. It communicates
+             * with the server to delete the passkey and signals the authenticator
+             * about the deleted credential.
+             */
             async #deleteRegistration(credentialId, rpId) {
                 try {
                     // Get the passkey registration options from the server
@@ -323,10 +329,15 @@
                 }, null, 2);
             } //Function end
 
+            /**
+             * Function to display an alert message. It uses the CognitoAlert
+             * class if available, otherwise falls back to the default alert.
+             * @param {string} message - The message to display.
+             * @param {string} type - The type of alert ('info', 'success', 'error').
+             */
             #alert(message, type = 'info') {
-
-                let alertBox = new CognitoAlert();
-                if (alertBox) {
+                if (typeof CognitoAlert !== 'undefined') {
+                    let alertBox = new CognitoAlert();
                     if (type === 'success') {
                         alertBox.success(message);
                     } else if (type === 'error') {
@@ -337,9 +348,8 @@
                 } else {
                     // Fallback to default alert if CognitoAlert is not available
                     alert(message);
-                }
-            }
-
+                } //End if
+            } //Function end
         } //Class end
 
         @if ($challengeNameValue === 'WEB_AUTHN')
