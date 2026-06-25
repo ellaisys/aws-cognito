@@ -33,27 +33,32 @@
             // Add event listeners to all buttons with the data-role attribute set to "device-auth"
             const elemsDeviceAuth = document.querySelectorAll('[data-role="device-auth"]');
             elemsDeviceAuth.forEach(button => {
-                // Initialize and check device registration status
-                let deviceService = new DeviceService();
+                try {
+                    // Initialize and check device registration status
+                    let deviceService = new DeviceService();
 
-                // Element action attribute to determine the action to be performed
-                let dataAction = button?.attributes['data-action']?.value?.toLowerCase() ?? 'undefined';
+                    // Element action attribute to determine the action to be performed
+                    let dataAction = button?.attributes['data-action']?.value?.toLowerCase() ?? 'undefined';
 
-                if ((deviceService?.isDeviceRegistered) && dataAction === 'register') {
-                    button.disabled = true;
-                } else if ((!deviceService?.isDeviceRegistered) && dataAction === 'delete') {
-                    button.disabled = true;
-                } else if ((deviceService?.isDeviceRegistered) && dataAction === 'validate') {
-                    let deviceKey = deviceService?.deviceData['d-key'] ?? '';
+                    if ((deviceService?.isDeviceRegistered) && dataAction === 'register') {
+                        button.disabled = true;
+                    } else if ((!deviceService?.isDeviceRegistered) && dataAction === 'delete') {
+                        button.disabled = true;
+                    } else if ((deviceService?.isDeviceRegistered) && dataAction === 'validate') {
+                        let deviceKey = deviceService?.deviceData['d-key'] ?? '';
 
-                    // Set the device key value in the hidden input field
-                    // and enable it for submission.
-                    let elemDeviceKey = document.getElementById('device_key');
-                    elemDeviceKey.value = deviceKey;
-                    elemDeviceKey.disabled = false;
-                } else {
+                        // Set the device key value in the hidden input field
+                        // and enable it for submission.
+                        let elemDeviceKey = document.getElementById('device_key');
+                        elemDeviceKey.value = deviceKey;
+                        elemDeviceKey.disabled = false;
+                    } else {
+                        button.disabled = false;
+                    } //End if
+                } catch (error) {
+                    console.error('Error processing device auth button:', error);
                     button.disabled = false;
-                } //End if
+                } // Try ends
 
                 button.addEventListener('click', async function() {
                     // Disable the button to prevent multiple clicks
@@ -331,22 +336,41 @@
              */
             get isDeviceRegistered() {
                 try {
-                    let deviceData = this.deviceData;
-                    return deviceData && deviceData['d-key'] && deviceData['d-secret'] && deviceData['d-grp'];
+                    const deviceData = this.deviceData;
+                    return Boolean(deviceData && deviceData['d-key'] && deviceData['d-secret'] && deviceData['d-grp']);
                 } catch (error) {
                     console.error('Device not registered:', error);
                     throw error;
                 } // Try ends
             } //Function end
 
+            /**
+             * Getter to retrieve the device name. It attempts to get the
+             * device name from the navigator object, falling back to
+             * 'Unknown Device' if not available.
+             * @returns {string} - The device name.
+             * @throws {Error} - Throws an error if there is an issue
+             * retrieving the device name.
+             */
             get #deviceName() {
                 try {
                     return navigator.appCodeName || 'Unknown Device';
                 } catch (error) {
+                    console.error('Error retrieving device name:', error);
                     throw error;
                 } // Try ends
             } //Function end
 
+            /**
+             * Getter to generate a random salt for the device. It uses
+             * the CryptoUtils class to generate a random hex string of
+             * 16 bytes (128 bits) and converts it to an unsigned hex
+             * format.
+             * @returns {string} - The generated device salt in unsigned
+             * hex format.
+             * @throws {Error} - Throws an error if there is an issue
+             * generating the salt.
+             */
             get #deviceSalt() {
                 try {
                     // Generate a random salt for the device of 16 bytes (128 bits)
@@ -360,6 +384,13 @@
                 } // Try ends
             } //Function end
 
+            /**
+             * Setter to update the device secret. It updates the device
+             * data in local storage with the new device secret.
+             * @param {string} deviceSecret - The new device secret.
+             * @throws {Error} - Throws an error if there is an issue
+             * updating the device secret.
+             */
             set #deviceSecret(deviceSecret) {
                 try {
                     let deviceData = this.deviceData;
@@ -399,10 +430,15 @@
                 } // Try ends
             } //Function end
 
+            /**
+             * Function to display an alert message. It uses the CognitoAlert
+             * class if available, otherwise falls back to the default alert.
+             * @param {string} message - The message to display.
+             * @param {string} type - The type of alert ('info', 'success', 'error').
+             */
             #alert(message, type = 'info') {
-
-                let alertBox = new CognitoAlert();
-                if (alertBox) {
+                if (typeof CognitoAlert !== 'undefined') {
+                    let alertBox = new CognitoAlert();
                     if (type === 'success') {
                         alertBox.success(message);
                     } else if (type === 'error') {
@@ -413,7 +449,7 @@
                 } else {
                     // Fallback to default alert if CognitoAlert is not available
                     alert(message);
-                }
+                } //End if
             } //Function end
 
         } //Class end
