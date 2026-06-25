@@ -24,6 +24,17 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 /**
+ * Exception class for handling invalid challenge data in AWS Cognito.
+ */
+class AwsCognitoChallengeException extends BadRequestHttpException
+{
+    public function __construct($message = 'Invalid challenge value', $code = 400, Exception $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+    }
+} //Class ends
+
+/**
  * AWS Cognito Client Helper Trait
  */
 trait AwsCognitoClientHelper
@@ -62,7 +73,7 @@ trait AwsCognitoClientHelper
 
                 case CognitoChallengeTypes::SELECT_MFA_TYPE:
                     if (!in_array($challengeValue, ['SMS_MFA','EMAIL_MFA','SOFTWARE_TOKEN_MFA'], true)) {
-                        throw new BadRequestHttpException('Invalid challenge value');
+                        throw new AwsCognitoChallengeException();
                     } //End if
 
                     $challengePayload = array_merge($challengePayload, [
@@ -90,7 +101,7 @@ trait AwsCognitoClientHelper
                     } else{
                         $challengeValueJson = json_decode($challengeValue, true);
                         if (!is_array($challengeValueJson)) {
-                            throw new BadRequestHttpException('Invalid challenge value');
+                            throw new AwsCognitoChallengeException();
                         } //End if
                         $challengePayload = array_merge($challengePayload, $challengeValueJson);
                     }
@@ -125,13 +136,13 @@ trait AwsCognitoClientHelper
                 case CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER:
                     $challengeValueJson = json_decode($challengeValue, true);
                     if (!is_array($challengeValueJson)) {
-                        throw new BadRequestHttpException('Invalid challenge value');
+                        throw new AwsCognitoChallengeException();
                     } //End if
                     $challengePayload = array_merge($challengePayload, $challengeValueJson);
                     break;
 
                 default:
-                    throw new BadRequestHttpException('Invalid challenge type');
+                    throw new AwsCognitoChallengeException('Invalid challenge type: ' . $challengeName->value);
                     break;
             } //End Switch
         } catch (Exception $e) {
