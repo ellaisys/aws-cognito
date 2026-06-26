@@ -682,22 +682,19 @@ However, to customize the column name in the local DB user table, you may do tha
     AWS_COGNITO_USER_SUBJECT_UUID="sub"
     
 ```
+
 >[!IMPORTANT]
->Please make sure to set the $primaryKey attribute in the User Model so that the data is retirived without any error. Sample code of user model is shared.
+>In v2.0.5, we have released a trait to be included into your User Model. This includes ManagesSubject, ManagesRegistration and ManagesPasskey traits. Sample code of user model is shared. In case you have already implemented the sub column in your user table, you can use the below code snippet to include the trait into your User model.
 
 ```php
+    ...
+    use Ellaisys\Cognito\Concerns\CognitoAuthenticatable;
+    ...
 
     class User extends Authenticatable
     {
         ...
-
-        /**
-         * The primary key for the model.
-         *
-         * @var string
-         */
-        protected $primaryKey = null;
-
+        use CognitoAuthenticatable;
 
         /**
          * The attributes that are mass assignable.
@@ -712,22 +709,7 @@ However, to customize the column name in the local DB user table, you may do tha
         ];
 
         ...
-
-        /**
-         * Create a new user instance.
-         *
-         * @param  array  $attributes
-         * @return void
-         */
-        public function __construct(array $attributes = [])
-        {
-            parent::__construct($attributes);
-
-            $this->primaryKey = config('cognito.user_subject_uuid', 'id');
-        }
-
         ...
-
     }
 
 ```
