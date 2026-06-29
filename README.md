@@ -1,7 +1,7 @@
-<img src="./assets/images/banner.png" width="100%" alt="Laravel AWS Cognito Package for Web and API authentication with MFA Feature"/>
+<img src="./assets/images/banner.png" width="100%" alt="Laravel AWS Cognito Package for IAM"/>
 
-# Laravel AWS Cognito Package for Web and API authentication + MFA + FIDO2 (Passkey) + SRP Authentication Features
-AWS Cognito package using the AWS SDK for PHP
+# Laravel Authentication using AWS Cognito (Web + API)
+Supports: Multi-Factor Authentication (MFA) + FIDO2 (Passkey) + SRP Authentication + Device Authentication
 
 [![Release Version](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Version)](https://packagist.org/packages/ellaisys/aws-cognito#v1.1.3)&#160;
 [![Release Date](https://img.shields.io/github/release-date/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Date)](https://packagist.org/packages/ellaisys/aws-cognito)&#160;
@@ -45,13 +45,14 @@ We decided to use it and contribute it to the community as a package, that encou
 - [Refresh Token API](#refresh-token)
 - [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
 - [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
-- [MFA Implementation for Session and Token Guards](./docs/README_MFA.md)
+- [MFA Implementation for Session and Token Guards](./docs/README_MFA.md) **Updated**
 - [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
 - [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
 - [Preconfigured routes and controllers for Web and API ](./docs/README_ROUTES.md#routes)
 - [Preconfigured views for Web ](./docs/README_ROUTES.md#web-views-and-components)
-- [FIDO2 Security Keys Passkey Feature](./docs/README_FIDO2.md) **New Feature**
-- [SRP Authentication Feature](./docs/README_SRP.md) **New Feature**
+- [FIDO2 Security Keys Passkey](./docs/README_FIDO2.md) **Updated**
+- [SRP Authentication](./docs/README_SRP.md) **New Feature**
+- [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
 
 ## Compatability
 
@@ -681,22 +682,19 @@ However, to customize the column name in the local DB user table, you may do tha
     AWS_COGNITO_USER_SUBJECT_UUID="sub"
     
 ```
+
 >[!IMPORTANT]
->Please make sure to set the $primaryKey attribute in the User Model so that the data is retirived without any error. Sample code of user model is shared.
+>In v2.0.5, we have released a trait to be included into your User Model. This includes ManagesSubject, ManagesRegistration and ManagesPasskey traits. Sample code of user model is shared. In case you have already implemented the sub column in your user table, you can use the below code snippet to include the trait into your User model.
 
 ```php
+    ...
+    use Ellaisys\Cognito\Concerns\CognitoAuthenticatable;
+    ...
 
     class User extends Authenticatable
     {
         ...
-
-        /**
-         * The primary key for the model.
-         *
-         * @var string
-         */
-        protected $primaryKey = null;
-
+        use CognitoAuthenticatable;
 
         /**
          * The attributes that are mass assignable.
@@ -711,22 +709,7 @@ However, to customize the column name in the local DB user table, you may do tha
         ];
 
         ...
-
-        /**
-         * Create a new user instance.
-         *
-         * @param  array  $attributes
-         * @return void
-         */
-        public function __construct(array $attributes = [])
-        {
-            parent::__construct($attributes);
-
-            $this->primaryKey = config('cognito.user_subject_uuid', 'id');
-        }
-
         ...
-
     }
 
 ```

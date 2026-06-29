@@ -12,6 +12,7 @@ use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController;
+use Ellaisys\Cognito\Http\Controllers\Auth\DeviceController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 
@@ -53,10 +54,10 @@ Route::group([], function () {
         Route::get('/', function () { return view('cognito::pages.auth.login'); })->name('form.login');
         Route::post('/', [LoginController::class, 'login'])->name('action.login.submit');
         Route::post('/srp', [LoginController::class, 'loginSRP'])->name('action.auth.srp.challenge');
-        Route::post('/auth-challenge', [LoginController::class, 'challenge'])->name('action.auth.challenge.submit');
+        Route::post('/auth-challenge', [LoginController::class, 'actionChallenge'])->name('action.auth.challenge.submit');
         Route::any('/{step}', function (string $step) {
             return view('cognito::pages.auth.login', ['step' => $step]);
-        });
+        })->name('form.login.step');
         Route::post('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge'])->name('action.auth.passkey.challenge');
     });
 
@@ -69,8 +70,8 @@ Route::group([], function () {
 
         //Route group logout
         Route::group(['prefix' => 'logout', 'controller' => LoginController::class], function() {
-            Route::post('/', 'logout')->name('logout');
-            Route::post('/forced', 'logoutForced')->name('logout_forced');
+            Route::post('/', 'actionLogout')->name('logout');
+            Route::post('/forced', 'actionLogoutForced')->name('logout_forced');
         });
 
         Route::group(['prefix' => 'user'], function() {
@@ -93,7 +94,14 @@ Route::group([], function () {
                 Route::post('/complete', 'complete')->name('action.user.passkey.complete');
                 Route::delete('/', 'delete')->name('action.user.passkey.delete');
             });
+
+            //Route to device management
+            Route::group(['prefix' => 'device', 'controller' => DeviceController::class], function() {
+                Route::get('/', 'list')->name('form.user.device.list');
+                Route::post('/', 'create')->name('action.user.device.create');
+                Route::put('/{deviceKey}', 'update')->name('action.user.device.update');
+                Route::delete('/', 'delete')->name('action.user.device.delete');
+            });
         });
     });
-
 });

@@ -2,7 +2,7 @@
 
 ## **Overview**
 
-SRP is a secure authentication protocol that allows users to authenticate without transmitting their password over the network. Instead, the authentication process uses cryptographic operations based on the user's password. This document explains how you can use this in the context of AWS Cognito and Laravel package.
+SRP is a secure authentication protocol that allows users to authenticate without transmitting their password over the network. Instead, the authentication process uses cryptographic operations based on the user's password. This is a **Zero-Knowledge Authentication** method. This document explains how you can use this in the context of AWS Cognito and Laravel package.
 
 ## **Configuration**
 

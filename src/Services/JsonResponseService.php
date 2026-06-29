@@ -126,7 +126,8 @@ class JsonResponseService
             $meta['error'] = [
                 'code' => $statusCode,
                 'message' => $message,
-                'key' => $errorKey
+                'key' => $errorKey,
+                'meta' => $systemErrorMsg
             ];
 
             //Add system messages when in debug mode

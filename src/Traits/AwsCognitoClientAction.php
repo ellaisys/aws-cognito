@@ -78,9 +78,9 @@ trait AwsCognitoClientAction
             return $this->client->getUser([
                 'AccessToken' => $accessToken
             ]);
-        } catch (CognitoIdentityProviderException $e) {
+        } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAction:getUser:CognitoIdentityProviderException');
-            throw $e;
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
     } //Function ends
 
@@ -107,7 +107,11 @@ trait AwsCognitoClientAction
             ];
 
             //Set session for challenge types that require it
-            if (!in_array($challengeName, [CognitoChallengeTypes::PASSWORD_VERIFIER], true)) {
+            if (!in_array($challengeName, [
+                    CognitoChallengeTypes::PASSWORD_VERIFIER,
+                    CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER
+                ], true))
+            {
                 $payload['Session'] = $session;
             } //End if
 

@@ -1,5 +1,8 @@
+>[!IMPORTANT]
+>We have released the **laravel components** for the FIDO2 Security Keys OR Passkey based MFA functionality as a new feature from V2.0.6. The component had php blade components and javascript functions to implement the FIDO2 Security Keys OR Passkey based MFA functionality in your application. The component provides the necessary methods to implement this functionality in your application. All FIDO2 Security features are supported.
+
 ## **FIDO2 Security Keys OR Passkey Functionality**
-The library currently provides the FIDO2 Security Keys OR Passkey based MFA functionality. This is a passwordless authentication approach, where the user can use the security key or passkey to authenticate. The security key can be a physical device or a virtual device (i.e. mobile device). The passkey is a software-based credential that is stored on the user's device and can be used for authentication.
+The library currently provides the FIDO2 Security Keys OR Passkey based MFA functionality. This is a passwordless authentication approach, where the user can use the security key or passkey to authenticate. This is a **Zero-Knowledge Authentication** method.The security key can be a physical device or a virtual device (i.e. mobile device). The passkey is a software-based credential that is stored on the user's device and can be used for authentication.
 
 AWS Cognito provides the FIDO2 Security Keys OR Passkey based MFA functionality, which can be enabled for the user pool. The user can then use the security key or passkey to authenticate. The library provides the necessary methods to implement this functionality in your application. The supported FIDO2 Security Keys OR Passkey based types are as follows:
 - EMAIL OTP
@@ -48,7 +51,40 @@ Also, configure below keys into the .env file to change the default setting.
 For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
 
 ### **Passkey Registration with FIDO Authenticator**
-The passkey registration process involves two steps.
+
+#### Using the Blade Component
+The package provides a blade component that you can use to implement the passkey registration functionality in your pages.
+You can use the component in your blade files as shown below. The component has all the required scripts, routes and methods to implement the passkey registration functionality in your application. The component uses the WebAuthPasskey trait, which provides the necessary methods to implement this functionality in your application.
+
+```blade
+    ...
+    @section('content')
+        <x-cognito::common.js-scripts />
+        <x-cognito-passkey-webauthn />
+
+        ...
+        ...
+
+        @stack('cognito-common-scripts')
+        @stack('cognito-passkey-webauthn-scripts')
+    @endsection
+    ...
+```
+
+You can also use simple html buttons or any element with the data attributes to trigger the passkey registration functionality as shown below. The component uses the WebAuthPasskey trait, which provides the necessary methods to implement this functionality in your application. The data attributes are used to trigger the necessary javascript functions to implement the passkey registration functionality in your application. The data attributes are as follows:
+- data-role: This attribute is used to identify the element that will trigger the passkey registration functionality. The value of this attribute should be passkey-webauthn.
+- data-action: This attribute is used to identify the action that will be performed when the element is clicked. The value of this attribute can be register or delete. The register value is used to trigger the passkey registration functionality and the delete value is used to trigger the passkey deletion functionality.
+
+```html
+    <button data-role="passkey-webauthn" data-action="register">
+        Register Passkeys</button>
+
+    <button type="button" data-role="passkey-webauthn" data-action="delete">
+        Delete Passkeys</button>
+
+```
+
+Alternately, the package also provides API routes that you can use to implement the passkey registration functionality in your application. The API routes are as follows: The passkey registration process involves two steps.
 1. The first step is to generate the registration certificate. The library provides a route that calls the start method in the WebAuthPasskey trait to generate the registration certificate. The response will be the registration certificate that can be used to register the passkey with the FIDO Authenticator (navigator.credentials.create).
 ```php
 
@@ -127,6 +163,48 @@ The response for the API call would look like this with the HTTP Status Code 200
 ```
 
 ### **Login with Passkey Functionality**
+
+#### Using the Blade Component
+
+The package provides a blade component that you can use to implement the passkey login functionality in your **challenge page**.
+
+```blade
+    <form id="auth-challenge-form" method="POST" ...>
+        ...
+        <x-cognito-challenge
+            :challenge-form-name="'auth-challenge-form'" /> <!-- Note the form name provided as a parameter to the component -->
+        ...
+        ...
+        @php
+            $data = (session('data')) ?? null;
+            $challengeNameValue = 'NONE';
+
+            if ($data && isset($data['status']) && $data['status'] == 'challenge') {
+                $challengeNameValue = isset($data['challenge_name']) ?
+                    strtoupper($data['challenge_name']) :
+                    $challengeNameValue;
+            } //End if
+        @endphp
+        ...
+        ...
+        <div> <!-- Shows the passcode input field for the Password/OTP/TOTP based challenges only  -->
+            @stack('cognito-challenge-passcode')
+        </div>
+        ...
+        ...
+        <button type="submit"
+            data-action="challenge-submit" data-role="{{ $challengeNameValue }}">
+            Submit</button>
+        ...
+    </form>
+
+    @stack('cognito-challenge-scripts')
+    ...
+```
+Using this component will simplify the implementation of the passkey login functionality in your application. The data is secure on the client side and the necessary scripts and methods are provided in the component to implement the passkey login functionality in your application.
+
+Alternately, you can also use your own logic and API calls to implement the passkey login functionality in your application. The package provides API routes that you can use to implement the passkey login functionality in your application.
+
 The login shall require three steps for implementation of the overall authentication using the passkey approach. 
 1. The first step shall generate the available challenges.
 ```php

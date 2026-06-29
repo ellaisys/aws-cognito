@@ -25,8 +25,6 @@ use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Events\Auth\PreAuthEvent;
 use Ellaisys\Cognito\Events\Auth\PostAuthSuccessEvent;
 use Ellaisys\Cognito\Events\Auth\PostAuthFailedEvent;
-use Ellaisys\Cognito\Events\Auth\PreLogoutEvent;
-use Ellaisys\Cognito\Events\Auth\PostLogoutEvent;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -60,7 +58,7 @@ class LoginController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('guest')->except(['logout', 'logoutForced']);
+        $this->middleware('guest')->except(['actionLogout', 'actionLogoutForced']);
 
         //Set flag to indicate action called from controller
         $this->setIsControllerAction(true);
@@ -80,7 +78,7 @@ class LoginController extends Controller
      */
     public function login(Request $request,
         string $usernameField='username', string $passwordField='password',
-        ?CognitoAuthFlowTypes $authFlowType = CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH)
+        ?CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH)
     {
         try {
             //Initialize parameters
@@ -100,11 +98,13 @@ class LoginController extends Controller
             } //End if
 
             //Authenticate with Cognito Package Trait based on the guard
-            if ($authFlowType === CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH) {
-                $claim = $this->attemptLogin($request,
+            if (in_array($authFlow, [CognitoAuthFlowTypes::USER_PASSWORD_AUTH,
+                CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH]))
+            {
+                $claim = $this->attemptLogin($request, $authFlow,
                     $usernameField, $passwordField);
-            } elseif ($authFlowType === CognitoAuthFlowTypes::USER_SRP_AUTH) {
-                $claim = $this->attemptLoginSRP($request,
+            } elseif ($authFlow === CognitoAuthFlowTypes::USER_SRP_AUTH) {
+                $claim = $this->attemptLoginSRP($request, $authFlow,
                     $usernameField, $passwordField);
             } else {
                 throw new HttpException(400, 'Invalid authentication flow type specified');
@@ -157,31 +157,24 @@ class LoginController extends Controller
      *
      * @throws \HttpException
      */
-    public function challenge(Request $request)
+    public function actionChallenge(Request $request)
     {
         try
         {
             //Initialize parameters
-            $guard = 'web';
-            $isJsonResponse = false;
-
-            //Check if request is json
-            if ($this->isJson($request)) {
-                $isJsonResponse = true;
-                $guard = 'api';
-            } //End if
-            $this->setIsJsonResponse($isJsonResponse);
+            $guard = $this->getGuard($request);
+            $isJsonResponse = $this->getIsJsonResponse($request);
 
             //Authenticate the user request
-            $claim = $this->attemptLoginChallenge($request);
+            $response = $this->challenge($request);
 
             //Process the claim response
             return $this->processClaimResponse(
-                    $request, $claim, $guard, $isJsonResponse,
+                    $request, $response, $guard, $isJsonResponse,
                     $this->usernameField, $this->passwordField
                 );
         } catch (Exception $e) {
-            Log::error('LoginController:challenge:Exception');
+            Log::error('LoginController:actionChallenge:Exception');
 
             //Rise Post Auth Failed Event
             $this->callPostAuthErrorEvent($request, $e, $this->passwordField);
@@ -196,46 +189,28 @@ class LoginController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return bool
      */
-    public function logout(Request $request, bool $forced = false)
+    public function actionLogout(Request $request, bool $forced = false)
     {
         try {
             //Initialize parameters
             $returnValue = null;
-            $guard = 'web';
-            $isJsonResponse = false;
-
-            //Raise Pre Logout Event
-            event(new PreLogoutEvent(
-                $request->toArray(),
-                $request->ip()
-            ));
-
-            //Check if request is json
-            if ($this->isJson($request)) {
-                $isJsonResponse = true;
-                $guard = 'api';
-            } //End if
 
             //Logout user
-            Auth::guard($guard)->logout($forced);
-
-            //Raise Post Logout Event
-            event(new PostLogoutEvent(
-                $request->toArray(),
-                $request->ip()
-            ));
+            $response = $this->logout($request, $forced);
 
             //Send response data
-            if ($isJsonResponse) {
-                $returnValue = $this->response->success([]);
+            if ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
             } else {
-                $request->session()->invalidate();
-                $returnValue = redirect(route('cognito.form.login'));
+                $returnValue = redirect()
+                    ->route('cognito.form.login')
+                    ->with('data', $response);
             } //End if
         } catch (Exception $e) {
-            Log::error('LoginController:logout:Exception');
+            Log::error('LoginController:actionLogout:Exception');
             throw $e;
         } //End try-catch
+        
         return $returnValue;
     } //Function ends
 
@@ -245,9 +220,9 @@ class LoginController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return bool
      */
-    public function logoutForced(Request $request)
+    public function actionLogoutForced(Request $request)
     {
-        return $this->logout($request, true);
+        return $this->actionLogout($request, true);
     } //Function ends
 
     /**
@@ -294,6 +269,13 @@ class LoginController extends Controller
                             ->withErrors([
                                 $this->usernameField => 'Incorrect username and/or password !!',
                             ]);
+                    } elseif (is_array($claim)) { // Challenge generated
+                        $returnValue = redirect()
+                            ->route('cognito.form.login.step', [
+                                    'step' => 'challenge',
+                                    'challenge' => $claim['challenge_name']
+                                ])
+                            ->with('data', $claim);
                     } else {
                         $returnValue = $claim;
                     }

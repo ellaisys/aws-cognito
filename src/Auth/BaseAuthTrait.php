@@ -145,6 +145,16 @@ trait BaseAuthTrait
     } //Function ends
 
     /**
+     * Set the redirect path
+     *
+     * @param string $redirectTo
+     */
+    protected function setRedirectPath(string $redirectTo): void
+    {
+        $this->redirectTo = $redirectTo;
+    } //Function ends
+
+    /**
      * The method to get the guard to be used for authentication based on the request type
      *
      * @return bool
