@@ -34,7 +34,7 @@ To use this view in your application, you can include it in your Blade templates
 
 ```blade
   @section('content')
-  <x-cognito-device-auth />
+  <x-cognito::device-auth />
   ...
   ...
   ...
@@ -73,7 +73,7 @@ The package provides the component to be added to your login view, which will ha
   <form method="POST" id="auth-password-form" ... >
       @csrf
 
-      <x-cognito-device-auth
+      <x-cognito::device-auth
           :includeGMP="false"
           :includeCryptoJS="false"
           :includeCryptoUtils="false" />
