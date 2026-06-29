@@ -83,7 +83,15 @@
                     button.addEventListener('click', function(event) {
                         // Set passcode value to challenge_value input before form submission
                         let elemPasscode = document.getElementById('pass_code');
-                        challengeValue.value = elemPasscode.value;
+
+                        if (!elemPasscode.value.trim()) {
+                            elemPasscode.setCustomValidity("Please enter the passcode.");
+                            elemPasscode.reportValidity();
+                            return; // Stop form submission if passcode is empty
+                        } else {
+                            elemPasscode.setCustomValidity(""); // Clear any previous custom validity message
+                            challengeValue.value = elemPasscode.value;
+                        } //End if
 
                         // Clear the passcode input for security reasons
                         elemPasscode.value = '';
@@ -138,6 +146,7 @@
                 } //End if
             } catch (error) {
                 console.error("Error handling form submission:", error);
+                this.alert("An error occurred while processing the challenge. Please try again.", "error");
                 throw error;
             }
         } // Function ends
@@ -183,6 +192,28 @@
                 throw error;
             } // End try-catch
         } // Function ends
+
+        /**
+         * Function to display an alert message. It uses the CognitoAlert
+         * class if available, otherwise falls back to the default alert.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of alert ('info', 'success', 'error').
+         */
+        function alert(message, type = 'info') {
+            if (typeof CognitoAlert !== 'undefined') {
+                let alertBox = new CognitoAlert();
+                if (type === 'success') {
+                    alertBox.success(message);
+                } else if (type === 'error') {
+                    alertBox.error(message);
+                } else {
+                    alertBox.info(message);
+                }
+            } else {
+                // Fallback to default alert if CognitoAlert is not available
+                alert(message);
+            } //End if
+        } //Function end
 
         /**
          * Class to handle the various Cognito authentication challenges, including
