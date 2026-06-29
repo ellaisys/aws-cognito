@@ -32,14 +32,14 @@
                 } //End if
 
                 if (dataAction === 'register') { // Register a new passkey
-                    let webAuthn = new WebAuthnRegistration();
+                    let webAuthn = new WebAuthnService();
                     let response = await webAuthn.register();
 
                     // Disable on success, re-enable on failure
                     this.disabled = response;
                 } else if (dataAction === 'delete') { // Delete an existing passkey
                     // Get the user key from the data attribute
-                    let webAuthn = new WebAuthnRegistration();
+                    let webAuthn = new WebAuthnService();
                     await webAuthn.delete();
 
                     // Re-enable the button after deletion
@@ -58,10 +58,10 @@
          * It includes methods to start the registration process, complete it,
          * and delete existing passkeys.
          */
-        class WebAuthnRegistration {
+        class WebAuthnService {
 
             /**
-             * Constructor to initialize the WebAuthnRegistration class
+             * Constructor to initialize the WebAuthnService class
              * with necessary parameters for secure communication with
              * the server during the passkey registration process.
              */
