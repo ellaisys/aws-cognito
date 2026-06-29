@@ -14,11 +14,11 @@
     :includeCryptoUtils="false" />
 
 @if((isset($challengeNameValue) && ($challengeNameValue != 'NONE')))
-    <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue ?? '' }}" required />
-    <input type="hidden" id="session" name="session" value="{{ $sessionValue ?? '' }}" />
-    <input type="hidden" id="challenge_params" name="challenge_params" value="{{ $challengeParamsValue ?? '' }}" />
-    <input type="hidden" id="challenge_value"  name="challenge_value" required />
-    <input type="hidden" id="username" name="username" value="{{ old('username', $usernameValue) }}" required />
+    <input type="hidden" id="challenge_name" name="challenge_name" value="{{ $challengeNameValue ?? '' }}" data-role="challenge-data" required />
+    <input type="hidden" id="session" name="session" value="{{ $sessionValue ?? '' }}" data-role="challenge-data" />
+    <input type="hidden" id="challenge_params" name="challenge_params" value="{{ $challengeParamsValue ?? '' }}" data-role="challenge-data" />
+    <input type="hidden" id="challenge_value"  name="challenge_value" data-role="challenge-data" required />
+    <input type="hidden" id="username" name="username" value="{{ old('username', $usernameValue) }}" data-role="challenge-data" required />
 @endif
 
 @if((isset($challengeNameValue) && ($challengeNameValue != 'NONE')))
@@ -136,9 +136,10 @@
                 // Process the challenge based on the challenge name
                 await processChallenge();
 
-                if (!frmChallenge.checkValidity()) {
+                if ((!frmChallenge.checkValidity()) || (!this.challengeCheckValidity())) {
                     // Show validation errors if the form is not valid
                     frmChallenge.reportValidity();
+                    this.alert("An error occurred while processing the challenge. Please try again.", "error");
                     return; // Stop form submission if validation fails
                 } else {
                     // Submit the form
@@ -191,6 +192,20 @@
                 console.error("Error processing challenge:", error);
                 throw error;
             } // End try-catch
+        } // Function ends
+
+        function challengeCheckValidity() {
+            const elemsRequired = document.querySelectorAll('[data-role="challenge-data"][required]');
+            let isValid = true;
+            for (const elem of elemsRequired) {
+                if (!elem.value.trim()) {
+                    elem.setCustomValidity("This field is required.");
+                    isValid = isValid && false;
+                } else {
+                    elem.setCustomValidity(""); // Clear any previous custom validity message
+                    isValid = isValid && true;
+                }
+            }
         } // Function ends
 
         /**
