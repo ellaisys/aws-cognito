@@ -1,17 +1,57 @@
+# FIDO2 Security OR Passkey Functionality (WebAuthn/EMail OTP/SMS OTP)
+
 >[!IMPORTANT]
->We have released the **laravel components** for the FIDO2 Security Keys OR Passkey based MFA functionality as a new feature from V2.0.6. The component had php blade components and javascript functions to implement the FIDO2 Security Keys OR Passkey based MFA functionality in your application. The component provides the necessary methods to implement this functionality in your application. All FIDO2 Security features are supported.
+>We have released the **laravel blade components** as a feature from V2.0.6. These  component have php/html blade components and javascript functions to implement the FIDO2 Security Keys OR Passkey based functionality within your application. All FIDO2 Security features are supported.
 
-## **FIDO2 Security Keys OR Passkey Functionality**
-The library currently provides the FIDO2 Security Keys OR Passkey based MFA functionality. This is a passwordless authentication approach, where the user can use the security key or passkey to authenticate. This is a **Zero-Knowledge Authentication** method.The security key can be a physical device or a virtual device (i.e. mobile device). The passkey is a software-based credential that is stored on the user's device and can be used for authentication.
+## **Contents**
+- [Introduction](#introduction)
+- [Configurations](#configurations)
+- [Features](#features)
+- [API Routes](#api-routes)
+- [References](#references)
 
-AWS Cognito provides the FIDO2 Security Keys OR Passkey based MFA functionality, which can be enabled for the user pool. The user can then use the security key or passkey to authenticate. The library provides the necessary methods to implement this functionality in your application. The supported FIDO2 Security Keys OR Passkey based types are as follows:
+## **Introduction**
+This package feature provides the FIDO2 Security Keys OR Passkey based functionality. This is a passwordless authentication approach, where the user can use the security key or passkey to authenticate. 
+
+This is a ***Zero-Knowledge Authentication*** method.
+The approach uses a physical or a virtual device (i.e. laptop or mobile device). The passkey is a software-based certificate that is stored on the user's device and can be used for authentication.
+
+The AWS Cognito currently provides following methods:
 - EMAIL OTP
 - SMS OTP
 - Device based Biometric Authentication (i.e. Touch ID, Face ID)
 
 ## **Configurations**
+- [AWS Configurations](#aws-configurations)
+- [Laravel Package Configurations](#laravel-package-configurations)
+
+### AWS Configurations
+---
+In order to use the FIDO2 Security Keys OR Passkey based functionality, you need to configure the AWS Cognito User Pool with the necessary settings.
+
+#### Step 1: Select the App Client in the AWS Cognito User Pool
+<img src="../assets/images/aws_cognito_passkey_flow1.png" width="100%" alt="cognito app client settings"/>
+
+#### Step 2: Enable the FIDO2 Security Keys OR Passkey based MFA functionality in the Sign-in experience settings
+<img src="../assets/images/aws_cognito_passkey_flow2.png" width="100%" alt="cognito app client settings"/>
+
+AWS Cognito provides the FIDO2 Security Keys OR Passkey based functionality, with multiple choices. This data is dynamically provided from the trait making the user experience better.
+
+#### Step 3: Set the Authentication flow settings for passkey based authentication
+<img src="../assets/images/aws_cognito_passkey_flow3.png" width="100%" alt="cognito app client settings"/>
+
+>[!IMPORTANT]
+> During the development phase, you can set the server domain as localhost. 
+
+This will be used as the relying party id for the FIDO2 Security Keys OR Passkey based authentication. However, in the production environment, you need to set the server domain as the domain name of your application. This is required for the FIDO2 Security Keys OR Passkey based authentication. The relying party id is used to identify the application during the authentication process.
+
+### Laravel Package Configurations
+---
+This Laravel Package provides the necessary methods to implement this functionality and supports all types provided by AWS Cognito. The available challenges are dynamically provided from the trait making the user experience better.
+
 The package provides a trait that you can add to your controller to make the passkey methods running.
 - Ellaisys\Cognito\Auth\WebAuthPasskey
+
 The methods provided in the trait are as follows:
 - start
 - complete
@@ -21,9 +61,9 @@ The methods provided in the trait are as follows:
 The package also provides Controller methods that you can use to implement the FIDO2 Security Keys OR Passkey based MFA functionality. You can publish the controllers using the command below and then use the methods in your controller.
 > php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
 
-The name of the controller that is published is WebAuthPasskeyController. You can use the methods in this controller to implement the FIDO2 Security Keys OR Passkey based MFA functionality in your application. The controller uses the trait Ellaisys\Cognito\Auth\WebAuthPasskey, which provides the necessary methods to implement this functionality in your application.
+The name of the controller that is published is `WebAuthPasskeyController`. You can use the methods in this controller to implement the FIDO2 Security Keys OR Passkey based MFA functionality in your application. The controller uses the trait ***Ellaisys\Cognito\Auth\WebAuthPasskey***, which provides the necessary methods to implement this functionality in your application.
 
-For the AWS Cognito user pool, you need to enable the FIDO2 Security Keys OR Passkey based MFA functionality. This can be done by configuring the user pool with the necessary settings. The settings are covered in the section [AWS Cognito User Pool Configuration](#aws-cognito-user-pool-configuration) in the documentation.
+
 
 Also, configure below keys into the .env file to change the default setting. 
  - The **AWS_COGNITO_ALLOW_PASSKEYS** should be set to true to enable the passkey feature. The default value is false resulting into disabled passkey functionality. 
@@ -46,7 +86,7 @@ Also, configure below keys into the .env file to change the default setting.
 ## **API Routes**
 >[!IMPORTANT]
 >We are releasing the API predefined routes as a new feature from V1.3.0.
-> php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+>php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
 
 For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
 
@@ -168,7 +208,7 @@ The response for the API call would look like this with the HTTP Status Code 200
 
 The package provides a blade component that you can use to implement the passkey login functionality in your **challenge page**.
 
-```blade
+```html
     <form id="auth-challenge-form" method="POST" ...>
         ...
         <x-cognito::challenge
@@ -319,24 +359,3 @@ The payload for the Web and API based route is as shown below. The request paylo
 
 The response for the API call would look like this with the HTTP Status Code 200. The response object will contain the access token, refresh token and the id token. The user can then use the access token to access the protected resources in the application. This is similar to the response received in the simple login process. The only difference is that the user can use the security key or passkey to authenticate.
 
-### AWS Cognito User Pool Configuration
-In order to use the FIDO2 Security Keys OR Passkey based functionality, you need to configure the AWS Cognito User Pool with the necessary settings.
-
-------------
-#### Step 1: Select the App Client in the AWS Cognito User Pool
-<img src="../assets/images/aws_cognito_passkey_flow1.png" width="100%" alt="cognito app client settings"/>
-
-------------
-## Step 2: Enable the FIDO2 Security Keys OR Passkey based MFA functionality in the Sign-in experience settings
-<img src="../assets/images/aws_cognito_passkey_flow2.png" width="100%" alt="cognito app client settings"/>
-
-AWS Cognito provides the FIDO2 Security Keys OR Passkey based functionality, with multiple choices. This data is dynamically provided from the trait making the user experience better.
-
-------------
-## Step 3: Set the Authentication flow settings for passkey based authentication
-<img src="../assets/images/aws_cognito_passkey_flow3.png" width="100%" alt="cognito app client settings"/>
-
->[!IMPORTANT]
-> During the development phase, you can set the server domain as localhost. 
-
-This will be used as the relying party id for the FIDO2 Security Keys OR Passkey based authentication. However, in the production environment, you need to set the server domain as the domain name of your application. This is required for the FIDO2 Security Keys OR Passkey based authentication. The relying party id is used to identify the application during the authentication process.
