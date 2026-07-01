@@ -205,7 +205,6 @@ trait WebAuthPasskey
 
     /**
      * Action to delete a registered passkey authenticator for the currently signed-in user.
-     * TO BE TESTED
      *
      * @param Request $request
      *
