@@ -7,8 +7,11 @@
 - [Introduction](#introduction)
 - [Configurations](#configurations)
 - [Features](#features)
-- [Blade Component](#blade-component)
-- [API Routes](#api-routes)
+- Easy Implementation
+    - [Blade Component](#blade-component)
+- Custom Implementation
+    - [API Documentation](#api-documentation)
+    - [API Routes](#api-routes)
 - [References](#references)
 
 ## **Introduction**
@@ -48,21 +51,7 @@ This will be used as the relying party id for the FIDO2 Security Keys OR Passkey
 
 ### Laravel Package Configurations
 ---
-This Laravel Package provides the necessary methods to implement this functionality and supports all types provided by AWS Cognito. The available challenges are dynamically provided from the trait making the user experience better.
 
-The package provides a trait that you can add to your controller to make the passkey methods running.
-- Ellaisys\Cognito\Auth\WebAuthPasskey
-
-The methods provided in the trait are as follows:
-- start
-- complete
-- challenge
-- delete
-
-The package also provides Controller methods that you can use to implement the FIDO2 Security Keys OR Passkey based MFA functionality. You can publish the controllers using the command below and then use the methods in your controller.
-> php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
-
-The name of the controller that is published is `WebAuthPasskeyController`. You can use the methods in this controller to implement the FIDO2 Security Keys OR Passkey based MFA functionality in your application. The controller uses the trait ***Ellaisys\Cognito\Auth\WebAuthPasskey***, which provides the necessary methods to implement this functionality in your application.
 
 Also, configure below keys into the .env file to change the default setting. 
  - The **AWS_COGNITO_ALLOW_PASSKEYS** should be set to true to enable the passkey feature. The default value is false resulting into disabled passkey functionality. 
@@ -162,16 +151,30 @@ Using this component will simplify the implementation of the passkey authenticat
 
 The data is **secure** on the client side, as per the FIDO2 standards, and the necessary scripts and methods are provided in the component to implement the passkey feature in your application.
 
-## **API Routes**
->[!IMPORTANT]
->We are releasing the API predefined routes as a new feature from V1.3.0.
->php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+## **API Documentation**
+This Laravel Package provides the necessary methods to implement passkey functionality provided by AWS Cognito. The available challenges are dynamically provided from the trait making the user experience aligned to the AWS SDK.
 
-For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
+The `Email OTP` and `SMS OTP` challenges are simple to implement, as they are based on the challenge initiated by the AWS Cognito User Pool. The `WebAuthn` challenge is based on the FIDO2 Security Keys and require a registration process to be completed before the user can use the security key or passkey to authenticate.
 
-### **Passkey Registration with FIDO Authenticator**
+The package provides a trait `WebAuthPasskey` that you can add to your controller to make the passkey methods running. The namespace for the trait is `Ellaisys\Cognito\Auth\WebAuthPasskey`.
+
+The methods provided in the trait are as follows:
+- start (Start the registration process)
+- complete (Complete the registration process)
+- delete (Delete a registered passkey)
+- challenge (Authenticate by responding to the passkey authentication challenge)
+
+The package also provides a Controller `WebAuthPasskeyController` with methods that you can alter. You can publish the controllers using the command below and then use the methods in your controller.
+```sh
+php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+```
+
+This controller uses the trait `WebAuthPasskey` referenced above.
+
+### *Passkey Registration with FIDO Authenticator*
 Alternately, the package also provides API routes that you can use to implement the passkey registration functionality in your application. The API routes are as follows: The passkey registration process involves two steps.
-1. The first step is to generate the registration certificate. The library provides a route that calls the start method in the WebAuthPasskey trait to generate the registration certificate. The response will be the registration certificate that can be used to register the passkey with the FIDO Authenticator (navigator.credentials.create).
+
+<u>***Step 1***</u> The first step is to generate the registration certificate. The library provides a route that calls the start method in the WebAuthPasskey trait to generate the registration certificate. The response will be the registration certificate that can be used to register the passkey with the FIDO Authenticator (navigator.credentials.create).
 ```php
 
     public function start(Request $request)
@@ -232,7 +235,7 @@ Send this data to the java script function to register the passkey with the FIDO
 <img src="../assets/images/aws_cognito_passkey_flow5.png" width="45%" alt="cognito app client settings"/>
 
 
-2. The response from the FIDO Authenticator will be used in the second step to complete the registration process.
+<u>***Step 2***</u> The response from the FIDO Authenticator will be used in the second step to complete the registration process.
 ```php
 
     public function complete(Request $request)
@@ -247,26 +250,26 @@ The response for the API call would look like this with the HTTP Status Code 200
         "status": "success"
     }
 ```
+---
+### *Passkey Authentication Functionality*
+The package provides API routes that you can use to implement the passkey login functionality in your application.
 
-### **Login with Passkey Functionality**
+The login shall require three steps for implementation of the overall authentication using the passkey approach.
 
-#### Using the Blade Component
-Alternately, you can also use your own logic and API calls to implement the passkey login functionality in your application. The package provides API routes that you can use to implement the passkey login functionality in your application.
+<u>***Step 1***</u>:  Generate the available challenges.
 
-The login shall require three steps for implementation of the overall authentication using the passkey approach. 
-1. The first step shall generate the available challenges.
-```php
+```sh
 
-    public function challenge(Request $request, ?string $challengeName = null)
-    {
-        ...
-    } //Function ends
+    curl -X GET '<BASE_URL>/api/cognito/login/passkey/challenge' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -d '{
+        "username": "<username_registered_in_cognito_user_pool>"
+    }'
 
 ```
+This API will return the available challenges for the user. The response will be as shown below. The challenge name shall be `SELECT_CHALLENGE`.
 
-This API will return the available challenges for the user. The response will be as shown below. The challenge name shall be SELECT_CHALLENGE. This will also chow the available challenges for the user. 
-
-The data in AvailableChallenges will be based on the configuration in the AWS Cognito User Pool and the user's settings. The user can then select the challenge and proceed with the authentication process. The available challenges will be dynamically provided from the trait making the user experience better. The user can then select the challenge and proceed with the authentication process. The available challenges will be dynamically provided from the trait making the user experience better.
 
 ```json
     {
@@ -279,8 +282,7 @@ The data in AvailableChallenges will be based on the configuration in the AWS Co
         jVrz53Y1uJ3I30w46CpL9xlB50IbVJ0SNYY_tuFsLc
         GjYfDpn7XQcd6-fXWovCIYoMH5Q",
         "AvailableChallenges": [
-            "PASSWORD_SRP",
-            "PASSWORD",
+            ...
             "EMAIL_OTP",
             "SMS_OTP",
             "WEB_AUTHN"
@@ -289,19 +291,28 @@ The data in AvailableChallenges will be based on the configuration in the AWS Co
     }
 ```
 
-2. The second step involves generating the challenge based on the selected passkey choice with the session token.
+The data in `AvailableChallenges` attribute will be based on the configuration in the AWS Cognito User Pool and the user's settings.
 
-The API endpoint is the same with additional parameter for the challenge name. The route provided allows the challenge name to be passed as a path parameter. The response will be the challenge for the selected passkey choice. The user can then use the security key or passkey to authenticate.
+>*Note:* The available challenges will be dynamically provided from the trait based in the verified data in cognito. This makes the the user experience better.
 
-```php
+<u>***Step 2***</u>: This step involves generating the challenge based on the selected passkey choice with the session token.
 
-    public function challenge(Request $request, ?string $challengeName = null)
-    {
-        ...
-    } //Function ends
+The API endpoint is the same with additional parameter for the `challenge name`. It is one of the values in the `AvailableChallenges` array from the previous step. (e.g. WEB_AUTHN).
+
+The route provided allows the challenge name to be passed as a path parameter. The response will be the challenge for the selected passkey choice. The user can then use the security key or passkey to authenticate.
+
+```sh
+
+    curl -X GET '<BASE_URL>/api/cognito/login/passkey/challenge/<challenge_name>' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -d '{
+        "username": "<username_registered_in_cognito_user_pool>"
+    }'
 
 ```
 
+> Note: The challenge name is case insensitive. The available challenges are dynamically provided from the trait making the user experience better.
 The request payload for the Web and API based route is as shown below.
 ```json
     {
@@ -312,7 +323,7 @@ The request payload for the Web and API based route is as shown below.
 
 The response for the API call would look like this with the HTTP Status Code 200. Based on the challenge name, the necessary data will be provided in the response. 
 
-The data in **ChallengeParameters** will be based on the challengeName provided. The user can then use the security key or passkey to authenticate. The available challenges will be dynamically provided from the trait making the user experience better.
+The data in `ChallengeParameters` will be based on the challengeName provided. The user can then use the security key or passkey to authenticate. The available challenges will be dynamically provided from the trait making the user experience better.
 ```json
     {
         "ChallengeName": "WEB_AUTHN",
@@ -333,22 +344,28 @@ The data in **ChallengeParameters** will be based on the challengeName provided.
     }
 ```
 
-3. The third step involves verifying the OTP/TOTP code OR biometric data.
+<u>***Step 3***</u>: This step involves verifying the OTP/TOTP code OR biometric data.
+- The Email OTP will be sent to the registered email address of the user.
+- The SMS OTP will be sent to the registered mobile number of the user.
+- The WebAuthn challenge will be verified using the FIDO Authenticator (navigator.credentials.get) registered with cognito.
 
-The library provides the necessary views and methods to implement the login functionality in your application.
+The user response will be sent to the API endpoint to verify the challenge. A single API endpoint is provided to verify the challenge response for authentication. The request payload will depend on the challenge name provided in the previous step.
 
-The challenge based login enpoint for Web and API based approach is provided. The same endpoint can be used for MFA challenges and FIDO2 authentication challenges.
+```sh
 
-We have used simple javascript to make the API calls for the login functionality. You can customize the views and the API calls as per your requirements and the choice of the frontend framework.
-
-```php
-
-    public function challenge(Request $request)
-    {
-        ...
-    } //Function ends
+    curl -X POST '<BASE_URL>/api/cognito/login/challenge' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -d '{
+        "challenge_name": "<challenge_name>",
+        "session": "<session_token_from_previous_step>",
+        "challenge_value": "<response_from_user>",
+        "challenge_params": "<challenge_params_from_previous_step>",
+        "username": "<username_registered_in_cognito_user_pool>"
+    }'
 
 ```
+
 The payload for the Web and API based route is as shown below. The request payload will depend on the challenge name provided in the previous step. The user can then use the security key or passkey to authenticate.
 
 ```json
@@ -360,9 +377,24 @@ The payload for the Web and API based route is as shown below. The request paylo
         ...
         jVrz53Y1uJ3I30w46CpL9xlB50IbVJ0SNYY_tuFsLc
         GjYfDpn7XQcd6-fXWovCIYoMH5Q",
-        "challenge_response": "string_response",
+        "challenge_value": "string_response",
+        "challenge_params": "json_string_of_credential_request_options",
         "username": "john@doe.com"
     }
 ```
 
-The response for the API call would look like this with the HTTP Status Code 200. The response object will contain the access token, refresh token and the id token. The user can then use the access token to access the protected resources in the application. This is similar to the response received in the simple login process. The only difference is that the user can use the security key or passkey to authenticate.
+The response for the API call would look like this with the HTTP Status Code 200.
+
+The response object will contain the `access token`, `refresh token` and the `id token`. The user can then use the access token to access the protected resources in the application.
+
+## **API Routes**
+>[!IMPORTANT]
+>We are releasing the API predefined routes as a new feature from V1.3.0.
+>php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+
+For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
+
+## **References**
+- [FIDO2 Security Keys](https://fidoalliance.org/fido2/)
+- [WebAuthn](https://webauthn.guide/)
+- [W3C Web Authentication](https://www.w3.org/TR/webauthn-3/)
