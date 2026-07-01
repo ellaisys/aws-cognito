@@ -34,6 +34,7 @@ The API routes that are wired via the API Controller, making it easy for users t
 You can change the API prefix by configuring **AWS_COGNITO_API_PREFIX** in the .env file. The default value of the AWS_COGNITO_API_PREFIX is **cognito**.
 
 ```php
+
     POST      api/cognito/login ................................................... Ellaisys\Cognito\Http\Controllers\Auth\LoginController@login
     POST      api/cognito/login/challenge ..................................... Ellaisys\Cognito\Http\Controllers\Auth\LoginController@challenge
     PUT       api/cognito/logout ................................................. Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout
