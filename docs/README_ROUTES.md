@@ -1,37 +1,63 @@
-## **Preconfigured routes for Web and API Functionality**
-To help faster implementations, we have now provided with routes for web and APIs in this package. This includes Controllers, Views and updated Configuration file. 
+# **Preconfigured Routes for Web and API Functionality**
 
-The new version of the package should work fine, you might have to just add some lines into the AppServiceProvider. Refer the section: [Ignore the routes and controllers](#ignore-the-routes-and-controllers)
+> [!IMPORTANT]
+> We have released the **Device Authentication** feature from V2.0.6. The routes were amended.
+
+To help faster implementations, we have now provided with routes for web and APIs in this package. This includes Controllers, Views and updated Configuration file.
+
+## **Contents**
+- [Configurations](#configurations)
+- [Features](#features)
+- [Routes](#routes)
+  - [API Routes](#api-routes)
+  - [Web Routes](#web-routes)
+- [Ignore the routes and controllers](#ignore-the-routes-and-controllers)
+- [Web Views and Components](#web-views-and-components)
 
 ## **Configurations**
+Default Laravel configurations should work flawlessly. You can customize the package to a large extent.
 
-Default configurations should work without any issues. However, you will be able to customize the package to a large extent. In case you have published the prior configuration file in your config folder, you may need to delete that and publish again. Please take backup of the prior configuration in case you have modified anything.
+You can change the API prefix by configuring `AWS_COGNITO_API_PREFIX` and the web prefix by configuring `AWS_COGNITO_WEB_PREFIX` in the .env file. The default value for both is **cognito**.
+
+```php
+
+AWS_COGNITO_API_PREFIX="cognito"
+AWS_COGNITO_WEB_PREFIX="cognito"
+
+```
+
+> [!NOTE]
+> In case you have published the prior cognito configuration file in your config folder, you may need to delete that and republish again. Please take backup of the cognito.php in case you have modified anything.
 
 ## **Features**
 - [Preconfigured Routes & Controllers](#routes)
 - [Web Views and Components]()
 
 ## **Routes**
->[!IMPORTANT]
->Preconfigured Web and API routes as a new feature from V2.0.0.
+>[!NOTE]
+>Preconfigured Web and API routes are introduced as a new feature from V2.0.0.
 
 To help faster implementations, we have now provided with routes for web and APIs in this package. This includes Controllers, Views and updated Configuration file. 
 
-The new version of the package should work fine with your existing implementation of routes and views. Just add some lines into the AppServiceProvider to ignore the routes and controllers
+In case you want to omit this feature, add a few lines into the AppServiceProvider to ignore the routes and controllers
 Refer the section: [Ignore the routes and controllers](#ignore-the-routes-and-controllers)
 
 You can overwrite the controllers. Just publish and modify them. The controllers for Web and APIs will be saved differently in the app/Http/Controllers directory, for finer control.
 
 ```bash
-    ```bash
-    php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+    
+php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+
 ```
 
 ### API Routes
+---
+The Web and API routes that are wired to the same Controller, making it easy for users to implement. The API returns standardized JSON response and the response format is consistent across all API endpoints.
 
-The API routes that are wired via the API Controller, making it easy for users to implement. The validations are built in and API response format is standardized. 
+The validations are built in and API response format is standardized.
 
-You can change the API prefix by configuring **AWS_COGNITO_API_PREFIX** in the .env file. The default value of the AWS_COGNITO_API_PREFIX is **cognito**.
+> [!IMPORTANT]
+> It is recommended to use the request headers have `content-type` and `accept` as **application/json**. This will ensure that the API response is in JSON format.
 
 ```php
 
@@ -46,13 +72,15 @@ You can change the API prefix by configuring **AWS_COGNITO_API_PREFIX** in the .
     POST      api/cognito/user/changepassword .......................... Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@change
     POST      api/cognito/user/invite ................................... Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@actionInvite
     GET|HEAD  api/cognito/user/profile ................................ Ellaisys\Cognito\Http\Controllers\Api\UserController@actionGetRemoteUser
-
+    
+    // API routes for MFA
     GET|HEAD  api/cognito/user/mfa/activate ...................................... Ellaisys\Cognito\Http\Controllers\Auth\MFAController@activate
     POST      api/cognito/user/mfa/activate/{code} ................................. Ellaisys\Cognito\Http\Controllers\Auth\MFAController@verify
     POST      api/cognito/user/mfa/deactivate .................................. Ellaisys\Cognito\Http\Controllers\Auth\MFAController@deactivate
     POST      api/cognito/mfa/disable ............................................. Ellaisys\Cognito\Http\Controllers\Auth\MFAController@disable
     POST      api/cognito/mfa/enable ............................................... Ellaisys\Cognito\Http\Controllers\Auth\MFAController@enable
 
+    // API routes for Passkey (FIDO2 Security Keys)
     GET|HEAD  api/cognito/user/passkey/start ............................. Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@start
     POST      api/cognito/user/passkey/complete ....................... Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@complete
     DELETE    api/cognito/user/passkey .................................. Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@delete
@@ -63,12 +91,11 @@ You can change the API prefix by configuring **AWS_COGNITO_API_PREFIX** in the .
 ```
 
 ### Web Routes
-
+---
 The web routes that are wired via the Controllers, making it easy for users to implement. The validations are built in and response is wired to blade views. The views can be 
 
-You can change the API prefix by configuring **AWS_COGNITO_WEB_PREFIX** in the .env file. The default value of the AWS_COGNITO_WEB_PREFIX is **cognito**.
-
 ```php
+
     GET|HEAD  cognito/home ............................................................................................................................... cognito.home
     GET|HEAD  cognito/login ........................................................................................................................ cognito.form.login
     POST      cognito/login ................................................ cognito.action.login.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@login
@@ -91,12 +118,14 @@ You can change the API prefix by configuring **AWS_COGNITO_WEB_PREFIX** in the .
     GET|HEAD  cognito/user/invite ............................................................................................................ cognito.form.user.invite
     POST      cognito/user/invite ..................................... cognito.action.invite.submit › Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@invite
 
+    // Web routes for MFA
     GET|HEAD  cognito/user/mfa/activate ................................ cognito.form.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@activate
     GET|HEAD  cognito/user/mfa/deactivate ........................ cognito.action.user.mfa.deactivate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@deactivate
     GET|HEAD  cognito/user/mfa/disable ...................................... cognito.action.mfa.disable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@disable
     GET|HEAD  cognito/user/mfa/enable ......................................... cognito.action.mfa.enable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@enable
     POST      cognito/user/mfa/verify .................................. cognito.action.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@verify
 
+    // Web routes for Passkey (FIDO2 Security Keys)
     POST      cognito/user/passkey/start .................... cognito.action.user.passkey.start › Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@start
     POST      cognito/user/passkey/complete ........... cognito.action.user.passkey.complete › Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@complete
     DELETE    cognito/user/passkey ........................ cognito.action.user.passkey.delete › Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@delete
@@ -104,11 +133,11 @@ You can change the API prefix by configuring **AWS_COGNITO_WEB_PREFIX** in the .
 
 ```
 
-### Ignore the routes and controllers
-
+## Ignore the routes and controllers
 If you would like to prevent AWS Cognito's routes and/or views from running entirely, you may use the ignoreRoutes and ignoreViews methods provided by AWS Cognito. Typically, this method should be called in the register method of your AppServiceProvider:
 
 ```php
+
     use Ellaisys\Cognito\AwsCognito;
     
     /**
@@ -119,6 +148,7 @@ If you would like to prevent AWS Cognito's routes and/or views from running enti
         AwsCognito::ignoreRoutes(); //Ignore the preconfired routes
         AwsCognito::ignoreViews();  //Ignore the views provided by the package
     }
+
 ```
 
 ## **Web Views and Components**
@@ -128,7 +158,13 @@ The package provides preconfigured blade views and components, for quick develop
 If you need to overwrite the views that ship with this package, you can publish them using the vendor:publish Artisan command make required changes.
 
 ```bash
-    php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="views"
+
+php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="views"
+
 ```
 
 The views reference a layout file. Modify the layout after publishing the file. If your own blade layout file has to be used, amend **AWS_COGNITO_VIEWS_LAYOUT** paramter with the name of the layout file. The default value is 'cognito::layouts.app' but you can change it to 'layouts.app' to point to your own app.blade.php in the resources/views/layouts folder.
+
+
+
+The new version of the package should work fine, you might have to just add some lines into the AppServiceProvider. Refer the section: [Ignore the routes and controllers](#ignore-the-routes-and-controllers)
