@@ -1,15 +1,15 @@
 # FIDO2 Security OR Passkey Functionality (WebAuthn/EMail OTP/SMS OTP)
 
->[!IMPORTANT]
->We have released the **laravel blade components** as a feature from V2.0.6. These  component have php/html blade components and javascript functions to implement the FIDO2 Security Keys OR Passkey based functionality within your application. All FIDO2 Security features are supported.
+> [!IMPORTANT]
+> We have released the **laravel blade components** as a feature from V2.0.6. These  component have php/html blade components and javascript functions to implement the FIDO2 Security Keys OR Passkey based functionality within your application. All FIDO2 Security features are supported.
 
 ## **Contents**
 - [Introduction](#introduction)
 - [Configurations](#configurations)
 - [Features](#features)
-- Easy Implementation
-    - [Blade Component](#blade-component)
-- Custom Implementation
+- Quick Start
+    - [Blade Component](#blade-component-web-app)
+- Advanced Topics
     - [API Documentation](#api-documentation)
     - [API Routes](#api-routes)
 - [References](#references)
@@ -27,7 +27,7 @@ The AWS Cognito currently provides following methods:
 
 ## **Configurations**
 - [AWS Configurations](#aws-configurations)
-- [Laravel Package Configurations](#laravel-package-configurations)
+- [Laravel Configurations](#laravel-configurations)
 
 ### AWS Configurations
 ---
@@ -44,20 +44,27 @@ AWS Cognito provides the FIDO2 Security Keys OR Passkey based functionality, wit
 #### Step 3: Set the Authentication flow settings for passkey based authentication
 <img src="../assets/images/aws_cognito_passkey_flow3.png" width="100%" alt="cognito app client settings"/>
 
->[!IMPORTANT]
-> During the development phase, you can set the server domain as localhost. 
+> [!TIP]
+> During the development phase, you can set the server domain as **`localhost`**. 
 
-This will be used as the relying party id for the FIDO2 Security Keys OR Passkey based authentication. However, in the production environment, you need to set the server domain as the domain name of your application. This is required for the FIDO2 Security Keys OR Passkey based authentication. The relying party id is used to identify the application during the authentication process.
+This will be used as the ***relying party id*** for the FIDO2 Security Keys OR Passkey based authentication. 
 
-### Laravel Package Configurations
+> [!CAUTION]
+> In the production environment, you need to set the server domain as the domain name of your application.
+
+This is required for the FIDO2 Security Keys OR Passkey based authentication. The relying party id is used to identify the application during the authentication process.
+
+### Laravel Configurations
 ---
+The package allows some configurations, which can be set in the .env file. The default values are set in the configuration file. You can change the default values by setting the keys in the .env file.
 
-
-Also, configure below keys into the .env file to change the default setting. 
- - The **AWS_COGNITO_ALLOW_PASSKEYS** should be set to true to enable the passkey feature. The default value is false resulting into disabled passkey functionality. 
- - The **AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION** can have values MULTI_FACTOR_WITH_USER_VERIFICATION (default) or SINGLE_FACTOR. More details are available in the configuration file with the key web_authn_mfa_configuration.
- - The **AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID** is the domain name of the application. This is required for the FIDO2 Security Keys OR Passkey based MFA functionality. The default value is localhost.
- - The **AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD** can have values preferred (default), required or discouraged. More details are available in the configuration file with the key web_authn_mfa_configuration.
+Configure below keys into the .env file to change the default values. 
+ - The `AWS_COGNITO_ALLOW_PASSKEYS` should be set to true to enable the passkey feature. The default value is false resulting into disabled passkey functionality. 
+ - The `AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION` can have values **MULTI_FACTOR_WITH_USER_VERIFICATION** (default) or **SINGLE_FACTOR**.
+> [!NOTE]
+> More details are available in the configuration file with the key `web_authn_mfa_configuration`.
+ - The `AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID` is the domain name of the application. This is required for the FIDO2 Security Keys OR Passkey based MFA functionality. The default value is **`localhost`**.
+ - The `AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD` can have values **`preferred`** (default), **`required`** or **`discouraged`**. More details are available in the configuration file with the key `web_authn_mfa_configuration`.
 
    The provider configuration aids to send out the SMS from AWS with additional costs. Refer AWS SNS pricing for more details [AWS SMS Pricing](https://aws.amazon.com/sns/sms-pricing/)
 
@@ -71,7 +78,7 @@ Also, configure below keys into the .env file to change the default setting.
 - [Passkey Management](#passkey-management-functionality)
 - [Login (Passkey Enabled)](#login-with-passkey-functionality)
 
-## **Blade Component**
+## **Blade Component** (web app)
 The package provides a blade component for `passkey management` and `passkey authentication`. The passkey authentication component is integrated into the `challenge component`.
 
 ### *Passkey Management Functionality*
@@ -293,7 +300,8 @@ This API will return the available challenges for the user. The response will be
 
 The data in `AvailableChallenges` attribute will be based on the configuration in the AWS Cognito User Pool and the user's settings.
 
->*Note:* The available challenges will be dynamically provided from the trait based in the verified data in cognito. This makes the the user experience better.
+> [!NOTE]
+> The available challenges will be dynamically provided from the trait based in the verified data in cognito. This makes the the user experience better.
 
 <u>***Step 2***</u>: This step involves generating the challenge based on the selected passkey choice with the session token.
 
