@@ -49,8 +49,7 @@ AWS Cognito provides the FIDO2 Security Keys OR Passkey based functionality, wit
 
 This will be used as the ***relying party id*** for the FIDO2 Security Keys OR Passkey based authentication. 
 
-> [!CAUTION]
-> In the production environment, you need to set the server domain as the domain name of your application.
+In the production environment, you need to set the server domain as the domain name of your application.
 
 This is required for the FIDO2 Security Keys OR Passkey based authentication. The relying party id is used to identify the application during the authentication process.
 
