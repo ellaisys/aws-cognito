@@ -1,7 +1,7 @@
 # FIDO2 Security OR Passkey Functionality (WebAuthn/EMail OTP/SMS OTP)
 
 > [!IMPORTANT]
-> We have released the **laravel blade components** as a feature from V2.0.6. These  component have php/html blade components and javascript functions to implement the FIDO2 Security Keys OR Passkey based functionality within your application. All FIDO2 Security features are supported.
+> We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to implement the FIDO2 Security Keys OR Passkey based functionality within your application. All FIDO2 Security features are supported.
 
 ## **Contents**
 - [Introduction](#introduction)
