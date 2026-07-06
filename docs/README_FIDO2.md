@@ -120,11 +120,12 @@ The data attributes are used to trigger the necessary javascript functions to im
 ### *Passkey Authentication Functionality*
 The package provides a blade component that you can use to implement the passkey login functionality in your **challenge page**.
 
-```blade
+```html
     <form id="auth-challenge-form" method="POST" ...>
         ...
+        <!-- pass the form name provided as a parameter to the component -->
         <x-cognito::challenge
-            :challenge-form-name="'auth-challenge-form'" /> <!-- Note the form name provided as a parameter to the component -->
+            :challenge-form-name="'auth-challenge-form'" />
         ...
         ...
         @php
@@ -144,6 +145,7 @@ The package provides a blade component that you can use to implement the passkey
         </div>
         ...
         ...
+        <!-- Button with data-action and data-role attribute -->
         <button type="submit"
             data-action="challenge-submit" data-role="{{ $challengeNameValue }}">
             Submit</button>
@@ -172,7 +174,9 @@ The methods provided in the trait are as follows:
 
 The package also provides a Controller `WebAuthPasskeyController` with methods that you can alter. You can publish the controllers using the command below and then use the methods in your controller.
 ```sh
+
 php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+
 ```
 
 This controller uses the trait `WebAuthPasskey` referenced above.
