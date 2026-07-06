@@ -86,41 +86,126 @@ The data attributes are used to trigger the necessary javascript functions to im
 
 ```
 
+### *Device Authentication Functionality*
+The package provides a couple blade components that you can use to implement the device login functionality in your **login page** and **challenge page**.
 
+On the login page, you can use the `device-auth` component to handle the device authentication flow.
 
+```html
 
+    ...
+    <form method="POST" id="auth-password-form" ...>
+        @csrf
 
+        <x-cognito::device-auth
+            :includeGMP="false"
+            :includeCryptoJS="false"
+            :includeCryptoUtils="false" />
+        ...
+        ...
+        <!-- username field with data-action and data-role attribute -->
+        <input type="email" id="username" name="username"
+          data-role="device-auth" data-action="username"
+          required autocomplete="email" autofocus />
+        ...
+        ...
+        <!-- Button with data-action and data-role attribute -->
+        <button type="submit" 
+          data-role="device-auth" data-action="validate">Login</button>
+    </form>
+    ...
+    @stack('cognito-device-auth-scripts')
+    ...
 
+```
 
+This component will check if the device is already registered and will send the device key to the server if it is. If the device is not registered, it will proceed with the normal authentication flow. If the device is registered, the server will respond with a challenge that includes the necessary parameters for the next step of the authentication flow.
 
+Use the `challenge` component in your challenge page to handle the device authentication flow. The component will handle the generation of the necessary values for the device proof and will send them back to the server in response to the challenge.
 
+```html
+    <form id="auth-challenge-form" method="POST" ...>
+        ...
+        <!-- pass the form name provided as a parameter to the component -->
+        <x-cognito::challenge
+            :challenge-form-name="'auth-challenge-form'" />
+        ...
+        ...
+        @php
+            $data = (session('data')) ?? null;
+            $challengeNameValue = 'NONE';
 
+            if ($data && isset($data['status']) && $data['status'] == 'challenge') {
+                $challengeNameValue = isset($data['challenge_name']) ?
+                    strtoupper($data['challenge_name']) :
+                    $challengeNameValue;
+            } //End if
+        @endphp
+        ...
+        ...
+        <div> <!-- Shows the passcode input field for the Password/OTP/TOTP based challenges only  -->
+            @stack('cognito-challenge-passcode')
+        </div>
+        ...
+        ...
+        <!-- Button with data-action and data-role attribute -->
+        <button type="submit"
+            data-action="challenge-submit" data-role="{{ $challengeNameValue }}">
+            Submit</button>
+        ...
+    </form>
 
+    @stack('cognito-challenge-scripts')
+    ...
+```
 
+Using this component will simplify the implementation of the device authentication functionality in your application.
+
+The data is **secure** on the client side, as per the cyber security standards, and the necessary scripts and methods are provided in the component to implement the device feature in your application.
+
+## **API Documentation**
+This Laravel Package provides the necessary methods to implement device authentication functionality provided by AWS Cognito. The available challenges are dynamically provided from the trait making the user experience aligned to the AWS SDK.
+
+The package provides a trait `DeviceActions` that you can add to your controller to provide custom functionality. The namespace for the trait is `Ellaisys\Cognito\Auth\DeviceActions`.
+
+The CRUD methods are provided in the trait, as follows:
+- list (List all the registered devices for the user)
+- create (Register a new device for the user)
+- update (Update the device information for the user)
+- delete (Delete a registered device for the user)
+
+The package also provides a Controller `DeviceController` with methods that you can alter. You can publish the controllers using the command below and then use the methods in your controller.
+```sh
+
+php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+
+```
+
+### **Registering a New Device**
 When a user logs in from a new device, they will be prompted to register the device. The registration process involves generating a unique device key and associating it with the user's account. This claim data is provided with additional **NewDeviceMetadata** having DeviceGroupKey and DeviceKey.
 
 Generate a new SRP secret for your user's device and store it securely on the client side (e.g., in local storage or secure storage). This secret will be used for future device authentication attempts.
 
 This secret is generated using the SRP protocol and is unique to the device. It should be treated as sensitive information and not shared or transmitted over insecure channels.
 
-This package provides a new component view **cognito-device-auth** which can be used to register a new device. The view is located at **resources/views/components/device/main.blade.php** within the package. You may not require to customize this view, but if you wish to do so, you can publish the package views and modify the view as needed.
+```sh
 
-To use this view in your application, you can include it in your Blade templates as follows:
-
-```blade
-  @section('content')
-  <x-cognito::device-auth />
-  ...
-  ...
-  ...
-
-  @stack('cognito-device-auth-scripts')
-  @endsection
+POST /device
+Content-Type: application/json
+Accept: application/json
+{
+  "device_key": "<device_key_in_NewDeviceMetadata>",
+  "device_name": "<user_friendly_device_name_for_reference>"
+}
 
 ```
-Add the @stack('cognito-device-auth-scripts') directive to your main layout file (e.g., home.blade.php) to ensure that the necessary JavaScript for device authentication is included in your application. This should be added after the @stack directives for other Cognito-related scripts to ensure proper loading order.
 
-for the API based implementation, exposes CRUD for you can use. The following endpoints are available for device authentication:
+## **API Routes**
+>[!IMPORTANT]
+>We are releasing the API predefined routes as a new feature from V1.3.0.
+>php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+
+The package provides a set of API routes that you can use to implement the device management and authentication functionality in your application. The routes are grouped under the `device` namespace and are protected by the authentication middleware. You can customize the routes as per your application requirements.
 
 ```php
 
@@ -130,6 +215,15 @@ for the API based implementation, exposes CRUD for you can use. The following en
   DELETE    api/cognito/device/{deviceKey} ........ Ellaisys\Cognito\Http\Controllers\Auth\DeviceController@delete
 
 ```
+
+## **References**
+- [AWS Cognito - Working with user devices in your user pool](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-device-tracking.html)
+
+
+
+
+
+
 
 ## **Device Authentication Flow**
 
@@ -142,30 +236,6 @@ For this package, a new service is provided **Ellaisys\Cognito\Services\AwsCogni
 The client initiates the device authentication process by sending the device key to the server. The server then calls AWS Cognito's endpoint to initiate the authentication process and receives the authentication challenge.
 
 The package provides the component to be added to your login view, which will handle the device authentication flow. When the user submits their username and password, the component will check if the device is already registered. If not, it will not send the device key to the server and will proceed with the normal authentication flow.
-
-```blade
-
-  <form method="POST" id="auth-password-form" ... >
-      @csrf
-
-      <x-cognito::device-auth
-          :includeGMP="false"
-          :includeCryptoJS="false"
-          :includeCryptoUtils="false" />
-      ...
-      ...
-      <input type="email" id="username" name="username"
-        data-role="device-auth" data-action="username"
-        required autocomplete="email" autofocus />
-      ...
-      ...
-      <button type="submit" 
-        data-role="device-auth" data-action="validate">Login</button>
-  </form>
-
-  @stack('cognito-device-auth-scripts')
-
-```
 
 If you are using the API based implementation, you can call the standard login endpoint method from your controller to initiate the device authentication process. This method will handle the communication with AWS Cognito and return the necessary challenge parameters for the next step of the authentication flow. It just requires an additional parameter **device_key** to be sent along with the username and password in the request body. The device key is a unique identifier for the registered device and is used to authenticate the device during the login process.
 
@@ -370,7 +440,4 @@ AWS Cognito typically uses **RFC 2409 (1024-bit) with g=2**.
 4. **Standardization**: RFC standards ensure interoperability between different implementations
 
 
-## **References**
-
-- [AWS Cognito - Working with user devices in your user pool](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-device-tracking.html)
 
