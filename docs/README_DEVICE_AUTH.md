@@ -1,7 +1,20 @@
 # **Device Authentication**
 
-## **Overview**
+> [!IMPORTANT]
+> We have released the **laravel blade components** as a feature from V2.0.6. These  component have php/html blade components and javascript functions to implement the FIDO2 Security Keys OR Passkey based functionality within your application. All FIDO2 Security features are supported.
 
+## **Contents**
+- [Introduction](#introduction)
+- [Configurations](#configurations)
+- [Features](#features)
+- Quick Start
+    - [Blade Component](#blade-component-web-app)
+- Advanced Topics
+    - [API Documentation](#api-documentation)
+    - [API Routes](#api-routes)
+- [References](#references)
+
+## **Introduction**
 With Amazon Cognito user pools, you can associate each of your users' devices with a unique device identifier: a device key. When you present the device key and perform device authentication at sign-in, you can configure your application with a trusted device authentication flow. Device authentication is a security feature that allows users to register and authenticate their devices with AWS Cognito. This feature enhances security by enabling multi-factor authentication (MFA) and device tracking, ensuring that only trusted devices can access user accounts. 
 
 When a user logs in from a new device, they may be prompted to register the new device. Once registered, the device can be remembered for future logins, reducing the need for repeated MFA prompts. This feature is particularly useful for applications that require high security, such as banking or healthcare apps.
@@ -11,7 +24,11 @@ The device authentication process involves using logic similar to the SRP (Secur
 This document explains how you can use this in the context of AWS Cognito and Laravel package.
 
 ## **Configuration**
+- [AWS Configurations](#aws-configurations)
+- [Laravel Configurations](#laravel-configurations)
 
+### AWS Configurations
+---
 Configure your user pool to remember devices in the Sign-in menu of your user pool, under Device tracking as shown below:
 <img src="../assets/images/aws_cognito_device_flow1.png" width="100%" alt="cognito device flow"/>
 
@@ -20,7 +37,65 @@ You can choose to always remember devices, or only remember them when the user o
 
 For more information on configuring device authentication in AWS Cognito, refer to the [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-device-tracking.html).
 
-## **Registering a Device**
+### Laravel Configurations
+---
+
+## **Blade Component** (web app)
+The package provides a blade component for 
+1. `device management`, and 
+2. `device authentication`
+
+The device authentication component is integrated into the `challenge component`.
+
+### *Device Management Functionality*
+The package provides a blade component that you can use to implement the device `registration` and device `deletion` functionality in your pages.
+
+You can use the component in your blade files as shown below. The component has all the required scripts, routes and methods to implement the device management functionality in your application.
+
+The component uses the `DeviceActions` trait, which provides the necessary methods to implement this functionality in your application.
+
+```html
+    ...
+    @section('content')
+        <x-cognito::common.js-scripts /> <!-- Optional -->
+        <x-cognito::device-auth />
+
+        ...
+        ...
+
+        @stack('cognito-common-scripts') <!-- Optional (shall be added if you have used the common.js-scripts component) -->
+        @stack('cognito-device-auth-scripts')
+    @endsection
+    ...
+```
+You can also use simple html buttons or any element with the data attributes to trigger the device management functionality as shown below.
+
+The data attributes are used to trigger the necessary javascript functions to implement the device registration and deletion functionality in your application. The data attributes are as follows:
+- `data-role`: This attribute is used to identify the element that will trigger the device functionality role. The value of this attribute must be ***device-auth***.
+- `data-action`: This attribute is used to identify the action that will be performed when the element is clicked. The value of this attribute can be ***register*** or ***delete***. 
+  - The `register` value is used to trigger the device registration functionality, and 
+  - The `delete` value is used to trigger the device deletion (forget) functionality.
+
+```html
+
+    <button data-role="device-auth" data-action="register">
+        Register Device</button>
+
+    <button data-role="device-auth" data-action="delete">
+        Delete Device</button>
+
+```
+
+
+
+
+
+
+
+
+
+
+
 
 When a user logs in from a new device, they will be prompted to register the device. The registration process involves generating a unique device key and associating it with the user's account. This claim data is provided with additional **NewDeviceMetadata** having DeviceGroupKey and DeviceKey.
 
@@ -94,15 +169,17 @@ The package provides the component to be added to your login view, which will ha
 
 If you are using the API based implementation, you can call the standard login endpoint method from your controller to initiate the device authentication process. This method will handle the communication with AWS Cognito and return the necessary challenge parameters for the next step of the authentication flow. It just requires an additional parameter **device_key** to be sent along with the username and password in the request body. The device key is a unique identifier for the registered device and is used to authenticate the device during the login process.
 
-```
+```sh
+
 POST /login
 Content-Type: application/json
-
+Accept: application/json
 {
   "username": "<username_for_login>",
   "password": "<password_for_login>",
   "device_key": "<device_key_of_registered_device>"
 }
+
 ```
 
 The server will then process this request and call AWS Cognito's endpoint to initiate the authentication process. If the device key is valid and the user credentials are correct, AWS Cognito will respond with an authentication challenge **DEVICE_SRP_AUTH** that includes the necessary parameters for the next step of the authentication flow.
@@ -124,10 +201,11 @@ Where:
 
 The client sends the following to the server:
 
-```
+```sh
+
 POST /login/auth-challenge
 Content-Type: application/json
-
+Accept: application/json
 {
   "challenge_name": "DEVICE_SRP_AUTH",
   "session": "<session_token_from_the_server>",
@@ -135,6 +213,7 @@ Content-Type: application/json
   "challenge_value": "<computed_challenge_value>",
   "challenge_params": "<returned_challenge_params_from_the_server>"
 }
+
 ```
 
 The `srp_a` field here contains the **pre-computed SRP_A value** (not the actual user password). if you choose not to compute SRP_A on the client side, you can omit this field and the package will compute it for you on the server side. 
