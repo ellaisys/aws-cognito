@@ -82,7 +82,7 @@ The package provides a blade component for `passkey management` and `passkey aut
 
 ### *Passkey Management Functionality*
 The package provides a blade component that you can use to implement the passkey registration functionality in your pages.
-You can use the component in your blade files as shown below. The component has all the required scripts, routes and methods to implement the passkey registration functionality in your application. The component uses the WebAuthPasskey trait, which provides the necessary methods to implement this functionality in your application.
+You can use the component in your blade files as shown below. The component has all the required scripts, routes and methods to implement the passkey registration functionality in your application. The component uses the `WebAuthPasskey` trait, which provides the necessary methods to implement this functionality in your application.
 
 ```blade
     ...
