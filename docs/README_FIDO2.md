@@ -84,7 +84,7 @@ The package provides a blade component for `passkey management` and `passkey aut
 The package provides a blade component that you can use to implement the passkey registration functionality in your pages.
 You can use the component in your blade files as shown below. The component has all the required scripts, routes and methods to implement the passkey registration functionality in your application. The component uses the `WebAuthPasskey` trait, which provides the necessary methods to implement this functionality in your application.
 
-```blade
+```html
     ...
     @section('content')
         <x-cognito::common.js-scripts />
@@ -181,10 +181,14 @@ php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServ
 
 This controller uses the trait `WebAuthPasskey` referenced above.
 
+---
 ### *Passkey Registration with FIDO Authenticator*
 Alternately, the package also provides API routes that you can use to implement the passkey registration functionality in your application. The API routes are as follows: The passkey registration process involves two steps.
 
-<u>***Step 1***</u> The first step is to generate the registration certificate. The library provides a route that calls the start method in the WebAuthPasskey trait to generate the registration certificate. The response will be the registration certificate that can be used to register the passkey with the FIDO Authenticator (navigator.credentials.create).
+#### <u>***Step 1***</u> Register the passkey
+
+The first step is to generate the registration certificate. The library provides a route that calls the start method in the WebAuthPasskey trait to generate the registration certificate. The response will be the registration certificate that can be used to register the passkey with the FIDO Authenticator (navigator.credentials.create).
+
 ```php
 
     public function start(Request $request)
@@ -196,47 +200,49 @@ Alternately, the package also provides API routes that you can use to implement 
 
 The response for the API call would look like this.
 ```json
-    {
-        "challenge": "yEAFH***********vfPIZwg",
-        "rp": {
-            "name": "Application Name",
-            "id": "localhost"
+
+{
+    "challenge": "yEAFH***********vfPIZwg",
+    "rp": {
+        "name": "Application Name",
+        "id": "localhost"
+    },
+    "user": {
+        "id": "YzA3M2Uw************************zMGYwN2Zk",
+        "name": "johndoe",
+        "displayName": "John Doe"
+    },
+    "pubKeyCredParams": [
+        {
+            "type": "public-key",
+            "alg": -7
         },
-        "user": {
-            "id": "YzA3M2Uw************************zMGYwN2Zk",
-            "name": "johndoe",
-            "displayName": "John Doe"
-        },
-        "pubKeyCredParams": [
-            {
-                "type": "public-key",
-                "alg": -7
-            },
-            {
-                "type": "public-key",
-                "alg": -257
-            }
-        ],
-        "timeout": 60000,
-        "excludeCredentials": [
-            {
-                "type": "public-key",
-                "id": "hu9Bl-y9fkczpQLT6X40Ww"
-            },
-            ...
-            ...
-            {
-                "type": "public-key",
-                "id": "WScmmw29ENmAC07cQP-kdw"
-            }
-        ],
-        "authenticatorSelection": {
-            "requireResidentKey": true,
-            "residentKey": "required",
-            "userVerification": "preferred"
+        {
+            "type": "public-key",
+            "alg": -257
         }
+    ],
+    "timeout": 60000,
+    "excludeCredentials": [
+        {
+            "type": "public-key",
+            "id": "hu9Bl-y9fkczpQLT6X40Ww"
+        },
         ...
+        ...
+        {
+            "type": "public-key",
+            "id": "WScmmw29ENmAC07cQP-kdw"
+        }
+    ],
+    "authenticatorSelection": {
+        "requireResidentKey": true,
+        "residentKey": "required",
+        "userVerification": "preferred"
     }
+    ...
+}
+
 ```
 
 Send this data to the java script function to register the passkey with the FIDO Authenticator (navigator.credentials.create). it should show a prompt to the user to register the passkey with the FIDO Authenticator. The user can then use the security key or passkey to authenticate.
@@ -245,7 +251,7 @@ Send this data to the java script function to register the passkey with the FIDO
 <img src="../assets/images/aws_cognito_passkey_flow5.png" width="45%" alt="cognito app client settings"/>
 
 
-<u>***Step 2***</u> The response from the FIDO Authenticator will be used in the second step to complete the registration process.
+#### <u>***Step 2***</u> The response from the FIDO Authenticator will be used in the second step to complete the registration process.
 ```php
 
     public function complete(Request $request)
@@ -256,49 +262,54 @@ Send this data to the java script function to register the passkey with the FIDO
 ```
 The response for the API call would look like this with the HTTP Status Code 200.
 ```json
-    {
-        "status": "success"
-    }
+
+{
+    "status": "success"
+}
+
 ```
+
 ---
 ### *Passkey Authentication Functionality*
 The package provides API routes that you can use to implement the passkey login functionality in your application.
 
 The login shall require three steps for implementation of the overall authentication using the passkey approach.
 
-<u>***Step 1***</u>:  Generate the available challenges.
+#### <u>***Step 1***</u>:  Generate the available challenges.
 
 ```sh
 
-    curl -X GET '<BASE_URL>/api/cognito/login/passkey/challenge' \
-    -H 'Content-Type: application/json' \
-    -H 'Accept: application/json' \
-    -d '{
-        "username": "<username_registered_in_cognito_user_pool>"
-    }'
+GET /login/passkey/challenge
+Content-Type: application/json
+Accept: application/json
+{
+    "username": "<username_registered_in_cognito_user_pool>"
+}
 
 ```
 This API will return the available challenges for the user. The response will be as shown below. The challenge name shall be `SELECT_CHALLENGE`.
 
 
 ```json
-    {
+
+{
+    ...
+    "ChallengeName": "SELECT_CHALLENGE",
+    "Session":"AYABeEkKMeJKkzhx3MK-GzS3ISIAH
+    QABAAdTZXJ2aWNlABBDb2duaXRvVXNlclBvb2xzAA
+    ...
+    ...
+    jVrz53Y1uJ3I30w46CpL9xlB50IbVJ0SNYY_tuFsLc
+    GjYfDpn7XQcd6-fXWovCIYoMH5Q",
+    "AvailableChallenges": [
         ...
-        "ChallengeName": "SELECT_CHALLENGE",
-        "Session":"AYABeEkKMeJKkzhx3MK-GzS3ISIAH
-        QABAAdTZXJ2aWNlABBDb2duaXRvVXNlclBvb2xzAA
-        ...
-        ...
-        jVrz53Y1uJ3I30w46CpL9xlB50IbVJ0SNYY_tuFsLc
-        GjYfDpn7XQcd6-fXWovCIYoMH5Q",
-        "AvailableChallenges": [
-            ...
-            "EMAIL_OTP",
-            "SMS_OTP",
-            "WEB_AUTHN"
-        ],
-        ...
-    }
+        "EMAIL_OTP",
+        "SMS_OTP",
+        "WEB_AUTHN"
+    ],
+    ...
+}
+
 ```
 
 The data in `AvailableChallenges` attribute will be based on the configuration in the AWS Cognito User Pool and the user's settings.
@@ -306,7 +317,7 @@ The data in `AvailableChallenges` attribute will be based on the configuration i
 > [!NOTE]
 > The available challenges will be dynamically provided from the trait based in the verified data in cognito. This makes the the user experience better.
 
-<u>***Step 2***</u>: This step involves generating the challenge based on the selected passkey choice with the session token.
+#### <u>***Step 2***</u>: This step involves generating the challenge based on the selected passkey choice with the session token.
 
 The API endpoint is the same with additional parameter for the `challenge name`. It is one of the values in the `AvailableChallenges` array from the previous step. (e.g. WEB_AUTHN).
 
@@ -314,48 +325,52 @@ The route provided allows the challenge name to be passed as a path parameter. T
 
 ```sh
 
-    curl -X GET '<BASE_URL>/api/cognito/login/passkey/challenge/<challenge_name>' \
-    -H 'Content-Type: application/json' \
-    -H 'Accept: application/json' \
-    -d '{
-        "username": "<username_registered_in_cognito_user_pool>"
-    }'
+GET /login/passkey/challenge/<challenge_name>
+Content-Type: application/json
+Accept: application/json
+{
+    "username": "<username_registered_in_cognito_user_pool>"
+}
 
 ```
 
 > Note: The challenge name is case insensitive. The available challenges are dynamically provided from the trait making the user experience better.
 The request payload for the Web and API based route is as shown below.
 ```json
-    {
-        "challenge_name": "WEB_AUTHN",
-        "username": "john@doe.com"
-    }
+
+{
+    "challenge_name": "WEB_AUTHN",
+    "username": "john@doe.com"
+}
+
 ```
 
 The response for the API call would look like this with the HTTP Status Code 200. Based on the challenge name, the necessary data will be provided in the response. 
 
 The data in `ChallengeParameters` will be based on the challengeName provided. The user can then use the security key or passkey to authenticate. The available challenges will be dynamically provided from the trait making the user experience better.
 ```json
-    {
-        "ChallengeName": "WEB_AUTHN",
-        "Session":"AYABeEkKMeJKkzhx3MK-GzS3ISIAH
-        QABAAdTZXJ2aWNlABBDb2duaXRvVXNlclBvb2xzAA
+
+{
+    "ChallengeName": "WEB_AUTHN",
+    "Session":"AYABeEkKMeJKkzhx3MK-GzS3ISIAH
+    QABAAdTZXJ2aWNlABBDb2duaXRvVXNlclBvb2xzAA
+    ...
+    ...
+    jVrz53Y1uJ3I30w46CpL9xlB50IbVJ0SNYY_tuFsLc
+    GjYfDpn7XQcd6-fXWovCIYoMH5Q",
+    "AvailableChallenges": [
         ...
         ...
-        jVrz53Y1uJ3I30w46CpL9xlB50IbVJ0SNYY_tuFsLc
-        GjYfDpn7XQcd6-fXWovCIYoMH5Q",
-        "AvailableChallenges": [
-            ...
-            ...
-            "WEB_AUTHN"
-        ],
-        "ChallengeParameters": {
-            "CREDENTIAL_REQUEST_OPTIONS": "json_string_of_credential_request_options"
-        }
+        "WEB_AUTHN"
+    ],
+    "ChallengeParameters": {
+        "CREDENTIAL_REQUEST_OPTIONS": "json_string_of_credential_request_options"
     }
+}
+
 ```
 
-<u>***Step 3***</u>: This step involves verifying the OTP/TOTP code OR biometric data.
+#### <u>***Step 3***</u>: This step involves verifying the OTP/TOTP code OR biometric data.
 - The Email OTP will be sent to the registered email address of the user.
 - The SMS OTP will be sent to the registered mobile number of the user.
 - The WebAuthn challenge will be verified using the FIDO Authenticator (navigator.credentials.get) registered with cognito.
@@ -364,34 +379,36 @@ The user response will be sent to the API endpoint to verify the challenge. A si
 
 ```sh
 
-    curl -X POST '<BASE_URL>/api/cognito/login/challenge' \
-    -H 'Content-Type: application/json' \
-    -H 'Accept: application/json' \
-    -d '{
-        "challenge_name": "<challenge_name>",
-        "session": "<session_token_from_previous_step>",
-        "challenge_value": "<response_from_user>",
-        "challenge_params": "<challenge_params_from_previous_step>",
-        "username": "<username_registered_in_cognito_user_pool>"
-    }'
+POST /login/challenge
+Content-Type: application/json
+Accept: application/json
+{
+    "challenge_name": "<challenge_name>",
+    "session": "<session_token_from_previous_step>",
+    "challenge_value": "<response_from_user>",
+    "challenge_params": "<challenge_params_from_previous_step>",
+    "username": "<username_registered_in_cognito_user_pool>"
+}
 
 ```
 
 The payload for the Web and API based route is as shown below. The request payload will depend on the challenge name provided in the previous step. The user can then use the security key or passkey to authenticate.
 
 ```json
-    {
-        "challenge_name": "WEB_AUTHN",
-        "session": "AYABeEkKMeJKkzhx3MK-GzS3ISIAH
-        QABAAdTZXJ2aWNlABBDb2duaXRvVXNlclBvb2xzAA
-        ...
-        ...
-        jVrz53Y1uJ3I30w46CpL9xlB50IbVJ0SNYY_tuFsLc
-        GjYfDpn7XQcd6-fXWovCIYoMH5Q",
-        "challenge_value": "string_response",
-        "challenge_params": "json_string_of_credential_request_options",
-        "username": "john@doe.com"
-    }
+
+{
+    "challenge_name": "WEB_AUTHN",
+    "session": "AYABeEkKMeJKkzhx3MK-GzS3ISIAH
+    QABAAdTZXJ2aWNlABBDb2duaXRvVXNlclBvb2xzAA
+    ...
+    ...
+    jVrz53Y1uJ3I30w46CpL9xlB50IbVJ0SNYY_tuFsLc
+    GjYfDpn7XQcd6-fXWovCIYoMH5Q",
+    "challenge_value": "string_response",
+    "challenge_params": "json_string_of_credential_request_options",
+    "username": "john@doe.com"
+}
+
 ```
 
 The response for the API call would look like this with the HTTP Status Code 200.
@@ -399,9 +416,10 @@ The response for the API call would look like this with the HTTP Status Code 200
 The response object will contain the `access token`, `refresh token` and the `id token`. The user can then use the access token to access the protected resources in the application.
 
 ## **API Routes**
->[!IMPORTANT]
->We are releasing the API predefined routes as a new feature from V1.3.0.
->php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+> [!NOTE]
+> We are releasing the API predefined routes as a new feature from V1.3.0.
+>
+> php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
 
 For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
 
