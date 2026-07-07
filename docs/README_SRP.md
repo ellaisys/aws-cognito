@@ -36,9 +36,7 @@ Ensure your AWS Cognito User Pool is configured to allow `USER_SRP_AUTH` as an a
 The package provides a blade component for `SRP authentication`. The SRP authentication component is integrated into the `challenge component`.
 
 ### *SRP Authentication Functionality*
-
-
-Use the `challenge` component in your challenge page to handle the device authentication flow. The component will handle the generation of the necessary values for the device proof and will send them back to the server in response to the challenge.
+For SRP based authentication, use the `challenge` component in your challenge page to handle the authentication flow. The component will handle the generation of the necessary values and will send them back to the server in response to the challenge.
 
 ```html
     <form id="auth-challenge-form" method="POST" ...>
@@ -76,9 +74,9 @@ Use the `challenge` component in your challenge page to handle the device authen
     ...
 ```
 
-Using this component will simplify the implementation of the device authentication functionality in your application.
+Using this component will simplify the implementation of the SRP authentication functionality in your application.
 
-The data is **secure** on the client side, as per the cyber security standards, and the necessary scripts and methods are provided in the component to implement the device feature in your application.
+The data is **secure** on the client side, as per the cyber security standards, and the necessary scripts and methods are provided in the component to implement the SRP feature in your application.
 
 ## **API Documentation**
 This Laravel Package provides the necessary methods to implement SRP authentication functionality provided by AWS Cognito. The available challenges are dynamically provided from the trait making the user experience aligned to the AWS SDK.
@@ -87,7 +85,7 @@ For this package, a new service is provided **Ellaisys\Cognito\Services\AwsCogni
 1. *generateEphemeral* - Generates the SRP_A value on the client side, along with the private ephemeral value 'a'.
 2. *processChallenge* - Builds the response to the PASSWORD_VERIFIER challenge using the SRP_B, salt, and secret block received from the server.
 
-### **Step 1: SRP_A Generation**
+#### <u>***Step 1***</u>: SRP_A Generation
 
 The package expects the client (browser/mobile app) to compute the SRP_A value before sending it to the server. This is a critical part of the SRP protocol, as it ensures that the actual password is never transmitted. However, for ease you can have the package compute SRP_A on the server side as well, but this is not recommended for security reasons.
 **IMPORTANT: SRP_A is calculated BEFORE receiving the salt from the server.**
@@ -102,7 +100,7 @@ Where:
 - **N** = Large prime modulus (provided by AWS Cognito)
 - **mod** = Modulo operation
 
-### **Step 2: Initiate Authentication**
+#### <u>***Step 2***</u>: Initiate Authentication
 
 The client sends the following to the server:
 
@@ -134,7 +132,7 @@ Example:
 6. The client uses the session token to retrieve the private ephemeral value `a` from memory and processes the server's challenge response to compute the password proof, which is then sent back to the server for verification.
 7. The client also sends the private ephemeral value `a` back to the now as a session value in the next step when responding to the server's challenge, so that the server can use it to verify the password proof and authenticate the user.
 
-### **Step 3: Server-Side Processing**
+#### <u>***Step 3***</u>:: Server-Side Processing
 
 The server receives the request and calls AWS Cognito's endpoint. AWS Cognito processes the SRP_A value and responds with a challenge that includes the following parameters:
 
@@ -146,7 +144,7 @@ AWS Cognito responds with:
 - **Session**: Session token for the ongoing authentication process
 - **ChallengeName**: Typically "PASSWORD_VERIFIER" indicating the next step in the authentication process
 
-### **Step 4: Password Proof Calculation**
+#### <u>***Step 4***</u>: Password Proof Calculation
 
 Generate the password hash (with SHA256 encryption) using the pool name (without region), username and the user's password. You can use the following formula to calculate the password proof:
 
@@ -162,7 +160,7 @@ Generate the password hash (with SHA256 encryption) using the pool name (without
 
 Send that value back to the server in response to the challenge with **PASSKEY_HASH** as the key.
 
-### **Step 5: Respond to the Auth Challenge**
+#### <u>***Step 5***</u>: Respond to the Auth Challenge
 
 The client sends the following to the server:
 
@@ -213,7 +211,7 @@ The server side, the package will process this challenge response and call AWS C
 - The values must be converted to appropriate formats (hex, base64) for transmission
 - SRP_A is typically a very large number (1024-bit to 2048-bit range)
 
-## **Understanding SRP Parameters: N and g**
+### **Understanding SRP Parameters: N and g**
 
 ### **What is N (Modulus)?**
 
