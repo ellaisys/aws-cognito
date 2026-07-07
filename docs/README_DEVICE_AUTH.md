@@ -88,7 +88,7 @@ The data attributes are used to trigger the necessary javascript functions to im
 ```
 
 ### *Device Authentication Functionality*
-The package provides a couple blade components that you can use to implement the device login functionality in your **login page** and **challenge page**.
+The package provides a couple of blade components that you should use to implement the device login functionality in your **login page** and **challenge page**.
 
 On the login page, you can use the `device-auth` component to handle the device authentication flow.
 
