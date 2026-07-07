@@ -24,7 +24,7 @@ The device authentication process involves using logic similar to the SRP (Secur
 
 This document explains how you can use this in the context of AWS Cognito and Laravel package.
 
-## **Configuration**
+## **Configurations**
 - [AWS Configurations](#aws-configurations)
 - [Laravel Configurations](#laravel-configurations)
 
