@@ -1,13 +1,39 @@
-## **MFA Functionality**
+# **Multi-Factor Authentication (MFA)**
+
+> [!IMPORTANT]
+> We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to handle MFA challenge verification within your application.
+
+## **Contents**
+- [Introduction](#introduction)
+- [Configurations](#configurations)
+- [Features](#features)
+- Quick Start
+    - [Blade Component](#blade-component-web-app)
+- Advanced Topics
+    - [API Documentation](#api-documentation)
+    - [API Routes](#api-routes)
+- [References](#references)
+- [Key Points](#key-points)
+
+## **Introduction**
+Multi-Factor Authentication (MFA) is a security feature that adds an extra layer of protection to user accounts by requiring users to provide additional verification during the login process. This package provides support for MFA using AWS Cognito, allowing developers to implement MFA in their Laravel applications.
+
 The library currently provides the MFA for the Software Token and SMS based TOPT.
 
 ## **Configurations**
-The package provides a trait that you can add to your controller to make the MFA methods running.
-- Ellaisys\Cognito\Auth\RegisterMFA
+- [AWS Configurations](#aws-configurations)
+- [Laravel Configurations](#laravel-configurations)
 
-Also, configure below keys into the .env file to change the default setting. 
- - The **AWS_COGNITO_MFA_SETUP** should be set to MFA_ENABLED to enable the MFA feature. The default value is MFA_NONE resulting into disabled MFA functionality. 
- - The **AWS_COGNITO_MFA_TYPE** can have values SOFTWARE_TOKEN_MFA (default) for the Software Token and SMS_MFA for the SMS based TOTP.
+### AWS Configurations
+---
+Ensure your AWS Cognito User Pool is configured to allow `USER_SRP_AUTH` as an authentication flow. For that go to your User Pool in AWS Console, navigate to "App clients", select your app client, and check the option for "SRP (Secure Remote Password) authentication flow **ALLOW_USER_SRP_AUTH**" as shown below:
+<img src="../assets/images/aws_cognito_srp_flow.png" width="100%" alt="cognito app client settings"/>
+
+### Laravel Configurations
+---
+The package exposes following keys to change the default setting. These keys can be configured in the `.env` file or in the `config/aws-cognito.php` file. The default values are set in the configuration file.
+ - The `AWS_COGNITO_MFA_SETUP` should be set to **MFA_ENABLED** to enable the MFA feature. The default value is MFA_NONE resulting into disabled MFA functionality. 
+ - The `AWS_COGNITO_MFA_TYPE` can have values **SOFTWARE_TOKEN_MFA** (default) for the Software Token and **SMS_MFA** for the SMS based TOTP.
 
    The provider configuration aids to send out the SMS from AWS with additional costs. Refer AWS SNS pricing for more details [AWS SMS Pricing](https://aws.amazon.com/sns/sms-pricing/)
 
@@ -26,12 +52,94 @@ Also, configure below keys into the .env file to change the default setting.
 - [Enable MFA](#enabledisable-mfa)
 - [Disable MFA](#enabledisable-mfa)
 
-# **API Routes**
->[!IMPORTANT]
->We are releasign the API predefined routes as a new feature from V1.3.0.
-> php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+## **Blade Component** (web app)
+The package provides a blade component for 
+1. `MFA management`, and 
+2. `MFA based authentication`
 
-For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
+The MFA based authentication component is integrated into the `challenge component`.
+
+### *MFA based Authentication*
+Use the `challenge` component in your challenge page to handle the MFA authentication flow. The component will handle the generation of the necessary values for the MFA proof and will send them back to the server in response to the challenge.
+
+```html
+    <form id="auth-challenge-form" method="POST" ...>
+        ...
+        <!-- pass the form name provided as a parameter to the component -->
+        <x-cognito::challenge
+            :challenge-form-name="'auth-challenge-form'" />
+        ...
+        ...
+        @php
+            $data = (session('data')) ?? null;
+            $challengeNameValue = 'NONE';
+
+            if ($data && isset($data['status']) && $data['status'] == 'challenge') {
+                $challengeNameValue = isset($data['challenge_name']) ?
+                    strtoupper($data['challenge_name']) :
+                    $challengeNameValue;
+            } //End if
+        @endphp
+        ...
+        ...
+        <div> <!-- Shows the passcode input field for the Password/OTP/TOTP based challenges only  -->
+            @stack('cognito-challenge-passcode')
+        </div>
+        ...
+        ...
+        <!-- Button with data-action and data-role attribute -->
+        <button type="submit"
+            data-action="challenge-submit" data-role="{{ $challengeNameValue }}">
+            Submit</button>
+        ...
+    </form>
+
+    @stack('cognito-challenge-scripts')
+    ...
+```
+
+Using this component will simplify the implementation of the MFA authentication functionality in your application.
+
+The data is **secure**, as per the cyber security standards, and the necessary scripts and methods are provided in the component to implement the MFA feature in your application.
+
+## **API Documentation**
+This Laravel Package provides the necessary methods to implement MFA based authentication functionality provided by AWS Cognito. The available challenges are dynamically provided from the trait making the user experience aligned to the AWS SDK.
+
+The package provides a trait `RegisterMFA` that you can add to your controller to provide custom functionality. The namespace for the trait is `Ellaisys\Cognito\Auth\RegisterMFA`.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### **Login**
 The login shall require two steps for implementation of the overall authentication using the MFA approach. The first step shall generate the challenge, identified as a session token. The second step involves the OTP/TOTP code against that session token.
@@ -194,3 +302,14 @@ Below methods in the trait help to enable or disable the MFA returning the HTTP 
     } //Function ends
 
 ```
+
+## **API Routes**
+> [!NOTE]
+> We are releasing the API predefined routes as a new feature from V1.3.0.
+>
+> php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+
+For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
+
+## **References**
+- [AWS Cognito MFA](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-mfa.html)
