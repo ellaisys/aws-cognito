@@ -29,10 +29,14 @@ The library currently provides the MFA for the Software Token and SMS based TOPT
 In order to use the MFA functionality, you need to configure the AWS Cognito User Pool with the necessary settings. Enable the **Multi-Factor Authentication (MFA)** option.
 
 Select your AWS Cognito User Pool and navigate to the `Authentication` > `Sign-in`.
+
+#### Step 1: Navigate to the MFA and verifications settings in the AWS Cognito User Pool
 ![Cognito MFA Flow #1](../assets/images/aws_cognito_mfa_flow1.png)
 
-Select the desired MFA enforcement and methods (i.e. Authenticatior apps for SOFTWARE_TOKEN_MFA, SMS messages for SMS_MFA, others). Save the changes.
+#### Step 2: Select the MFA enforcement and methods in the AWS Cognito User Pool
 ![Cognito MFA Flow #2](../assets/images/aws_cognito_mfa_flow2.png)
+
+Select the desired MFA enforcement and methods (i.e. Authenticatior apps for `SOFTWARE_TOKEN_MFA`, SMS messages for `SMS_MFA`, others). Save the changes.
 
 ### Laravel Configurations
 ---
