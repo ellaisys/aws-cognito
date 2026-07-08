@@ -1,7 +1,6 @@
-<img src="./assets/images/banner.png" width="100%" alt="Laravel AWS Cognito Package for IAM"/>
+![Laravel Authentication using AWS Cognito - Web and API](./assets/images/banner.png)
 
-# Laravel Authentication using AWS Cognito (Web + API)
-Supports: Multi-Factor Authentication (MFA) + FIDO2 (Passkey) + SRP Authentication + Device Authentication
+# Laravel Authentication using AWS Cognito
 
 [![Release Version](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Version)](https://packagist.org/packages/ellaisys/aws-cognito#v1.1.3)&#160;
 [![Release Date](https://img.shields.io/github/release-date/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Date)](https://packagist.org/packages/ellaisys/aws-cognito)&#160;
@@ -9,53 +8,41 @@ Supports: Multi-Factor Authentication (MFA) + FIDO2 (Passkey) + SRP Authenticati
 
 ![Github Stars](https://img.shields.io/github/stars/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Stars)&#160;
 ![Github Forks](https://img.shields.io/github/forks/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Forks)&#160;
-[![GitHub Contributors](https://img.shields.io/github/contributors-anon/ellaisys/aws-cognito?style=flat&logo=github&logoColor=whitesmoke&label=Contributors)](CONTRIBUTING.md)&#160;
+[![GitHub Contributors](https://img.shields.io/github/contributors-anon/ellaisys/aws-cognito?style=flat&logo=github&logoColor=whitesmoke&label=Contributors)](https://github.com/ellaisys/aws-cognito/graphs/contributors?all=1)&#160;
 [![APM](https://img.shields.io/packagist/l/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=License)](LICENSE.md)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)&#160;
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)&#160;
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
 
+## **Contents**
+- [Introduction](#introduction)
+    + [Demo Application & Code](#demo-application--code)
+    + [Compatability](#compatability)
+    + [Credits](#credits--contributors)
+- [Features](#features)
+- [Installation](#installation)
+- [Configurations](#configurations)
+- [References](#references)
 
-This package provides a simple way to use AWS Cognito authentication in Laravel for Web and API Auth Drivers.
-The idea of this package, and some of the code, is based on the package from Pod-Point which you can find here: [Pod-Point/laravel-cognito-auth](https://github.com/Pod-Point/laravel-cognito-auth), [black-bits/laravel-cognito-auth](https://github.com/black-bits/laravel-cognito-auth) and [tymondesigns/jwt-auth](https://github.com/tymondesigns/jwt-auth).
+## **Introduction**
 
-**[DEMO Application](https://demo.ellaisys.com/cognito)**. You can try and register and login. For the first time, it will force the user to change password. The **[source code](https://github.com/ellaisys/demo_cognito_app)** of the demo application is also available of the GitHub.
+AWS Cognito is a AWS Service that provides authentication, authorization, and user management for web and mobile apps. It allows you to add user sign-up, sign-in, and access control to your web and mobile apps quickly and easily.
 
-We decided to use it and contribute it to the community as a package, that encourages standarised use and a RAD tool for authentication using AWS Cognito.
+AWS Cognito provides amplify SDKs for JavaScript, iOS, and Android that make it easy to integrate authentication into your apps. It also provides a web-based user interface for managing users and groups, as well as a REST API for programmatic access.
 
-## Features
-- [Registration and Confirmation E-Mail (Sign Up)](#registering-users)
-- Forced password change at first login (configurable)
-- [Login (Sign In)](#user-authentication)
-- Token Validation for all Session and Token Guard Requests
-- Remember Me Cookie
-- Single Sign On (Fix: Issue #86)
-- Forgot Password (Resend - configurable)
-- User Deletion
-- Edit User Attributes
-- Reset User Password
-- Confirm Sign Up
-- Easy API Token handling (uses the cache driver)
-- [DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)](#storing-web-sessions-or-api-tokens-in-dynamodb-useful-for-multiservercontainer-implementation)
-- Easy configuration of Token Expiry (Manage using the cognito console, no code or configurations needed)
-- Support for App Client without Secret
-- Support for Cognito Groups, including assigning a default group to a new user
-- Session (Web) now has AccessToken and RefreshToken as part of the claim object
-- [Refresh Token API](#refresh-token)
-- [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
-- [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
-- [MFA Implementation for Session and Token Guards](./docs/README_MFA.md) **Updated**
-- [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
-- [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
-- [Preconfigured routes and controllers for Web and API ](./docs/README_ROUTES.md#routes)
-- [Preconfigured views for Web ](./docs/README_ROUTES.md#web-views-and-components)
-- [FIDO2 Security Keys Passkey](./docs/README_FIDO2.md) **Updated**
-- [SRP Authentication](./docs/README_SRP.md) **New Feature**
-- [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
+This package provides a simple way to use AWS Cognito based authentication in Laravel framework using its built-in authentication system.
 
-## Compatability
+This package is built on top of the AWS Cognito SDK for PHP, which provides a simple and easy-to-use interface for interacting with the AWS Cognito service. The package provides a set of traits that can be used in your Laravel controllers to handle user registration, login, and logout.
 
+### *Demo Application & Code*
+---
+We have created a demo application to show the usage of this package. The demo application is built using Laravel and uses the AWS Cognito package for authentication.
+
+The [demo application code](https://github.com/ellaisys/demo_cognito_app) is available on the GitHub and can be used as a reference for your own application.
+
+### *Compatability*
+---
 |PHP Version|Support|
 |-|-| 
 |7.4|Yes :heavy_check_mark:|
@@ -69,19 +56,39 @@ We decided to use it and contribute it to the community as a package, that encou
 |8.x|Yes :heavy_check_mark:|
 |9.x|Yes :heavy_check_mark:|
 |10.x|Yes :heavy_check_mark:|
-|[11.x](#laravel-110-and-above-updated)|Yes :heavy_check_mark:|
+|11.x|Yes :heavy_check_mark:|
 |12.x|Yes :heavy_check_mark:|
 
->[!IMPORTANT]
->The middleware configurtion in Laravel 11.x and above shall need a configuration. Refer [### Laravel 11.0 and above **Updated**](#laravel-110-and-above-updated)
+> [!NOTE]
+> The middleware configurtion in Laravel 11.x and above shall need a configuration. Refer the Laravel configuration section for more details.
+
+### *Credits & Contributors*
+---
+The concept of this package, some of the code contributions and ideas, are based on the contributions from many in the OSS community. Below are some of the notable contributions/references:
+- [Package By Pod-Point - GitHub](https://github.com/Pod-Point)
+- [black-bits/laravel-cognito-auth - GitHub](https://github.com/black-bits/laravel-cognito-auth), and
+- [tymondesigns/jwt-auth - GitHub](https://github.com/tymondesigns/jwt-auth).
+
+
+## **Features**
+- [MFA Implementation for Session and Token Guards](./docs/README_MFA.md) **Updated**
+- [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
+- [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
+- [Preconfigured routes and controllers for Web and API ](./docs/README_ROUTES.md#routes)
+- [Preconfigured views for Web ](./docs/README_ROUTES.md#web-views-and-components)
+- [FIDO2 Security Keys Passkey](./docs/README_FIDO2.md) **Updated**
+- [SRP Authentication](./docs/README_SRP.md) **New Feature**
+- [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
 
 ## Installation
+This package is available via [Packagist](https://packagist.org/packages/ellaisys/aws-cognito) and can be installed using composer.
 
-You can install the package via composer.
-
-```bash
+```sh
 composer require ellaisys/aws-cognito
 ```
+
+
+
 
 ### Laravel 5.4 and before
 Using a version prior to Laravel 5.5 you need to manually register the service provider.
@@ -97,7 +104,7 @@ Using a version prior to Laravel 5.5 you need to manually register the service p
 
 ### Configuration File: Next you can publish the config.
 
-```bash
+```sh
     php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="config"
 ```
 Last but not least you want to change the auth driver. To do so got to your config\auth.php file and change it
@@ -201,7 +208,6 @@ Our package is providing you 10 traits you can just add to your Auth Controllers
 - Ellaisys\Cognito\Auth\RegisterMFA
 - Ellaisys\Cognito\Auth\RegistersUsers
 - Ellaisys\Cognito\Auth\ResetsPasswords
-- Ellaisys\Cognito\Auth\RespondsMFAChallenge
 - Ellaisys\Cognito\Auth\SendsPasswordResetEmails
 - Ellaisys\Cognito\Auth\VerifiesEmails
 - Ellaisys\Cognito\Auth\WebAuthPasskey
