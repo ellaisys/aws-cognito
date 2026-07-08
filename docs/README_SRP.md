@@ -110,9 +110,9 @@ POST /login/srp
 Content-Type: application/json
 Accept: application/json
 {
-  "username": "user@example.com",
-  "srp_a": "<optional_computed_SRP_A_value>",
-  "session_token": "<optional_computed_random_number>"
+    "username": "user@example.com",
+    "srp_a": "<optional_computed_SRP_A_value>",
+    "session_token": "<optional_computed_random_number>"
 }
 
 ```
@@ -132,7 +132,7 @@ Example:
 6. The client uses the session token to retrieve the private ephemeral value `a` from memory and processes the server's challenge response to compute the password proof, which is then sent back to the server for verification.
 7. The client also sends the private ephemeral value `a` back to the now as a session value in the next step when responding to the server's challenge, so that the server can use it to verify the password proof and authenticate the user.
 
-#### <u>***Step 3***</u>:: Server-Side Processing
+#### <u>***Step 3***</u>: Server-Side Processing
 
 The server receives the request and calls AWS Cognito's endpoint. AWS Cognito processes the SRP_A value and responds with a challenge that includes the following parameters:
 
@@ -170,10 +170,10 @@ POST /login/auth-challenge
 Content-Type: application/json
 Accept: application/json
 {
-  "challenge_name": "PASSWORD_VERIFIER",
-  "session": "<session_token_as_private_ephemeral_value_a>",
-  "username": "<username_for_srp>",
-  "challenge_value": "<computed_challenge_value>"
+    "challenge_name": "PASSWORD_VERIFIER",
+    "session": "<session_token_as_private_ephemeral_value_a>",
+    "username": "<username_for_srp>",
+    "challenge_value": "<computed_challenge_value>"
 }
 
 ```
@@ -183,11 +183,11 @@ The `challenge_value` field contains the stringified JSON object with the follow
 ```json
 
 {
-  "SALT": "<salt_from_step-2>",
-  "SECRET_BLOCK": "<secret_block_from_step-2>",
-  "SRP_B": "<SRP_B_from_step-2>",
-  "USER_ID_FOR_SRP": "<username_for_srp_from_step-2>",
-  "PASSKEY_HASH": "<computed_password_proof_hash>"
+    "SALT": "<salt_from_step-2>",
+    "SECRET_BLOCK": "<secret_block_from_step-2>",
+    "SRP_B": "<SRP_B_from_step-2>",
+    "USER_ID_FOR_SRP": "<username_for_srp_from_step-2>",
+    "PASSKEY_HASH": "<computed_password_proof_hash>"
 }
 
 ```
