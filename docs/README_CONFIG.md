@@ -2,7 +2,12 @@
 
 ## **Contents**
 - [AWS Configurations](#aws-configurations)
+    + [AWS IAM configuration](#aws-iam-configuration)
+    + [AWS Cognito configuration](#aws-cognito-configuration)
 - [Laravel Configurations](#laravel-configurations)
+    + [ServiceProvider Registration](#serviceprovider-registration)
+    + [Environment Variables](#environment-variables)
+    + [Publishing Configurations](#publishing-configurations)
 - [Database Configurations](#database-configurations)
 
 ### AWS Configurations
@@ -24,9 +29,9 @@ From this IAM User you must use the **AWS_ACCESS_KEY_ID** and **AWS_SECRET_ACCES
 ### Laravel Configurations
 ---
 
-#### *Service Registration*
+#### *ServiceProvider Registration*
 
-<u>*Laravel 5.4 and before*</u></br>
+*<u>Laravel 5.4 and before</u>*</br>
 Using a version prior to Laravel 5.5 you need to manually register the service provider in your `bootstrap/app.php` file:
 
 ```php
@@ -34,8 +39,25 @@ Using a version prior to Laravel 5.5 you need to manually register the service p
 'providers' => [
     ...
     Ellaisys\Cognito\Providers\AwsCognitoServiceProvider::class,
-    
 ];
+```
+
+*<u>Laravel 11.0 and above</u>*</br>
+With Laravel versions 11.0 and above the middleware congiguration is defined in the `bootstrap/app.php` file. Please configure as shown below
+
+```php
+// bootstrap/app.php
+return Application::configure(basePath: dirname(__DIR__))
+    ...
+    ->withMiddleware(function (Middleware $middleware): void {
+        ...
+        $middleware->alias([
+            ...
+            'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
+        ]);
+        ...
+    })
+    ...
 ```
 
 #### *Environment Variables*
