@@ -1,4 +1,4 @@
-# AWS Cognito Core Functionality
+# **AWS Cognito Core Functionality**
 
 ## **Contents**
 - [Introduction](#introduction)

@@ -1,4 +1,4 @@
-# Features
+# **Features**
 
 - [Registration and Confirmation E-Mail (Sign Up)](#registering-users)
 - Forced password change at first login (configurable)
