@@ -15,6 +15,7 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)&#160;
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
 
+
 ## **Contents**
 - [Introduction](#introduction)
     + [Demo Application & Code](#demo-application--code)
@@ -35,6 +36,7 @@
 - [License](#license)
 - [Disclaimer](#disclaimer)
 
+
 ## **Introduction**
 
 AWS Cognito is a AWS Service that provides authentication, authorization, and user management for web and mobile apps. It allows you to add user sign-up, sign-in, and access control to your web and mobile apps quickly and easily.
@@ -46,12 +48,14 @@ This package provides a simple way to use AWS Cognito based authentication in La
 This package is built on top of the AWS Cognito SDK for PHP, which provides a simple and easy-to-use interface for interacting with the AWS Cognito service. The package provides a set of traits that can be used in your Laravel controllers to handle user registration, login, and logout.
 
 ### *Demo Application & Code*
+---
 
 We have created a demo application to show the usage of this package. The demo application is built using Laravel and uses the AWS Cognito package for authentication.
 
 The [demo application code](https://github.com/ellaisys/demo_cognito_app) is available on the GitHub and can be used as a reference for your own application.
 
 ### *Compatability*
+---
 
 |PHP Version|Support|
 |-|-| 
@@ -81,6 +85,7 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 - [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
 - [Preconfigured Routes and Controllers](./docs/README_ROUTES.md) **Updated**
 
+
 ## **Installation**
 This package is available via [Packagist](https://packagist.org/packages/ellaisys/aws-cognito) and can be installed using composer.
 
@@ -88,26 +93,26 @@ This package is available via [Packagist](https://packagist.org/packages/ellaisy
 composer require ellaisys/aws-cognito
 ```
 
-## Code Quality
+## **Code Quality**
 
 This project follows secure coding and quality assurance practices throughout its development lifecycle. Automated static code analysis is performed using SonarCloud to help identify potential bugs, code smells, maintainability issues, and security hotspots.
 
 In addition to automated analysis, all contributions are reviewed before being merged to help maintain the quality, reliability, and security of the project.
 
 
-## Changelog
+## **Changelog**
 
 For a complete history of changes, improvements, bug fixes, and new features, please refer to the [CHANGELOG.md](CHANGELOG.md).
 
 
-## Security
+## **Security**
 
 The security of this project and its users is important to us. If you discover or suspect a security vulnerability, please follow our responsible disclosure process described in [SECURITY.md](SECURITY.md).
 
 We kindly ask that you **do not report security vulnerabilities through public GitHub issues**.
 
 
-## Roadmap
+## **Roadmap**
 
 Our development roadmap, planned features, and future enhancements are maintained on the project's GitHub Projects and Wiki.
 
@@ -116,7 +121,7 @@ https://github.com/orgs/ellaisys/projects/2
 https://github.com/ellaisys/aws-cognito/wiki/RoadMap
 
 
-## Credits & Contributors
+## **Credits & Contributors**
 
 This project has been inspired and shaped by the work of the open-source community. We are grateful to the developers and maintainers whose ideas, discussions, libraries, and code have helped influence the design and implementation of this package.
 
@@ -131,7 +136,8 @@ Special thanks to everyone who has contributed their time, expertise, and feedba
 * **EllaiSys Team** – https://github.com/ellaisys
 * **Project Contributors** – https://github.com/ellaisys/aws-cognito/graphs/contributors
 
-### Contribute
+### *Contribute*
+---
 
 Open source thrives because of its community. Whether you're fixing bugs, improving documentation, reviewing code, suggesting new features, or helping other users, every contribution is valued and appreciated.
 
@@ -149,7 +155,7 @@ If you'd like to get involved, explore the contribution badges below to find way
 </div>
 
 
-## Support Us
+## **Support Us**
 
 EllaiSys was a web engineering and technology consulting company specializing in Cloud Computing (AWS and Azure), DevOps, Identity and Access Management (IAM), and Product Engineering. Although we concluded our professional services business in October 2021, we remain committed to maintaining and improving our open-source projects for the benefit of the community.
 
@@ -163,14 +169,15 @@ If this project has been helpful to you or your organization, we'd love your sup
 * **Help others** by answering questions and participating in community discussions.
 * **Spread the word** by starring the repository, sharing it with your network, or recommending it to others.
 
-### Sponsor the Project
+### *Sponsor the Project*
+---
 
 Maintaining a high-quality open-source project requires a significant investment of time and effort. If you'd like to support its continued development financially, your sponsorship is greatly appreciated. Every contribution—regardless of size—helps us dedicate more time to maintaining the project, fixing issues, implementing new features, and improving the documentation.
 
 Whether you contribute your time, expertise, or financial support, thank you for helping us build better software for the community.
 
 
-## License
+## **License**
 
 This package is open-source software released under the MIT License.
 
@@ -179,7 +186,7 @@ The source code is available on GitHub and may be used, copied, modified, merged
 A copy of the license is included with this package in the [License](LICENSE.md) file. Please review the license before using, modifying, or redistributing this software.
 
 
-## Disclaimer
+## **Disclaimer**
 
 This package is actively used in production across multiple projects and is continually being improved.
 
