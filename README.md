@@ -2,6 +2,9 @@
 
 # Laravel Authentication using AWS Cognito
 
+> [!NOTE]
+> Updated On 2024-06-10
+
 [![Release Version](https://img.shields.io/packagist/v/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Version)](https://packagist.org/packages/ellaisys/aws-cognito#v1.1.3)&#160;
 [![Release Date](https://img.shields.io/github/release-date/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Date)](https://packagist.org/packages/ellaisys/aws-cognito)&#160;
 [![Total Downloads](https://img.shields.io/packagist/dt/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Downloads)](https://packagist.org/packages/ellaisys/aws-cognito)&#160;
