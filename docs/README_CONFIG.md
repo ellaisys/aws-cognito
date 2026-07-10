@@ -24,6 +24,8 @@ This document provides guidance on configuring the AWS Cognito service and the L
 
 The AWS configurations are required to be set up in order to use the AWS Cognito service. The detailed steps for setting up the AWS Cognito service are provided in the [AWS Configurations](COGNITOCONFIG.md) document. Please refer to that document for detailed instructions on how to set up the AWS Cognito service.
 
+https://github.com/ellaisys/aws-cognito/blob/192ffbb74be910f3b7c622b19d1ef84996babdc8/docs/COGNITOCONFIG.md
+
 
 ## **Laravel Configurations**
 
