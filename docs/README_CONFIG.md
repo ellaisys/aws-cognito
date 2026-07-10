@@ -2,7 +2,7 @@
 
 This document provides guidance on configuring the AWS Cognito service and the Laravel application to work with AWS Cognito. It is intended for developers who are familiar with Laravel and AWS services.
 
-> [!NOTE]
+> [!INFO]
 > Updated On 2024-06-10
 
 
