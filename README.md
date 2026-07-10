@@ -46,13 +46,13 @@ This package provides a simple way to use AWS Cognito based authentication in La
 This package is built on top of the AWS Cognito SDK for PHP, which provides a simple and easy-to-use interface for interacting with the AWS Cognito service. The package provides a set of traits that can be used in your Laravel controllers to handle user registration, login, and logout.
 
 ### *Demo Application & Code*
----
+
 We have created a demo application to show the usage of this package. The demo application is built using Laravel and uses the AWS Cognito package for authentication.
 
 The [demo application code](https://github.com/ellaisys/demo_cognito_app) is available on the GitHub and can be used as a reference for your own application.
 
 ### *Compatability*
----
+
 |PHP Version|Support|
 |-|-| 
 |7.4|Yes :heavy_check_mark:|
