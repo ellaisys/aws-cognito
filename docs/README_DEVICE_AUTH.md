@@ -28,7 +28,8 @@ This document explains how you can use this in the context of AWS Cognito and La
 - [AWS Configurations](#aws-configurations)
 - [Laravel Configurations](#laravel-configurations)
 
-### AWS Configurations
+
+### *AWS Configurations*
 ---
 Configure your user pool to remember devices in the Sign-in menu of your user pool, under Device tracking as shown below:
 <img src="../assets/images/aws_cognito_device_flow1.png" width="100%" alt="cognito device flow"/>
@@ -38,7 +39,8 @@ You can choose to always remember devices, or only remember them when the user o
 
 For more information on configuring device authentication in AWS Cognito, refer to the [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-device-tracking.html).
 
-### Laravel Configurations
+
+### *Laravel Configurations*
 ---
 
 ## **Blade Component** (web app)
