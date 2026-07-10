@@ -1,36 +1,33 @@
 # **Configurations**
 
+This document provides guidance on configuring the AWS Cognito service and the Laravel application to work with AWS Cognito. It is intended for developers who are familiar with Laravel and AWS services.
+
+> [!NOTE]
+> Updated On 2024-06-10
+
+
 ## **Contents**
-- [AWS Configurations](#aws-configurations)
-    + [AWS IAM configuration](#aws-iam-configuration)
-    + [AWS Cognito configuration](#aws-cognito-configuration)
+- [AWS Configurations](COGNITOCONFIG.md)
+    + [AWS IAM configuration](COGNITOCONFIG.md#aws-iam-configuration)
+    + [AWS Cognito configuration](COGNITOCONFIG.md#aws-cognito-configuration)
 - [Laravel Configurations](#laravel-configurations)
     + [ServiceProvider Registration](#serviceprovider-registration)
     + [Environment Variables](#environment-variables)
+    + [Changes in Auth Configurations](#changes-in-auth-configurations)
     + [Publishing Configurations](#publishing-configurations)
-- [Database Configurations](#database-configurations)
+    + [Database Configurations](#database-configurations)
+    + [Session Storage Configurations](#session-storage-configurations)
+        * DynamoDB Storage
+- [References](#references)
 
-### AWS Configurations
----
+## **AWS Configurations**
 
-#### *AWS IAM configuration*
----
-
-You also need a new `IAM Role` with the following Access Rights:
-
-- AmazonCognitoDeveloperAuthenticatedIdentities
-- AmazonCognitoPowerUser
-- AmazonESCognitoAccess
-
-From this IAM User you must use the **AWS_ACCESS_KEY_ID** and **AWS_SECRET_ACCESS_KEY** in the laravel environment file.
+The AWS configurations are required to be set up in order to use the AWS Cognito service. The detailed steps for setting up the AWS Cognito service are provided in the [AWS Configurations](COGNITOCONFIG.md) document. Please refer to that document for detailed instructions on how to set up the AWS Cognito service.
 
 
-#### *AWS Cognito configuration*
+## **Laravel Configurations**
 
-
-### Laravel Configurations
-
-#### *ServiceProvider Registration*
+### *ServiceProvider Registration*
 ---
 
 *<u>Laravel 5.4 and before</u>*</br>
@@ -63,7 +60,7 @@ return Application::configure(basePath: dirname(__DIR__))
 ```
 
 
-#### *Environment Variables*
+### *Environment Variables*
 ---
 
 In order to use AWS Cognito, you will need to add the following minimum configurations to your Laravel application. You can do this by adding the following fields to your `.env` file:
@@ -87,7 +84,7 @@ For more details on how to find `AWS_COGNITO_CLIENT_ID`, `AWS_COGNITO_CLIENT_SEC
 > To sync the web session timeout with the cognito access token ttl value, set the `SESSION_LIFETIME` parameter in the .env file. This value is in minutes with the default value being 120 mins i.e. 2 hours. This will ensure that the laravel session times out at the same time as the access token.
 
 
-#### *Changes in Auth Configurations*
+### *Changes in Auth Configurations*
 ---
 
 In order to use AWS Cognito as your authentication driver, you will need to make the following changes to your `config/auth.php` file:
@@ -105,7 +102,7 @@ In order to use AWS Cognito as your authentication driver, you will need to make
 ```
 
 
-#### *Publishing Configurations* (Optional)
+### *Publishing Configurations* (Optional)
 ---
 
 You can publish the AWS Cognito configuration file using the following command:
@@ -114,7 +111,7 @@ php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServ
 ```
 
 
-#### *Database Configurations*
+### *Database Configurations*
 ---
 
 We are using Laravel's built-in database migration system to manage the database schema for AWS Cognito. We are assuming that you have already configured your database connection in the `.env` file. If you haven't done so, please refer to the [Laravel Database Configuration](https://laravel.com/docs/10.x/database#configuration) documentation for more information.
@@ -149,7 +146,7 @@ public function register(): void
 ```
 
 
-#### *Session Storage Configurations*
+### *Session Storage Configurations*
 ---
 
 ##### *DynamoDB Storage*
@@ -164,7 +161,9 @@ The library is capable of handling the DynamoDB with ease. All that you need to 
 4. Use default settings and click the **Create** button
 5. Update the DynamoDB table for the TTL columns as `expires_at` and set the TTL attribute to `enabled`. This will ensure that the expired sessions are automatically removed from the DynamoDB table.
 
-### Update the .env file for Dynamo DB configurations
+
+**Update the .env file for Dynamo DB configurations**
+
 Add/Edit the following fields to your `.env` file and set the values according to your AWS settings:
 
 ```php
@@ -185,3 +184,7 @@ DYNAMODB_ENDPOINT="https://dynamodb.us-west-2.amazonaws.com" // You can change t
 
 Refer the [AWS DynamoDB Documentation](https://docs.aws.amazon.com/general/latest/gr/ddb.html) and refer the endpoints provided in **Service endpoints** section.
 
+
+## **References**
+- [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html)
+- [AWS DynamoDB Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html)
