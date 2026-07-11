@@ -1,4 +1,4 @@
-# **FIDO2 Security OR Passkey Functionality (WebAuthn/EMail OTP/SMS OTP)**
+# **FIDO2 Security OR Passkey Functionality**
 
 This package provides the FIDO2 Security Keys OR Passkey based functionality. This is a passwordless authentication approach, where the user can use the security key or passkey to authenticate.
 
