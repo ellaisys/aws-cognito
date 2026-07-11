@@ -12,6 +12,7 @@ This document provides guidance on configuring the AWS Cognito service and the L
     + [AWS Cognito configuration](COGNITOCONFIG.md#aws-cognito-configuration)
 - [Laravel Configurations](#laravel-configurations)
     + [ServiceProvider Registration](#serviceprovider-registration)
+    + [Registering the Middleware](#registering-the-middleware)
     + [Environment Variables](#environment-variables)
     + [Changes in Auth Configurations](#changes-in-auth-configurations)
     + [Publishing Configurations](#publishing-configurations)
@@ -45,13 +46,31 @@ Using a version prior to Laravel 5.5 you need to manually register the service p
 ];
 ```
 
-*<u>Laravel 5.5 to 10.x</u>*
+*<u>Laravel 5.5 and above</u>*
 
 With Laravel versions 5.5 and above, the service provider is automatically registered using Laravel's package auto-discovery feature. You do not need to manually register the service provider in your `bootstrap/app.php` file.
 
+
+### *Registering the Middleware*
+---
+
+To use the AWS Cognito middleware, you need to register it in your Laravel application. The middleware is responsible for handling the authentication and authorization of requests to your application.
+
+*<u>Laravel 10.0 and below</u>*
+
+In case you are using this library as API driver, you can register the middleware into the `app/Http/Kernel.php` in the `$routeMiddleware` array as shown below:
+
+```php
+// app/Http/Kernel.php
+protected $routeMiddleware = [
+    ...
+    'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
+];
+```
+
 *<u>Laravel 11.0 and above</u>*
 
-With Laravel versions 11.0 and above the middleware congiguration is defined in the `bootstrap/app.php` file. Please configure as shown below
+The middleware congiguration is defined in the `bootstrap/app.php` file. Please configure as shown below
 
 ```php
 // bootstrap/app.php
@@ -66,6 +85,17 @@ return Application::configure(basePath: dirname(__DIR__))
         ...
     })
     ...
+```
+
+You can then use the middleware in your routes or controllers to protect your application routes. For example, you can use the middleware in your `routes/web.php` file as shown below:
+
+```php
+// routes/web.php
+Route::middleware(['aws-cognito'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+});
 ```
 
 
