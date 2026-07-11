@@ -20,6 +20,7 @@ This document provides guidance on configuring the AWS Cognito service and the L
         * DynamoDB Storage
 - [References](#references)
 
+
 ## **AWS Configurations**
 
 The AWS configurations are required to be set up in order to use the AWS Cognito service. The detailed steps for setting up the AWS Cognito service are provided in the [AWS Configurations](COGNITOCONFIG.md) document. Please refer to that document for detailed instructions on how to set up the AWS Cognito service.
@@ -27,10 +28,13 @@ The AWS configurations are required to be set up in order to use the AWS Cognito
 
 ## **Laravel Configurations**
 
+Laravel configurations are required to be set up in order to use the AWS Cognito service with your Laravel application. The following sections provide detailed instructions on how to set up the Laravel configurations.
+
 ### *ServiceProvider Registration*
 ---
 
-*<u>Laravel 5.4 and before</u>*</br>
+*<u>Laravel 5.4 and before</u>*
+
 Using a version prior to Laravel 5.5 you need to manually register the service provider in your `bootstrap/app.php` file:
 
 ```php
@@ -41,7 +45,12 @@ Using a version prior to Laravel 5.5 you need to manually register the service p
 ];
 ```
 
-*<u>Laravel 11.0 and above</u>*</br>
+*<u>Laravel 5.5 to 10.x</u>*
+
+With Laravel versions 5.5 and above, the service provider is automatically registered using Laravel's package auto-discovery feature. You do not need to manually register the service provider in your `bootstrap/app.php` file.
+
+*<u>Laravel 11.0 and above</u>*
+
 With Laravel versions 11.0 and above the middleware congiguration is defined in the `bootstrap/app.php` file. Please configure as shown below
 
 ```php
@@ -148,6 +157,10 @@ public function register(): void
 
 ### *Session Storage Configurations*
 ---
+
+The AWS Cognito service provider uses Laravel's built-in session management system to manage the session storage. By default, the session storage is set to `file` driver. You can change the session storage driver to `database`,  `dynamodb` in your `.env` file.
+
+This package supports both `database` and `dynamodb` session storage drivers. You can choose the one that best suits your needs.
 
 ##### *DynamoDB Storage*
 If you have a deployment architecture, that involves multiple servers and you want to maintain the Sessions or Tokens across the servers, you can use the AWS DynamoDB.
