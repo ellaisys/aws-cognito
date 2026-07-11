@@ -5,7 +5,9 @@
 
 To help faster implementations, we have now provided with routes for web and APIs in this package. This includes Controllers, Views and updated Configuration file.
 
+
 ## **Contents**
+
 - [Configurations](#configurations)
 - [Features](#features)
 - [Routes](#routes)
@@ -14,7 +16,9 @@ To help faster implementations, we have now provided with routes for web and API
 - [Ignore the routes and controllers](#ignore-the-routes-and-controllers)
 - [Web Views and Components](#web-views-and-components)
 
+
 ## **Configurations**
+
 Default Laravel configurations should work flawlessly. You can customize the package to a large extent.
 
 You can change the API prefix by configuring `AWS_COGNITO_API_PREFIX` and the web prefix by configuring `AWS_COGNITO_WEB_PREFIX` in the .env file. The default value for both is **cognito**.
@@ -29,11 +33,15 @@ AWS_COGNITO_WEB_PREFIX="cognito"
 > [!NOTE]
 > In case you have published the prior cognito configuration file in your config folder, you may need to delete that and republish again. Please take backup of the cognito.php in case you have modified anything.
 
+
 ## **Features**
+
 - [Preconfigured Routes & Controllers](#routes)
 - [Web Views and Components]()
 
+
 ## **Routes**
+
 >[!NOTE]
 >Preconfigured Web and API routes are introduced as a new feature from V2.0.0.
 
@@ -50,8 +58,9 @@ php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServ
 
 ```
 
-### API Routes
+### *API Routes*
 ---
+
 The Web and API routes that are wired to the same Controller, making it easy for users to implement. The API returns standardized JSON response and the response format is consistent across all API endpoints.
 
 The validations are built in and API response format is standardized.
@@ -90,66 +99,67 @@ The validations are built in and API response format is standardized.
 
 ```
 
-### Web Routes
+
+### *Web Routes*
 ---
+
 The web routes that are wired via the Controllers, making it easy for users to implement. The validations are built in and response is wired to blade views. The views can be 
 
 ```php
+GET|HEAD  cognito/home ............................................................................................................................... cognito.home
+GET|HEAD  cognito/login ........................................................................................................................ cognito.form.login
+POST      cognito/login ................................................ cognito.action.login.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@login
+POST      cognito/login/auth-challenge .................... cognito.action.auth.challenge.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@challenge
+POST      cognito/logout ........................................................... cognito.logout › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout
+POST      cognito/logout/forced ....................................... cognito.logout_forced › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logoutForced
+GET|HEAD  cognito/password/forgot .................................................................................................... cognito.form.password.forgot
+POST      cognito/password/forgot .................. cognito.action.password.forgot › Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLink
+GET|HEAD  cognito/password/reset ...................................................................................................... cognito.form.password.reset
+POST      cognito/password/reset ............................. cognito.action.password.reset › Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController@reset
+GET|HEAD  cognito/register .................................................................................................................. cognito.form.register
+POST      cognito/register .................................... cognito.action.register.submit › Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@register
+GET|HEAD  cognito/register/resend-code .......................................................................................... cognito.form.register.resend_code
+POST      cognito/register/resend-code ................. cognito.action.register.resend_code › Ellaisys\Cognito\Http\Controllers\Auth\VerificationController@resend
+GET|HEAD  cognito/register/verify .................................................................................................... cognito.form.register.verify
+POST      cognito/register/verify ........................... cognito.action.register.verify › Ellaisys\Cognito\Http\Controllers\Auth\VerificationController@verify
+POST      cognito/session/refresh ............................................. cognito. › Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
+GET|HEAD  cognito/user/changepassword ................................................................................................ cognito.form.change.password
+POST      cognito/user/changepassword .................... cognito.action.change.password › Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@change
+GET|HEAD  cognito/user/invite ............................................................................................................ cognito.form.user.invite
+POST      cognito/user/invite ..................................... cognito.action.invite.submit › Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@invite
 
-    GET|HEAD  cognito/home ............................................................................................................................... cognito.home
-    GET|HEAD  cognito/login ........................................................................................................................ cognito.form.login
-    POST      cognito/login ................................................ cognito.action.login.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@login
-    POST      cognito/login/auth-challenge .................... cognito.action.auth.challenge.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@challenge
-    POST      cognito/logout ........................................................... cognito.logout › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout
-    POST      cognito/logout/forced ....................................... cognito.logout_forced › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logoutForced
-    GET|HEAD  cognito/password/forgot .................................................................................................... cognito.form.password.forgot
-    POST      cognito/password/forgot .................. cognito.action.password.forgot › Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLink
-    GET|HEAD  cognito/password/reset ...................................................................................................... cognito.form.password.reset
-    POST      cognito/password/reset ............................. cognito.action.password.reset › Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController@reset
-    GET|HEAD  cognito/register .................................................................................................................. cognito.form.register
-    POST      cognito/register .................................... cognito.action.register.submit › Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@register
-    GET|HEAD  cognito/register/resend-code .......................................................................................... cognito.form.register.resend_code
-    POST      cognito/register/resend-code ................. cognito.action.register.resend_code › Ellaisys\Cognito\Http\Controllers\Auth\VerificationController@resend
-    GET|HEAD  cognito/register/verify .................................................................................................... cognito.form.register.verify
-    POST      cognito/register/verify ........................... cognito.action.register.verify › Ellaisys\Cognito\Http\Controllers\Auth\VerificationController@verify
-    POST      cognito/session/refresh ............................................. cognito. › Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
-    GET|HEAD  cognito/user/changepassword ................................................................................................ cognito.form.change.password
-    POST      cognito/user/changepassword .................... cognito.action.change.password › Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@change
-    GET|HEAD  cognito/user/invite ............................................................................................................ cognito.form.user.invite
-    POST      cognito/user/invite ..................................... cognito.action.invite.submit › Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@invite
+// Web routes for MFA
+GET|HEAD  cognito/user/mfa/activate ................................ cognito.form.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@activate
+GET|HEAD  cognito/user/mfa/deactivate ........................ cognito.action.user.mfa.deactivate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@deactivate
+GET|HEAD  cognito/user/mfa/disable ...................................... cognito.action.mfa.disable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@disable
+GET|HEAD  cognito/user/mfa/enable ......................................... cognito.action.mfa.enable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@enable
+POST      cognito/user/mfa/verify .................................. cognito.action.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@verify
 
-    // Web routes for MFA
-    GET|HEAD  cognito/user/mfa/activate ................................ cognito.form.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@activate
-    GET|HEAD  cognito/user/mfa/deactivate ........................ cognito.action.user.mfa.deactivate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@deactivate
-    GET|HEAD  cognito/user/mfa/disable ...................................... cognito.action.mfa.disable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@disable
-    GET|HEAD  cognito/user/mfa/enable ......................................... cognito.action.mfa.enable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@enable
-    POST      cognito/user/mfa/verify .................................. cognito.action.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@verify
-
-    // Web routes for Passkey (FIDO2 Security Keys)
-    POST      cognito/user/passkey/start .................... cognito.action.user.passkey.start › Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@start
-    POST      cognito/user/passkey/complete ........... cognito.action.user.passkey.complete › Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@complete
-    DELETE    cognito/user/passkey ........................ cognito.action.user.passkey.delete › Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@delete
-    POST      cognito/login/passkey/challenge ....... cognito.action.auth.passkey.challenge › Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@challenge
-
+// Web routes for Passkey (FIDO2 Security Keys)
+POST      cognito/user/passkey/start .................... cognito.action.user.passkey.start › Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@start
+POST      cognito/user/passkey/complete ........... cognito.action.user.passkey.complete › Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@complete
+DELETE    cognito/user/passkey ........................ cognito.action.user.passkey.delete › Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@delete
+POST      cognito/login/passkey/challenge ....... cognito.action.auth.passkey.challenge › Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController@challenge
 ```
 
-## Ignore the routes and controllers
+
+## **Ignore the routes and controllers**
+
 If you would like to prevent AWS Cognito's routes and/or views from running entirely, you may use the ignoreRoutes and ignoreViews methods provided by AWS Cognito. Typically, this method should be called in the register method of your AppServiceProvider:
 
 ```php
+use Ellaisys\Cognito\AwsCognito;
 
-    use Ellaisys\Cognito\AwsCognito;
-    
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        AwsCognito::ignoreRoutes(); //Ignore the preconfired routes
-        AwsCognito::ignoreViews();  //Ignore the views provided by the package
-    }
-
+/**
+ * Register any application services.
+ */
+public function register(): void
+{
+    AwsCognito::ignoreRoutes(); //Ignore the preconfired routes
+    AwsCognito::ignoreViews();  //Ignore the views provided by the package
+}
 ```
+
 
 ## **Web Views and Components**
 
@@ -158,13 +168,9 @@ The package provides preconfigured blade views and components, for quick develop
 If you need to overwrite the views that ship with this package, you can publish them using the vendor:publish Artisan command make required changes.
 
 ```bash
-
 php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="views"
-
 ```
 
 The views reference a layout file. Modify the layout after publishing the file. If your own blade layout file has to be used, amend **AWS_COGNITO_VIEWS_LAYOUT** paramter with the name of the layout file. The default value is 'cognito::layouts.app' but you can change it to 'layouts.app' to point to your own app.blade.php in the resources/views/layouts folder.
-
-
 
 The new version of the package should work fine, you might have to just add some lines into the AppServiceProvider. Refer the section: [Ignore the routes and controllers](#ignore-the-routes-and-controllers)
