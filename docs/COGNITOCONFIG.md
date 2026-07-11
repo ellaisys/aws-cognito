@@ -6,6 +6,12 @@ This document provides guidance on configuring AWS services, specifically AWS Co
 > Updated On 2026-07-10
 
 
+## **Contents**
+- [AWS IAM configuration](#aws-iam-configuration)
+- [AWS Cognito configuration](#aws-cognito-configuration)
+- [References](#references)
+
+
 ## **AWS IAM configuration**
 
 You will need a new `IAM Role` with the following Access Rights:
@@ -127,3 +133,10 @@ In the **OpenID Connect** (OIDC) scopes section, ensure that the following scope
 - `openid`
 
 Save the changes by clicking the **Save Changes** button at the bottom of the page.
+
+
+## **References**
+- [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html)
+- [AWS Cognito User Pool Settings](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools.html)
+- [AWS Cognito App Client Settings](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html)
+- [AWS Cognito Security](https://docs.aws.amazon.com/cognito/latest/developerguide/security.html)
