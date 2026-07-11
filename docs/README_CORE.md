@@ -11,12 +11,15 @@
     - [API Routes](#api-routes)
 - [References](#references)
 
+
 ## **Introduction**
+
 
 ## **Configurations**
 
 
 ## **Features**
+
 - [Registration and Confirmation E-Mail (Sign Up)](#registering-users)
 - Forced password change at first login (configurable)
 - [Login (Sign In)](#user-authentication)
@@ -47,6 +50,318 @@
 - [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
 
 
+## **Registering Users OR Sign Up**
+
+As a default, if you are registering a new user with Cognito, Cognito will send you an email during signUp that includes the username and temporary password for the users to verify themselves.
+
+Using this library in conjunction with **AWS Lambda**, once can look to customize the email template and content. The email template can be text or html based. The Lambda code for not included in this code repository. You can create your own. Any object (array) that you pass to the registration method is transferred as is to the lambda function, we are not prescriptive about the attribute names.
+
+We have made is very easy for anyone to use the default behaviour.
+
+1. You don't need to create an extra field to store the verification token.
+2. You don't have to bother about the Sessions or API tokens, they are managed for you. The session or token is managed via the standard mechanism of Laravel. You have the liberty to keep it where ever you want, no security loop holes.
+3. If you use the trait provided by us 'Ellaisys\Cognito\Auth\RegistersUsers', the code will be limited to just a few lines
+4. if you are using the Laravel scafolding, then make the password nullable in DB or drop it from schema. Passwords will be only managed by AWS Cognito.
+
+```php
+use Ellaisys\Cognito\Auth\RegistersUsers;
+
+class UserController extends BaseController
+{
+    use RegistersUsers;
+
+    public function register(Request $request)
+    {
+        $validator = $request->validate([
+            'name' => 'required|max:255',
+            'email' => 'required|email|max:64|unique:users',
+            'password' => 'sometimes|confirmed|min:6|max:64',
+        ]);
+
+        //Create credentials object
+        $collection = collect($request->all());
+        $data = $collection->only('name', 'email', 'password'); //passing 'password' is optional.
+
+        //Register User in cognito
+        if ($cognitoRegistered=$this->createCognitoUser($data)) {
+
+            //If successful, create the user in local db
+            User::create($collection->only('name', 'email'));
+        } //End if
+
+        //Redirect to view
+        return view('login');
+    }
+}
+```
+
+5. You don't need to turn off Cognito to send you emails. We rather propose the use of AWS Cognito or AWS SMS mailers, such that user credentials are always secure.
+
+6. In case you want to suppress the mails to be sent to the new users, you can configure the parameter given below to skip welcome mails to new user registration. Default configuration shall send the welcome email.
+
+```php
+AWS_COGNITO_NEW_USER_MESSAGE_ACTION="SUPPRESS"
+```
+
+7. The configuration given below allows the new user's email address to be auto marked as verified.
+
+```php
+AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is false.
+```
+
+8. To assign a default group to a new user when registering set a name of the user group as per the configuration done via AWS Cognito Management Console. The default value is set to null.
+
+```php
+AWS_COGNITO_DEFAULT_USER_GROUP="Customers"
+```
+
+9. To enable custom password or user defined password, the below configuration if set to **true** will force the user to set the password during registration, else cognito will generate a random password and send over email and/or SMS based on the configurations.
+
+```php
+AWS_COGNITO_FORCE_NEW_USER_PASSWORD=true //optional - default value is false.  
+```
+
+10. The registration process now allows two types of request, 'invite' and 'register'. The register is self registration and an verification email is sent to the user. The invite is sent from the admin and contains the temporary cedentials. The RegistersUsers Trait allows two methods invite and register respectively. The default method called in the trait is set to **register**. You can change the behaviour of the register method by setting following configuration.
+
+```php
+    AWS_COGNITO_REGISTRATION_TYPE="register" //optional - the default type is invite
+```
+
+
+## **User Authentication OR Sign In**
+
+We have provided you with a useful trait that make the authentication very simple (with Web or API routes). You don't have to worry about any additional code to manage sessions and token (for API).
+
+> [!NOTE]
+> The Access Token is now validated with the AWS Cognito certificate. If the certificate is incorrect or expired, it will throw am exception.
+
+The trait takes in some additional parameters, refer below the function signature of the trait. Note that the function takes the object of **Illuminate\Support\Collection** instead of **Illuminate\Http\Request**. This will allow you to use this function in any tier of the code.
+
+Also, the 'guard' name reference is passed, so that you can reuse the function for multiple guard drivers in your project. The function has the capability to handle the Session and Token Guards with multiple drivers and providers as defined in /config/auth.php
+
+```php
+namespace Ellaisys\Cognito\Auth;
+
+protected function attemptLogin (
+    Collection $request, string $guard='web', 
+    string $paramUsername='email', string $paramPassword='password', 
+    bool $isJsonResponse=false
+) {
+    ...
+    ...
+
+    ...
+}
+```
+
+In case you want to use this trait for Web login, you can write the code as shown below in the AuthController.php
+
+```php
+namespace App\Http\Controllers;
+
+...
+use Ellaisys\Cognito\AwsCognitoClaim;
+use Ellaisys\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
+
+class AuthController extends Controller
+{
+    use CognitoAuthenticatesUsers;
+
+    /**
+     * Authenticate User
+     * 
+     * @throws \HttpException
+     * 
+     * @return mixed
+     */
+    public function login(\Illuminate\Http\Request $request)
+    {
+        ...
+
+        //Convert request to collection
+        $collection = collect($request->all());
+
+        //Authenticate with Cognito Package Trait (with 'web' as the auth guard)
+        if ($response = $this->attemptLogin($collection, 'web')) {
+            if ($response===true) {
+                return redirect(route('home'))->with('success', true);
+            } elseif ($response===false) {
+                // If the login attempt was unsuccessful you may increment the number of attempts
+                // to login and redirect the user back to the login form. Of course, when this
+                // user surpasses their maximum number of attempts they will get locked out.
+                //
+                //$this->incrementLoginAttempts($request);
+                //
+                //$this->sendFailedLoginResponse($collection, null);
+            } else {
+                return $response;
+            } //End if
+        } //End if
+
+    } //Function ends
+
+    ...
+} //Class ends
+```
+
+In case you want to use this trait for API based login, you can write the code as shown below in the AuthApiController.php
+
+```php
+namespace App\Api\Controller;
+
+...
+use Ellaisys\Cognito\AwsCognitoClaim;
+use Ellaisys\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
+
+class AuthApiController extends Controller
+{
+    use CognitoAuthenticatesUsers;
+
+    /**
+     * Authenticate User
+     * 
+     * @throws \HttpException
+     * 
+     * @return mixed
+     */
+    public function login(\Illuminate\Http\Request $request)
+    {
+        ...
+
+        //Convert request to collection
+        $collection = collect($request->all());
+
+        //Authenticate with Cognito Package Trait (with 'api' as the auth guard)
+        if ($claim = $this->attemptLogin($collection, 'api', 'username', 'password', true)) {
+            if ($claim instanceof AwsCognitoClaim) {
+                return $claim->getData();
+            } else {
+                return response()->json(['status' => 'error', 'message' => $claim], 400);
+            } //End if
+        } //End if
+
+    } //Function ends
+
+
+    ...
+} //Class ends
+```
+
+## **Log Out OR Signout (Remove Access Token)**
+
+The logout methods are now part of the guard implementations, the logout method removes the access-tokens from AWS and also removes from Application Storage managed by this library. Just calling the auth guard logout method will be sufficient. You can implement it into the routes or controller based on your development preference.
+
+The logout method now takes an **optional** boolean parameter (true) to revoke RefreshToken. The default value is (false) and that will persist the Refresh Token with AWS Cognito.
+
+```php
+...
+Auth::guard('api')->logout();
+
+...
+Auth::guard('api')->logout(true); //Revoke the Refresh Token.
+```
+
+
+## **Refresh Token**
+
+You can use this trait for API to generate new token
+
+```php
+namespace App\Api\Controller;
+
+...
+use Ellaisys\Cognito\AwsCognitoClaim;
+use Ellaisys\Cognito\Auth\RefreshToken;
+
+class AuthApiController extends Controller
+{
+    use RefreshToken;
+
+    /**
+     * Generate a new token using refresh token.
+     * 
+     * @throws \HttpException
+     * 
+     * @return mixed
+     */
+    public function refreshToken(\Illuminate\Http\Request $request)
+    {
+        ...
+        $validator = $request->validate([
+            'email' => 'required|email',
+            'refresh_token' => 'required'
+        ]);
+        
+        try {
+            return $this->refresh($request, 'email', 'refresh_token');
+        } catch (Exception $e) {
+            return $e;
+        }
+    } //Function ends
+    ...
+} //Class ends
+```
+
+
+## **Delete User**
+
+If you want to give your users the ability to delete themselves from your app you can use our deleteUser function
+from the CognitoClient.
+
+To delete the user you should call deleteUser and pass the email of the user as a parameter to it.
+After the user has been deleted in your cognito pool, delete your user from your database too.
+
+```php
+$cognitoClient->deleteUser($user->email);
+$user->delete();
+```
+
+We have implemented a new config option `delete_user`, which you can access through `AWS_COGNITO_DELETE_USER` env var.
+If you set this config to true, the user is deleted in the Cognito pool. If it is set to false, it will stay registered.
+Per default this option is set to false. If you want this behaviour you should set USE_SSO to true to let the user
+restore themselves after a successful login.
+
+To access our CognitoClient you can simply pass it as a parameter to your Controller Action where you want to perform
+the deletion.
+
+```php
+public function deleteUser(Request $request, AwsCognitoClient $client)
+```
+
+Laravel will take care of the dependency injection by itself.
+
+```
+    IMPORTANT: You want to secure this action by maybe security questions, a second delete password or by confirming 
+    the email address.
+```
+
+
+## **Forgot Password**
+
+In case the user has not activated the account, AWS Cognito as a default feature does not allow user of use the forgot password feature. We have introduced the AWS documented feature that allows the password to be resent.
+
+We have made this configurable for the developers so that they can use it as per the business requirement. The configuration takes a boolean value. Default is true (allows resend of forgot password)
+
+```php
+AWS_COGNITO_ALLOW_FORGOT_PASSWORD_RESEND=true
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -65,15 +380,7 @@ you need for your `.env` file.
 *IMPORTANT: Don't forget to activate the checkbox to Enable sign-in API for server-based Authentication.
 The Auth Flow is called: ADMIN_USER_PASSWORD_AUTH (formerly ADMIN_NO_SRP_AUTH)*
 
-### AWS IAM configuration
 
-You also need a new **IAM Role** with the following Access Rights:
-
-- AmazonCognitoDeveloperAuthenticatedIdentities
-- AmazonCognitoPowerUser
-- AmazonESCognitoAccess
-
-From this IAM User you must use the **AWS_ACCESS_KEY_ID** and **AWS_SECRET_ACCESS_KEY** in the laravel environment file.
 
 
 ### Importing existing users into the Cognito Pool
@@ -116,379 +423,10 @@ Any additional registration data you have, for example `firstname`, `lastname` n
 [cognito.php](/config/cognito.php) cognito_user_fields config to be pushed to Cognito. Otherwise they are only stored locally
 and are not available if you want to use Single Sign On's.*
 
-## Forgot password with resend option
 
-In case the user has not activated the account, AWS Cognito as a default feature does not allow user of use the forgot password feature. We have introduced the AWS documented feature that allows the password to be resent.
 
-We have made this configurable for the developers so that they can use it as per the business requirement. The configuration takes a boolean value. Default is true (allows resend of forgot password)
 
-```php
 
-    AWS_COGNITO_ALLOW_FORGOT_PASSWORD_RESEND=true
-
-```
-
-## Middleware configuration for API Routes **Updated**
-for Laravel 10 and before: In case you are using this library as API driver, you can register the middleware into the kernal.php in the $routeMiddleware 
-
-```php
-
-    protected $routeMiddleware = [
-        ...
-        'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
-    ]
-
-```
-
-### Laravel 11.0 and above **Updated**
-With Laravel 11 and above the middleware congiguration is defined in the app.php in the bootstrap folder. Please configure as shown below
-
-```php
-    // bootstrap/app.php
-        ...
-        ->withMiddleware(function (Middleware $middleware): void {
-            ...
-            $middleware->alias([
-                ...
-                'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
-            ]);
-            ...
-        })
-        ...
-
-```
-
-To use the middleware into the **Web routes**, you can use the std auth middleware as shown below
-
-```php
-
-    Route::middleware('auth')->get('user', 'NameOfTheController@functionName');
-
-```
-
-To use the middleware into the **API routes**, as shown below
-
-```php
-
-    Route::middleware('aws-cognito')->get('user', 'NameOfTheController@functionName');
-
-```
-
-
-## Registering Users
-
-As a default, if you are registering a new user with Cognito, Cognito will send you an email during signUp that includes the username and temporary password for the users to verify themselves.
-
-Using this library in conjunction with **AWS Lambda**, once can look to customize the email template and content. The email template can be text or html based. The Lambda code for not included in this code repository. You can create your own. Any object (array) that you pass to the registration method is transferred as is to the lambda function, we are not prescriptive about the attribute names.
-
-We have made is very easy for anyone to use the default behaviour.
-
-1. You don't need to create an extra field to store the verification token.
-2. You don't have to bother about the Sessions or API tokens, they are managed for you. The session or token is managed via the standard mechanism of Laravel. You have the liberty to keep it where ever you want, no security loop holes.
-3. If you use the trait provided by us 'Ellaisys\Cognito\Auth\RegistersUsers', the code will be limited to just a few lines
-4. if you are using the Laravel scafolding, then make the password nullable in DB or drop it from schema. Passwords will be only managed by AWS Cognito.
-
-```php
-    use Ellaisys\Cognito\Auth\RegistersUsers;
-
-    class UserController extends BaseController
-    {
-        use RegistersUsers;
-
-        public function register(Request $request)
-        {
-            $validator = $request->validate([
-                'name' => 'required|max:255',
-                'email' => 'required|email|max:64|unique:users',
-                'password' => 'sometimes|confirmed|min:6|max:64',
-            ]);
-
-            //Create credentials object
-            $collection = collect($request->all());
-            $data = $collection->only('name', 'email', 'password'); //passing 'password' is optional.
-
-            //Register User in cognito
-            if ($cognitoRegistered=$this->createCognitoUser($data)) {
-
-                //If successful, create the user in local db
-                User::create($collection->only('name', 'email'));
-            } //End if
-
-            //Redirect to view
-            return view('login');
-        }
-    }
-
-```
-
-5. You don't need to turn off Cognito to send you emails. We rather propose the use of AWS Cognito or AWS SMS mailers, such that user credentials are always secure.
-
-6. In case you want to suppress the mails to be sent to the new users, you can configure the parameter given below to skip welcome mails to new user registration. Default configuration shall send the welcome email.
-
-```php
-
-    AWS_COGNITO_NEW_USER_MESSAGE_ACTION="SUPPRESS"
-
-```
-
-7. The configuration given below allows the new user's email address to be auto marked as verified.
-
-```php
-
-    AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is false.
-
-```
-
-8. To assign a default group to a new user when registering set a name of the user group as per the configuration done via AWS Cognito Management Console. The default value is set to null.
-
-```php
-
-    AWS_COGNITO_DEFAULT_USER_GROUP="Customers"
-
-```
-
-9. To enable custom password or user defined password, the below configuration if set to **true** will force the user to set the password during registration, else cognito will generate a random password and send over email and/or SMS based on the configurations.
-
-```php
-
-    AWS_COGNITO_FORCE_NEW_USER_PASSWORD=true //optional - default value is false.  
-
-```
-
-10. The registration process now allows two types of request, 'invite' and 'register'. The register is self registration and an verification email is sent to the user. The invite is sent from the admin and contains the temporary cedentials. The RegistersUsers Trait allows two methods invite and register respectively. The default method called in the trait is set to **register**. You can change the behaviour of the register method by setting following configuration.
-
-```php
-
-    AWS_COGNITO_REGISTRATION_TYPE="register" //optional - the default type is invite
-```
-
-## User Authentication
-
-We have provided you with a useful trait that make the authentication very simple (with Web or API routes). You don't have to worry about any additional code to manage sessions and token (for API).
-
-> [!NOTE]
-> The Access Token is now validated with the AWS Cognito certificate. If the certificate is incorrect or expired, it will throw am exception.
-
-The trait takes in some additional parameters, refer below the function signature of the trait. Note that the function takes the object of **Illuminate\Support\Collection** instead of **Illuminate\Http\Request**. This will allow you to use this function in any tier of the code.
-
-Also, the 'guard' name reference is passed, so that you can reuse the function for multiple guard drivers in your project. The function has the capability to handle the Session and Token Guards with multiple drivers and providers as defined in /config/auth.php
-
-```php
-
-    namespace Ellaisys\Cognito\Auth;
-
-    protected function attemptLogin (
-        Collection $request, string $guard='web', 
-        string $paramUsername='email', string $paramPassword='password', 
-        bool $isJsonResponse=false
-    ) {
-        ...
-        ...
-
-
-        ...
-    }
-
-```
-
-In case you want to use this trait for Web login, you can write the code as shown below in the AuthController.php
-
-```php
-
-    namespace App\Http\Controllers;
-
-    ...
-
-    use Ellaisys\Cognito\AwsCognitoClaim;
-    use Ellaisys\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
-
-    class AuthController extends Controller
-    {
-        use CognitoAuthenticatesUsers;
-
-        /**
-         * Authenticate User
-         * 
-         * @throws \HttpException
-         * 
-         * @return mixed
-         */
-        public function login(\Illuminate\Http\Request $request)
-        {
-            ...
-
-            //Convert request to collection
-            $collection = collect($request->all());
-
-            //Authenticate with Cognito Package Trait (with 'web' as the auth guard)
-            if ($response = $this->attemptLogin($collection, 'web')) {
-                if ($response===true) {
-                    return redirect(route('home'))->with('success', true);
-                } elseif ($response===false) {
-                    // If the login attempt was unsuccessful you may increment the number of attempts
-                    // to login and redirect the user back to the login form. Of course, when this
-                    // user surpasses their maximum number of attempts they will get locked out.
-                    //
-                    //$this->incrementLoginAttempts($request);
-                    //
-                    //$this->sendFailedLoginResponse($collection, null);
-                } else {
-                    return $response;
-                } //End if
-            } //End if
-
-        } //Function ends
-
-        ...
-    } //Class ends
-
-```
-
-In case you want to use this trait for API based login, you can write the code as shown below in the AuthApiController.php
-
-```php
-
-    namespace App\Api\Controller;
-
-    ...
-
-    use Ellaisys\Cognito\AwsCognitoClaim;
-    use Ellaisys\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
-
-    class AuthApiController extends Controller
-    {
-        use CognitoAuthenticatesUsers;
-
-        /**
-         * Authenticate User
-         * 
-         * @throws \HttpException
-         * 
-         * @return mixed
-         */
-        public function login(\Illuminate\Http\Request $request)
-        {
-            ...
-
-            //Convert request to collection
-            $collection = collect($request->all());
-
-            //Authenticate with Cognito Package Trait (with 'api' as the auth guard)
-            if ($claim = $this->attemptLogin($collection, 'api', 'username', 'password', true)) {
-                if ($claim instanceof AwsCognitoClaim) {
-                    return $claim->getData();
-                } else {
-                    return response()->json(['status' => 'error', 'message' => $claim], 400);
-                } //End if
-            } //End if
-
-        } //Function ends
-
-
-        ...
-    } //Class ends
-
-```
-
-## Signout (Remove Access Token)
-
-The logout methods are now part of the guard implementations, the logout method removes the access-tokens from AWS and also removes from Application Storage managed by this library. Just calling the auth guard logout method will be sufficient. You can implement it into the routes or controller based on your development preference.
-
-The logout method now takes an **optional** boolean parameter (true) to revoke RefreshToken. The default value is (false) and that will persist the Refresh Token with AWS Cognito.
-
-```php
-
-   ...
-
-   Auth::guard('api')->logout();
-
-
-   ...
-
-   Auth::guard('api')->logout(true); //Revoke the Refresh Token.
-
-```
-
-
-## Refresh Token
-
-You can use this trait for API to generate new token
-
-```php
-
-    namespace App\Api\Controller;
-
-    ...
-
-    use Ellaisys\Cognito\AwsCognitoClaim;
-    use Ellaisys\Cognito\Auth\RefreshToken;
-
-    class AuthApiController extends Controller
-    {
-        use RefreshToken;
-
-        /**
-         * Generate a new token using refresh token.
-         * 
-         * @throws \HttpException
-         * 
-         * @return mixed
-         */
-        public function refreshToken(\Illuminate\Http\Request $request)
-        {
-            ...
-
-            $validator = $request->validate([
-                'email' => 'required|email',
-                'refresh_token' => 'required'
-            ]);
-            
-            try {
-                return $this->refresh($request, 'email', 'refresh_token');
-            } catch (Exception $e) {
-                return $e;
-            }
-
-        } //Function ends
-
-
-        ...
-    } //Class ends
-
-```
-
-
-## Delete User
-
-If you want to give your users the ability to delete themselves from your app you can use our deleteUser function
-from the CognitoClient.
-
-To delete the user you should call deleteUser and pass the email of the user as a parameter to it.
-After the user has been deleted in your cognito pool, delete your user from your database too.
-
-```php
-        $cognitoClient->deleteUser($user->email);
-        $user->delete();
-```
-
-We have implemented a new config option `delete_user`, which you can access through `AWS_COGNITO_DELETE_USER` env var.
-If you set this config to true, the user is deleted in the Cognito pool. If it is set to false, it will stay registered.
-Per default this option is set to false. If you want this behaviour you should set USE_SSO to true to let the user
-restore themselves after a successful login.
-
-To access our CognitoClient you can simply pass it as a parameter to your Controller Action where you want to perform
-the deletion.
-
-```php
-    public function deleteUser(Request $request, AwsCognitoClient $client)
-```
-
-Laravel will take care of the dependency injection by itself.
-
-```
-    IMPORTANT: You want to secure this action by maybe security questions, a second delete password or by confirming 
-    the email address.
-```
 
 ## Automatic User Password update for API usage (for New Cognito Users)
 
@@ -497,10 +435,8 @@ In case of the new cognito users, the AWS SDK will send a session key and the us
 However, if you have an API based implementation, and want to automatically authenticate the user without forcing the password change, you may do that with below setting fields to your `.env` file
 
 ```php
-
-    AWS_COGNITO_FORCE_PASSWORD_CHANGE_API=false     //Make true for forcing password change
-    AWS_COGNITO_FORCE_PASSWORD_AUTO_UPDATE_API=true //Make false for stopping auto password change
-
+AWS_COGNITO_FORCE_PASSWORD_CHANGE_API=false     //Make true for forcing password change
+AWS_COGNITO_FORCE_PASSWORD_AUTO_UPDATE_API=true //Make false for stopping auto password change
 ```
 
 ## Support for App Client without Secret enabled
@@ -508,9 +444,7 @@ However, if you have an API based implementation, and want to automatically auth
 The library now supports where the AWS configuration of App Client with the Client Secret set to disabled. Use the below configuration into the environment file to enable/disable this. The default is marked as enable (i.e. we expect the App Client Secret to be enabled in AWS Cognito configuration)
 
 ```php
-
-   AWS_COGNITO_CLIENT_SECRET_ALLOW=false
-
+AWS_COGNITO_CLIENT_SECRET_ALLOW=false
 ```
 
 ## Password Validation based of Cognito Configuration
@@ -520,6 +454,7 @@ This library fetches the password policy from the cognito pool configurations. T
 >[!IMPORTANT]
 >In case of special characters, we are supporting all except the pipe character **|** for now.
 >We are working on making sure that pipe character is handled soon.
+
 
 ## Mapping Cognito User using Subject UUID
 
