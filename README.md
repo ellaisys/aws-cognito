@@ -1,6 +1,6 @@
 ![Laravel Authentication using AWS Cognito - Web and API](./assets/images/banner.png)
 
-# Laravel Authentication using AWS Cognito
+# **Laravel Authentication using AWS Cognito**
 
 > [!NOTE]
 > Updated On 2026-07-10
@@ -20,6 +20,7 @@
 
 
 ## **Contents**
+
 - [Introduction](#introduction)
     + [Demo Application & Code](#demo-application--code)
     + [Compatability](#compatability)
@@ -81,6 +82,7 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 
 
 ## **Features**
+
 - [Core Authentication](./docs/README_CORE.md)
 - [Multi-Factor Authentication (MFA)](./docs/README_MFA.md) **Updated**
 - [SRP Authentication](./docs/README_SRP.md) **New Feature**
@@ -90,6 +92,7 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 
 
 ## **Installation**
+
 This package is available via [Packagist](https://packagist.org/packages/ellaisys/aws-cognito) and can be installed using composer.
 
 ```sh
