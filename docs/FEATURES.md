@@ -29,3 +29,10 @@
 - [SRP Authentication](./docs/README_SRP.md) **New Feature**
 - [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
 
+
+## **What this package provides**
+
+1. A simple way to integrate AWS Cognito into your Laravel application.
+2. Preconfigured set of routes, controllers, and views for Web and API.
+3. You don't need to create an extra field to store the verification token.
+4. You don't have to bother about the Sessions or API tokens, they are managed for you. The session or token is managed via the standard mechanism of Laravel. You have the liberty to keep it where ever you want, no security loop holes.

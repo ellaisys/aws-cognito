@@ -52,14 +52,16 @@
 
 ## **Registering Users OR Sign Up**
 
+The registration process is now simplified and you can use the trait provided by us to register users. The registration process is now a single step process. You can pass the user attributes as an array to the registration method. The registration method will take care of the rest.
+
+You will need to configure the AWS Cognito User Pool to allow **Self Registration**. If this is not enabled, then the users will have to be created by an administrator by inviting them to the application. Refer to the AWS Cognito documentation for more details on how to enable self registration.
+
 As a default, if you are registering a new user with Cognito, Cognito will send you an email during signUp that includes the username and temporary password for the users to verify themselves.
 
-Using this library in conjunction with **AWS Lambda**, once can look to customize the email template and content. The email template can be text or html based. The Lambda code for not included in this code repository. You can create your own. Any object (array) that you pass to the registration method is transferred as is to the lambda function, we are not prescriptive about the attribute names.
+Using this library in conjunction with **AWS Lambda**, once can look to customize the email template and content. The email template can be text or html based content. The Lambda code is not included in this code repository.
 
 We have made is very easy for anyone to use the default behaviour.
 
-1. You don't need to create an extra field to store the verification token.
-2. You don't have to bother about the Sessions or API tokens, they are managed for you. The session or token is managed via the standard mechanism of Laravel. You have the liberty to keep it where ever you want, no security loop holes.
 3. If you use the trait provided by us 'Ellaisys\Cognito\Auth\RegistersUsers', the code will be limited to just a few lines
 4. if you are using the Laravel scafolding, then make the password nullable in DB or drop it from schema. Passwords will be only managed by AWS Cognito.
 
