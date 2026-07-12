@@ -368,24 +368,11 @@ AWS_COGNITO_ALLOW_FORGOT_PASSWORD_RESEND=true
 
 
 
-## Cognito User Pool
-
-In order to use AWS Cognito as authentication provider, you require a Cognito User Pool.
-
-If you haven't created one already, go to your [Amazon management console](https://console.aws.amazon.com/cognito/home) and create a new user pool.
-
-Next, generate an App Client. This will give you the App client id and the App client secret
-you need for your `.env` file.
-
-*IMPORTANT: Don't forget to activate the checkbox to Enable sign-in API for server-based Authentication.
-The Auth Flow is called: ADMIN_USER_PASSWORD_AUTH (formerly ADMIN_NO_SRP_AUTH)*
 
 
 
 
-### Importing existing users into the Cognito Pool
 
-If you are already working on an existing project and want to integrate Cognito you have to [import a user csv file to your Cognito Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-using-import-tool.html).
 
 ## Usage
 Our package is providing you 10 traits you can just add to your Auth Controllers to get our package running.
@@ -403,6 +390,7 @@ Our package is providing you 10 traits you can just add to your Auth Controllers
 In the simplest way you just go through your Auth Controllers and use these traits which are currently implemented in Laravel. The Controllers are now also provided and preconfigured with the traits. You can use them as they are or change them to fit your needs.
 
 You can change structure to suit your needs. Please be aware of the @extend statement in the blade file to fit into your project structure.
+
 
 ## Single Sign-On
 
@@ -455,48 +443,3 @@ This library fetches the password policy from the cognito pool configurations. T
 >In case of special characters, we are supporting all except the pipe character **|** for now.
 >We are working on making sure that pipe character is handled soon.
 
-
-## Mapping Cognito User using Subject UUID
-
-The library maps the Cognito user subject UUID with the local repository. Everytime a new user is created in cognito, the sub UUID is mapped with the local user table with an user specified column name.
-
-The column name in the local database is identified as `sub`. This can be changed and managed with the config parameter `user_subject_uuid`. The default value of the config is set to `sub`. 
-
-However, to customize the column name in the local DB user table, you may do that with below setting fields to your `.env` file
-
-```php
-
-    AWS_COGNITO_USER_SUBJECT_UUID="sub"
-    
-```
-
->[!IMPORTANT]
->In v2.0.5, we have released a trait to be included into your User Model. This includes ManagesSubject, ManagesRegistration and ManagesPasskey traits. Sample code of user model is shared. In case you have already implemented the sub column in your user table, you can use the below code snippet to include the trait into your User model.
-
-```php
-    ...
-    use Ellaisys\Cognito\Concerns\CognitoAuthenticatable;
-    ...
-
-    class User extends Authenticatable
-    {
-        ...
-        use CognitoAuthenticatable;
-
-        /**
-         * The attributes that are mass assignable.
-         *
-         * @var array<int, string>
-         */
-        protected $fillable = [
-            'name',
-            'email',
-            'password',
-            'sub'
-        ];
-
-        ...
-        ...
-    }
-
-```
