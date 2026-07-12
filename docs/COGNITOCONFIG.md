@@ -138,5 +138,6 @@ Save the changes by clicking the **Save Changes** button at the bottom of the pa
 ## **References**
 - [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html)
 - [AWS Cognito User Pool Settings](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools.html)
+- [Import a user CSV file to your Cognito Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-using-import-tool.html)
 - [AWS Cognito App Client Settings](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html)
 - [AWS Cognito Security](https://docs.aws.amazon.com/cognito/latest/developerguide/security.html)
