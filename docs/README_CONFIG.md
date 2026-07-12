@@ -14,15 +14,20 @@ This document provides guidance on configuring the AWS Cognito service and the L
     + [ServiceProvider Registration](#serviceprovider-registration)
     + [Registering the Middleware](#registering-the-middleware)
     + [Environment Variables](#environment-variables)
+    + [Environment Variables - Optional](#additional-environment-variables)
     + [Changes in Auth Configurations](#changes-in-auth-configurations)
     + [Publishing Configurations](#publishing-configurations)
     + [Database Configurations](#database-configurations)
+    + [Model Configurations](#model-configurations)
+        * User Model
     + [Session Storage Configurations](#session-storage-configurations)
         * DynamoDB Storage
 - [References](#references)
 
 
 ## **AWS Configurations**
+
+This package uses the AWS Cognito Services to provide authentication and authorization services for your Laravel application. To create an account with AWS, please refer to the [Amazon Management Console](https://console.aws.amazon.com/cognito/home).
 
 The AWS configurations are required to be set up in order to use the AWS Cognito service. The detailed steps for setting up the AWS Cognito service are provided in the [AWS Configurations](COGNITOCONFIG.md) document. Please refer to that document for detailed instructions on how to set up the AWS Cognito service.
 
@@ -123,6 +128,10 @@ For more details on how to find `AWS_COGNITO_CLIENT_ID`, `AWS_COGNITO_CLIENT_SEC
 > To sync the web session timeout with the cognito access token ttl value, set the `SESSION_LIFETIME` parameter in the .env file. This value is in minutes with the default value being 120 mins i.e. 2 hours. This will ensure that the laravel session times out at the same time as the access token.
 
 
+### *Additional Environment Variables* (Optional)
+---
+
+
 ### *Changes in Auth Configurations*
 ---
 
@@ -182,6 +191,67 @@ public function register(): void
 {
     AwsCognito::ignoreMigrations();
 }
+```
+
+In case you are using the `ignoreMigrations` method, you will need to create your own migrations for updating the **users** table. Please ensure that you add the following columns to your **users** table:
+- `sub` (type:string, nullable:yes, index:yes) - This column is used to store the Cognito user subject UUID. This column is used to map the Cognito user to the local user table. The default value of this column is `sub`. You can change this value by setting the `AWS_COGNITO_USER_SUBJECT_UUID` environment variable.
+
+```php
+AWS_COGNITO_USER_SUBJECT_UUID="sub"
+```
+
+### *Model Configurations*
+---
+
+This section provides guidance on how to configure your Application models to work with AWS Cognito.
+
+#### User Model
+---
+
+The `User` model is the default model that is used by AWS Cognito to manage the users. In the default laravel setup, the `User` model is located in the `app/Models/User.php` file.
+
+> [!IMPORTANT]
+> Starting version 2.0.5 of this package, we have released a few traits to be included into your User Model.
+
+These traits provide the necessary methods to manage the users in AWS Cognito. The `CognitoAuthenticatable` trait is located in the `Ellaisys\Cognito\Concerns` namespace. This trait references the `ManagesSubject`, `ManagesRegistration` and `ManagesPasskey` traits. These traits provide the necessary methods to manage the users in AWS Cognito.
+
+As a basic laravel user, please ensure that you have included the `CognitoAuthenticatable` trait in your User model as shown below:
+
+```php
+namespace App\Models\Auth;
+...
+use Ellaisys\Cognito\Concerns\CognitoAuthenticatable;
+
+class User extends Authenticatable
+{
+    ...
+    use CognitoAuthenticatable;
+    ...
+}
+```
+
+For Advanced users, that want to use their own custom User model, you can set the `AWS_COGNITO_USER_MODEL` environment variable in your `.env` file. If plan to omit the `CognitoAuthenticatable` trait from your User model, you will need to manually implement the subject identifier column in your User model (`sub` by default). The sample code for the User model is provided below:
+
+```php
+namespace App\Models\Auth;
+...
+class User extends Authenticatable
+{
+    ...
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'sub'
+    ];
+    ...
+}
+
 ```
 
 
