@@ -32,6 +32,7 @@ class AwsCognitoException extends HttpException
     const COGNITO_AUTH_POOL_CONFIG_INVALID = 'ERROR_COGNITO_AUTH_POOL_CONFIG_INVALID';
     const COGNITO_THROTTLING_LIMIT = 'ERROR_COGNITO_THROTTLING_LIMIT';
     const COGNITO_WEB_AUTH_INVALID = 'ERROR_COGNITO_WEB_AUTH_INVALID';
+    const COGNITO_INVALID_PASSWORD = 'ERROR_COGNITO_INVALID_PASSWORD';
 
     //cognito.validation.reset_required.invalid_user
 
@@ -110,6 +111,10 @@ class AwsCognitoException extends HttpException
 
             case 'InvalidUserPoolConfigurationException':
                 $errorCode = self::COGNITO_AUTH_POOL_CONFIG_INVALID;
+                break;
+
+            case 'InvalidPasswordException':
+                $errorCode = self::COGNITO_INVALID_PASSWORD;
                 break;
             
             case 'ResourceNotFoundException':
