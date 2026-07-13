@@ -26,14 +26,11 @@ use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait ResetsPasswords
 {
-    /**
-     * Private variable to indicate if the action
-     * is called from controller
-     */
-    private bool $isControllerAction = false;
+    use BaseAuthTrait;
 
     /**
      * private variable for password policy
@@ -60,7 +57,7 @@ trait ResetsPasswords
      */
     public function reset(Request $request,
         string $paramUsername='email', string $paramToken='token',
-        string $paramPassword='password')
+        string $paramPassword='password'): mixed
     {
         $response = '';
         try {
@@ -69,11 +66,6 @@ trait ResetsPasswords
             $this->paramToken = $paramToken;
             $this->paramPassword = $paramPassword;
 
-            if ($request instanceof Request) {
-                $req = $request;
-                $request = collect($request->all());
-            } //End if
-
             //Get the password policy
             $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
@@ -81,7 +73,6 @@ trait ResetsPasswords
             $validator = Validator::make($request->all(), $this->rules(), [
                 'regex' => $this->passwordPolicy['message'],
             ]);
-
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
@@ -91,85 +82,43 @@ trait ResetsPasswords
 
             //Get User Data
             $user = $client->adminGetUser($request[$paramUsername]);
+            if ($user) {
+                //Check user status and change password
+                $userStatus = CognitoUserStatusTypes::from($user['UserStatus']);
 
-            //Check user status and change password
-            $userStatus = CognitoUserStatusTypes::from($user['UserStatus']);
-            if (($userStatus == CognitoUserStatusTypes::CONFIRMED) ||
-                ($userStatus == CognitoUserStatusTypes::RESET_REQUIRED)) {
-                $response = $client->resetPassword(
-                        $request[$paramToken],
-                        $request[$paramUsername],
-                        $request[$paramPassword]
-                    );
+                //Check if user is confirmed or reset required
+                if (($userStatus == CognitoUserStatusTypes::CONFIRMED) ||
+                    ($userStatus == CognitoUserStatusTypes::RESET_REQUIRED)) {
+                    $response = $client->resetPassword(
+                            $request[$paramToken],
+                            $request[$paramUsername],
+                            $request[$paramPassword]
+                        );
+                } else {
+                    throw new HttpException(400, 'User status is not valid for password reset.');
+                } //End if
             } else {
-                $response = false;
+                throw new HttpException(400, 'User not found.');
             } //End if
 
-        } catch(Exception $e) {
-            return $this->sendResetFailedResponse($req, $e->getMessage());
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('status', 'success')
+                    ->with('data', $response);
+            } //Return response
+
+        } catch(Exception $exception) {
+            Log::error('ResetsPasswords:reset:Exception');
+            throw $exception;
         } //Try-Catch ends
 
-        return $this->sendResetResponse($req, $response);
-    } //Function ends
-
-    /**
-     * Get the response for a successful password reset.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  string  $response
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
-     */
-    protected function sendResetResponse(Request $request, $response)
-    {
-        if ($request->wantsJson()) {
-            return new JsonResponse(['message' => trans($response)], 200);
-        } //End if
-
-        return redirect()
-            ->route($this->redirectPath())
-            ->with('status', trans($response))
-            ->with('message', trans('messages.auth.password_reset_success'));
-    } //Function ends
-
-    /**
-     * Get the response for a failed password reset.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  string  $response
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
-     */
-    protected function sendResetFailedResponse(Request $request, $response)
-    {
-        if ($request->wantsJson()) {
-            throw ValidationException::withMessages([
-                'email' => [trans($response)],
-            ]);
-        } //End if
-
-        return redirect()->back()
-            ->withInput($request->only('email'))
-            ->withErrors(['email' => trans($response)])
-            ->with('message', trans('messages.auth.password_reset_failed'));
-    } //Function ends
-
-    /**
-     * Get the post register / login redirect path.
-     *
-     * @return string
-     */
-    public function redirectPath(): string
-    {
-        //Check if method exists
-        if (method_exists($this, 'redirectTo')) {
-            return $this->redirectTo();
-        } //End if
-
-        //Check if property exists and not null
-        if (property_exists($this, 'redirectTo') && !is_null($this->redirectTo)) {
-            return $this->redirectTo;
-        } //End if
-
-        return config('cognito.routes.web.login_page', 'cognito.form.login');
+        return $returnValue;
     } //Function ends
 
     /**
@@ -185,7 +134,7 @@ trait ResetsPasswords
     {
         return view('cognito.form.password.reset')->with(
             [
-                'email' => $request->email,
+                'email' => $request->email ?? '',
                 'token' => $token
             ]
         );
