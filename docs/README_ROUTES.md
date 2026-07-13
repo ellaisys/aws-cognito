@@ -38,7 +38,7 @@ You can change the API prefix by configuring **AWS_COGNITO_API_PREFIX** in the .
     POST      api/cognito/login/challenge ..................................... Ellaisys\Cognito\Http\Controllers\Auth\LoginController@challenge
     PUT       api/cognito/logout ................................................. Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout
     PUT       api/cognito/logout/forced .................................... Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logoutForced
-    POST      api/cognito/password/forgot ........................ Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLink
+    POST      api/cognito/password/forgot ........................ Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLinkEmail
     POST      api/cognito/password/reset .................................. Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController@reset
     POST      api/cognito/register .......................................... Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@register
     POST      api/cognito/token/refresh ............................... Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
@@ -75,7 +75,7 @@ You can change the API prefix by configuring **AWS_COGNITO_WEB_PREFIX** in the .
     POST      cognito/logout ........................................................... cognito.logout › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout
     POST      cognito/logout/forced ....................................... cognito.logout_forced › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logoutForced
     GET|HEAD  cognito/password/forgot .................................................................................................... cognito.form.password.forgot
-    POST      cognito/password/forgot .................. cognito.action.password.forgot › Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLink
+    POST      cognito/password/forgot .................. cognito.action.password.forgot › Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLinkEmail
     GET|HEAD  cognito/password/reset ...................................................................................................... cognito.form.password.reset
     POST      cognito/password/reset ............................. cognito.action.password.reset › Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController@reset
     GET|HEAD  cognito/register .................................................................................................................. cognito.form.register
