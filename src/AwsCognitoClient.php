@@ -71,13 +71,6 @@ class AwsCognitoClient
     const USERNAME_EXISTS = 'UsernameExistsException';
 
     /**
-     * Constant representing the invalid password exception.
-     *
-     * @var string
-     */
-    const INVALID_PASSWORD = 'InvalidPasswordException';
-
-    /**
      * Constant representing the code mismatch exception.
      *
      * @var string
@@ -300,12 +293,13 @@ class AwsCognitoClient
             $payload = $this->cognitoSecretHash($username, $payload);
 
             $this->client->forgotPassword($payload);
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClient:sendResetLink:CognitoIdentityProviderException');
+            if ($exception->getAwsErrorCode() === self::USER_NOT_FOUND) {
                 return Password::INVALID_USER;
             } //End if
 
-            throw $e;
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return Password::RESET_LINK_SENT;
@@ -339,20 +333,16 @@ class AwsCognitoClient
             $payload = $this->cognitoSecretHash($username, $payload);
 
             $this->client->confirmForgotPassword($payload);
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
+        } catch (CognitoIdentityProviderException $exception) {
+            if ($exception->getAwsErrorCode() === self::USER_NOT_FOUND) {
                 $returnValue = Password::INVALID_USER;
             } //End if
 
-            if ($e->getAwsErrorCode() === self::INVALID_PASSWORD) {
-                $returnValue = Lang::has('passwords.password') ? 'passwords.password' : $e->getAwsErrorMessage();
-            } //End if
-
-            if ($e->getAwsErrorCode() === self::CODE_MISMATCH || $e->getAwsErrorCode() === self::EXPIRED_CODE) {
+            if ($exception->getAwsErrorCode() === self::CODE_MISMATCH || $exception->getAwsErrorCode() === self::EXPIRED_CODE) {
                 $returnValue = Password::INVALID_TOKEN;
             } //End if
 
-            throw $e;
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $returnValue;
@@ -421,12 +411,12 @@ class AwsCognitoClient
                 CognitoChallengeTypes::NEW_PASSWORD_REQUIRED,
                 $session, $password, $username
             );
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::CODE_MISMATCH || $e->getAwsErrorCode() === self::EXPIRED_CODE) {
+        } catch (CognitoIdentityProviderException $exception) {
+            if ($exception->getAwsErrorCode() === self::CODE_MISMATCH || $exception->getAwsErrorCode() === self::EXPIRED_CODE) {
                 return Password::INVALID_TOKEN;
             } //End if
 
-            throw $e;
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return Password::PASSWORD_RESET;
@@ -455,11 +445,7 @@ class AwsCognitoClient
                 return Password::INVALID_USER;
             } //End if
 
-            if ($e->getAwsErrorCode() === self::INVALID_PASSWORD) {
-                return Lang::has('passwords.password') ? 'passwords.password' : $e->getAwsErrorMessage();
-            } //End if
-
-            throw $e;
+            throw AwsCognitoException::create($e);
         } //Try-catch ends
         return true;
     } //Function ends
