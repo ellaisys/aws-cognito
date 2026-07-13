@@ -35,35 +35,15 @@ class ForgotPasswordController extends Controller
     use SendsPasswordResetEmails;
 
     /**
-     * Send reset link for the forgot password
+     * Constructor.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return Response
      */
-    public function sendResetLink(Request $request)
+    public function __construct()
     {
-        try {
-            //Initialize parameters
-            $isJsonResponse = false;
+        //Set flag to indicate action called from controller
+        $this->setIsControllerAction(false);
 
-            //Check if request is json
-            if ($this->isJson($request)) {
-                $isJsonResponse = true;
-            } //End if
-
-            //Request reset link
-            $response = $this->sendResetLinkEmail($request, 'email', true, $isJsonResponse);
-
-            if ($isJsonResponse) {
-                $returnValue = $this->response->success($response);
-            } else {
-                $returnValue = $response;
-            } //End if
-            return $returnValue;
-        } catch (Exception $e) {
-            Log::error('SendsPasswordResetEmails:sendResetLinkEmail:Exception');
-            throw $e;
-        } //End try-catch
-    } //Function ends
+        parent::__construct();
+    }
 
 } //Class ends

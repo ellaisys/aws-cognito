@@ -48,7 +48,7 @@ Route::group([
 
     //Forgot password routes
     Route::group(['prefix' => 'password'], function() {
-        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLink']);
+        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail']);
         Route::post('/reset', [ResetPasswordController::class, 'reset']);
     });
 

@@ -44,7 +44,7 @@ Route::group([], function () {
     //Forgot password
     Route::group(['prefix' => 'password'], function() {
         Route::get('/forgot',  function () { return view('cognito::pages.auth.passwords.email'); })->name('form.password.forgot');
-        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLink'])->name('action.password.forgot');
+        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('action.password.forgot');
         Route::get('/reset',  function () { return view('cognito::pages.auth.passwords.reset'); })->name('form.password.reset');
         Route::post('/reset', [ResetPasswordController::class, 'reset'])->name('action.password.reset');
     });
