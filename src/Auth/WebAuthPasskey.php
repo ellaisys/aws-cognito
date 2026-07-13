@@ -38,9 +38,10 @@ trait WebAuthPasskey
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \mixed
+     * @throws \Exception
      */
-    public function start(Request $request)
+    public function start(Request $request): mixed
     {
         try {
             // Initialize variables
@@ -78,9 +79,10 @@ trait WebAuthPasskey
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \mixed
+     * @throws \Exception
      */
-    public function complete(Request $request)
+    public function complete(Request $request): mixed
     {
         try {
             // Initialize variables
