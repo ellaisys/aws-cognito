@@ -206,7 +206,6 @@ class Handler extends ExceptionHandler
                 break;
 
             default:
-                $statusCode = $e->getCode();
                 $errorMessage = $e->getMessage();
                 $errorKey = 'ERROR_COGNITO_DEFAULT';
                 break;
