@@ -33,6 +33,7 @@ class AwsCognitoException extends HttpException
     const COGNITO_THROTTLING_LIMIT = 'ERROR_COGNITO_THROTTLING_LIMIT';
     const COGNITO_WEB_AUTH_INVALID = 'ERROR_COGNITO_WEB_AUTH_INVALID';
     const COGNITO_INVALID_PASSWORD = 'ERROR_COGNITO_INVALID_PASSWORD';
+    const COGNITO_MFA = 'ERROR_COGNITO_MFA';
 
     //cognito.validation.reset_required.invalid_user
 
@@ -89,6 +90,11 @@ class AwsCognitoException extends HttpException
 
             case 'UsernameExistsException':
                 $errorCode = self::COGNITO_AUTH_USERNAME_EXITS;
+                break;
+
+            case 'EnableSoftwareTokenMFAException':
+            case 'SoftwareTokenMFANotFoundException':
+                $errorCode = self::COGNITO_MFA;
                 break;
 
             case 'CodeMismatchException':
