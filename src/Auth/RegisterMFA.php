@@ -187,7 +187,7 @@ trait RegisterMFA
     } //Function ends
 
     /**
-     * Toggle the MFA by the admin user
+     * Change the MFA settings for the mentioned user by the admin
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  bool    $isEnable (optional)
@@ -200,6 +200,14 @@ trait RegisterMFA
         $returnValue = null;
 
         try {
+            // Validate the request data
+            $validator = Validator::make($request->all(), [
+                'username' => 'required|string'
+            ]);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
@@ -207,7 +215,7 @@ trait RegisterMFA
             $authUser = $this->getAuthenticatedUser($request);
            
             //Get the response from AWS Cognito for the MFA configurations
-            $response = $client->setUserMFAPreferenceByAdmin($authUser->email, $isEnable);
+            $response = $client->adminSetUserMFAPreference($request['username'], $isEnable);
 
             //Return response
             if ($this->isControllerAction) {
