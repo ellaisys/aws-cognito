@@ -272,9 +272,9 @@ try {
 
 #### Deactivate MFA
 
-In order to deactivate the MFA for the authenticated user, this endpoint can be called to deactivate the MFA. In most practical situations, you can skip this implementation.
+In order to deactivate the MFA for the authenticated user, this endpoint can be called to deactivate the MFA. In most practical situations, you can skip this implementation, based on your application requirements. However, if you want to provide this feature, you can implement the following method in your controller.
 
-In order to enable/disable another user based on your RBAC implementation, you can use the [Enable](#enable-mfa) and [Disable](#disable-mfa) endpoints.
+In order to enable/disable a user's MFA setting by an admin, based on your RBAC implementation, you can use the [Enable](#enable-mfa) and [Disable](#disable-mfa) endpoints.
 
 Below curl helps deactivate the user's MFA, returning the HTTP Success Code.
 
@@ -289,7 +289,7 @@ Authorization: Bearer <access_token>
 ### *Enable MFA*
 ---
 
-This feature allows the user to enable MFA using an email address. The developer must implement the RBAC to ensure this feature is not misused.
+This feature allows the admin user to enable MFA using an email address. The developer must implement the RBAC to ensure this feature is not misused.
 
 Below curl helps enable the MFA returning the HTTP Success Code.
 
@@ -307,7 +307,7 @@ Authorization: Bearer <access_token>
 ### *Disable MFA*
 ---
 
-This feature allows the user to disable MFA using an email address. The developer must implement the RBAC to ensure this feature is not misused.
+This feature allows the admin user to disable MFA using an email address. The developer must implement the RBAC to ensure this feature is not misused.
 
 Below curl helps disable the MFA returning the HTTP Success Code.
 
