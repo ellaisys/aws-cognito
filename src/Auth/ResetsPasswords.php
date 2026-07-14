@@ -109,7 +109,7 @@ trait ResetsPasswords
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
-                    ->with('status', 'success')
+                    ->with('status', 'Password reset successfully.')
                     ->with('data', $response);
             } //Return response
 
