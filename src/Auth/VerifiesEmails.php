@@ -36,7 +36,7 @@ trait VerifiesEmails
      *
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function verify(Request $request, ?array $clientMetadata = null): mixed
     {
