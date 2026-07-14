@@ -126,9 +126,9 @@ trait AwsCognitoClientMFAAction
             $payload = array_merge($payload, $this->setMFAPreference($isEnable));
 
             $response = $this->client->setUserMFAPreference($payload);
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientMFAAction:setUserMFAPreference:Exception');
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientMFAAction:setUserMFAPreference:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $response;
@@ -142,7 +142,7 @@ trait AwsCognitoClientMFAAction
      *
      * @return mixed
      */
-    public function setUserMFAPreferenceByAdmin(string $username, bool $isEnable=false)
+    public function adminSetUserMFAPreference(string $username, bool $isEnable=false)
     {
         try {
             //Build payload
@@ -153,9 +153,9 @@ trait AwsCognitoClientMFAAction
             $payload = array_merge($payload, $this->setMFAPreference($isEnable));
 
             $response = $this->client->adminSetUserMFAPreference($payload);
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientMFAAction:setUserMFAPreferenceByAdmin:Exception');
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientMFAAction:adminSetUserMFAPreference:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $response;
