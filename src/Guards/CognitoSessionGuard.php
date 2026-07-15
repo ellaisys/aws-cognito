@@ -169,11 +169,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             } else {
                 throw new AwsCognitoException('ERROR_AWS_COGNITO');
             } //End if
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoSessionGuard:attempt:CognitoIdentityProviderException:'.$e->getAwsErrorCode());
-
-            //Handle the exception
-            $returnValue = $this->handleCognitoException($e);
         } catch (NoLocalUserException | AwsCognitoException | Exception $e) {
             $exceptionClass = basename(str_replace('\\', DIRECTORY_SEPARATOR, get_class($e)));
             Log::error('CognitoSessionGuard:attempt:'.$exceptionClass);
@@ -214,9 +209,11 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             //Set Token
             $this->setToken();
 
-            //Get Session and store details. Regenerate the session id (to keep
-            //session-fixation protection) without flushing the session, so that
-            //other guards sharing this session are not logged out on sign-in.
+            /*
+             * Note: We do not flush the session here, because other guards may be
+             * sharing this session. Instead, we just regenerate the session id
+             * (to keep session-fixation protection) without flushing the session.
+             */
             $session = $this->getSession();
             $session->migrate(true);
             $session->put(
@@ -253,9 +250,9 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                         'status' => $this->challengeData['status'],
                         'email' => $this->challengeData['username'],
                     ]))
-                        ->with('success', true)
+                        ->with('success', 'success')
                         ->with('force', true)
-                        ->with('messaage', $this->challengeName);
+                        ->with('message', $this->challengeName);
                 } //End if
                 break;
 
@@ -268,9 +265,11 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 //Invalidate the session
                 $session = $this->getSession();
             
-                //Get Session and store details. Regenerate the session id without
-                //flushing the session (see processAWSClaim), so kicking off an MFA
-                //challenge does not log out other guards sharing this session.
+                /*
+                 * Note: We do not flush the session here, because other guards may be
+                 * sharing this session. Instead, we just regenerate the session id
+                 * (to keep session-fixation protection) without flushing the session.
+                 */
                 $session->migrate(true);
 
                 $returnValue = $this->challengeData;
@@ -278,38 +277,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         } //End switch
 
         return $returnValue;
-    } //Funtion ends
-
-    /**
-     * Handle the AWS Cognito Exception
-     *
-     * @param CognitoIdentityProviderException $e
-     * @return mixed
-     */
-    private function handleCognitoException(CognitoIdentityProviderException $e) {
-        if ($e instanceof CognitoIdentityProviderException) {
-            //Set proper route
-            if (!empty($e->getAwsErrorCode())) {
-                switch ($e->getAwsErrorCode()) {
-                    case 'PasswordResetRequiredException':
-                        return redirect(route('cognito.form.password.reset.password.code'))
-                            ->with('success', false)
-                            ->with('force', true)
-                            ->with('messaage', $e->getAwsErrorMessage())
-                            ->with('aws_error_code', $e->getAwsErrorCode())
-                            ->with('aws_error_message', $e->getAwsErrorMessage());
-                        break;
-                    
-                    default:
-                        throw $e;
-                        break;
-                } //End switch
-            } //End if
-
-            return $e->getAwsErrorCode();
-        } else {
-            return $e->getAwsErrorCode();
-        } //End if
     } //Function ends
 
     /**
