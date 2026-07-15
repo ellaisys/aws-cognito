@@ -1,6 +1,12 @@
-@if (session('status'))
+@if (session('status') && session('status') === 'success')
     <div class="alert alert-success" role="alert">
-        {{ session('status') }}
+        {{ session('message') }}
+    </div>
+@endif
+
+@if (session('status') && session('status') === 'error')
+    <div class="alert alert-danger" role="alert">
+        {{ session('message') }}
     </div>
 @endif
 

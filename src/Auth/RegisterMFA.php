@@ -96,7 +96,8 @@ trait RegisterMFA
                 $returnValue = $this->response->success($response);
             } else {
                 $returnValue = redirect(back())
-                    ->with('status', 'MFA verified successfully')
+                    ->with('status', 'success')
+                    ->with('message', trans('messages.mfa.verification_success'))
                     ->with('data', $response);
             } //Return response
         } catch (Exception $exception) {
@@ -150,8 +151,11 @@ trait RegisterMFA
             } elseif ($this->getIsJsonResponse($request)) {
                 $returnValue = $this->response->success($response);
             } else {
+                $messageKey = $isEnable ? 'messages.mfa.activation_success' : 'messages.mfa.deactivation_success';
+
                 $returnValue = redirect(back())
-                    ->with('status', ($isEnable ? 'MFA activated successfully' : 'MFA deactivated successfully'))
+                    ->with('status', 'success')
+                    ->with('message', trans($messageKey))
                     ->with('data', $response);
             } //Return response
         } catch (Exception $exception) {
@@ -223,8 +227,11 @@ trait RegisterMFA
             } elseif ($this->getIsJsonResponse($request)) {
                 $returnValue = $this->response->success($response);
             } else {
+                $messageKey = $isEnable ? 'messages.mfa.enabled_success' : 'messages.mfa.disabled_success';
+
                 $returnValue = redirect(back())
-                    ->with('status', ($isEnable ? 'MFA enabled successfully' : 'MFA disabled successfully'))
+                    ->with('status', 'success')
+                    ->with('message', trans($messageKey))
                     ->with('data', $response);
             } //Return response
         } catch (Exception $exception) {

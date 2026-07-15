@@ -76,7 +76,7 @@ trait VerifiesEmails
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
-                    ->with('status', 'Verification successful. Please login to continue.')
+                    ->with('status', 'success')
                     ->with('username', $payload['email'])
                     ->with('session', $response['Session'] ?? null)
                     ->with('message', trans('messages.auth.registration_verification_success'));
@@ -132,7 +132,7 @@ trait VerifiesEmails
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
-                    ->with('status', 'Resend code request successful. Please verify your email.')
+                    ->with('status', 'success')
                     ->with('username', $payload['email'])
                     ->with('message', trans('messages.auth.registration_code_resend_success'));
             } //End if

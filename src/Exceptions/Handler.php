@@ -305,10 +305,15 @@ class Handler extends ExceptionHandler
         if ($isRedirectToLogin) {
             return redirect()
                 ->route(config('cognito.routes.web.login_page', 'cognito.form.login'))
+                ->withInput($request->input())
+                ->with('status', 'error')
+                ->with('message', $systemErrorMsg)
                 ->withErrors($errors);
         } else {
             return redirect()->back()
                 ->withInput($request->input())
+                ->with('status', 'error')
+                ->with('message', $systemErrorMsg)
                 ->withErrors($errors);
         }
     } //Function ends
