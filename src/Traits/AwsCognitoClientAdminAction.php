@@ -14,19 +14,17 @@ namespace Ellaisys\Cognito\Traits;
 use Config;
 use Carbon\Carbon;
 
-use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
+use Aws\Result as AwsResult;
+
 use Illuminate\Support\Facades\Log;
+
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
+use Ellaisys\Cognito\Enums\CognitoDeviceRememberedStatus;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
-use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
-use Aws\CognitoIdentityProvider\Exception\InvalidPasswordException;
-use Aws\CognitoIdentityProvider\Exception\NotAuthorizedException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 /**
@@ -350,6 +348,131 @@ trait AwsCognitoClientAdminAction
             $response = $this->client->adminRespondToAuthChallenge($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAdminAction:adminRespondToAuthChallenge:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+    /**
+     * Updates the device status as an administrator.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminUpdateDeviceStatus.html
+     *
+     * @param string $username
+     * @param string $deviceKey
+     * @param CognitoDeviceRememberedStatus $rememberStatus (default: REMEMBERED)
+     *
+     * @return AwsResult
+     */
+    public function adminUpdateDeviceStatus(string $username, string $deviceKey,
+        CognitoDeviceRememberedStatus $rememberStatus=CognitoDeviceRememberedStatus::REMEMBERED): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'Username' => $username,
+                'DeviceKey' => $deviceKey,
+                'UserPoolId' => $this->poolId,
+                'DeviceRememberedStatus' => $rememberStatus->value,
+            ];
+
+            $response = $this->client->adminUpdateDeviceStatus($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminUpdateDeviceStatus:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+    /**
+     * Get the device details as an administrator.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminGetDevice.html
+     *
+     * @param string $username
+     * @param string $deviceKey
+     *
+     * @return AwsResult
+     */
+    public function adminGetDevice(string $username, string $deviceKey): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'Username' => $username,
+                'DeviceKey' => $deviceKey,
+                'UserPoolId' => $this->poolId,
+            ];
+
+            //Execute the payload
+            $response = $this->client->adminGetDevice($payload);
+        } catch (CognitoIdentityProviderException $e) {
+            Log::error('AwsCognitoClientAdminAction:adminGetDevice:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($e);
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+    /**
+     * Forget/Delete the device as an administrator.
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminForgetDevice.html
+     *
+     * @param string $username
+     * @param string $deviceKey
+     *
+     * @return AwsResult
+     */
+    public function adminForgetDevice(string $username, string $deviceKey): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'Username' => $username,
+                'DeviceKey' => $deviceKey,
+                'UserPoolId' => $this->poolId,
+            ];
+
+            //Execute the payload
+            $response = $this->client->adminForgetDevice($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminForgetDevice:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+    /**
+     * Declares an authentication flow and initiates sign-in for a user
+     * in the Amazon Cognito user directory as an administrator.
+     *
+     * @see http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html
+     * @param CognitoAuthFlowTypes $authFlow
+     * @param array $payloadData
+     * @param string $username
+     * @return AwsResult
+     */
+    public function adminInitiateAuth(CognitoAuthFlowTypes $authFlow,
+        array $payloadData, string $username): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'AuthFlow' => $authFlow->value,
+                'ClientId' => $this->clientId,
+                'UserPoolId' => $this->poolId,
+            ];
+
+            //Add other payload data
+            $payload = array_merge($payload, $payloadData);
+
+            //Add Secret Hash in case of Client Secret being configured
+            $payload = $this->cognitoSecretHash($username, $payload);
+
+            $response = $this->client->adminInitiateAuth($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminInitiateAuth:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 

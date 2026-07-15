@@ -55,7 +55,6 @@ trait RegistersUsers
      *
      * @var string
      */
-    private string $statusMsg = 'Registration successful. Please verify your email to continue.';
     private string $messageKey = 'messages.auth.registration_success';
 
     /**
@@ -68,8 +67,6 @@ trait RegistersUsers
     {
         $this->registrationType = 'invite';
         $this->redirectTo = config('cognito.routes.web.home_page');
-
-        $this->statusMsg = 'User invited successfully. An invitation email has been sent to the user.';
         $this->messageKey = 'messages.auth.invitation_success';
 
         return $this->register(
@@ -147,7 +144,7 @@ trait RegistersUsers
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
-                    ->with('status', $this->statusMsg)
+                    ->with('status', 'success')
                     ->with('message', trans($this->messageKey));
             } //End if
 

@@ -50,17 +50,30 @@
     @endphp
 
     @if (Route::has('cognito.action.user.passkey.delete') && config('cognito.allow_passkeys') && $passkeyEnabled)
-    <button class="dropdown-item"
-        onclick="event.preventDefault();
-        frmAction=document.getElementById('form-action');
-        frmAction.action='{{ route('cognito.action.user.passkey.delete') }}';
-        frmAction.method='DELETE';
-        frmAction.submit();">
+    <button type="button" class="dropdown-item"
+        data-role="passkey-webauthn" data-action="delete"
+        data-userkey="{{ base64_encode(Auth::user()->email) }}">
         {{ __('Delete Passkey') }}
     </button>
+    @endif
 
     <div class="dropdown-divider"></div>
+
+    @if (Route::has('cognito.action.user.device.create'))
+    <button class="dropdown-item"
+        data-role="device-auth" data-action="register">
+        {{ __('Register Device') }}
+    </button>
     @endif
+
+    @if (Route::has('cognito.action.user.device.delete'))
+    <button class="dropdown-item"
+        data-role="device-auth" data-action="delete">
+        {{ __('Unregister Device') }}
+    </button>
+    @endif
+
+    <div class="dropdown-divider"></div>
 
     @if (Route::has('cognito.logout'))
     <button class="dropdown-item"

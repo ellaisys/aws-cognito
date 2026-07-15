@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito\Auth;
 
+use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -37,9 +38,10 @@ trait WebAuthPasskey
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \mixed
+     * @throws \Exception
      */
-    public function start(Request $request)
+    public function start(Request $request): mixed
     {
         try {
             // Initialize variables
@@ -77,9 +79,10 @@ trait WebAuthPasskey
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \mixed
+     * @throws \Exception
      */
-    public function complete(Request $request)
+    public function complete(Request $request): mixed
     {
         try {
             // Initialize variables
@@ -143,20 +146,24 @@ trait WebAuthPasskey
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function challenge(Request $request, ?string $challengeName = null)
+    public function challenge(Request $request,
+        ?string $challengeName = null,
+        ?string $paramUsername='username',
+        ?string $paramPassword='')
     {
         try {
             // Initialize variables
             $returnValue = null;
+            $guard = $this->getGuard($request);
 
             if (!empty($challengeName)) {
                 $request->merge(['challenge_name' => $challengeName]);
             } //End if
 
             // If username present in query parameters is email, decode it before validation and processing
-            $email = $this->getDataFromQueryParam($request, 'username', EncryptionTypes::URL_ENCODE, true);
+            $email = $this->getDataFromQueryParam($request, $paramUsername, EncryptionTypes::URL_ENCODE, true);
             if (!empty($email)) {
-                $request->merge(['username' => $email]);
+                $request->merge([$paramUsername => $email]);
             } //End if
 
             //Convert challenge name to upper case if present in the request
@@ -166,22 +173,19 @@ trait WebAuthPasskey
         
             //Validate payload
             $validator = Validator::make($request->all(), [
-                'username' => ['required'],
+                $paramUsername => ['required'],
                 'challenge_name' => ['sometimes', 'in:WEB_AUTHN,EMAIL_OTP,SMS_OTP']
             ]);
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
 
-            //Create AWS Cognito Client
-            $client = app()->make(AwsCognitoClient::class);
-
-            //Get the response from AWS Cognito for authenticating with passkey credentials
-            $response = $client->authWebAuthnCredential(
-                CognitoAuthFlowTypes::USER_AUTH,
-                $request['username'],
-                $request['challenge_name'] ?? null
-            );
+            //Authenticate User
+            $response = Auth::guard($guard)->attempt(
+                    $request->all(), false,
+                    $paramUsername, $paramPassword,
+                    CognitoAuthFlowTypes::USER_AUTH
+                );
 
             //Return response
             if ($this->isControllerAction) {

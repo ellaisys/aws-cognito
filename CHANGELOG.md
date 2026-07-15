@@ -1,3 +1,12 @@
+Release 50 (tag v2.0.6)
+- Feat: Issue [#139](https://github.com/ellaisys/aws-cognito/issues/139)
+- Feat: Add new components and scripts for FIDO2 Security Keys OR Passkey based MFA functionality.
+- Feat: Implemented Device Management and Authentication flow as blade component.
+- Feat: Implemented the scripts to handle BigInt and its operations.
+- Feat: Implemented the ability to handle all challenge response components.
+- Refactor: Updated the user interface to include options for FIDO2 MFA during login and registration flows.
+- Doc: Update readme with FIDO2 MFA configuration instructions and details.
+
 Release 49 (tag v2.0.5)
 - Feat: Issue [#132](https://github.com/ellaisys/aws-cognito/issues/132)
 - Feat: Implement the SRP Protocol based authentication and routes for api and web guards.

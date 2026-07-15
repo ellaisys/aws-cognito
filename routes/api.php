@@ -12,6 +12,7 @@ use Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
 use Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController;
 use Ellaisys\Cognito\Http\Controllers\Auth\WebAuthPasskeyController;
+use Ellaisys\Cognito\Http\Controllers\Auth\DeviceController;
 
 use Ellaisys\Cognito\Http\Controllers\Api\UserController;
 
@@ -39,7 +40,7 @@ Route::group([
     Route::group(['prefix' => 'login'], function() {
         Route::post('/', [LoginController::class, 'login']);
         Route::post('/srp', [LoginController::class, 'loginSRP']);
-        Route::post('/challenge', [LoginController::class, 'challenge']);
+        Route::post('/challenge', [LoginController::class, 'actionChallenge']);
         Route::get('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge']);
         Route::get('/passkey/challenge/{challengeName}', [WebAuthPasskeyController::class, 'challenge']);
         Route::post('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge']);
@@ -47,7 +48,7 @@ Route::group([
 
     //Forgot password routes
     Route::group(['prefix' => 'password'], function() {
-        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLink']);
+        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail']);
         Route::post('/reset', [ResetPasswordController::class, 'reset']);
     });
 
@@ -84,8 +85,8 @@ Route::group([
 
         //Route group logout
         Route::group(['prefix' => 'logout', 'controller' => LoginController::class], function() {
-            Route::put('/', 'logout');
-            Route::put('/forced', 'logoutForced');
+            Route::put('/', 'actionLogout');
+            Route::put('/forced', 'actionLogoutForced');
         });
 
         //Route group for MFA
@@ -96,5 +97,13 @@ Route::group([
 
         //Route for refresh token
         Route::post('/token/refresh', [RefreshTokenController::class, 'revalidate']);
+
+        //Route for device operations
+        Route::group(['prefix' => 'device', 'controller' => DeviceController::class], function() {
+            Route::get('/', 'list');
+            Route::post('/', 'create');
+            Route::put('/{deviceKey}', 'update');
+            Route::delete('/{deviceKey}', 'delete');
+        });
     });
 });

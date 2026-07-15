@@ -33,6 +33,7 @@ use Exception;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
+use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
@@ -113,8 +114,8 @@ class CognitoTokenGuard extends TokenGuard
      * @return bool
      */
     public function attempt(array $request = [], $remember = false,
-        string $paramUsername='email', string $paramPassword='password',
-        ?CognitoAuthFlowTypes $authFlowType = CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH)
+        string $paramUsername='email', ?string $paramPassword='password',
+        ?CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH)
     {
         $returnValue = null;
         try {
@@ -123,10 +124,10 @@ class CognitoTokenGuard extends TokenGuard
 
             //Build the payload
             $payloadCognito = $this->buildCognitoPayload($request, $paramUsername,
-                $paramPassword, $authFlowType);
+                $paramPassword, $authFlow);
 
             //Check if the payload has valid AWS credentials
-            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlowType));
+            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlow));
             if ($responseCognito) {
                 if ($this->claim) {
                     $credentials = collect([
@@ -190,8 +191,8 @@ class CognitoTokenGuard extends TokenGuard
         //Send claim object
         $claim = $this->claim;
 
-        if ($claim && is_array($claim) && $claim['status']) {
-            $challengeType = CognitoChallengeTypes::from($claim['status']);
+        if ($claim && is_array($claim) && isset($claim['challenge_name'])) {
+            $challengeType = CognitoChallengeTypes::from($claim['challenge_name']);
             switch ($challengeType) {
                 case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
                 case CognitoChallengeTypes::SMS_MFA:
@@ -233,6 +234,9 @@ class CognitoTokenGuard extends TokenGuard
         try {
             //Get authentication token from request
             $accessToken = $this->cognito->getToken();
+            if (empty($accessToken)) {
+                throw new InvalidTokenException();
+            } //End if
 
             //Revoke the token from AWS Cognito
             if ($this->client->signOut($accessToken)) {
@@ -251,7 +255,7 @@ class CognitoTokenGuard extends TokenGuard
                 } //End if
 
                 //Remove the token from application storage
-                return $this->cognito->unsetToken($forceForever);
+                return $this->cognito->unsetToken();
             } //End if
         } catch (Exception $e) {
             Log::error('CognitoTokenGuard:invalidate:Exception');
@@ -318,7 +322,7 @@ class CognitoTokenGuard extends TokenGuard
     {
         $returnValue = null;
         try {
-            $responseCognito = $this->attemptBaseChallenge($challenge, $remember);
+            $responseCognito = $this->attemptBaseChallenge($challenge);
             if ($responseCognito) {
                 if ($this->claim) {
                     $credentials = collect([

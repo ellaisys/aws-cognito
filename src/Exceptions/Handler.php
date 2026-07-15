@@ -180,6 +180,7 @@ class Handler extends ExceptionHandler
         $statusCode = Response::HTTP_BAD_REQUEST; //400
         switch ($e->getMessage()) {
             case AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED:
+                $statusCode = Response::HTTP_UNAUTHORIZED; //401
                 $errorMessage = 'User authentication error';
                 $errorKey = AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED;
                 break;
@@ -197,6 +198,11 @@ class Handler extends ExceptionHandler
             case AwsCognitoException::COGNITO_AUTH_CODE_INVALID:
                 $errorMessage = 'Invalid confirmation code';
                 $errorKey = AwsCognitoException::COGNITO_AUTH_CODE_INVALID;
+                break;
+
+            case AwsCognitoException::COGNITO_AUTH_POOL_CONFIG_INVALID:
+                $errorMessage = 'Cognito pool configuration error';
+                $errorKey = AwsCognitoException::COGNITO_AUTH_POOL_CONFIG_INVALID;
                 break;
 
             default:
@@ -299,10 +305,15 @@ class Handler extends ExceptionHandler
         if ($isRedirectToLogin) {
             return redirect()
                 ->route(config('cognito.routes.web.login_page', 'cognito.form.login'))
+                ->withInput($request->input())
+                ->with('status', 'error')
+                ->with('message', $systemErrorMsg)
                 ->withErrors($errors);
         } else {
             return redirect()->back()
                 ->withInput($request->input())
+                ->with('status', 'error')
+                ->with('message', $systemErrorMsg)
                 ->withErrors($errors);
         }
     } //Function ends

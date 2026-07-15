@@ -154,36 +154,11 @@ trait AwsCognitoClientPasskeyAction
         string $username, ?string $challenge)
     {
         try {
-            //Build payload
-            $payload = [];
-
-            //Set Auth Parameters based on the Auth Flow
-            switch ($authFlow) {
-                case CognitoAuthFlowTypes::USER_AUTH:
-                    $payload['AuthParameters'] = [
-                        'USERNAME' => $username,
-                        'PREFERRED_CHALLENGE' => $challenge
-                    ];
-                    break;
-
-                case CognitoAuthFlowTypes::CUSTOM_AUTH:
-                default:
-                    $payload['AuthParameters'] = [
-                        'USERNAME' => $username
-                    ];
-                    break;
-            } //End switch
-
-            // Call initiateAuth with the provided auth flow to start the authentication process
-            $response = $this->initiateAuth(
-                $authFlow, $payload, $username
-            );
-        } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClientPasskeyAction:authWebAuthnCredential:CognitoIdentityProviderException');
+            return $this->authenticate($authFlow, $username, null, null, $challenge);
+        } catch (Exception $exception) {
+            Log::error('AwsCognitoClientPasskeyAction:authWebAuthnCredential:Exception');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
     
 } //Trait ends

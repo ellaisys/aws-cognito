@@ -24,6 +24,17 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 /**
+ * Exception class for handling invalid challenge data in AWS Cognito.
+ */
+class AwsCognitoChallengeException extends BadRequestHttpException
+{
+    public function __construct($message = 'Invalid challenge value', $code = 400, Exception $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+    }
+} //Class ends
+
+/**
  * AWS Cognito Client Helper Trait
  */
 trait AwsCognitoClientHelper
@@ -48,9 +59,21 @@ trait AwsCognitoClientHelper
 
             //Build challenge payload based on the challenge type
             switch ($challengeName) {
+                case CognitoChallengeTypes::PASSWORD:
+                     $challengePayload = array_merge($challengePayload, [
+                        'PASSWORD' => $challengeValue
+                    ]);
+                    break;
+
+                case CognitoChallengeTypes::PASSWORD_SRP:
+                     $challengePayload = array_merge($challengePayload, [
+                        'SRP_A' => $challengeValue
+                    ]);
+                    break;
+
                 case CognitoChallengeTypes::SELECT_MFA_TYPE:
                     if (!in_array($challengeValue, ['SMS_MFA','EMAIL_MFA','SOFTWARE_TOKEN_MFA'], true)) {
-                        throw new BadRequestHttpException('Invalid challenge value');
+                        throw new AwsCognitoChallengeException();
                     } //End if
 
                     $challengePayload = array_merge($challengePayload, [
@@ -62,6 +85,26 @@ trait AwsCognitoClientHelper
                     $challengePayload = array_merge($challengePayload, [
                         'SMS_MFA_CODE' => $challengeValue
                     ]);
+                    break;
+
+                case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
+                    $challengePayload = array_merge($challengePayload, [
+                        'SOFTWARE_TOKEN_MFA_CODE' => $challengeValue
+                    ]);
+                    break;
+
+                case CognitoChallengeTypes::SELECT_CHALLENGE:
+                    if (in_array($challengeValue, ['EMAIL_OTP','SMS_OTP','WEB_AUTHN'], true)) {
+                        $challengePayload = array_merge($challengePayload, [
+                            'ANSWER' => $challengeValue
+                        ]);
+                    } else{
+                        $challengeValueJson = json_decode($challengeValue, true);
+                        if (!is_array($challengeValueJson)) {
+                            throw new AwsCognitoChallengeException();
+                        } //End if
+                        $challengePayload = array_merge($challengePayload, $challengeValueJson);
+                    }
                     break;
 
                 case CognitoChallengeTypes::SMS_OTP:
@@ -76,30 +119,30 @@ trait AwsCognitoClientHelper
                     ]);
                     break;
 
-                case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
-                    $challengePayload = array_merge($challengePayload, [
-                        'SOFTWARE_TOKEN_MFA_CODE' => $challengeValue
-                    ]);
-                    break;
-                
-                case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
-                    $challengePayload = array_merge($challengePayload, [
-                        'NEW_PASSWORD' => $challengeValue
-                    ]);
-                    break;
-
                 case CognitoChallengeTypes::WEB_AUTHN:
                     $challengePayload = array_merge($challengePayload, [
                         'CREDENTIAL' => $challengeValue
                     ]);
                     break;
 
+                case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
+                    $challengePayload = array_merge($challengePayload, [
+                        'NEW_PASSWORD' => $challengeValue
+                    ]);
+                    break;
+
                 case CognitoChallengeTypes::PASSWORD_VERIFIER:
-                    $challengePayload = json_decode($challengeValue, true);
+                case CognitoChallengeTypes::DEVICE_SRP_AUTH:
+                case CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER:
+                    $challengeValueJson = json_decode($challengeValue, true);
+                    if (!is_array($challengeValueJson)) {
+                        throw new AwsCognitoChallengeException();
+                    } //End if
+                    $challengePayload = array_merge($challengePayload, $challengeValueJson);
                     break;
 
                 default:
-                    throw new BadRequestHttpException('Invalid challenge type');
+                    throw new AwsCognitoChallengeException('Invalid challenge type: ' . $challengeName->value);
                     break;
             } //End Switch
         } catch (Exception $e) {
@@ -144,7 +187,7 @@ trait AwsCognitoClientHelper
     } //Function ends
 
     /**
-     * Creates a HMAC from a string.
+     * Creates a HMAC from a string for the Cognito secret hash.
      *
      * @param string $message
      * @return string
@@ -159,6 +202,94 @@ trait AwsCognitoClientHelper
         );
 
         return base64_encode($hash);
+    } //Function ends
+
+    /**
+     * Builds the payload for inviting a user, including attributes,
+     * client metadata, and message action.
+     * @param array $payload The initial payload to be built upon.
+     * @param string|null $password (optional)
+     * @param array|null $attributes (optional)
+     * @param array|null $clientMetadata (optional)
+     * @param string|null $messageAction (optional)
+     * @return array The constructed payload for inviting a user.
+     */
+    protected function buildInviteUserPayload(
+        array $payload, ?string $password = null,
+        ?array $attributes = [], ?array $clientMetadata = null,
+        ?string $messageAction = null): array
+    {
+        try {
+            //Validate phone for MFA
+            if (config('cognito.mfa_setup')=="MFA_ENABLED" && empty($attributes['phone_number'])) {
+                throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING');
+            } //End if
+            
+            //Force validate email
+            if (!empty($attributes['email'])) {
+                $attributes['email_verified'] = config('cognito.force_new_user_email_verified', false)? 'true' : 'false';
+            } //End if
+
+            // Add user attributes
+            if (!empty($attributes)) {
+                $payload['UserAttributes'] = $this->formatAttributes($attributes);
+            } //End if
+
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
+            } //End if
+
+            //Set Temporary password
+            if (!empty($password)) {
+                $payload['TemporaryPassword'] = $password;
+            } //End if
+
+            //Set Message Action
+            if (!empty($messageAction) && in_array($messageAction, ['RESEND', 'SUPPRESS'])) {
+                $payload['MessageAction'] = $messageAction;
+            } //End If
+
+            //Set Delivery Mediums
+            if (config('cognito.add_user_delivery_mediums')!="NONE") {
+                if (config('cognito.add_user_delivery_mediums')=="BOTH") {
+                    $payload['DesiredDeliveryMediums'] = ['EMAIL', 'SMS'];
+                } else {
+                    $defaultDeliveryMedium = config('cognito.add_user_delivery_mediums', "EMAIL");
+                    $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
+                } //End if
+            } //End if
+            
+            if (config('cognito.mfa_setup')=="MFA_ENABLED") {
+                $defaultDeliveryMedium = 'SMS';
+                $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
+            } //End if
+        } catch (Exception $e) {
+            Log::error('AwsCognitoClientHelper:buildInviteUserPayload:Exception');
+            throw $e;
+        } //Try-catch ends
+
+        return $payload;
+    } //Function ends
+
+    /**
+     * Format attributes in Name/Value array.
+     *
+     * @param array $attributes
+     * @return array
+     */
+    protected function formatAttributes(array $attributes): array
+    {
+        $userAttributes = [];
+
+        foreach ($attributes as $key => $value) {
+            $userAttributes[] = [
+                'Name' => $key,
+                'Value' => $value,
+            ];
+        } //Loop ends
+
+        return $userAttributes;
     } //Function ends
 
 } //Trait ends

@@ -161,7 +161,7 @@ trait BaseCognitoGuard
      * @return mixed
      */
     protected function hasValidAWSCredentials(Collection $credentials,
-        CognitoAuthFlowTypes $authFlowType): mixed {
+        CognitoAuthFlowTypes $authFlow): mixed {
         //Reset global variables
         $this->challengeName = null;
         $this->challengeData = null;
@@ -170,8 +170,11 @@ trait BaseCognitoGuard
 
         //Authenticate the user with AWS Cognito
         $result = $this->client->authenticate(
-            $authFlowType,
-            $credentials['email'], $credentials['password']
+            $authFlow,
+            $credentials['email'],
+            $credentials['password'] ?? null,
+            $credentials['device_key'] ?? null,
+            $credentials['challenge_name'] ?? null
         );
 
         //Check if the result is an instance of AwsResult
@@ -203,36 +206,30 @@ trait BaseCognitoGuard
         
         $challengeType = CognitoChallengeTypes::from($result['ChallengeName']);
         switch ($challengeType) {
-            case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
-                $returnValue = [
-                    'status' => $result['ChallengeName'],
-                    'session_token' => $result['Session']
-                ];
-                break;
-
             case CognitoChallengeTypes::PASSWORD_VERIFIER:
+            case CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER:
                 $returnValue = [
-                    'status' => $result['ChallengeName'],
-                    'session_token' => $credentials['session_token']??null,
-                    'challenge_params' => $result['ChallengeParameters']
+                    'session_token' => $credentials['session_token'] ?? null,
                 ];
                 break;
 
+            case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
             case CognitoChallengeTypes::SMS_MFA:
             case CognitoChallengeTypes::SELECT_MFA_TYPE:
+            case CognitoChallengeTypes::DEVICE_SRP_AUTH:
+            case CognitoChallengeTypes::SELECT_CHALLENGE:
+            case CognitoChallengeTypes::SMS_OTP:
+            case CognitoChallengeTypes::EMAIL_OTP:
+            case CognitoChallengeTypes::WEB_AUTHN:
                 $returnValue = [
-                    'status' => $result['ChallengeName'],
-                    'session_token' => $result['Session'],
-                    'challenge_params' => $result['ChallengeParameters']
+                    'session_token' => isset($result['Session']) ? $result['Session'] : null
                 ];
                 break;
 
             default:
                 if (in_array($challengeType, config('cognito.forced_challenge_names'))) {
                     $returnValue = [
-                        'status' => $result['ChallengeName'],
                         'session_token' => isset($result['Session']) ? $result['Session'] : null,
-                        'challenge_params' => isset($result['ChallengeParameters']) ? $result['ChallengeParameters'] : null
                     ];
                 } //End if
                 break;
@@ -240,8 +237,11 @@ trait BaseCognitoGuard
 
         //Add username and challenge name into return value
         $returnValue = array_merge($returnValue, [
+            'status' => 'challenge',
             'username' => $credentials['email'],
-            'challenge_name' => $challengeType->value
+            'challenge_name' => $challengeType->value,
+            'challenge_params' => isset($result['ChallengeParameters']) ? $result['ChallengeParameters'] : null,
+            'available_challenges' => isset($result['AvailableChallenges']) ? $result['AvailableChallenges'] : null
         ]);
 
         return $returnValue;
@@ -253,11 +253,12 @@ trait BaseCognitoGuard
      * @param  \Illuminate\Http\Request  $request
      * @param  string  $paramUsername
      * @param  string  $paramPassword
+     * @param  \Ellaisys\Cognito\Enums\CognitoAuthFlowTypes  $authFlow
      * @return array
      */
     final public function buildCognitoPayload(Collection $request,
         string $paramUsername, string $paramPassword,
-        CognitoAuthFlowTypes $authFlowType): Collection
+        CognitoAuthFlowTypes $authFlow): Collection
     {
         $payload = [];
 
@@ -274,7 +275,7 @@ trait BaseCognitoGuard
         if ($userFields) {
             //Iterate all the keys in the request
             $request->each(function($value, $key) use ($userFields, $paramUsername,
-                $paramPassword, &$payload, $authFlowType) {
+                $paramPassword, &$payload, $authFlow) {
                 switch ($key) {
                     case $paramUsername:
                         $payload = array_merge($payload, ['email' => $value]);
@@ -283,10 +284,18 @@ trait BaseCognitoGuard
                     case $paramPassword:
                         $payload = array_merge($payload, ['password' => $value]);
                         break;
+
+                    case 'device_key':
+                        $payload = array_merge($payload, ['device_key' => $value]);
+                        break;
+
+                    case 'challenge_name':
+                        $payload = array_merge($payload, ['challenge_name' => $value]);
+                        break;
                     
                     default:
                         if (array_key_exists($key, $userFields) ||
-                            ($authFlowType == CognitoAuthFlowTypes::USER_SRP_AUTH))
+                            ($authFlow == CognitoAuthFlowTypes::USER_SRP_AUTH))
                         {
                             $payload = array_merge($payload, [$key => $value]);
                         } //End if
@@ -357,12 +366,16 @@ trait BaseCognitoGuard
                 //Iterate all the keys in the request
                 $request->each(function($value) use ($userFields, &$payload) {
                     if (array_key_exists($value['Name'], $userFields)) {
-                        $payload = array_merge($payload, [$userFields[$value['Name']] => $value['Value']]);
+                        $payload = array_merge($payload, [
+                                $userFields[$value['Name']] => $value['Value']
+                            ]);
                     } //End if
 
                     //Add user subject if exists
                     if ($value['Name'] == 'sub') {
-                        $payload = array_merge($payload, [config('cognito.user_subject_uuid') => $value['Value']]);
+                        $payload = array_merge($payload, [
+                            config('cognito.user_subject_uuid') => $value['Value']
+                        ]);
                     } //End if
                 });
             } //End if
@@ -402,7 +415,7 @@ trait BaseCognitoGuard
     /**
      * Attempt Challenge based Authentication
      */
-    final public function attemptBaseChallenge(array $challenge, bool $remember=false) {
+    final public function attemptBaseChallenge(array $challenge) {
         try {
             //Reset global variables
             $this->challengeName = null;
@@ -430,7 +443,10 @@ trait BaseCognitoGuard
                 if (isset($result['ChallengeName'])) {
                     $this->challengeName = $result['ChallengeName'];
                     $this->challengeData = $this->handleCognitoChallenge(
-                            $result, collect(['email' => $username])
+                            $result, collect([
+                                'email' => $username,
+                                'session_token' => $session
+                            ])
                         );
                 } elseif (isset($result['AuthenticationResult'])) {
                     //Create claim token

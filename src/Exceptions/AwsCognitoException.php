@@ -29,8 +29,11 @@ class AwsCognitoException extends HttpException
     const COGNITO_USER_INVALID = 'ERROR_COGNITO_USER_INVALID';
     const COGNITO_RESET_PWD_REQ_INVALID = 'ERROR_COGNITO_RESET_PWD_REQ_INVALID';
     const COGNITO_RESET_PWD_FAILED = 'ERROR_COGNITO_RESET_PWD_FAILED';
+    const COGNITO_AUTH_POOL_CONFIG_INVALID = 'ERROR_COGNITO_AUTH_POOL_CONFIG_INVALID';
     const COGNITO_THROTTLING_LIMIT = 'ERROR_COGNITO_THROTTLING_LIMIT';
     const COGNITO_WEB_AUTH_INVALID = 'ERROR_COGNITO_WEB_AUTH_INVALID';
+    const COGNITO_INVALID_PASSWORD = 'ERROR_COGNITO_INVALID_PASSWORD';
+    const COGNITO_MFA = 'ERROR_COGNITO_MFA';
 
     //cognito.validation.reset_required.invalid_user
 
@@ -45,33 +48,34 @@ class AwsCognitoException extends HttpException
      * @return void
      */
     public function __construct(string $message="AWS Cognito Error",
-        ?Throwable $previous=null, array $headers=[], int $code=400)
+        ?Throwable $previous=null, array $headers=[], int $statusCode=400, int $code=0)
     {
         if ($previous instanceof CognitoIdentityProviderException && (!empty($previous->getAwsErrorCode()))) {
-            $message = self::processAwsCognitoError($previous);
+            [$message, $statusCode, $headers, $code] = self::processAwsCognitoError($previous);
         } //End if
 
-        parent::__construct(400, $message, $previous, $headers, $code);
+        parent::__construct($statusCode, $message, $previous, $headers, $code);
     }
 
     /**
      * Static constructor / factory
      */
-    public static function create(CognitoIdentityProviderException $e): self {
-        return new self(self::processAwsCognitoError($e), $e);
+    public static function create(CognitoIdentityProviderException $exception): self {
+        [$message, $statusCode, $headers, $code] = self::processAwsCognitoError($exception);
+        return new self($message, $exception, $headers, $statusCode, $code);
     }
 
     /**
      * Process AWS Cognito error and return proper error code
      *
-     * @param  CognitoIdentityProviderException  $e
+     * @param  CognitoIdentityProviderException  $exception
      *
-     * @return string
+     * @return array [string $message, int $statusCode, array $headers, int $code]
      */
-    private static function processAwsCognitoError(CognitoIdentityProviderException $e): string
+    private static function processAwsCognitoError(CognitoIdentityProviderException $exception): array
     {
         //Set proper route
-        switch ($e->getAwsErrorCode()) {
+        switch ($exception->getAwsErrorCode()) {
             case 'PasswordResetRequiredException':
                 $errorCode = self::COGNITO_AUTH_USER_RESET_PASS;
                 break;
@@ -86,6 +90,11 @@ class AwsCognitoException extends HttpException
 
             case 'UsernameExistsException':
                 $errorCode = self::COGNITO_AUTH_USERNAME_EXITS;
+                break;
+
+            case 'EnableSoftwareTokenMFAException':
+            case 'SoftwareTokenMFANotFoundException':
+                $errorCode = self::COGNITO_MFA;
                 break;
 
             case 'CodeMismatchException':
@@ -105,14 +114,29 @@ class AwsCognitoException extends HttpException
             case 'WebAuthnOriginNotAllowedException':
                 $errorCode = self::COGNITO_WEB_AUTH_INVALID;
                 break;
+
+            case 'InvalidUserPoolConfigurationException':
+                $errorCode = self::COGNITO_AUTH_POOL_CONFIG_INVALID;
+                break;
+
+            case 'InvalidPasswordException':
+                $errorCode = self::COGNITO_INVALID_PASSWORD;
+                break;
             
+            case 'ResourceNotFoundException':
             case 'InvalidParameterException':
             case 'InternalErrorException':
             default:
-                $errorCode = $e->getAwsErrorCode();
+                $errorCode = $exception->getAwsErrorCode();
                 break;
         } //End switch
-        return $errorCode;
+        
+        return [
+                $errorCode,
+                $exception->getStatusCode(),
+                [],
+                0
+            ];
     } //Function ends
     
 } //Class ends

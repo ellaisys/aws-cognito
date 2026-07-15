@@ -30,6 +30,8 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 trait RegisterMFA
 {
+    use BaseAuthTrait;
+
     /**
      * Activate the MFA for the authenticated user
      *
@@ -47,127 +49,197 @@ trait RegisterMFA
      *
      * @param  string  $guard (optional)
      *
-     * @return mixed
+     * @return \mixed
      */
-    public function verifyMFA(string $guard='web',
-        string $userCode=null, string $deviceName='my device'): mixed
+    public function verify(Request $request, 
+        ?string $code=null, ?string $deviceName=null): mixed
     {
-        $response = Auth::guard($guard)->verifySoftwareTokenMFA($userCode, $deviceName);
-        if (!empty($response) && ($response['Status']=='SUCCESS')) {
-            return $this->toggleMFA($guard, true);
-        } //End if
+        try {
+            // Initialize variables
+            $returnValue = null;
+
+            // Merge the request data with the provided code and device name
+            if (!empty($code)) {
+                $request->merge(['code' => $code]);
+            } //End if
+            if (!empty($deviceName)) {
+                $request->merge(['device_name' => $deviceName]);
+            } //End if
+
+            // Validate the request data
+            $validator = Validator::make($request->all(), [
+                'code' => 'required|string',
+                'device_name' => 'nullable|string',
+            ]);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
+            // Get the guard
+            $guard = $this->getGuard($request);
+
+            // Verify the MFA for the authenticated user
+            $response = Auth::guard($guard)->verifySoftwareTokenMFA(
+                $request['code'],
+                $request['device_name'] ?? 'My Device'
+            );
+
+            // If the verification is successful, toggle ON the MFA for the authenticated user
+            if (!empty($response) && ($response['Status']=='SUCCESS')) {
+                $this->toggleMFA($request, true, true);
+            } //End if
+
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $returnValue = redirect(back())
+                    ->with('status', 'success')
+                    ->with('message', trans('messages.mfa.verification_success'))
+                    ->with('data', $response);
+            } //Return response
+        } catch (Exception $exception) {
+            Log::error('RegisterMFA:verify:Exception');
+            Log::error($exception);
+            throw $exception;
+        } //End try
+
+        return $returnValue;
     } //Function ends
 
     /**
      * Deactivate the MFA for the authenticated user
      *
-     * @param  string  $guard (optional)
+     * @param  \Illuminate\Http\Request  $request
      *
-     * @return mixed
+     * @return \mixed
      */
-    public function deactivateMFA(string $guard='web'): mixed
+    public function deactivate(Request $request): mixed
     {
-        return $this->toggleMFA($guard, false);
+        return $this->toggleMFA($request, false);
     } //Function ends
 
     /**
      * Toggle the MFA for the authenticated user
      *
-     * @param  string  $guard
-     * @param  bool    $isEnable (optional)
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \bool  $isEnable (optional)
      *
-     * @return array
+     * @return \mixed
+     * @throws \Exception
      */
-    private function toggleMFA(string $guard, bool $isEnable=false): mixed
+    private function toggleMFA(Request $request, bool $isEnable=false, bool $isDirectCall=false): mixed
     {
+        // Initialize variables
+        $returnValue = null;
+
         try {
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
-            //Get Authenticated user
-            $authUser = Auth::guard($guard)->user();
-            if (empty($authUser)) { throw new InvalidUserException(); }
-
             //Token Object
-            $objToken = Auth::guard($guard)->cognito()->getToken();
-            if (empty($authUser)) { throw new HttpException(400, 'EXCEPTION_INVALID_TOKEN'); }
+            $accessToken = $this->getAccessToken($request);
 
-            //Access Token
-            $accessToken = $objToken;
+            // Set the MFA preference for the authenticated user
+            $response = $client->setUserMFAPreference($accessToken, $isEnable);
             
-            //Use username from AWS to refresh token, not email from login!
-            if (!empty($accessToken)) {
-                $response = $client->setUserMFAPreference($accessToken, $isEnable);
-                if (empty($response)) {
-                    throw new AwsCognitoException('EXCEPTION_COGNITO_MFA_PREFERENCE');
-                } //End if
-
-                return $response;
+            //Return response
+            if ($this->isControllerAction || $isDirectCall) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
             } else {
-                throw new AwsCognitoException('EXCEPTION_INVALID_USERNAME_OR_TOKEN');
-            } //End if
-        } catch(Exception $e) {
-            if ($e instanceof CognitoIdentityProviderException) {
-                throw AwsCognitoException::create($e);
-            } //End if
-            throw $e;
-        } //Try-catch ends
+                $messageKey = $isEnable ? 'messages.mfa.activation_success' : 'messages.mfa.deactivation_success';
+
+                $returnValue = redirect(back())
+                    ->with('status', 'success')
+                    ->with('message', trans($messageKey))
+                    ->with('data', $response);
+            } //Return response
+        } catch (Exception $exception) {
+            Log::error('RegisterMFA:toggleMFA:Exception');
+            throw $exception;
+        } //End try
+
+        return $returnValue;
     } //Function ends
 
     /**
      * Enable the MFA for the mentioned user
      *
-     * @param  string  $guard (optional)
-     * @param  string  $username
+     * @param  \Illuminate\Http\Request  $request
      *
      * @return mixed
      */
-    public function enableMFA(string $guard='web', string $username='email'): mixed
+    public function enable(Request $request): mixed
     {
-        return $this->toggleAdminMFA($guard, $username, true);
+        return $this->toggleAdminMFA($request, true);
     } //Function ends
 
     /**
      * Disable the MFA for the mentioned user
      *
-     * @param  string  $guard (optional)
-     * @param  string  $username
+     * @param  \Illuminate\Http\Request  $request
      *
      * @return mixed
      */
-    public function disableMFA(string $guard='web', string $username='email'): mixed
+    public function disable(Request $request): mixed
     {
-        return $this->toggleAdminMFA($guard, $username, false);
+        return $this->toggleAdminMFA($request, false);
     } //Function ends
 
     /**
-     * Toggle the MFA by the admin user
+     * Change the MFA settings for the mentioned user by the admin
      *
-     * @param  string  $guard
-     * @param  string  $username
+     * @param  \Illuminate\Http\Request  $request
      * @param  bool    $isEnable (optional)
      *
      * @return array
      */
-    private function toggleAdminMFA(string $guard, string $username, bool $isEnable=false): mixed
+    private function toggleAdminMFA(Request $request, bool $isEnable=false): mixed
     {
+        // Initialize variables
+        $returnValue = null;
+
         try {
+            // Validate the request data
+            $validator = Validator::make($request->all(), [
+                'username' => 'required|string'
+            ]);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
             //Get Authenticated user
-            $authUser = Auth::guard($guard)->user();
-            if (empty($authUser)) { throw new InvalidUserException(); }
+            $authUser = $this->getAuthenticatedUser($request);
            
-            //Use username for the MFA configurations
-            return $client->setUserMFAPreferenceByAdmin($username, $isEnable);
-        } catch(Exception $e) {
-            if ($e instanceof CognitoIdentityProviderException) {
-                throw AwsCognitoException::create($e);
-            } //End if
+            //Get the response from AWS Cognito for the MFA configurations
+            $response = $client->adminSetUserMFAPreference($request['username'], $isEnable);
 
-            throw $e;
-        } //Try-catch ends
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $messageKey = $isEnable ? 'messages.mfa.enabled_success' : 'messages.mfa.disabled_success';
+
+                $returnValue = redirect(back())
+                    ->with('status', 'success')
+                    ->with('message', trans($messageKey))
+                    ->with('data', $response);
+            } //Return response
+        } catch (Exception $exception) {
+            Log::error('RegisterMFA:toggleAdminMFA:Exception');
+            throw $exception;
+        } //End try
+
+        return $returnValue;
     } //Function ends
 
 } //Trait ends

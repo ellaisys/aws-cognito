@@ -15,6 +15,7 @@ use GMP;
 use Carbon\Carbon;
 
 use Illuminate\Support\Facades\Log;
+use Ellaisys\Cognito\Providers\StorageProvider;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -31,27 +32,24 @@ class AwsCognitoSrpService
      */
     private const HASH_ALGO = 'sha256';
 
-    // 3072-bit group from AWS Cognito
-    private const N_HEX = 'FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1'.
-        '29024E088A67CC74020BBEA63B139B22514A08798E3404DD'.
-        'EF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245'.
-        'E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED'.
-        'EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3D'.
-        'C2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F'.
-        '83655D23DCA3AD961C62F356208552BB9ED529077096966D'.
-        '670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B'.
-        'E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9'.
-        'DE2BCBF6955817183995497CEA956AE515D2261898FA0510'.
-        '15728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64'.
-        'ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7'.
-        'ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6B'.
-        'F12FFA06D98A0864D87602733EC86A64521F2B18177B200C'.
-        'BBE117577A615D6C770988C0BAD946E208E24FA074E5AB31'.
-        '43DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF';
-
-    private const G_HEX = '2';
-
+    /**
+     * Info bits for HKDF
+     */
     private const INFO_BITS = 'Caldera Derived Key';
+
+    /**
+     * The provider.
+     *
+     * @var \Ellaisys\Cognito\Providers\StorageProvider
+     */
+    protected $provider;
+
+    /**
+     * Cache prefix for storing ephemeral values
+     *
+     * @var string
+     */
+    private string $cachePrefix;
 
     /**
      * The user pool ID.
@@ -67,6 +65,13 @@ class AwsCognitoSrpService
      */
     private string $clientId;
 
+    /**
+     * Flag to indicate if the authentication is for a device
+     *
+     * @var bool
+     */
+    private bool $isDeviceAuth = false;
+
     private GMP $paramN;
     private GMP $paramG;
     private GMP $paramK;
@@ -78,13 +83,17 @@ class AwsCognitoSrpService
      *
      * @return void
      */
-    public function __construct(string $poolId, string $clientId)
+    public function __construct(
+        StorageProvider $provider, string $cachePrefix,
+        string $clientId, string $poolId)
     {
+        $this->provider = $provider;
+        $this->cachePrefix = $cachePrefix;
         $this->poolId = $poolId;
         $this->clientId = $clientId;
 
-        $this->paramN = gmp_init(self::N_HEX, 16);
-        $this->paramG = gmp_init(self::G_HEX, 16);
+        $this->paramN = gmp_init(config('cognito.srp_parameters.N_HEX'), 16);
+        $this->paramG = gmp_init(config('cognito.srp_parameters.G_HEX'), 16);
 
         /**
          * k = H(N | g)
@@ -95,17 +104,43 @@ class AwsCognitoSrpService
     }
 
     /**
+     * Set the device authentication flag
+     *
+     * @param bool $isDeviceAuth
+     * @return void
+     */
+    public function setIsDeviceAuth(bool $isDeviceAuth): void
+    {
+        $this->isDeviceAuth = $isDeviceAuth;
+    } //Function ends
+
+    /**
      * Generate SRP_A(public ephemeral value) and a (private ephemeral value)
      */
-    public function generateEphemeral(): array
+    public function generateEphemeral(?string $sessionKey=null): array
     {
+        // Generate a random 20-byte integer for session key
+        if ($sessionKey === null) {
+            $sessionKey = gmp_init(bin2hex(random_bytes(20)), 16);
+            $sessionKey = gmp_strval($sessionKey, 16);
+        } //End if
+
         // Generate a random 128-byte integer for a
         $paramSmallA = gmp_init(bin2hex(random_bytes(128)), 16);
 
         // Calculate A = g^a mod N
         $paramCapA = gmp_powm($this->paramG, $paramSmallA, $this->paramN);
 
+        // Store the private ephemeral value (a) using the session key
+        // as the key for retrieval during challenge processing
+        $this->provider->add(
+                $this->cachePrefix . $sessionKey,
+                gmp_strval($paramSmallA, 16),
+                60
+            );
+
         return [
+            'session_token' => $sessionKey, // session key in hex format
             'private_key' => gmp_strval($paramSmallA, 16), // a in hex format
             'public_key' => strtoupper(gmp_strval($paramCapA, 16)), // SRP_A in hex format
         ];
@@ -115,28 +150,63 @@ class AwsCognitoSrpService
      * Build PASSWORD_VERIFIER challenge response
      */
     public function processChallenge(string $challengeValue,
-        string $privateEphemeral): array
+        string $sessionKey, ?string $challengeParams = null): array
     {
         try {
             $payload = json_decode($challengeValue, true);
 
-            // Set the timestamp to the current time in the required format if not present in the payload
-            $timestamp = (isset($payload['TIMESTAMP'])) ? $payload['TIMESTAMP'] : $this->generateTimestamp();
+            /**
+             * If the client has computed all response parameters, then
+             * return without processing the challenge
+             */
+            if (isset($payload['PASSWORD_CLAIM_SIGNATURE']))
+            {
+                return $payload;
+            } else {
+                //Build challenge response on the server side
+                return $this->buildChallengeResponse(
+                        $challengeValue, $sessionKey,
+                        $challengeParams
+                    );
+            } //End if
+        } catch (Exception $e) {
+            Log::error('AwsCognitoSrpService:processChallenge:Exception');
+            throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+    /**
+     * Build challenge response on the server side using the parameters
+     * from the client request and the challenge parameters from the
+     * provider
+     */
+    private function buildChallengeResponse(string $challengeValue,
+        string $sessionKey, ?string $challengeParams = null): array
+    {
+        try {
+            $returnValue = json_decode($challengeValue, true);
 
             //Check if the required parameters are present
-            if (!isset($payload['USER_ID_FOR_SRP']) ||
-                !isset($payload['SALT']) ||
-                !isset($payload['SECRET_BLOCK']) ||
-                !isset($payload['SRP_B']) ||
-                !isset($payload['PASSKEY_HASH'])) {
+            if (!isset($returnValue['PASSKEY_HASH'])) {
                 throw new BadRequestHttpException('Missing required parameters in challenge value');
-            }
+            } else {
+                $paramsData = json_decode($challengeParams, true);
+                if (!is_array($paramsData)) {
+                    throw new BadRequestHttpException('Invalid challenge parameters');
+                } //End if
+                $payload = array_merge($returnValue, $paramsData);
+            } //End if
 
-            //Check if the secret block is present
-            $secretBlock = $payload['SECRET_BLOCK'];
-
-            // Get the pool name from the pool ID
-            $poolName = $this->getPoolName();
+            // Get the private ephemeral value (a) from the provider using the session token
+            $privateEphemeral = '';
+            if($this->provider->has($this->cachePrefix . $sessionKey)) {
+                $privateEphemeral = $this->provider->get($this->cachePrefix . $sessionKey);
+            } else {
+                $privateEphemeral = $payload['PRIVATE_KEY'];
+            } //End if
+            if (empty($privateEphemeral)) {
+                throw new HttpException(400, 'Invalid session key or private key not found');
+            } //End if
 
             // Get the SRP parameters and generate A and a from the client request
             $paramSmallA = gmp_init($privateEphemeral, 16);
@@ -147,10 +217,9 @@ class AwsCognitoSrpService
             // Set Hex Params
             $salt = gmp_init($payload['SALT'], 16);
             $paramCapB = gmp_init($payload['SRP_B'], 16);
-            $userIdForSrp = $payload['USER_ID_FOR_SRP'];
-            $userPassHash = $payload['PASSKEY_HASH'];
 
             //Sign with the Salt
+            $userPassHash = $returnValue['PASSKEY_HASH'];
             $x = $this->hexHash($this->padHex($salt) . $userPassHash);
 
             /*
@@ -164,17 +233,10 @@ class AwsCognitoSrpService
             * S = (B - k * g^x) ^ (a + ux) mod N
             */
             $gModPowXN = gmp_powm($this->paramG, $x, $this->paramN);
-
             $kgx = gmp_mul($this->paramK, $gModPowXN);
-
             $intValue2 = gmp_sub($paramCapB, $kgx);
-            Log::debug('intValue2: ' . gmp_strval($intValue2, 16));
-
             $exp = gmp_add($paramSmallA, gmp_mul($u, $x));
-            Log::debug('Exp: ' . gmp_strval($exp, 16));
-
             $s = gmp_powm($intValue2, $exp, $this->paramN);
-            Log::debug('S: ' . gmp_strval($s, 16));
 
             $hkdf = $this->computeHkdf(
                 hex2bin($this->padHex($s)),
@@ -182,19 +244,34 @@ class AwsCognitoSrpService
             );
 
             // Build the challenge response
-            $message = $poolName . $userIdForSrp . base64_decode($secretBlock) . $timestamp;
+            $message = $this->buildMessage($returnValue, $payload);
+
+            // Calculate the signature using HMAC-SHA256
             $signature = hash_hmac(self::HASH_ALGO, $message, $hkdf, true);
 
-            return [
-                'TIMESTAMP' => $timestamp,
-                'USERNAME' => $userIdForSrp,
-                'PASSWORD_CLAIM_SECRET_BLOCK' => $secretBlock,
+            $returnValue = array_merge($returnValue, [
                 'PASSWORD_CLAIM_SIGNATURE' => base64_encode($signature),
-            ];
+            ]);
+
+            // Unset some parameters that are not needed in the response
+            if (isset($returnValue['PASSKEY_HASH'])) {
+                unset($returnValue['PASSKEY_HASH']);
+            } //End if
+            if (isset($returnValue['MESSAGE_BASE64'])) {
+                unset($returnValue['MESSAGE_BASE64']);
+            } //End if
+            if (isset($returnValue['DEVICE_GROUP_KEY'])) {
+                unset($returnValue['DEVICE_GROUP_KEY']);
+            } //End if
+            if (isset($returnValue['PRIVATE_KEY'])) {
+                unset($returnValue['PRIVATE_KEY']);
+            } //End if
         } catch (Exception $e) {
-            Log::error('AwsCognitoClientHelper:processChallenge:Exception');
+            Log::error('AwsCognitoSrpService:buildChallengeResponse:Exception');
             throw $e;
         } //Try-catch ends
+
+        return $returnValue;
     } //Function ends
 
     /**
@@ -291,6 +368,38 @@ class AwsCognitoSrpService
         $poolId = $poolId ?? $this->poolId;
         $poolIdParts = explode('_', $poolId);
         return $poolIdParts[1];
+    } //Function ends
+
+    /**
+     * Build the challenge response message
+     *
+     * @param array $returnValue
+     * @param array $payload
+     * @return string
+     */
+    private function buildMessage(array $returnValue, array $payload): string
+    {
+        // Build the challenge response
+        $message = isset($returnValue['MESSAGE_BASE64']) ? base64_decode($returnValue['MESSAGE_BASE64'], true) : '';
+        if (empty($message)) {
+            //Check if the secret block is present
+            $secretBlock = $returnValue['PASSWORD_CLAIM_SECRET_BLOCK'];
+
+            // Get the current timestamp in the format required by Cognito
+            $timestamp = $returnValue['TIMESTAMP'] ?? $this->generateTimestamp();
+
+            if ($this->isDeviceAuth) {
+                $message = $returnValue['DEVICE_GROUP_KEY'] . $returnValue['DEVICE_KEY'];
+            } else {
+                // Get the pool name from the pool ID
+                $poolName = $this->getPoolName();
+
+                $userIdForSrp = $this->isDeviceAuth?$payload['USERNAME']:$payload['USER_ID_FOR_SRP'];
+                $message = $poolName . $userIdForSrp;
+            }
+            $message .= base64_decode($secretBlock) . $timestamp;
+        } //End if
+        return $message;
     } //Function ends
 
 } //Class ends

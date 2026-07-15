@@ -1,6 +1,11 @@
 <form method="POST" action="{{ route('cognito.action.login.submit') }}" id="auth-password-form">
     @csrf
 
+    <x-cognito::device-auth
+        :includeGMP="false"
+        :includeCryptoJS="false"
+        :includeCryptoUtils="false" />
+
     @php
         $usernameValue = (request()->has('username'))? request()->get('username') : null;
         $sessionValue = (request()->has('session'))? request()->get('session') : null;
@@ -15,6 +20,7 @@
                 class="form-control @error('username') is-invalid @enderror @if($usernameValue) is-valid @endif"
                 name="username" value="{{ old('username', $usernameValue) }}"
                 @if($usernameValue) readonly @else required autocomplete="email" autofocus @endif
+                data-role="device-auth" data-action="username"
                 />
 
             @error('username')
@@ -55,9 +61,24 @@
         </div>
     </div>
 
+    <div class="row mb-3">
+        <div class="col-md-6 offset-md-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox"
+                    name="device_key_checkbox" id="device_key_checkbox"
+                    value="checked" checked/>
+
+                <label class="form-check-label" for="device_key_checkbox" id="device_key_checkbox_label">
+                    {{ __('Device Security Disabled') }}
+                </label>
+            </div>
+        </div>
+    </div>
+
     <div class="row mb-0">
         <div class="col-md-6 offset-md-4">
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn btn-primary"
+                data-role="device-auth" data-action="validate">
                 {{ __('Login') }}
             </button>
 
@@ -91,8 +112,29 @@
     @endif
 </form>
 
+@stack('cognito-device-auth-scripts')
+
 <script>
     const urlAuthStep = "{{ route('cognito.form.login') }}";
+
+    const deviceKeyCheckbox = document.getElementById('device_key_checkbox');
+    const deviceKeyInput = document.getElementById('device_key');
+    const deviceKeyCheckboxLabel = document.getElementById('device_key_checkbox_label');
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        toggleDeviceKey();
+    });
+    deviceKeyCheckbox.addEventListener('change', function() {
+        if (!deviceKeyInput.value) {
+            deviceKeyInput.disabled = true;
+            deviceKeyCheckbox.checked = false;
+            alert('Device key is not available. Please validate your device first.');
+            return;
+        } else {
+            deviceKeyInput.disabled = !deviceKeyInput.disabled;
+            toggleDeviceKey();
+        } // End if
+    });
 
     function redirectToPasskeyOptions(urlEndpoint) {
         if (urlEndpoint != null || urlEndpoint != undefined) {
@@ -107,5 +149,14 @@
         form.method = 'POST';
         form.action = urlAuthStep + '/' + urlEndpoint;
         form.submit();
+    }
+
+    function toggleDeviceKey() {
+        if (deviceKeyCheckbox.checked && deviceKeyInput.disabled==false) {
+            deviceKeyCheckboxLabel.innerText = '{{ __('Device Security Enabled') }}';
+        } else {
+            deviceKeyCheckbox.checked = false;
+            deviceKeyCheckboxLabel.innerText = '{{ __('Device Security Disabled') }}';
+        }
     }
 </script>

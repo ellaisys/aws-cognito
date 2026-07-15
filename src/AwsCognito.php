@@ -254,10 +254,10 @@ class AwsCognito
      *
      * @return \Ellaisys\Cognito\AwsCognito
      */
-    public function unsetToken(bool $forceForever = false)
+    public function unsetToken()
     {
         $tokenKey = $this->token->get();
-        $this->manager->release($tokenKey, $forceForever);
+        $this->manager->release($tokenKey);
         $this->claim = null;
         $this->token = null;
 
