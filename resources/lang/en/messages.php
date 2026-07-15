@@ -18,6 +18,17 @@ return [
         'registration_code_resend_success' => 'Verification code resent successfully. Please check your email.',
         'password_reset_code_resend_success' => 'Password reset code resent successfully. Please check your email.',
         'password_change_success' => 'Password changed successfully. Please login with your new password.',
+        'challenge_generated' => 'A challenge has been generated. Please complete the required steps.',
+        'error' => [
+            'incorrect_credentials' => 'Incorrect username and/or password.',
+            'user_not_found' => 'User not found. Please check your credentials.',
+            'user_not_confirmed' => 'User not confirmed. Please check your email for verification instructions.',
+            'user_disabled' => 'User account is disabled. Please contact support.',
+            'password_reset_failed' => 'Password reset failed. Please try again later.',
+            'registration_failed' => 'Registration failed. Please try again later.',
+            'invitation_failed' => 'User invitation failed. Please try again later.',
+            'challenge_failed' => 'Challenge failed. Please try again.',
+        ]
     ],
 
     'mfa' => [

@@ -271,7 +271,7 @@ class LoginController extends Controller
                             ->back()
                             ->withInput($request->only($this->usernameField, 'remember'))
                             ->withErrors([
-                                $this->usernameField => 'Incorrect username and/or password !!',
+                                $this->usernameField => trans('cognito::messages.auth.error.incorrect_credentials'),
                             ]);
                     } elseif (is_array($claim)) { // Challenge generated
                         $returnValue = redirect()
@@ -279,6 +279,8 @@ class LoginController extends Controller
                                     'step' => 'challenge',
                                     'challenge' => $claim['challenge_name']
                                 ])
+                            ->with('status', 'success')
+                            ->with('message', trans('cognito::messages.auth.challenge_generated'))
                             ->with('data', $claim);
                     } else {
                         $returnValue = $claim;
