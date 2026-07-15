@@ -136,7 +136,7 @@
                 // Process the challenge based on the challenge name
                 await processChallenge();
 
-                if ((!frmChallenge.checkValidity()) || (!this.challengeCheckValidity())) {
+                if ((!frmChallenge.checkValidity()) || (!challengeCheckValidity())) {
                     // Show validation errors if the form is not valid
                     frmChallenge.reportValidity();
                     this.alert("An error occurred while processing the challenge. Please try again.", "error");
@@ -194,6 +194,12 @@
             } // End try-catch
         } // Function ends
 
+        /**
+         * Function to check the validity of required challenge data fields.
+         * It iterates through all elements with the data-role "challenge-data"
+         * and checks if they are filled. If any required field is empty,
+         * it sets a custom validity message and prevents form submission.
+         */
         function challengeCheckValidity() {
             const elemsRequired = document.querySelectorAll('[data-role="challenge-data"][required]');
             let isValid = true;
@@ -206,6 +212,7 @@
                     isValid = isValid && true;
                 }
             }
+            return isValid;
         } // Function ends
 
         /**
