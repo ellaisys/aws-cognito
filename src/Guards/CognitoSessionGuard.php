@@ -214,9 +214,11 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             //Set Token
             $this->setToken();
 
-            //Get Session and store details
+            //Get Session and store details. Regenerate the session id (to keep
+            //session-fixation protection) without flushing the session, so that
+            //other guards sharing this session are not logged out on sign-in.
             $session = $this->getSession();
-            $session->invalidate();
+            $session->migrate(true);
             $session->put(
                 ClaimSession::SESSION_KEY,
                 json_decode(json_encode($this->claim), true)
@@ -265,7 +267,11 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             default:
                 //Invalidate the session
                 $session = $this->getSession();
-                $session->invalidate();
+            
+                //Get Session and store details. Regenerate the session id without
+                //flushing the session (see processAWSClaim), so kicking off an MFA
+                //challenge does not log out other guards sharing this session.
+                $session->migrate(true);
 
                 $returnValue = $this->challengeData;
                 break;
@@ -337,7 +343,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 
             //Get the claim from session
             $claim = $session->has(ClaimSession::SESSION_KEY)?$session->get(ClaimSession::SESSION_KEY):null;
-            if (empty($claim)) { $session->invalidate(); throw new InvalidTokenException('EXCEPTION_INVALID_CLAIM'); }
+            if (empty($claim)) { $this->forgetCognitoSession($session); throw new InvalidTokenException('EXCEPTION_INVALID_CLAIM'); }
 
             $accessToken = (!empty($claim))?$claim['token']:null;
             if (empty($accessToken)) {
@@ -361,19 +367,39 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                     } //End if
 
                     //Remove the token from application storage
-                    $returnValue = $session->invalidate();
+                    $returnValue = $this->forgetCognitoSession($session);
                 } else {
                     //Remove the token from application storage
-                    $returnValue = $session->invalidate();
+                    $returnValue = $this->forgetCognitoSession($session);
                 } //End if
             } //End if
         } catch (Exception $e) {
-            if ($forceForever) { return $session->invalidate(); }
-            
+            if ($forceForever) { return $this->forgetCognitoSession($session); }
+
             throw $e;
         } //try-catch ends
 
         return $returnValue;
+    } //Function ends
+
+    /**
+     * Sign the Cognito user out of the (possibly shared) session.
+     *
+     * Forgets only this guard's keys - the Cognito claim and the guard's own
+     * auth key - and regenerates the session id, rather than flushing the whole
+     * session via invalidate(). The session is shared with any other guard
+     * (e.g. a separate admin guard), so a full flush would log those guards out
+     * too; this leaves their data intact.
+     *
+     * @param  \Illuminate\Contracts\Session\Session  $session
+     * @return bool
+     */
+    private function forgetCognitoSession($session): bool
+    {
+        $session->forget(ClaimSession::SESSION_KEY);
+        $session->forget($this->getName());
+
+        return $session->migrate(true);
     } //Function ends
 
     /**
