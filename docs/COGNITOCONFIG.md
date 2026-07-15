@@ -135,6 +135,61 @@ In the **OpenID Connect** (OIDC) scopes section, ensure that the following scope
 Save the changes by clicking the **Save Changes** button at the bottom of the page.
 
 
+### *Step 9: User Group Management* (Optional)
+---
+
+AWS Cognito allows you to create user groups to manage users with similar access levels or roles. This step is optional and can be skipped if you do not require user groups. The package allows, users to be mapped to groups for easier management. If you want to create user groups, follow the steps below:
+
+![AWS Cognito - Login Page Settings](../assets/images/aws_cognito_flow14.png)
+
+Navigate to the **User groups** section from the left menu and click on the **Create group** button. Provide a name for the group and configure any additional settings as required. Save the group.
+
+![AWS Cognito - Login Page Settings](../assets/images/aws_cognito_flow15.png)
+
+Enter the group name, description and click on the **Create group** button. You can create multiple groups as per your application requirements.
+
+![AWS Cognito - Login Page Settings](../assets/images/aws_cognito_flow16.png)
+
+You can also assign users to these groups by navigating to the newly created group, and adding users to it. This can be done by selecting the **Group Members** section and clicking on **Add users**.
+
+![AWS Cognito - Login Page Settings](../assets/images/aws_cognito_flow17.png)
+
+
+### *Step 10: Sign-in Settings*
+---
+
+In the **Sign-in** settings, you can configure the attributes that users can use to sign in to your application.
+
+![AWS Cognito - Sign-in Settings](../assets/images/aws_cognito_flow18.png)
+
+Review the **Sign-in** settings and ensure that the attributes you want to allow for sign-in are selected. You can choose to allow users to sign in with their email, phone number, or username. This will determine how users authenticate when accessing your application (to be done at the User Pool level setup).
+
+Select the account recovery settings based on your application requirements. You can choose to allow users to recover their accounts using email, phone number, or both. This will help users regain access to their accounts if they forget their passwords.
+
+![AWS Cognito - Sign-in Settings](../assets/images/aws_cognito_flow19.png)
+
+Select the options as shown in the image above. However, for the advanced users, you can change the settings based on your application requirements.
+
+
+### *Step 11: Sign-up Settings*
+---
+
+In the **Sign-up** settings, you can configure the attributes that users need to provide during registration.
+
+- You can configure the verification settings for email and phone number.
+- You can also enable or disable self-registration based on your application requirements.
+
+![AWS Cognito - Sign-up Settings](../assets/images/aws_cognito_flow25.png)
+
+In order to configure the attribute verification, to enable user verification, select the attributes that you want to verify during the sign-up process. You can choose to verify email, phone number, or both. This will ensure that users provide valid contact information during registration.
+
+![AWS Cognito - Sign-up Settings](../assets/images/aws_cognito_flow26.png)
+
+In order to enable self-registration, select the **Self-service sign-up** section as shown below. This will allow users to create their own accounts without requiring an administrator to create them.
+
+![AWS Cognito - Sign-up Settings](../assets/images/aws_cognito_flow27.png)
+
+
 ## **References**
 - [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html)
 - [AWS Cognito User Pool Settings](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools.html)

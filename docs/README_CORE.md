@@ -52,9 +52,15 @@
 
 ## **Registering Users OR Sign Up**
 
-The registration process is now simplified and you can use the trait provided by us to register users. The registration process is now a single step process. You can pass the user attributes as an array to the registration method. The registration method will take care of the rest.
+The registration process is now simplified and you can use the trait `RegistersUsers` provided by us. The trait has the capability to handle both the registration types, `invite` and `register`. The default type is set to **register**. You can change the behaviour of the register method by setting following configuration.
 
-You will need to configure the AWS Cognito User Pool to allow **Self Registration**. If this is not enabled, then the users will have to be created by an administrator by inviting them to the application. Refer to the AWS Cognito documentation for more details on how to enable self registration.
+```php
+AWS_COGNITO_REGISTRATION_TYPE="invite" //optional - default is register
+```
+
+You will need to configure the AWS Cognito User Pool to allow [Self Registration](COGNITOCONFIG.md#step-11-sign-up-settings). If this is not enabled, then the users will have to be created by an administrator by inviting them to the application.
+
+ Refer to the AWS Cognito documentation for more details on how to enable self registration.
 
 As a default, if you are registering a new user with Cognito, Cognito will send you an email during signUp that includes the username and temporary password for the users to verify themselves.
 
@@ -68,7 +74,7 @@ We have made is very easy for anyone to use the default behaviour.
 ```php
 use Ellaisys\Cognito\Auth\RegistersUsers;
 
-class UserController extends BaseController
+class RegisterController extends Controller
 {
     use RegistersUsers;
 
