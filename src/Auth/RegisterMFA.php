@@ -97,7 +97,7 @@ trait RegisterMFA
             } else {
                 $returnValue = redirect(back())
                     ->with('status', 'success')
-                    ->with('message', trans('messages.mfa.verification_success'))
+                    ->with('message', trans('cognito::messages.mfa.verification_success'))
                     ->with('data', $response);
             } //Return response
         } catch (Exception $exception) {
@@ -151,7 +151,8 @@ trait RegisterMFA
             } elseif ($this->getIsJsonResponse($request)) {
                 $returnValue = $this->response->success($response);
             } else {
-                $messageKey = $isEnable ? 'messages.mfa.activation_success' : 'messages.mfa.deactivation_success';
+                $messageKey = 'cognito::messages.mfa.';
+                $messageKey .= $isEnable ? 'activation_success' : 'deactivation_success';
 
                 $returnValue = redirect(back())
                     ->with('status', 'success')
@@ -227,7 +228,8 @@ trait RegisterMFA
             } elseif ($this->getIsJsonResponse($request)) {
                 $returnValue = $this->response->success($response);
             } else {
-                $messageKey = $isEnable ? 'messages.mfa.enabled_success' : 'messages.mfa.disabled_success';
+                $messageKey = 'cognito::messages.mfa.';
+                $messageKey .= $isEnable ? 'enabled_success' : 'disabled_success';
 
                 $returnValue = redirect(back())
                     ->with('status', 'success')

@@ -87,7 +87,7 @@ class ConfirmPasswordController extends Controller
                 $returnValue = redirect()
                     ->route(config('cognito.routes.web.login_page', $this->redirectTo))
                     ->with('status', 'success')
-                    ->with('message', trans('messages.auth.password_change_success'));
+                    ->with('message', trans('cognito::messages.auth.password_change_success'));
             } //End if
 
             return $returnValue;

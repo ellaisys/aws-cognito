@@ -110,7 +110,7 @@ trait ResetsPasswords
                 $returnValue = redirect()
                     ->route($this->redirectPath())
                     ->with('status', 'success')
-                    ->with('message', trans('messages.auth.password_reset_success'))
+                    ->with('message', trans('cognito::messages.auth.password_reset_success'))
                     ->with('data', $response);
             } //Return response
 

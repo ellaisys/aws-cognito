@@ -79,7 +79,7 @@ trait VerifiesEmails
                     ->with('status', 'success')
                     ->with('username', $payload['email'])
                     ->with('session', $response['Session'] ?? null)
-                    ->with('message', trans('messages.auth.registration_verification_success'));
+                    ->with('message', trans('cognito::messages.auth.registration_verification_success'));
             } //End if
         } catch (Exception $e) {
             Log::error('VerifiesEmails:verify:Exception');
@@ -134,7 +134,7 @@ trait VerifiesEmails
                     ->route($this->redirectPath())
                     ->with('status', 'success')
                     ->with('username', $payload['email'])
-                    ->with('message', trans('messages.auth.registration_code_resend_success'));
+                    ->with('message', trans('cognito::messages.auth.registration_code_resend_success'));
             } //End if
         } catch (Exception $e) {
             Log::error('VerifiesEmails:resend:Exception');

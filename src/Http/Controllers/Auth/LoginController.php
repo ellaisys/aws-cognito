@@ -204,6 +204,8 @@ class LoginController extends Controller
             } else {
                 $returnValue = redirect()
                     ->route('cognito.form.login')
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::messages.auth.logout_success'))
                     ->with('data', $response);
             } //End if
         } catch (Exception $e) {
@@ -261,7 +263,9 @@ class LoginController extends Controller
                         $this->callPostAuthSuccessEvent($request, $guard);
 
                         $returnValue = redirect()
-                            ->route(config('cognito.redirect_to_route_name', 'cognito.home'));
+                            ->route(config('cognito.redirect_to_route_name', 'cognito.home'))
+                            ->with('status', 'success')
+                            ->with('message', trans('cognito::messages.auth.login_success'));
                     } elseif ($claim===false) {
                         $returnValue = redirect()
                             ->back()

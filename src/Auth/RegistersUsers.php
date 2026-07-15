@@ -55,7 +55,7 @@ trait RegistersUsers
      *
      * @var string
      */
-    private string $messageKey = 'messages.auth.registration_success';
+    private string $messageKey = 'cognito::messages.auth.registration_success';
 
     /**
      * Handle a registration invite for the application.
@@ -67,7 +67,7 @@ trait RegistersUsers
     {
         $this->registrationType = 'invite';
         $this->redirectTo = config('cognito.routes.web.home_page');
-        $this->messageKey = 'messages.auth.invitation_success';
+        $this->messageKey = 'cognito::messages.auth.invitation_success';
 
         return $this->register(
             $request, $clientMetadata, true

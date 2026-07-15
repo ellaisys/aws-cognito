@@ -243,6 +243,8 @@ trait AuthenticatesUsers
                 $request->session()->invalidate();
                 $returnValue = redirect()
                     ->route($this->redirectPath())
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::auth.logout_success'))
                     ->with('data', $response);
             } //Return response
         } catch (Exception $e) {
