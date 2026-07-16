@@ -263,7 +263,7 @@ class LoginController extends Controller
                         $this->callPostAuthSuccessEvent($request, $guard);
 
                         $returnValue = redirect()
-                            ->route(config('cognito.redirect_to_route_name', 'cognito.home'))
+                            ->route(config('cognito.routes.web.home_page', 'cognito.home'))
                             ->with('status', 'success')
                             ->with('message', trans('cognito::messages.auth.login_success'));
                     } elseif ($claim===false) {

@@ -102,21 +102,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | AWS Cognito Home Route Name
-    |--------------------------------------------------------------------------
-    |
-    | This is the home route name where the page redirects post successful
-    | authentication. This will work with and without the MFA enabled using
-    | the AWS Cognito based authentication. This is applicable for web routes
-    | only.
-    |
-    | The default value is set to 'home'.
-    |
-    */
-    'redirect_to_route_name' => env('AWS_COGNITO_HOME_ROUTE_NAME', 'cognito.home'),
-
-    /*
-    |--------------------------------------------------------------------------
     | Cognito Fields & DB Mapping
     |--------------------------------------------------------------------------
     |
