@@ -8,6 +8,10 @@ return [
     'email_address' => 'Email Address',
     'pass_code' => 'Pass Code',
 
+    'error' => [
+        'ERROR_COGNITO_AUTH_USER_UNAUTHORIZED' => 'User is not authorized to perform this action.',
+    ],
+
     'auth' => [
         'registration_success' => 'Registration successful! Please check your email for verification instructions.',
         'invitation_success' => 'User invited successfully! An invitation email has been sent to the user.',

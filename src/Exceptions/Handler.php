@@ -310,10 +310,12 @@ class Handler extends ExceptionHandler
                 ->with('message', $systemErrorMsg)
                 ->withErrors($errors);
         } else {
+            $messageOutput = (!empty($errorKey)) ? trans('cognito::messages.error.' . $errorKey) : $systemErrorMsg;
+
             return redirect()->back()
                 ->withInput($request->input())
                 ->with('status', 'error')
-                ->with('message', $systemErrorMsg)
+                ->with('message', $messageOutput)
                 ->withErrors($errors);
         }
     } //Function ends
