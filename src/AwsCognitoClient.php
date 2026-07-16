@@ -263,6 +263,7 @@ class AwsCognitoClient
                 $this->adminAddUserToGroup($username, $groupname);
             } //End if
         } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClient:register:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
@@ -334,6 +335,7 @@ class AwsCognitoClient
 
             $this->client->confirmForgotPassword($payload);
         } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClient:resetPassword:CognitoIdentityProviderException');
             if ($exception->getAwsErrorCode() === self::USER_NOT_FOUND) {
                 $returnValue = Password::INVALID_USER;
             } //End if
@@ -385,6 +387,7 @@ class AwsCognitoClient
                 $this->adminAddUserToGroup($username, $groupname);
             } //End if
         } catch (CognitoIdentityProviderException $e) {
+            Log::error('AwsCognitoClient:inviteUser:CognitoIdentityProviderException');
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
                 throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS, $e);
             } //End if
@@ -441,6 +444,7 @@ class AwsCognitoClient
                 'ProposedPassword' => $passwordNew
             ]);
         } catch (CognitoIdentityProviderException $e) {
+            Log::error('AwsCognitoClient:changePassword:CognitoIdentityProviderException');
             if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
                 return Password::INVALID_USER;
             } //End if
@@ -486,6 +490,7 @@ class AwsCognitoClient
 
             $returnValue = $this->client->confirmSignUp($payload);
         } catch (CognitoIdentityProviderException $e) {
+            Log::error('AwsCognitoClient:confirmUserSignUp:CognitoIdentityProviderException');
             throw AwsCognitoException::create($e);
         } //Try-catch ends
 
@@ -633,9 +638,9 @@ class AwsCognitoClient
                 'ClientSecret'  => $this->clientSecret,
                 'Token'         => $refreshToken
             ]);
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             Log::error('CognitoIdentityProvider:revokeToken:Exception');
-            throw $e;
+            throw $exception;
         } //Try-catch ends
         return true;
     } //Function ends
