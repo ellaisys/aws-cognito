@@ -144,6 +144,7 @@ trait RegistersUsers
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
+                    ->withInput($request->except('password', 'password_confirmation'))
                     ->with('status', 'success')
                     ->with('message', trans($this->messageKey));
             } //End if

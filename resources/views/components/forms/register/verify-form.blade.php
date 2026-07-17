@@ -4,19 +4,28 @@
     @php
         $userFields = config('cognito.cognito_user_fields');
         $userEmailField = $userFields['email'];
-
-        $userEmailField = $userFields['email'];
-        $emailValue = (request()->has('email'))? request()->get('email') : null;
-        $emailValue = urlencode($emailValue);
-        if (str_contains($emailValue, '%40')) {
-            $emailValue = str_replace('%40', '@', $emailValue);
-        }
-        
-        // In case of resend code, email is sent via session
-        $emailValue = (session($userEmailField))? session($userEmailField) : $emailValue;
-
         $codeValue = (request()->has('code'))? request()->get('code') : null;
     @endphp
+
+    @if(!empty($userEmailField))
+    <div class="row mb-3">
+        <label for="{{ $userEmailField }}"
+            class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
+
+        <div class="col-md-6">
+            <input id="{{ $userEmailField }}" type="email"
+                class="form-control @error($userEmailField) is-invalid @enderror @if(old($userEmailField)) is-valid @endif"
+                name="{{ $userEmailField }}" value="{{ old($userEmailField) }}"
+                @if(old($userEmailField)) readonly @else required autocomplete="email" autofocus @endif />
+
+            @error($userEmailField)
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
+        </div>
+    </div>
+    @endif
 
     <div class="row mb-3">
         <label for="code" class="col-md-4 col-form-label text-md-end">{{ __('Verification Code') }}</label>
@@ -34,26 +43,6 @@
             @enderror
         </div>
     </div>
-
-    @if(!empty($userEmailField))
-    <div class="row mb-3">
-        <label for="{{ $userEmailField }}"
-            class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
-
-        <div class="col-md-6">
-            <input id="{{ $userEmailField }}" type="email"
-                class="form-control @error($userEmailField) is-invalid @enderror"
-                name="{{ $userEmailField }}" value="{{ old($userEmailField, $emailValue) }}"
-                required autocomplete="off" />
-
-            @error($userEmailField)
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-            @enderror
-        </div>
-    </div>
-    @endif
 
     <div class="row mb-0">
         <div class="col-md-6 offset-md-4">
@@ -76,10 +65,3 @@
         </div>
     </div>
 </form>
-
-@if(request()->has('code') && request()->has('email') &&
-    request()->has('action') && request()->get('action') == 'verify')
-<script>
-    //document.verifyForm.submit();
-</script>
-@endif

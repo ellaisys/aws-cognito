@@ -65,21 +65,6 @@ class RegisterController extends Controller
         parent::__construct();
     } //Function ends
 
-    // /**
-    //  * Get a validator for an incoming registration request.
-    //  *
-    //  * @param  array  $data
-    //  * @return \Illuminate\Contracts\Validation\Validator
-    //  */
-    // protected function validator(array $data)
-    // {
-    //     return Validator::make($data, [
-    //         'name' => ['required', 'string', 'max:255'],
-    //         'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-    //         'password' => ['required', 'string', 'min:8', 'confirmed'],
-    //     ]);
-    // } //Function ends
-
     /**
      * Action to invite the a new user
      *
@@ -106,6 +91,7 @@ class RegisterController extends Controller
                 } else {
                     $returnValue = redirect()
                         ->route($this->redirectPath())
+                        ->withInput($request->except('password', 'password_confirmation'))
                         ->with('status', 'success')
                         ->with('message', trans($this->messageKey))
                         ->with('data', $user);
