@@ -60,7 +60,11 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 ### *Compatibility*
 ---
 
-|PHP Version|Support|
+<table>
+<tr><th><div align="center">PHP Support</div></th><th><div align="center">Laravel Support</div></th></tr>
+<tr><td>
+
+|Version|Support|
 |-|-| 
 |7.4|Yes :heavy_check_mark:|
 |8.0|Yes :heavy_check_mark:|
@@ -69,7 +73,9 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 |8.3|NA |
 |8.4|NA |
 
-|Laravel Version|Support|
+</td><td>
+
+|Version|Support|
 |-|-|
 |7.x|Yes :heavy_check_mark:|
 |8.x|Yes :heavy_check_mark:|
@@ -77,6 +83,8 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 |10.x|Yes :heavy_check_mark:|
 |11.x|Yes :heavy_check_mark:|
 |12.x|Yes :heavy_check_mark:|
+
+</td></tr> </table>
 
 > [!NOTE]
 > Laravel 11 and later require an additional middleware configuration step. See the Laravel Configuration guide for details.
