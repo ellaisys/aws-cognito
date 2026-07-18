@@ -16,7 +16,30 @@
 
 
 ## **Configurations**
+- [AWS Configurations](#aws-configurations)
+- [Laravel Configurations](#laravel-configurations)
 
+
+### *AWS Configurations*
+---
+
+
+### *Laravel Configurations*
+---
+
+The package allows some configurations, which can be set in the .env file. The default values are set in the configuration file. You can change the default values by setting the keys in the .env file.
+
+```env
+# Configuration for user group assignment for registered or invited users.
+AWS_COGNITO_DEFAULT_USER_GROUP="Customers" //optional - default value is null.
+
+
+AWS_COGNITO_FORCE_NEW_USER_PASSWORD=true //optional - default value is false.
+
+# Configuration for user invitation only
+AWS_COGNITO_NEW_USER_MESSAGE_ACTION="SUPPRESS" //optional - default value is null.
+AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is false.
+```
 
 ## **Features**
 
@@ -53,6 +76,11 @@
 ## **Registering Users OR Sign Up**
 
 The registration process is simplified into just two steps, self registration and verification. They are detailed below in detail. The overall process is now simplified to just a couple of steps. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
+
+To enable user defined password to be set during registration or invitation, the key `AWS_COGNITO_FORCE_NEW_USER_PASSWORD` in the environment setting should be set to **true** as shown in the [Laravel Configurations](#laravel-configurations) section. This forces the user to set the password during registration, else cognito will generate a random password and send over email and/or SMS based on the configurations.
+
+This package also supports the AWS Cognito Groups. You can assign a default group to a new user when registering or inviting. This can be configured in the environment file. Use the key `AWS_COGNITO_DEFAULT_USER_GROUP` to set the default group name. The group name should be as per the configuration done via AWS Cognito Management Console. The default value is set to null. 
+
 
 ### *Self Registration*
 ---
@@ -126,7 +154,9 @@ After the user is successfully verified, the status of the user is `CONFIRMED` a
 The routes for the verification process are provided by us. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
 ```php
+//Route to verify a new user
 use Ellaisys\Cognito\Http\Controllers\Auth\VerificationController;
+...
 
 Route::group(['prefix' => 'register/verify'], function() {
     Route::get('/',  function () { return view('cognito::pages.auth.registers.verify'); })->name('form.register.verify');
@@ -142,59 +172,15 @@ Route::group(['prefix' => 'register/verify'], function() {
 
 ## **User Invitation OR Invite User**
 
+A new user can be invited by an administrator into the application. The invitation process is simplified into simple steps, `invite` and `verification`. However, you can also auto-verify the user. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
+
+In case you want to suppress the invitation mail sent to the new users, set the environment variable `AWS_COGNITO_NEW_USER_MESSAGE_ACTION` to **SUPPRESS**. You can configure the parameter given below to skip welcome mails to new user registration. Default configuration shall send the welcome email.
+
+Similarly, you can also auto-verify the new user by setting the environment variable `AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED` to **true**. This will mark the new user's email address as verified. Default configuration shall not mark the email address as verified and the user will have to verify the email address by clicking on the link sent to the email address.
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Using this library in conjunction with **AWS Lambda**, once can look to customize the email template and content. The email template can be text or html based content. The Lambda code is not included in this code repository.
-
-
-
-5. You don't need to turn off Cognito to send you emails. We rather propose the use of AWS Cognito or AWS SMS mailers, such that user credentials are always secure.
-
-6. In case you want to suppress the mails to be sent to the new users, you can configure the parameter given below to skip welcome mails to new user registration. Default configuration shall send the welcome email.
-
-```php
-AWS_COGNITO_NEW_USER_MESSAGE_ACTION="SUPPRESS"
-```
-
-7. The configuration given below allows the new user's email address to be auto marked as verified.
-
-```php
-AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is false.
-```
-
-8. To assign a default group to a new user when registering set a name of the user group as per the configuration done via AWS Cognito Management Console. The default value is set to null.
-
-```php
-AWS_COGNITO_DEFAULT_USER_GROUP="Customers"
-```
-
-9. To enable custom password or user defined password, the below configuration if set to **true** will force the user to set the password during registration, else cognito will generate a random password and send over email and/or SMS based on the configurations.
-
-```php
-AWS_COGNITO_FORCE_NEW_USER_PASSWORD=true //optional - default value is false.  
-```
-
-10. The registration process now allows two types of request, 'invite' and 'register'. The register is self registration and an verification email is sent to the user. The invite is sent from the admin and contains the temporary cedentials. The RegistersUsers Trait allows two methods invite and register respectively. The default method called in the trait is set to **register**. You can change the behaviour of the register method by setting following configuration.
-
-```php
-    AWS_COGNITO_REGISTRATION_TYPE="register" //optional - the default type is invite
-```
 
 
 
@@ -457,10 +443,10 @@ Our package is providing you 10 traits you can just add to your Auth Controllers
 - Ellaisys\Cognito\Auth\ConfirmsPasswords
 - Ellaisys\Cognito\Auth\RefreshToken
 - Ellaisys\Cognito\Auth\RegisterMFA
-- Ellaisys\Cognito\Auth\RegistersUsers
+
 - Ellaisys\Cognito\Auth\ResetsPasswords
 - Ellaisys\Cognito\Auth\SendsPasswordResetEmails
-- Ellaisys\Cognito\Auth\VerifiesEmails
+
 - Ellaisys\Cognito\Auth\WebAuthPasskey
 
 In the simplest way you just go through your Auth Controllers and use these traits which are currently implemented in Laravel. The Controllers are now also provided and preconfigured with the traits. You can use them as they are or change them to fit your needs.

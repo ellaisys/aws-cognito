@@ -80,7 +80,7 @@ Configure below keys into the .env file to change the default values.
 
    The provider configuration aids to send out the SMS from AWS with additional costs. Refer AWS SNS pricing for more details [AWS SMS Pricing](https://aws.amazon.com/sns/sms-pricing/)
 
-```php
+```env
 AWS_COGNITO_ALLOW_PASSKEYS=true
 ```
 
