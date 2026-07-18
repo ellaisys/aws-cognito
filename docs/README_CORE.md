@@ -52,39 +52,35 @@
 
 ## **Registering Users OR Sign Up**
 
-The registration process is simplified into just two steps, self registration and verification. They are detailed below in detail. The overall process is now simplified to just a few lines of code. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
+The registration process is simplified into just two steps, self registration and verification. They are detailed below in detail. The overall process is now simplified to just a couple of steps. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
 ### *Self Registration*
 ---
 
-The package provides you with a trait that makes the registration process very simple. In your controller, you can use the trait `RegistersUsers` and `VerifiesEmails`. The trait has the capability to handle both the registration types, `invite` and `register`. The default type is set to **register**. You can change the behaviour of the register method by setting following configuration.
-
-
-
-
-
-
-
-
-
-, use the trait `RegistersUsers` and `VerifiesEmails`. The trait has the capability to handle both the registration types, `invite` and `register`. The default type is set to **register**. You can change the behaviour of the register method by setting following configuration.
-
-```php
-AWS_COGNITO_REGISTRATION_TYPE="invite" //optional - default is register
-```
+The package provides you with a trait that makes the registration process very simple. The package provides a trait `RegistersUsers` that you can add to your controller to make the registration process functional. The namespace for the trait is `Ellaisys\Cognito\Auth\RegistersUsers`. The trait has the capability to handle the following registration types:
+    - `register` (self registration), and
+    - `invite` (admin invited registration).
 
 You will need to configure the AWS Cognito User Pool to allow [Self Registration](COGNITOCONFIG.md#step-11-sign-up-settings). If this is not enabled, then the users will have to be created by an administrator by inviting them to the application.
 
- Refer to the AWS Cognito documentation for more details on how to enable self registration.
+After the user is successfully registered, the status of the user is `UNCONFIRMED` and email is `UNVERIFIED`. A verification email is sent to the user's email and/or phone number.
 
-As a default, if you are registering a new user with Cognito, Cognito will send you an email during signUp that includes the username and temporary password for the users to verify themselves.
+The package provides routes and controllers for the registration process. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
-Using this library in conjunction with **AWS Lambda**, once can look to customize the email template and content. The email template can be text or html based content. The Lambda code is not included in this code repository.
+```php
+//Route to register a new user
+use Ellaisys\Cognito\Http\Controllers\Auth\RegisterController;
+...
 
-We have made is very easy for anyone to use the default behaviour.
+Route::group(['prefix' => 'register'], function() {
+    Route::get('/',  function () { return view('cognito::pages.auth.registers.register'); })->name('form.register');
+    Route::post('/', [RegisterController::class, 'actionRegister'])->name('action.register.submit');
+});
+```
 
-3. If you use the trait provided by us 'Ellaisys\Cognito\Auth\RegistersUsers', the code will be limited to just a few lines
-4. if you are using the Laravel scafolding, then make the password nullable in DB or drop it from schema. Passwords will be only managed by AWS Cognito.
+#### Advanced Registration Options
+
+In case you want to customize the registration process, and write your own controller, you can use the `register` method provided by the trait. The method takes a collection of user data and creates a new user in the AWS Cognito User Pool. The method returns user object on successful registration.
 
 ```php
 use Ellaisys\Cognito\Auth\RegistersUsers;
@@ -92,31 +88,81 @@ use Ellaisys\Cognito\Auth\RegistersUsers;
 class RegisterController extends Controller
 {
     use RegistersUsers;
+    protected $clientMetadata = null;
 
-    public function register(Request $request)
+    public function __construct()
     {
-        $validator = $request->validate([
-            'name' => 'required|max:255',
-            'email' => 'required|email|max:64|unique:users',
-            'password' => 'sometimes|confirmed|min:6|max:64',
-        ]);
+        $this->middleware('guest')->except(['actionInvite', 'invite']);
 
-        //Create credentials object
-        $collection = collect($request->all());
-        $data = $collection->only('name', 'email', 'password'); //passing 'password' is optional.
+        //Set flag to indicate action called from controller
+        $this->setIsControllerAction(true);
 
-        //Register User in cognito
-        if ($cognitoRegistered=$this->createCognitoUser($data)) {
+        parent::__construct();
+    } //Function ends
 
-            //If successful, create the user in local db
-            User::create($collection->only('name', 'email'));
-        } //End if
-
-        //Redirect to view
-        return view('login');
+    public function actionRegister(Request $request)
+    {
+        ...
+        //Get Registered User
+        $user = $this->register($request, $this->clientMetadata);
     }
 }
 ```
+
+The trait triggers `PreRegistrationEvent` and `PostRegistrationEvent` events before and after the registration process. You can listen to these events and perform any additional actions as per your business requirement.
+
+
+
+
+### *Verification of User*
+---
+
+The verification of the user is handled by the `VerifiesEmails` trait. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
+
+The trait has two key methods, `verify` and `resend`. As the name suggests, the verify method is used to verify the users email and/or phone. The resend method is to be called incase the user has not received the email or the code/link has expired. The resend method will send a new verification link to the user.
+
+After the user is successfully verified, the status of the user is `CONFIRMED` and email is `VERIFIED`.
+
+The routes for the verification process are provided by us. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
+
+```php
+use Ellaisys\Cognito\Http\Controllers\Auth\VerificationController;
+
+Route::group(['prefix' => 'register/verify'], function() {
+    Route::get('/',  function () { return view('cognito::pages.auth.registers.verify'); })->name('form.register.verify');
+    Route::post('/', [VerificationController::class, 'verify'])->name('action.register.verify');
+
+    Route::group(['prefix' => 'resend-code'], function() {
+        Route::get('/',  function () { return view('cognito::pages.auth.registers.resend'); })->name('form.register.resend_code');
+        Route::post('/', [VerificationController::class, 'resend'])->name('action.register.resend_code');
+    });
+});
+```
+
+
+## **User Invitation OR Invite User**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Using this library in conjunction with **AWS Lambda**, once can look to customize the email template and content. The email template can be text or html based content. The Lambda code is not included in this code repository.
+
+
 
 5. You don't need to turn off Cognito to send you emails. We rather propose the use of AWS Cognito or AWS SMS mailers, such that user credentials are always secure.
 
@@ -150,20 +196,11 @@ AWS_COGNITO_FORCE_NEW_USER_PASSWORD=true //optional - default value is false.
     AWS_COGNITO_REGISTRATION_TYPE="register" //optional - the default type is invite
 ```
 
-### *Verification of User*
----
 
-The verification of the user is handled by the `VerifiesEmails` trait. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
-The trait has two key methods, `verify` and `resend`. The verify method is called when the user clicks on the link sent to the email address. The resend method is to be called incase the user has not received the email or the link has expired. The resend method will send a new verification link to the user.
 
-The verify link can look like below, the link is generated by the AWS Cognito and sent to the user email address. The link contains a token that is used to verify the user. The link can be configured to use a custom domain name of your application. The token is valid for a limited time and can be used only once. The link can be used to verify the user and activate the account.
 
-Please note that the link is generated by AWS Cognito and sent to the user email address. The link can be configured to use a custom domain name of your application. The query parameter `token` is used to verify the user and activate the account. The token is valid for a limited time and can be used only once. The link can be used to verify the user and activate the account.
 
-```text
-https://<base_url>/register/verify?code=<some-verification-token>&email=<user-email-address>
-```
 
 
 
