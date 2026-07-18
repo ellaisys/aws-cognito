@@ -9,8 +9,8 @@
 [![Release Date](https://img.shields.io/github/release-date/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Release&nbsp;Date)](https://packagist.org/packages/ellaisys/aws-cognito)&#160;
 [![Total Downloads](https://img.shields.io/packagist/dt/ellaisys/aws-cognito?style=flat-square&logo=packagist&logoColor=whitesmoke&label=Downloads)](https://packagist.org/packages/ellaisys/aws-cognito)&#160;
 
-![Github Stars](https://img.shields.io/github/stars/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Stars)&#160;
-![Github Forks](https://img.shields.io/github/forks/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Forks)&#160;
+![GitHub Stars](https://img.shields.io/github/stars/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Stars)&#160;
+![GitHub Forks](https://img.shields.io/github/forks/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=Forks)&#160;
 [![GitHub Contributors](https://img.shields.io/github/contributors-anon/ellaisys/aws-cognito?style=flat&logo=github&logoColor=whitesmoke&label=Contributors)](https://github.com/ellaisys/aws-cognito/graphs/contributors?all=1)&#160;
 [![APM](https://img.shields.io/packagist/l/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=License)](LICENSE.md)
 
@@ -23,16 +23,17 @@
 
 - [Introduction](#introduction)
     + [Demo Application & Code](#demo-application--code)
-    + [Compatability](#compatability)
+    + [Compatibility](#compatibility)
 - [Features](#features)
 - [Installation](#installation)
-- [Configurations](./docs/README_CONFIG.md#contents)
+- [Quick Start & Configurations](./docs/README_CONFIG.md#contents)
 - [References](#references)
 - [Usage](#usage)
 - [Code Quality](#code-quality)
 - [Changelog](#changelog)
 - [Security](#security)
 - [Roadmap](#roadmap)
+- [FAQs](./docs/FAQ.md)
 - [Credits & Contributors](#credits--contributors)
     + [Contribute](#contribute)
 - [Support Us](#support-us)
@@ -43,22 +44,20 @@
 
 ## **Introduction**
 
-AWS Cognito is a AWS Service that provides authentication, authorization, and user management for web and mobile apps. It allows you to add user sign-up, sign-in, and access control to your web and mobile apps quickly and easily.
+*This package provides native integration between Laravel's authentication system and Amazon Cognito. It supports session-based authentication for web applications, token-based authentication for APIs, Multi-Factor Authentication (MFA), SRP authentication, Passkeys (FIDO2/WebAuthn), and Device Authentication while allowing developers to continue using Laravel's familiar authentication features.*
 
-AWS Cognito provides amplify SDKs for JavaScript, iOS, and Android that make it easy to integrate authentication into your apps. It also provides a web-based user interface for managing users and groups, as well as a REST API for programmatic access.
+It integrates AWS Cognito into Laravel's authentication ecosystem while preserving Laravel's native authentication experience.
 
-This package provides a simple way to use AWS Cognito based authentication in Laravel framework using its built-in authentication system.
-
-This package is built on top of the AWS Cognito SDK for PHP, which provides a simple and easy-to-use interface for interacting with the AWS Cognito service. The package provides a set of traits that can be used in your Laravel controllers to handle user registration, login, and logout.
+This is built on top of the AWS Cognito SDK for PHP, to provide a simple and easy-to-use experience for interacting with the AWS Cognito service. The package provides a set of traits that can be used in your Laravel controllers to handle all the authentication-related features.
 
 ### *Demo Application & Code*
 ---
 
-We have created a demo application to show the usage of this package. The demo application is built using Laravel and uses the AWS Cognito package for authentication.
+A complete demo application is available that demonstrates the package in a real Laravel application. It can be used as a reference implementation or as a starting point for your own projects.
 
 The [demo application code](https://github.com/ellaisys/demo_cognito_app) is available on the GitHub and can be used as a reference for your own application.
 
-### *Compatability*
+### *Compatibility*
 ---
 
 |PHP Version|Support|
@@ -66,7 +65,9 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 |7.4|Yes :heavy_check_mark:|
 |8.0|Yes :heavy_check_mark:|
 |8.1|Yes :heavy_check_mark:|
-|8.24|Yes :heavy_check_mark:|
+|8.2|Yes :heavy_check_mark:|
+|8.3|NA |
+|8.4|NA |
 
 |Laravel Version|Support|
 |-|-|
@@ -78,17 +79,35 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 |12.x|Yes :heavy_check_mark:|
 
 > [!NOTE]
-> The middleware configurtion in Laravel 11.x and above shall need a configuration. Refer the Laravel configuration section for more details.
+> Laravel 11 and later require an additional middleware configuration step. See the Laravel Configuration guide for details.
 
 
 ## **Features**
 
-- [Core Authentication](./docs/README_CORE.md)
-- [Multi-Factor Authentication (MFA)](./docs/README_MFA.md) **Updated**
-- [SRP Authentication](./docs/README_SRP.md) **New Feature**
-- [FIDO2 Security Keys Passkey](./docs/README_FIDO2.md) **Updated**
-- [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
-- [Preconfigured Routes and Controllers](./docs/README_ROUTES.md) **Updated**
+- Authentication
+    - [Core IAM](./docs/README_CORE.md)
+    
+        |Supports|
+        |-|
+        | User Invitation & Registration :heavy_check_mark: |
+        | User Verification :heavy_check_mark: |
+        | User Login & Logout :heavy_check_mark: |
+        | Forgot Password :heavy_check_mark: |
+        | Password Reset :heavy_check_mark: |
+        | Session Authentication :heavy_check_mark: |
+        | API Authentication :heavy_check_mark: |
+        | Laravel Guards :heavy_check_mark: |
+        More
+
+    - [SRP](./docs/README_SRP.md) ***New Feature***
+    - [Device](./docs/README_DEVICE_AUTH.md) ***New***
+
+- Security
+    - [Multi-Factor Authentication (MFA)](./docs/README_MFA.md) ***Updated***
+    - [FIDO2 Security Keys (Passkeys)](./docs/README_FIDO2.md) ***Updated***
+
+- Laravel
+    - [Preconfigured Routes and Controllers](./docs/README_ROUTES.md) ***Updated***
 
 
 ## **Installation**
@@ -101,7 +120,7 @@ composer require ellaisys/aws-cognito
 
 ## **Code Quality**
 
-This project follows secure coding and quality assurance practices throughout its development lifecycle. Automated static code analysis is performed using SonarCloud to help identify potential bugs, code smells, maintainability issues, and security hotspots.
+This project follows secure coding and quality assurance practices throughout its development lifecycle. Automated static analysis is performed using SonarCloud to identify potential bugs, vulnerabilities, maintainability issues, and code smells before changes are merged.
 
 In addition to automated analysis, all contributions are reviewed before being merged to help maintain the quality, reliability, and security of the project.
 
@@ -122,14 +141,14 @@ We kindly ask that you **do not report security vulnerabilities through public G
 
 Our development roadmap, planned features, and future enhancements are maintained on the project's GitHub Projects and Wiki.
 
-https://github.com/orgs/ellaisys/projects/2
-
-https://github.com/ellaisys/aws-cognito/wiki/RoadMap
+- [GitHub Project Board](https://github.com/orgs/ellaisys/projects/2)
+- [Project Wiki Roadmap](https://github.com/ellaisys/aws-cognito/wiki/RoadMap)
 
 
 ## **Credits & Contributors**
 
-This project has been inspired and shaped by the work of the open-source community. We are grateful to the developers and maintainers whose ideas, discussions, libraries, and code have helped influence the design and implementation of this package.
+
+This project has been inspired by the work of the open-source community. We are grateful to the developers and maintainers whose ideas, discussions, libraries, and code have helped influence the design and implementation of this package.
 
 We would like to acknowledge the following projects and organizations for their inspiration, technical references, or contributions. Portions of this project were adapted from the following open-source projects in accordance with their respective licenses:
 
@@ -168,6 +187,7 @@ EllaiSys was a web engineering and technology consulting company specializing in
 If this project has been helpful to you or your organization, we'd love your support. There are several ways you can contribute:
 
 * **Give some love** by starring the repository on GitHub, sharing it with your network, or recommending it to others.
+* **Spread the word** by writing blog posts, creating tutorials, or giving talks about the project.
 * **Contribute code** by fixing bugs, implementing new features, or improving performance.
 * **Report issues** and help us identify bugs or edge cases.
 * **Improve the documentation** by correcting errors, adding examples, or enhancing clarity.
@@ -194,6 +214,6 @@ A copy of the license is included with this package in the [License](LICENSE.md)
 
 ## **Disclaimer**
 
-This package is actively used in production across multiple projects and is continually being improved.
+This package is actively maintained and continuously improved.
 
 We welcome bug reports, feature requests, and other feedback from the community. While we will make every reasonable effort to review and address reported issues, support is provided on a voluntary, best-effort basis. As this is an open-source project offered free of charge, we are unable to guarantee response times, issue resolution, or support service level agreements (SLAs).
