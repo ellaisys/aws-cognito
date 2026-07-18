@@ -194,6 +194,18 @@ In order to enable self-registration, select the **Self-service sign-up** sectio
 ![AWS Cognito - Sign-up Settings](../assets/images/aws_cognito_flow27.png)
 
 
+### *Step 12: Amend Message Templates* (Optional)
+---
+
+In the **Message Templates** settings, under the **Branding** subsection, you can customize the email and SMS messages sent to users during various stages of the authentication process, such as account verification, password reset, and multi-factor authentication.
+
+![AWS Cognito - Message Templates](../assets/images/aws_cognito_flow30.png)
+
+Select the template in the list, and click on the **Edit** button to customize the messages. You can modify the subject, body, and other settings for each message type.
+
+![AWS Cognito - Message Templates](../assets/images/aws_cognito_flow31.png)
+
+
 ## **References**
 - [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html)
 - [AWS Cognito User Pool Settings](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools.html)
