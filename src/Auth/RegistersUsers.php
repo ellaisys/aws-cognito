@@ -70,7 +70,7 @@ trait RegistersUsers
         $this->messageKey = 'cognito::messages.auth.invitation_success';
 
         return $this->register(
-            $request, $clientMetadata, true
+            $request, $clientMetadata
         );
 
     } //Function ends
@@ -81,19 +81,13 @@ trait RegistersUsers
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function register(Request $request, ?array $clientMetadata = null,
-        bool $usePassedRegistrationType = false)
+    public function register(Request $request, ?array $clientMetadata = null): mixed
     {
         try {
             // Initialize variables
             $returnValue = null;
             $cognitoRegistered=false;
             $user = null;
-
-            //Set the registration type
-            if (!$usePassedRegistrationType) {
-                $this->registrationType = config('cognito.registration_type', 'register');
-            } //End if
 
             //Redirect to verification page if registration type is register
             if ($this->registrationType=='register') {
