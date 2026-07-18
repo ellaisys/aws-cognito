@@ -83,6 +83,7 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 |10.x|Yes :heavy_check_mark:|
 |11.x|Yes :heavy_check_mark:|
 |12.x|Yes :heavy_check_mark:|
+|13.x|NA|
 
 </td></tr> </table>
 
