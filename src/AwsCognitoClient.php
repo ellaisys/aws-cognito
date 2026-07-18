@@ -389,7 +389,7 @@ class AwsCognitoClient
         } catch (CognitoIdentityProviderException $e) {
             Log::error('AwsCognitoClient:inviteUser:CognitoIdentityProviderException');
             if ($e->getAwsErrorCode() === self::USERNAME_EXISTS) {
-                throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS, $e);
+                throw new InvalidUserException(AwsCognitoException::COGNITO_AUTH_USERNAME_EXISTS, $e);
             } //End if
 
             throw AwsCognitoException::create($e);

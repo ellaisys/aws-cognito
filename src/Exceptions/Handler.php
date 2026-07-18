@@ -20,6 +20,7 @@ use Psr\Log\LogLevel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Lang;
 
 use Ellaisys\Cognito\Services\JsonResponseService;
 use Ellaisys\Cognito\Contracts\ExceptionContract;
@@ -190,9 +191,9 @@ class Handler extends ExceptionHandler
                 $errorKey = AwsCognitoException::COGNITO_AUTH_USER_RESET_PASS;
                 break;
 
-            case AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS:
+            case AwsCognitoException::COGNITO_AUTH_USERNAME_EXISTS:
                 $errorMessage = 'User already exists';
-                $errorKey = AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS;
+                $errorKey = AwsCognitoException::COGNITO_AUTH_USERNAME_EXISTS;
                 break;
 
             case AwsCognitoException::COGNITO_AUTH_CODE_INVALID:
@@ -310,10 +311,11 @@ class Handler extends ExceptionHandler
                 ->with('message', $systemErrorMsg)
                 ->withErrors($errors);
         } else {
-            $messageOutput = (!empty($errorKey)) ? trans('cognito::messages.error.' . $errorKey) : $systemErrorMsg;
+            $messageKey = $errorKey ? 'cognito::messages.error.' . $errorKey : null;
+            $messageOutput = ($messageKey && Lang::has($messageKey)) ? trans($messageKey) : null;
 
             return redirect()->back()
-                ->withInput($request->input())
+                ->withInput($request->except('_token', 'password', 'password_confirmation', 'code', 'token', 'pass_code'))
                 ->with('status', 'error')
                 ->with('message', $messageOutput)
                 ->withErrors($errors);

@@ -9,7 +9,9 @@ return [
     'pass_code' => 'Pass Code',
 
     'error' => [
+        'ERROR_COGNITO_DEFAULT' => 'An error occurred while processing your request. Please try again later.',
         'ERROR_COGNITO_AUTH_USER_UNAUTHORIZED' => 'User is not authorized to perform this action.',
+        'ERROR_COGNITO_AUTH_USERNAME_EXISTS' => 'User already exists. Please provide different details.',
     ],
 
     'auth' => [

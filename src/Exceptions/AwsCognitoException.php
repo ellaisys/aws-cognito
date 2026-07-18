@@ -23,7 +23,7 @@ class AwsCognitoException extends HttpException
 {
     const COGNITO_AUTH_USER_UNAUTHORIZED = 'ERROR_COGNITO_AUTH_USER_UNAUTHORIZED';
     const COGNITO_AUTH_USER_RESET_PASS = 'ERROR_COGNITO_AUTH_USER_RESET_PASSWORD';
-    const COGNITO_AUTH_USERNAME_EXITS = 'ERROR_COGNITO_AUTH_USERNAME_EXITS';
+    const COGNITO_AUTH_USERNAME_EXISTS = 'ERROR_COGNITO_AUTH_USERNAME_EXISTS';
     const COGNITO_AUTH_CODE_INVALID = 'ERROR_COGNITO_AUTH_CODE_INVALID';
     const COGNITO_USERNAME_INVALID = 'ERROR_COGNITO_USERNAME_INVALID';
     const COGNITO_USER_INVALID = 'ERROR_COGNITO_USER_INVALID';
@@ -89,7 +89,7 @@ class AwsCognitoException extends HttpException
                 break;
 
             case 'UsernameExistsException':
-                $errorCode = self::COGNITO_AUTH_USERNAME_EXITS;
+                $errorCode = self::COGNITO_AUTH_USERNAME_EXISTS;
                 break;
 
             case 'EnableSoftwareTokenMFAException':
