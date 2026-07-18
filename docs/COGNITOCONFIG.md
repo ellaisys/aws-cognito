@@ -29,6 +29,10 @@ This document is shared for those requiring assistance or clarification in confi
 
 This document is intended to provide guidance on configuring AWS Cognito for your application. It is not a comprehensive guide to all AWS Cognito features, but rather focuses on the essential steps needed to set up a user pool and app client for your application.
 
+AWS Cognito is a AWS service that provides authentication, authorization, and user management for web and mobile applications. It allows you to add user sign-up, sign-in, and access control to your web and mobile applications quickly and easily.
+
+AWS Cognito provides Amplify SDKs for JavaScript, iOS, and Android that make it easy to integrate authentication into your applications. It also provides a web-based user interface for managing users and groups, as well as a REST API for programmatic access.
+
 Any additional configurations or customizations that are required for your specific application should be done based on your application's requirements and AWS Cognito documentation.
 
 In case of MFA (Multi-Factor Authentication), SRP, Device Authentication requirements, please refer to the configuration settings in respective sections of the AWS Cognito documentation.
