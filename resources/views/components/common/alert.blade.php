@@ -15,7 +15,7 @@
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-            @else
+            @elseif (!session('message'))
                 @error('error')
                     <div class="text-danger fw-bold">{{ $message }}</div>
                 @enderror
