@@ -93,6 +93,58 @@ class Handler extends ExceptionHandler
     }
 
     /**
+     * Report or log an exception.
+     *
+     * @param  \Throwable  $e
+     *
+     * @return void
+     *
+     * @throws \Exception
+     */
+    public function report(Throwable $exception): void
+    {
+        $systemErrorCode = null;
+        $systemErrorMsg = null;
+
+        // Handle AWS Cognito exceptions to extract more user-friendly messages
+        $parentError = $exception->getPrevious();
+        if ($parentError instanceof CognitoIdentityProviderException) {
+            $systemErrorCode = $parentError->getAwsErrorCode();
+            $systemErrorMsg = $parentError->getAwsErrorMessage();
+        }
+
+        // Prepare error data for logging
+        $errorData = [
+            'message'        => $exception->getMessage(),
+            'system_code'    => $systemErrorCode,
+            'system_message' => $systemErrorMsg,
+            'execution_time' => number_format(microtime(true) - LARAVEL_START, 4),
+            'ip'             => request()->ip(),
+        ];
+
+        //Add system messages when in debug mode
+        if (config('app.debug')) {
+            $errorData['debug'] = array_merge($errorData['debug'] ?? [], [
+                'exception' => get_class($exception),
+                'trace' => collect($exception->getTrace())->take(3),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'method'    => request()->method(),
+                'input'     => request()->except([
+                    'password',
+                    'password_confirmation',
+                    'current_password',
+                ]),                
+            ]);
+        } //End if
+
+        // Log the error with detailed information
+        Log::error($exception->getMessage(), $errorData);
+
+        parent::report($exception);
+    } //Function ends
+
+    /**
      * Register the exception handling callbacks for the application.
      *
      * @return void
@@ -100,9 +152,8 @@ class Handler extends ExceptionHandler
     public function register()
     {
         // Generic exception report
-        $this->reportable(function (Throwable $e) {
+        $this->reportable(function (Throwable $e): void {
             // You can log to an external service (Sentry, Bugsnag, etc.)
-            Log::error($e->getMessage());
         });
 
         // Handle API exceptions gracefully
@@ -293,9 +344,9 @@ class Handler extends ExceptionHandler
         bool $isRedirectToLogin = false): mixed
     {
         $systemErrorMsg = (!$isRedirectToLogin)?$e->getMessage():$message;
-        $parentError = $e->getPrevious();
 
         // Handle AWS Cognito exceptions to extract more user-friendly messages
+        $parentError = $e->getPrevious();
         if ($parentError instanceof CognitoIdentityProviderException) {
             $systemErrorMsg = $parentError->getAwsErrorMessage();
         }
