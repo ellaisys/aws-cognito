@@ -140,8 +140,6 @@ class RegisterController extends Controller
 The trait triggers `PreRegistrationEvent` and `PostRegistrationEvent` events before and after the registration process. You can listen to these events and perform any additional actions as per your business requirement.
 
 
-
-
 ### *Verification of User*
 ---
 
@@ -192,128 +190,92 @@ Similarly, you can also auto-verify the new user by setting the environment vari
 
 ## **User Authentication OR Sign In**
 
-We have provided you with a useful trait that make the authentication very simple (with Web or API routes). You don't have to worry about any additional code to manage sessions and token (for API).
+Basic password based user authentication is simplified into just one step, the login. It is essential that the `ALLOW_USER_PASSWORD_AUTH` is enabled in the AWS Cognito User Pool. For details on how to enable this, please refer to the [AWS Cognito Configuration - App Client Settings](COGNITOCONFIG.md#step-6-edit-app-client-settings) section.
 
-> [!NOTE]
-> The Access Token is now validated with the AWS Cognito certificate. If the certificate is incorrect or expired, it will throw am exception.
+Other authentication types like SRP, MFA, Passkeys, etc. are also supported by the package. In case you want to know more about these authentication types, please refer to the [AWS Cognito Configuration - App Client Settings](COGNITOCONFIG.md#step-6-edit-app-client-settings) section, OR  you can refer the features section of this document for more details.
 
-The trait takes in some additional parameters, refer below the function signature of the trait. Note that the function takes the object of **Illuminate\Support\Collection** instead of **Illuminate\Http\Request**. This will allow you to use this function in any tier of the code.
+The package provides you with a trait that makes the authentication process very simple. The package provides a trait `AuthenticatesUsers` that you can add to your controller to make the authentication process functional. The namespace for the trait is `Ellaisys\Cognito\Auth\AuthenticatesUsers`. The trait has the capability to handle the following authentication types:
+    - `attemptLogin` (Login with username and password), and
+    - `attemptLoginSRP` (Login with SRP)
+    - `challenge` (Login with challenge e.g. MFA, Passkeys, etc.)
 
-Also, the 'guard' name reference is passed, so that you can reuse the function for multiple guard drivers in your project. The function has the capability to handle the Session and Token Guards with multiple drivers and providers as defined in /config/auth.php
+You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes. The package provides routes and controllers for the authentication process.
 
 ```php
-namespace Ellaisys\Cognito\Auth;
+//Route to authenticate a user
 
-protected function attemptLogin (
-    Collection $request, string $guard='web', 
-    string $paramUsername='email', string $paramPassword='password', 
-    bool $isJsonResponse=false
-) {
-    ...
-    ...
+use Ellaisys\Cognito\Http\Controllers\Auth\LoginController;
+...
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/login/srp', [LoginController::class, 'loginSRP']);
+Route::post('/login/challenge', [LoginController::class, 'actionChallenge']);
+```
 
-    ...
+The trait triggers `PreAuthEvent`, `PostAuthSuccessEvent` and `PostAuthFailedEvent` events before and after the login process. You can listen to these events and perform any additional actions as per your business requirement.
+
+
+#### Advanced Authentication Options
+
+For advanced authentication options, you can use the `attemptLogin` method provided by the trait. The method takes a collection of user data and authenticates the user in the AWS Cognito User Pool. The method returns a claim object on successful authentication.
+
+```php
+use Ellaisys\Cognito\AwsCognitoClaim;
+use Ellaisys\Cognito\Auth\AuthenticatesUsers;
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
+...
+
+class LoginController extends Controller
+{
+    use AuthenticatesUsers;
+
+    public function __construct()
+    {
+        $this->middleware('guest')->except(['logout']);
+        parent::__construct();
+    } //Function ends
+
+    public function login(Request $request)
+    {
+        ...
+        $claim = $this->attemptLogin($request,  CognitoAuthFlowTypes::USER_PASSWORD_AUTH);
+
+        if ($claim instanceof AwsCognitoClaim) {
+            //Authentication successful
+            ...
+        } else {
+            // Challenge generated, handle the challenge
+            ...
+        } //End if
+
+    } //Function ends
 }
 ```
 
-In case you want to use this trait for Web login, you can write the code as shown below in the AuthController.php
+
+## **Log Out OR Sign out**
+
+The package provides you with a trait that makes the logout process very simple. The package provides a trait `AuthenticatesUsers` that you can add to your controller to make the logout process functional. The namespace for the trait is `Ellaisys\Cognito\Auth\AuthenticatesUsers`. The trait has the capability to handle the following logout types:
+    - `logout` (Logout, but persists the refresh token), and
+    - `logout(true)` (Logout, and revoke the refresh token)
+
+In multiple application scenarios, you may want to logout the user from one application then use the `logout()` method to persist the refresh token. This will allow the user to maintain the session in other applications. In case you want to logout the user from all applications, you can use the `logout(true)` method to revoke the refresh token. This will require the user to authenticate again in all applications. This is useful in Single Sign-On scenarios where you want to logout the user from all applications. This is detailed in the [Single Sign-On](#single-sign-on) section.
+
+If you are using the routes provided by us, you can use the preconfigured controller with following routes. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
 ```php
-namespace App\Http\Controllers;
+//Route to logout a user, secure the route with auth middleware
+use Ellaisys\Cognito\Http\Controllers\Auth\LoginController;
 
-...
-use Ellaisys\Cognito\AwsCognitoClaim;
-use Ellaisys\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
+Route::post('/logout', [LoginController::class, 'logout']);
+Route::post('/logout/forced', [LoginController::class, 'logoutForced']);
 
-class AuthController extends Controller
-{
-    use CognitoAuthenticatesUsers;
-
-    /**
-     * Authenticate User
-     * 
-     * @throws \HttpException
-     * 
-     * @return mixed
-     */
-    public function login(\Illuminate\Http\Request $request)
-    {
-        ...
-
-        //Convert request to collection
-        $collection = collect($request->all());
-
-        //Authenticate with Cognito Package Trait (with 'web' as the auth guard)
-        if ($response = $this->attemptLogin($collection, 'web')) {
-            if ($response===true) {
-                return redirect(route('home'))->with('success', true);
-            } elseif ($response===false) {
-                // If the login attempt was unsuccessful you may increment the number of attempts
-                // to login and redirect the user back to the login form. Of course, when this
-                // user surpasses their maximum number of attempts they will get locked out.
-                //
-                //$this->incrementLoginAttempts($request);
-                //
-                //$this->sendFailedLoginResponse($collection, null);
-            } else {
-                return $response;
-            } //End if
-        } //End if
-
-    } //Function ends
-
-    ...
-} //Class ends
 ```
 
-In case you want to use this trait for API based login, you can write the code as shown below in the AuthApiController.php
+The trait triggers a `PostLogoutEvent` event after the logout process. You can listen to this event and perform any additional actions as per your business requirement.
 
-```php
-namespace App\Api\Controller;
+#### Advanced Logout Options
 
-...
-use Ellaisys\Cognito\AwsCognitoClaim;
-use Ellaisys\Cognito\Auth\AuthenticatesUsers as CognitoAuthenticatesUsers;
-
-class AuthApiController extends Controller
-{
-    use CognitoAuthenticatesUsers;
-
-    /**
-     * Authenticate User
-     * 
-     * @throws \HttpException
-     * 
-     * @return mixed
-     */
-    public function login(\Illuminate\Http\Request $request)
-    {
-        ...
-
-        //Convert request to collection
-        $collection = collect($request->all());
-
-        //Authenticate with Cognito Package Trait (with 'api' as the auth guard)
-        if ($claim = $this->attemptLogin($collection, 'api', 'username', 'password', true)) {
-            if ($claim instanceof AwsCognitoClaim) {
-                return $claim->getData();
-            } else {
-                return response()->json(['status' => 'error', 'message' => $claim], 400);
-            } //End if
-        } //End if
-
-    } //Function ends
-
-
-    ...
-} //Class ends
-```
-
-## **Log Out OR Signout (Remove Access Token)**
-
-The logout methods are now part of the guard implementations, the logout method removes the access-tokens from AWS and also removes from Application Storage managed by this library. Just calling the auth guard logout method will be sufficient. You can implement it into the routes or controller based on your development preference.
-
-The logout method now takes an **optional** boolean parameter (true) to revoke RefreshToken. The default value is (false) and that will persist the Refresh Token with AWS Cognito.
+For advanced logout options, you can use the `logout` method provided by the trait. The method takes a boolean parameter to indicate whether to revoke the refresh token or not. The method returns a boolean value indicating whether the logout was successful or not.
 
 ```php
 ...
@@ -505,3 +467,5 @@ This library fetches the password policy from the cognito pool configurations. T
 >In case of special characters, we are supporting all except the pipe character **|** for now.
 >We are working on making sure that pipe character is handled soon.
 
+> [!NOTE]
+> The Access Token is now validated with the AWS Cognito certificate. If the certificate is incorrect or expired, it will throw am exception.
