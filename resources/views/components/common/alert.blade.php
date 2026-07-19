@@ -15,7 +15,7 @@
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-            @elseif (!session('message'))
+            @elseif (!session('message') || config('app.debug'))
                 @error('error')
                     <div class="text-danger fw-bold">{{ $message }}</div>
                 @enderror
