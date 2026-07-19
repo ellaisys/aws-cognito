@@ -116,6 +116,8 @@ class JsonResponseService
         if ((!empty($e)) && ($e instanceof Exception)) {
             $systemErrorCode = $e->getCode();
             $systemErrorMsg = $e->getMessage();
+
+            // Handle AWS Cognito exceptions to extract more user-friendly messages
             $parentError = $e->getPrevious();
             if ($parentError instanceof CognitoIdentityProviderException) {
                 $systemErrorCode = $parentError->getAwsErrorCode();
