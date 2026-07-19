@@ -132,8 +132,8 @@ class AwsCognitoException extends HttpException
         } //End switch
         
         return [
-                $errorCode,
-                $exception->getStatusCode(),
+                $errorCode ?? 'AWS Cognito Error',
+                $exception->getStatusCode() ?? 400,
                 [],
                 0
             ];
