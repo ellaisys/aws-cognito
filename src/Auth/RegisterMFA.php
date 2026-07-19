@@ -102,7 +102,6 @@ trait RegisterMFA
             } //Return response
         } catch (Exception $exception) {
             Log::error('RegisterMFA:verify:Exception');
-            Log::error($exception);
             throw $exception;
         } //End try
 
