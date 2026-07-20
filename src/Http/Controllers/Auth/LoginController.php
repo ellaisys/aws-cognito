@@ -11,27 +11,17 @@
 
 namespace Ellaisys\Cognito\Http\Controllers\Auth;
 
-use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
 
-use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\Auth\AuthenticatesUsers;
-
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
-
-use Ellaisys\Cognito\Events\Auth\PreAuthEvent;
-use Ellaisys\Cognito\Events\Auth\PostAuthSuccessEvent;
-use Ellaisys\Cognito\Events\Auth\PostAuthFailedEvent;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
-use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class LoginController extends Controller
 {
