@@ -216,7 +216,7 @@ The trait triggers `PreAuthEvent`, `PostAuthSuccessEvent` and `PostAuthFailedEve
 
 #### Advanced Authentication Options
 
-For advanced authentication options, you can use the `attemptLogin` method provided by the trait. The method takes a collection of user data and authenticates the user in the AWS Cognito User Pool. The method returns a claim object on successful authentication.
+For advanced authentication options, you can use the `attemptLogin` method provided by the trait. The method takes a collection of user data and authenticates the user in the AWS Cognito User Pool. The method returns a claim object on successful authentication. The credential object in the request should contain the `username` and `password` parameters for Basic Authentication. The method also takes an optional parameter to specify the authentication flow type. The default value is `USER_PASSWORD_AUTH`.
 
 ```php
 use Ellaisys\Cognito\AwsCognitoClaim;
@@ -231,13 +231,14 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest')->except(['logout']);
+        $this->setIsControllerAction(false); //Set flag to indicate action called from controller
         parent::__construct();
     } //Function ends
 
     public function login(Request $request)
     {
         ...
-        $claim = $this->attemptLogin($request,  CognitoAuthFlowTypes::USER_PASSWORD_AUTH);
+        $claim = $this->attemptLogin($request, CognitoAuthFlowTypes::USER_PASSWORD_AUTH);
 
         if ($claim instanceof AwsCognitoClaim) {
             //Authentication successful
@@ -271,7 +272,7 @@ Route::post('/logout/forced', [LoginController::class, 'logoutForced']);
 
 ```
 
-The trait triggers a `PostLogoutEvent` event after the logout process. You can listen to this event and perform any additional actions as per your business requirement.
+The trait triggers a `PreLogoutEvent` and `PostLogoutEvent` during the logout process. You can listen to these events and perform any additional actions as per your business requirement.
 
 #### Advanced Logout Options
 
