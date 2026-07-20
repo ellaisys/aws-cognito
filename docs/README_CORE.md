@@ -128,7 +128,7 @@ class RegisterController extends Controller
         parent::__construct();
     } //Function ends
 
-    public function actionRegister(Request $request)
+    public function actionRegister(\Illuminate\Http\Request $request)
     {
         ...
         //Get Registered User
@@ -235,7 +235,7 @@ class LoginController extends Controller
         parent::__construct();
     } //Function ends
 
-    public function login(Request $request)
+    public function login(\Illuminate\Http\Request $request)
     {
         ...
         $claim = $this->attemptLogin($request, CognitoAuthFlowTypes::USER_PASSWORD_AUTH);
