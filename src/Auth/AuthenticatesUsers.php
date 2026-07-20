@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
+use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoUserPool;
 
@@ -27,6 +28,9 @@ use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 use Ellaisys\Cognito\Services\AwsCognitoJwksService;
 use Ellaisys\Cognito\Services\AwsCognitoSrpService;
 
+use Ellaisys\Cognito\Events\Auth\PreAuthEvent;
+use Ellaisys\Cognito\Events\Auth\PostAuthSuccessEvent;
+use Ellaisys\Cognito\Events\Auth\PostAuthFailedEvent;
 use Ellaisys\Cognito\Events\Auth\PreLogoutEvent;
 use Ellaisys\Cognito\Events\Auth\PostLogoutEvent;
 
@@ -124,18 +128,14 @@ trait AuthenticatesUsers
                 );
 
             //Return response
-            if ($this->isControllerAction) {
-                $returnValue = $response;
-            } elseif ($this->getIsJsonResponse($request)) {
-                $returnValue = $this->response->success($response);
-            } else {
-                $returnValue = redirect()
-                    ->route($this->redirectPath())
-                    ->with('data', $response);
-            } //Return response
-        } catch (Exception $e) {
+            $returnValue = $this->processClaimResponse($request, $response);
+        } catch (Exception $exception) {
             Log::error('AuthenticatesUsers:attemptLogin:Exception');
-            throw $e;
+
+            //Rise Post Auth Failed Event
+            $this->callPostAuthErrorEvent($request, $exception, $paramPassword);
+
+            throw $exception;
         } //Try-catch ends
 
         return $returnValue;
@@ -160,9 +160,11 @@ trait AuthenticatesUsers
         string $sessionTokenParam = 'session_token',
         string $deviceKeyParam = 'device_key')
     {
+        // Initialize variables
+        $returnValue = null;
+
         try {
-            // Initialize variables
-            $returnValue = null;
+            // Get the authentication guard
             $guard = $this->getGuard($request);
 
             //Generate the SRP_A parameter if not present in the request
@@ -192,14 +194,21 @@ trait AuthenticatesUsers
             } //End if
 
             //Authenticate User
-            $returnValue = Auth::guard($guard)->attempt(
+            $response = Auth::guard($guard)->attempt(
                     $request->all(), false,
                     $paramUsername, $paramPassword,
                     $authFlow
                 );
-        } catch (Exception $e) {
+
+            //Return response
+            $returnValue = $this->processClaimResponse($request, $response);
+        } catch (Exception $exception) {
             Log::error('AuthenticatesUsers:attemptLoginSRP:Exception');
-            throw $e;
+
+            //Rise Post Auth Failed Event
+            $this->callPostAuthErrorEvent($request, $exception, $paramPassword);
+
+            throw $exception;
         } //Try-catch ends
 
         return $returnValue;
@@ -241,6 +250,11 @@ trait AuthenticatesUsers
                 $returnValue = $this->response->success($response);
             } else {
                 $request->session()->invalidate();
+
+                // Set the redirect path to the login page defined in the configuration
+                $this->redirectTo = config('cognito.routes.web.login_page');
+
+                // Call response redirect with status, message, and data
                 $returnValue = redirect()
                     ->route($this->redirectPath())
                     ->with('status', 'success')
@@ -297,18 +311,14 @@ trait AuthenticatesUsers
             $response = Auth::guard($guard)->attemptChallengeAuth($challenge);
 
             //Return response
-            if ($this->isControllerAction) {
-                $returnValue = $response;
-            } elseif ($this->getIsJsonResponse($request)) {
-                $returnValue = $this->response->success($response);
-            } else {
-                $returnValue = redirect()
-                    ->route($this->redirectPath())
-                    ->with('data', $response);
-            } //Return response
-        } catch (Exception $e) {
+           $returnValue = $this->processClaimResponse($request, $response);
+        } catch (Exception $exception) {
             Log::error('AuthenticatesUsers:challenge:Exception');
-            throw $e;
+
+            //Rise Post Auth Failed Event
+            $this->callPostAuthErrorEvent($request, $exception);
+
+            throw $exception;
         }
         return $returnValue;
     } //Function ends
@@ -487,12 +497,136 @@ trait AuthenticatesUsers
             $request->merge([
                 'challenge_value' => json_encode($challengeValue)
             ]);
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             Log::error('AuthenticatesUsers:buildChallengeRequestDataForPasswordVerifier:Exception');
-            throw $e;
+            throw $exception;
         } //Try-catch ends
 
         return $request;
+    } //Function ends
+
+    /**
+     * Process the claim response from Cognito authentication.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $response
+     *
+     * @return mixed
+     */
+    private function processClaimResponse(Request $request, $response): mixed
+    {
+        // Initialize variables
+        $returnValue = null;
+
+        try {
+            // Check if the response is an instance of AwsCognitoClaim
+            if ($response instanceof AwsCognitoClaim) { // Successful authentication
+                //Call the post-authentication success event
+                $this->callPostAuthSuccessEvent($request);
+
+                //Return response
+                if ($this->isControllerAction) {
+                    $returnValue = $response;
+                } elseif ($this->getIsJsonResponse($request)) {
+                    $returnValue = $this->response->success($response->getData());
+                } else {
+                    // Regenerate the session to prevent session fixation attacks
+                    $request->session()->regenerate();
+
+                    // Set the redirect path to the home page defined in the configuration
+                    $this->redirectTo = config('cognito.routes.web.home_page');
+
+                    // Call response redirect with status, message, and data
+                    $returnValue = redirect()
+                        ->route($this->redirectPath())
+                        ->with('status', 'success')
+                        ->with('message', trans('cognito::messages.auth.login_success'))
+                        ->with('data', $response->getData());
+                } //Return response
+            } else { // Challenge condition
+                //Return response
+                if ($this->isControllerAction) {
+                    $returnValue = $response;
+                } elseif ($this->getIsJsonResponse($request)) {
+                    $returnValue = $this->response->success($response);
+                } else {
+                    // Set the redirect path for the challenge
+                    $this->redirectTo = config('cognito.routes.web.challenge_page');
+
+                    // Call response redirect with status, message, and data for challenge
+                    $returnValue = redirect()
+                        ->route($this->redirectPath(), [
+                                'step' => 'challenge',
+                                'challenge' => $response['challenge_name']
+                            ])
+                        ->with('status', 'success')
+                        ->with('message', trans('cognito::messages.auth.challenge_generated'))
+                        ->with('data', $response);
+                } //Return response
+            } //End if
+        } catch (Exception $exception) {
+            Log::error('AuthenticatesUsers:processClaimResponse:Exception');
+            throw $exception;
+        } //Try-catch ends
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Call the pre-authentication event.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return void
+     */
+    private function callPreAuthEvent(Request $request): void
+    {
+        //Raise pre registration event
+        event(new PreAuthEvent(
+            $request->except($this->passwordField),
+            $request->ip()
+        ));
+    } //Function ends
+
+    /**
+     * Call the post-authentication success event.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param string $guard
+     * @return void
+     */
+    private function callPostAuthSuccessEvent(
+        Request $request, string $paramPassword='password'): void
+    {
+        // Initialize parameters
+        $guard = $this->getGuard($request);
+
+        // Get the authenticated user
+        $user = Auth::guard($guard)->user();
+
+        // Raise Post Auth Success Event
+        event(new PostAuthSuccessEvent(
+            $user->toArray(),
+            $request->except($paramPassword),
+            $request->ip()
+        ));
+    } //Function ends
+
+    /**
+     * Call the post-authentication error event.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \Exception $e
+     * @return void
+     */
+    private function callPostAuthErrorEvent(
+        Request $request, Exception $exception,
+        string $paramPassword='password'): void
+    {
+        //Rise Post Auth Failed Event
+        event(new PostAuthFailedEvent(
+            $request->except($paramPassword),
+            $exception, $request->ip()
+        ));
     } //Function ends
 
     /**

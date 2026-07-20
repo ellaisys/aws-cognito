@@ -491,6 +491,7 @@ return [
            'register_verify_page' => env('AWS_COGNITO_VERIFY_REGISTER_PAGE', 'cognito.form.register.verify'),
            'password_forgot_page' => env('AWS_COGNITO_PASSWORD_FORGOT_PAGE', 'cognito.form.password.forgot'),
            'password_reset_page' => env('AWS_COGNITO_PASSWORD_RESET_PAGE', 'cognito.form.password.reset'),
+           'challenge_page' => env('AWS_COGNITO_CHALLENGE_PAGE', 'cognito.form.login.step'),
         ]
     ],
 

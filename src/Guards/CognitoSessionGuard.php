@@ -136,10 +136,11 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         string $paramUsername='email', ?string $paramPassword='password',
         ?CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH)
     {
-        try {
-            $returnValue = false;
-            $user = null;
+        // Initialize return value
+        $returnValue = null;
+        $user = null;
 
+        try {
             //convert to collection
             $request = collect($credentials);
 
@@ -148,7 +149,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 $paramPassword, $authFlow);
 
             //Fire event for authenticating
-            $this->fireAttemptEvent($request->toArray(), $remember);
+            $this->fireAttemptEvent($credentials, $remember);
 
             //Check if the payload has valid AWS credentials
             $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlow));
@@ -159,9 +160,9 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                     $this->login($user, $remember);
 
                     //Fire successful attempt
-                    $this->fireLoginEvent($user, true);
+                    $this->fireLoginEvent($user, $remember);
 
-                    $returnValue = true;
+                    $returnValue = $this->claim;
                 } //End if
             } elseif ($responseCognito && $this->challengeName) {
                 //Handle the challenge
@@ -173,14 +174,12 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             $exceptionClass = basename(str_replace('\\', DIRECTORY_SEPARATOR, get_class($e)));
             Log::error('CognitoSessionGuard:attempt:'.$exceptionClass);
 
+            // Fire failed attempt
+            $this->fireFailedEvent($user, $credentials);
+
             //Find SQL Exception
             if (strpos($e->getMessage(), 'SQLSTATE') !== false) {
                 throw new DBConnectionException();
-            } //End if
-
-            //Fire failed attempt
-            if (!$returnValue) {
-                $this->fireFailedEvent($user, $request->toArray());
             } //End if
 
             throw $e;
@@ -308,6 +307,9 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             //Get authentication token from session
             $session = $this->getSession();
 
+            // Call the parents logout method
+            parent::logout();
+
             //Get the claim from session
             $claim = $session->has(ClaimSession::SESSION_KEY)?$session->get(ClaimSession::SESSION_KEY):null;
             if (empty($claim)) { $this->forgetCognitoSession($session); throw new InvalidTokenException('EXCEPTION_INVALID_CLAIM'); }
@@ -377,10 +379,13 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      *
      * @throws
      *
-     * @return bool
+     * @return mixed
      */
-    public function attemptChallengeAuth(array $challenge, bool $remember=false) {
-        $returnValue = false;
+    public function attemptChallengeAuth(array $challenge, bool $remember=false): mixed
+    {
+        // Initialize variables
+        $returnValue = null;
+
         try {
             //Login with Challenge
             $responseCognito = $this->attemptBaseChallenge($challenge);
@@ -393,7 +398,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                     //Fire successful attempt
                     $this->fireLoginEvent($user, true);
 
-                    $returnValue = true;
+                    $returnValue = $this->claim;
                 } //End if
             } elseif ($responseCognito && $this->challengeName) {
                 //Handle the challenge
