@@ -40,10 +40,10 @@ trait VerifiesEmails
      */
     public function verify(Request $request, ?array $clientMetadata = null): mixed
     {
-        try {
-            // Initialize variables
-            $returnValue = null;
+        // Initialize variables
+        $returnValue = null;
 
+        try {
             // If email is present in query parameters, decode it before validation and processing
             $email = $this->getDataFromQueryParam($request, 'email', EncryptionTypes::DEFAULT, true);
             if (!empty($email)) {
@@ -97,10 +97,10 @@ trait VerifiesEmails
      */
     public function resend(Request $request, ?array $clientMetadata = null): mixed
     {
-        try {
-            // Initialize variables
-            $returnValue = null;
+        // Initialize variables
+        $returnValue = null;
 
+        try {
             // If email is present in query parameters, decode it before validation and processing
             $email = $this->getDataFromQueryParam($request, 'email', EncryptionTypes::DEFAULT, true);
             if (!empty($email)) {
