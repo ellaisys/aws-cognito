@@ -12,7 +12,6 @@
 namespace Ellaisys\Cognito\Auth;
 
 use Auth;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -23,17 +22,18 @@ use Ellaisys\Cognito\AwsCognitoClaim;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
-use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 trait RefreshToken
 {
+    use BaseAuthTrait;
+
     /**
      * Passed params
      */
     private $paramRefreshToken = 'refresh_token';
     private $paramUsername = 'email';
+    private $deviceKey = 'drive_key';
 
     /**
      * Generate a new token.
@@ -45,10 +45,12 @@ trait RefreshToken
      * @return mixed
      */
     public function refresh(Request $request,
-        string $guard = 'api',
         string $paramUsername='email',
         string $paramRefreshToken='refresh_token')
     {
+        // Initialize variables
+        $returnValue = null;
+
         try {
             //Assign params
             $this->paramRefreshToken = $paramRefreshToken;
@@ -58,13 +60,33 @@ trait RefreshToken
             $this->validateRefreshRequest($request);
 
             //Process token refresh
-            return $this->processTokenRefresh($request, $guard);
-        } catch(Exception $e) {
-            if ($e instanceof CognitoIdentityProviderException) {
-                throw AwsCognitoException::create($e);
-            } //End if
-            throw $e;
+            $response = $this->processTokenRefresh($request);
+
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                // Regenerate the session to prevent session fixation attacks
+                $request->session()->regenerate();
+
+                // Set the redirect path to the home page defined in the configuration
+                $this->redirectTo = config('cognito.routes.web.home_page');
+
+                // Call response redirect with status, message, and data
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::messages.auth.login_success'))
+                    ->with('data', $response);
+            } //Return response
+        } catch(Exception $exception) {
+            Log::error('RefreshToken:refresh:Exception');
+            throw $exception;
         } //Try-catch ends
+
+        return $returnValue;
     } //Function ends
 
     /**
@@ -96,45 +118,40 @@ trait RefreshToken
      *
      * @return mixed
      */
-    private function processTokenRefresh(Request $request, string $guard): mixed
+    private function processTokenRefresh(Request $request): mixed
     {
-        //Convert request to collection
-        $payload = collect($request->all());
+        //Initialize variables
+        $returnValue = null;
 
-        //Create AWS Cognito Client
-        $client = app()->make(AwsCognitoClient::class);
+        try {
+            //Initialize variables
+            $refreshToken = $request->has($this->paramRefreshToken) ? $request[$this->paramRefreshToken] : null;
+            $username = $request->has($this->paramUsername) ? $request[$this->paramUsername] : null;
+            $deviceKey = $request->has($this->deviceKey) ? $request[$this->deviceKey] : null;
+            $clientMetadata = null;
 
-        //Get Authenticated user
-        $authUser  = Auth::guard($guard)->user();
-
-        //Get User Data
-        $user = $client->adminGetUser($authUser[$this->paramUsername]);
-
-        //Use username from AWS to refresh token, not email from login!
-        if (!empty($user['Username'])) {
-            $response = $client->refreshToken($user['Username'], $payload[$this->paramRefreshToken]);
-            if (empty($response) || empty($response['AuthenticationResult'])) {
-                throw new HttpException(400);
+            //Check if the refresh token and username are provided
+            if (empty($refreshToken) || empty($username)) {
+                //Get from authenticated user
+                $authUser = $this->getAuthenticatedUser($request);
+                $username = $username ?? $authUser[$this->paramUsername];
+                $refreshToken = $refreshToken ?? $authUser[$this->paramRefreshToken];
             } //End if
 
-            //Authenticate User
-            $claim = new AwsCognitoClaim($response, $authUser, $this->paramUsername);
-            if (!($claim instanceof AwsCognitoClaim)) {
-                return false;
-            } //End if
+            //Get guard
+            $guard = $this->getGuard($request);
 
-            //Store the token
-            $cognito = app()->make('ellaisys.aws.cognito');
-            if (empty($cognito)) {
-                throw new HttpException(400, 'ERROR_COGNITO_TOKEN_STORE');
-            } //End if
-            $cognito->setClaim($claim)->storeToken();
+            //Get refresh token
+            $response = Auth::guard($guard)->refreshToken($refreshToken, $username, $deviceKey, $clientMetadata);
 
             //Return the response object
-            return $claim->getData();
-        } else {
-            throw new HttpException(400, 'ERROR_COGNITO_USER_NOT_FOUND');
-        } //End if
+            $returnValue = $response->getData();
+        } catch (Exception $exception) {
+            Log::error('RefreshToken:processTokenRefresh:Exception');
+            throw $exception;
+        } //Try-catch ends
+
+        return $returnValue;
     } //Function ends
 
     /**
@@ -145,7 +162,9 @@ trait RefreshToken
     protected function rules()
     {
         return [
-            $this->paramRefreshToken => 'required'
+            $this->paramRefreshToken => 'sometimes|string',
+            $this->paramUsername => 'sometimes|email',
+            $this->deviceKey => 'sometimes|string',
         ];
     } //Function ends
 
