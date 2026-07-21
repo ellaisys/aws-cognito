@@ -35,7 +35,7 @@ class AwsCognitoAuthenticate extends BaseMiddleware
     public function handle(Request $request, \Closure $next)
     {
         $guard='';
-        $middleware='';
+        $middlewares='';
         $countRouteMiddleware=0;
 
         try {
@@ -43,12 +43,16 @@ class AwsCognitoAuthenticate extends BaseMiddleware
             if (empty($routeMiddleware) || (($countRouteMiddleware=count($routeMiddleware))<1)) {
                 throw new InvalidTokenException();
             } else {
-                ($countRouteMiddleware>0)?($guard = $routeMiddleware[0]):null;
-                ($countRouteMiddleware>1)?($middleware = $routeMiddleware[1]):null;
+                $guard = $routeMiddleware[0];
+
+                if ($countRouteMiddleware>1) {
+                    $middlewares = $routeMiddleware;
+                    unset($middlewares[0]);
+                } //End if
             } //End if
 
             //Authenticate the request
-            if (in_array($middleware, ['aws-cognito'])) {
+            if (in_array('aws-cognito', $middlewares)) {
                 $this->authenticate($request, $guard);
             } //End if
 
