@@ -158,10 +158,10 @@ trait BaseCognitoGuard
     /**
      * Validate the user credentials with AWS Cognito
      *
-     * @return mixed
+     * @return \Aws\Result
      */
     protected function hasValidAWSCredentials(Collection $credentials,
-        CognitoAuthFlowTypes $authFlow): mixed {
+        CognitoAuthFlowTypes $authFlow): AwsResult {
         //Reset global variables
         $this->challengeName = null;
         $this->challengeData = null;
@@ -177,6 +177,18 @@ trait BaseCognitoGuard
             $credentials['challenge_name'] ?? null
         );
 
+        return $this->processCognitoResponse($result, $credentials);
+    } //Function ends
+
+    /**
+     * Process the AWS Cognito response for authentication and challenges.
+     * @param \Aws\Result $result
+     * @param \Illuminate\Support\Collection $data
+     *
+     * @return \Aws\Result
+     */
+    protected function processCognitoResponse(AwsResult $result, Collection $data): AwsResult
+    {
         //Check if the result is an instance of AwsResult
         if (!empty($result) && $result instanceof AwsResult) {
             //Set value into class param
@@ -185,13 +197,15 @@ trait BaseCognitoGuard
             //Check in case of any challenge
             if (isset($result['ChallengeName'])) {
                 $this->challengeName = $result['ChallengeName'];
-                $this->challengeData = $this->handleCognitoChallenge($result, $credentials);
+                $this->challengeData = $this->handleCognitoChallenge($result, $data);
             } elseif (isset($result['AuthenticationResult'])) {
                 //Create claim token
                 $this->claim = new AwsCognitoClaim($result, null);
             } else {
-                $result = null;
+                throw new AwsCognitoException(AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED);
             } //End if
+        } else {
+            throw new AwsCognitoException(AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED);
         } //End if
 
         return $result;
@@ -434,38 +448,37 @@ trait BaseCognitoGuard
                     $challengeValue, $username
                 );
 
-            //Check if the result is an instance of AwsResult
-            if (!empty($result) && $result instanceof AwsResult) {
-                //Set value into class param
-                $this->awsResult = $result;
-
-                //Check in case of any challenge
-                if (isset($result['ChallengeName'])) {
-                    $this->challengeName = $result['ChallengeName'];
-                    $this->challengeData = $this->handleCognitoChallenge(
-                            $result, collect([
-                                'email' => $username,
-                                'session_token' => $session
-                            ])
-                        );
-                } elseif (isset($result['AuthenticationResult'])) {
-                    //Create claim token
-                    $this->claim = new AwsCognitoClaim($result, null);
-                } else {
-                    throw new HttpException(400, 'ERROR_AWS_COGNITO_MFA_CODE_NOT_PROPER');
-                } //End if
-            } //End if
-    
-            return $result;
-        } catch(CognitoIdentityProviderException $exception) {
-            Log::error('BaseCognitoGuard:attemptBaseChallenge:CognitoIdentityProviderException');
-            throw AwsCognitoException::create($exception);
-        } catch(Exception $e) {
+            return $this->processCognitoResponse($result, collect([
+                'email' => $username,
+                'session_token' => $session
+            ]));
+        } catch(Exception $exception) {
             Log::error('BaseCognitoGuard:attemptBaseChallenge:Exception');
-            throw $e;
+            throw $exception;
         } //Try-catch ends
-            
-        return $result;
+    } //Function ends
+
+    /**
+     * Attempt Refresh Token based Authentication
+     * @param  string  $refreshToken
+     * @param  string  $username
+     * @return AwsResult
+     */
+    final public function attemptRefreshToken(string $refreshToken, string $username,
+        ?string $deviceKey = null, ?array $clientMetadata = null): AwsResult
+    {
+        try {
+            // Refresh the token using AWS Cognito client
+            $result = $this->client->refreshToken($refreshToken, $username, $deviceKey, $clientMetadata);
+
+            return $this->processCognitoResponse($result, collect([
+                'email' => $username,
+                'refresh_token' => $refreshToken
+            ]));
+        } catch(Exception $exception) {
+            Log::error('BaseCognitoGuard:refreshToken:Exception');
+            throw $exception;
+        } //Try-catch ends
     } //Function ends
 
 } //Trait ends

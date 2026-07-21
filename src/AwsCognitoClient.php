@@ -584,13 +584,14 @@ class AwsCognitoClient
     
     /**
      * Generate a new token using refresh token.
-     *
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html
-     * @param string $username
+     *
      * @param string $refreshToken
-     * @return \Aws\Result|bool
+     * @param string $username
+     * @return \Aws\Result
      */
-    public function refreshToken(string $username, string $refreshToken)
+    public function refreshToken(string $refreshToken, string $username,
+        ?string $deviceKey = null, ?array $clientMetadata = null): AwsResult
     {
         try {
             //Build payload
@@ -599,6 +600,15 @@ class AwsCognitoClient
                     'REFRESH_TOKEN' => $refreshToken,
                 ]
             ];
+
+            if ($deviceKey !== null) {
+                $payload['AuthParameters']['DEVICE_KEY'] = $deviceKey;
+            } //End if
+
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
+            } //End if
 
             // Call initiateAuth with REFRESH_TOKEN_AUTH flow to get new tokens
             $response = $this->initiateAuth(
