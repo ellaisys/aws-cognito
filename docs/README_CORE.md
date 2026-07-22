@@ -43,34 +43,15 @@ AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is fal
 
 ## **Features**
 
-- [Registration and Confirmation E-Mail (Sign Up)](#registering-users)
-- Forced password change at first login (configurable)
-- [Login (Sign In)](#user-authentication)
-- Token Validation for all Session and Token Guard Requests
-- Remember Me Cookie
-- Single Sign On (Fix: Issue #86)
-- Forgot Password (Resend - configurable)
-- User Deletion
-- Edit User Attributes
-- Reset User Password
-- Confirm Sign Up
-- Easy API Token handling (uses the cache driver)
-- [DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)](#storing-web-sessions-or-api-tokens-in-dynamodb-useful-for-multiservercontainer-implementation)
-- Easy configuration of Token Expiry (Manage using the cognito console, no code or configurations needed)
-- Support for App Client without Secret
-- Support for Cognito Groups, including assigning a default group to a new user
-- Session (Web) now has AccessToken and RefreshToken as part of the claim object
-- [Refresh Token API](#refresh-token)
-- [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
-- [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
-- [MFA Implementation for Session and Token Guards](./docs/README_MFA.md) **Updated**
-- [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
-- [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
-- [Preconfigured routes and controllers for Web and API ](./docs/README_ROUTES.md#routes)
-- [Preconfigured views for Web ](./docs/README_ROUTES.md#web-views-and-components)
-- [FIDO2 Security Keys Passkey](./docs/README_FIDO2.md) **Updated**
-- [SRP Authentication](./docs/README_SRP.md) **New Feature**
-- [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
+- [Registering Users OR Sign Up](#registering-users-or-sign-up)
+    + [Self Registration](#self-registration)
+    + [Verification of User](#verification-of-user)
+
+- [User Invitation OR Invite User](#user-invitation-or-invite-user)
+- [User Authentication OR Sign In](#user-authentication-or-sign-in)
+- [Log Out OR Sign out](#log-out-or-sign-out)
+- [Refresh Token](#refresh-token)
+- [Delete User](#delete-user)
 
 
 ## **Registering Users OR Sign Up**
@@ -266,10 +247,9 @@ If you are using the routes provided by us, you can use the preconfigured contro
 ```php
 //Route to logout a user, secure the route with auth middleware
 use Ellaisys\Cognito\Http\Controllers\Auth\LoginController;
-
+...
 Route::post('/logout', [LoginController::class, 'logout']);
 Route::post('/logout/forced', [LoginController::class, 'logoutForced']);
-
 ```
 
 The trait triggers a `PreLogoutEvent` and `PostLogoutEvent` during the logout process. You can listen to these events and perform any additional actions as per your business requirement.
@@ -289,27 +269,39 @@ Auth::guard('api')->logout(true); //Revoke the Refresh Token.
 
 ## **Refresh Token**
 
-You can use this trait for API to generate new token
+The package provides you with a trait that makes the refresh token process very simple. The package provides a trait `RefreshToken` that you can add to your controller to make the refresh token process functional. The namespace for the trait is `Ellaisys\Cognito\Auth\RefreshToken`. The trait has the capability to handle the following refresh token types:
+    - `refresh` (Refresh the access token using the refresh token)
+    - `revalidate` (Authenticate using the refresh token)
+
+The `refresh` method requires an active access token to be present in the request. The `revalidate` method does not require an active access token to be present in the request. The `revalidate` method is useful in scenarios where the access token has expired and you want to re-authenticate the user using the refresh token.
+
+The package provides routes and controllers for the refresh and revalidate token process. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
 ```php
-namespace App\Api\Controller;
+//Route to refresh a token
+use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
+...
+Route::post('/token/revalidate', [RefreshTokenController::class, 'revalidate']);
+Route::post('/token/refresh', [RefreshTokenController::class, 'refresh']);
+```
 
+#### Advanced Refresh Token Options
+
+In case you want to customize the refresh token process, and write your own controller, you can use the `refresh` method provided by the trait. The method takes a collection of user data and refreshes the access token using the refresh token. The method returns a claim object on successful refresh.
+
+```php
 ...
 use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\Auth\RefreshToken;
 
-class AuthApiController extends Controller
+class RefreshTokenController extends Controller
 {
     use RefreshToken;
 
     /**
-     * Generate a new token using refresh token.
-     * 
-     * @throws \HttpException
-     * 
-     * @return mixed
+     * Generate a new claim using the revalidate approach
      */
-    public function refreshToken(\Illuminate\Http\Request $request)
+    public function revalidateToken(\Illuminate\Http\Request $request)
     {
         ...
         $validator = $request->validate([
@@ -317,11 +309,17 @@ class AuthApiController extends Controller
             'refresh_token' => 'required'
         ]);
         
-        try {
-            return $this->refresh($request, 'email', 'refresh_token');
-        } catch (Exception $e) {
-            return $e;
-        }
+        return $this->revalidate($request, 'email', 'refresh_token');
+    } //Function ends
+
+    /**
+     * Generate a new claim using refresh token.
+     * @return mixed
+     */
+    public function refreshToken(\Illuminate\Http\Request $request)
+    {
+        ...
+        return $this->refresh($request);
     } //Function ends
     ...
 } //Class ends
