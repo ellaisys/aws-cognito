@@ -53,7 +53,7 @@ trait RefreshToken
             $username = $request->has($this->paramUsername) ? $request[$this->paramUsername] : null;
 
             //Check if the refresh token and username are provided
-            if (empty($refreshToken) || empty($username)) {
+            if (empty($refreshToken) && empty($username)) {
                 //Get from authenticated user
                 $authUser = $this->getAuthenticatedUser($request);
                 $username = $username ?? $authUser[$this->paramUsername];
@@ -104,6 +104,12 @@ trait RefreshToken
             //Assign params
             $this->paramRefreshToken = $paramRefreshToken;
             $this->paramUsername = $paramUsername;
+
+            // If username present in query parameters is email, decode it before validation and processing
+            $email = $this->getDataFromQueryParam($request, $this->paramUsername, EncryptionTypes::URL_ENCODE, true);
+            if (!empty($email)) {
+                $request->merge([$this->paramUsername => $email]);
+            } //End if
             
             //Validate request
             $this->validateRefreshRequest($request);

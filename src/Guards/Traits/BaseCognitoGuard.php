@@ -429,7 +429,8 @@ trait BaseCognitoGuard
     /**
      * Attempt Challenge based Authentication
      */
-    final public function attemptBaseChallenge(array $challenge) {
+    final public function attemptBaseChallenge(array $challenge): AwsResult
+    {
         try {
             //Reset global variables
             $this->challengeName = null;

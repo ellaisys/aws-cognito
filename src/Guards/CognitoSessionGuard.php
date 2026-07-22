@@ -152,37 +152,22 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             $this->fireAttemptEvent($credentials, $remember);
 
             //Check if the payload has valid AWS credentials
-            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlow));
-            if ($responseCognito && (!empty($this->claim))) {
-                //Process the claim
-                if ($user = $this->processAWSClaim()) {
-                    //Login user into the session
-                    $this->login($user, $remember);
+            $responseCognito = $this->hasValidAWSCredentials($payloadCognito, $authFlow);
 
-                    //Fire successful attempt
-                    $this->fireLoginEvent($user, $remember);
-
-                    $returnValue = $this->claim;
-                } //End if
-            } elseif ($responseCognito && $this->challengeName) {
-                //Handle the challenge
-                $returnValue = $this->handleAWSChallenge();
-            } else {
-                throw new AwsCognitoException('ERROR_AWS_COGNITO');
-            } //End if
-        } catch (NoLocalUserException | AwsCognitoException | Exception $e) {
-            $exceptionClass = basename(str_replace('\\', DIRECTORY_SEPARATOR, get_class($e)));
-            Log::error('CognitoSessionGuard:attempt:'.$exceptionClass);
+            // Process the AWS Cognito response
+            $returnValue = $this->processAwsResult($responseCognito, true, $remember);
+        } catch (Exception $exception) {
+            Log::error('CognitoSessionGuard:attempt:Exception');
 
             // Fire failed attempt
             $this->fireFailedEvent($user, $credentials);
 
             //Find SQL Exception
-            if (strpos($e->getMessage(), 'SQLSTATE') !== false) {
+            if (strpos($exception->getMessage(), 'SQLSTATE') !== false) {
                 throw new DBConnectionException();
             } //End if
 
-            throw $e;
+            throw $exception;
         } //Try-catch ends
         
         return $returnValue;
@@ -219,10 +204,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                 ClaimSession::SESSION_KEY,
                 json_decode(json_encode($this->claim), true)
             );
-
-            //Fire successful attempt
-            $this->fireValidatedEvent($user);
-            $this->fireAuthenticatedEvent($user);
 
             return $user;
         } else {
@@ -389,26 +370,86 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         try {
             //Login with Challenge
             $responseCognito = $this->attemptBaseChallenge($challenge);
-            if ($responseCognito && (!empty($this->claim))) {
+
+            // Process the AWS Cognito response
+            $returnValue = $this->processAwsResult($responseCognito, true, $remember);
+        } catch(Exception $e) {
+            Log::error('CognitoSessionGuard:attemptChallengeAuth:Exception');
+            throw $e;
+        } //Try-catch ends
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Refresh the token using the provided refresh token and username.
+     * @param  string  $refreshToken
+     * @param  string  $username
+     * @param string|null  $deviceKey
+     * @param array|null  $clientMetadata
+     *
+     * @throws
+     *
+     * @return mixed
+     */
+    public function refreshToken(string $refreshToken, string $username,
+        ?string $deviceKey = null, ?array $clientMetadata = null): mixed
+    {
+        $returnValue = null;
+        try {
+            // Attempt to refresh the token using AWS Cognito
+            $responseCognito = $this->attemptRefreshToken($refreshToken, $username, $deviceKey, $clientMetadata);
+
+            // Process the AWS Cognito response
+            $returnValue = $this->processAwsResult($responseCognito, false, false);
+        } catch(Exception $exception) {
+            Log::error('CognitoSessionGuard:refreshToken:Exception');
+            throw $exception;
+        } //Try-catch ends
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Process the AWS Cognito response and return the appropriate result.
+     * @param AwsResult  $awsResult
+     * @param bool  $raiseEvent
+     *
+     * @throws
+     *
+     * @return mixed
+     */
+    private function processAwsResult(AwsResult $awsResult, 
+        bool $raiseEvent = true, bool $remember=false): mixed
+    {
+        // Initialize variables
+        $returnValue = null;
+
+        try {
+            if ($awsResult && $this->claim) {
                 //Process the claim
                 if ($user = $this->processAWSClaim()) {
                     //Login user into the session
                     $this->login($user, $remember);
 
-                    //Fire successful attempt
-                    $this->fireLoginEvent($user, true);
+                    if ($raiseEvent) {
+                        //Fire events for validated and authenticated
+                        $this->fireValidatedEvent($user);
+                        $this->fireAuthenticatedEvent($user);
+                        $this->fireLoginEvent($user, $remember);
+                    } //End if
 
                     $returnValue = $this->claim;
                 } //End if
-            } elseif ($responseCognito && $this->challengeName) {
+            } elseif ($awsResult && $this->challengeName) {
                 //Handle the challenge
                 $returnValue = $this->handleAWSChallenge();
             } else {
-                throw new HttpException(400, 'ERROR_AWS_COGNITO');
+                throw new AwsCognitoException(AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED);
             } //End if
-        } catch(Exception $e) {
-            Log::error('CognitoSessionGuard:attemptChallengeAuth:Exception');
-            throw $e;
+        } catch(Exception $exception) {
+            Log::error('CognitoSessionGuard:processAwsResult:Exception');
+            throw $exception;
         } //Try-catch ends
 
         return $returnValue;

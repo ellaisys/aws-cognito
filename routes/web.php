@@ -55,9 +55,15 @@ Route::group([], function () {
         Route::post('/', [LoginController::class, 'login'])->name('action.login.submit');
         Route::post('/srp', [LoginController::class, 'loginSRP'])->name('action.auth.srp.challenge');
         Route::post('/auth-challenge', [LoginController::class, 'actionChallenge'])->name('action.auth.challenge.submit');
-        Route::any('/{step}', function (string $step) {
+
+        //Route for revalidate token
+        Route::match(['get', 'post'], '/token/revalidate', [RefreshTokenController::class, 'revalidate']);
+
+        Route::match(['get', 'post'], '/{step}', function (string $step) {
             return view('cognito::pages.auth.login', ['step' => $step]);
         })->name('form.login.step');
+
+        //Route for passkey challenge
         Route::post('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge'])->name('action.auth.passkey.challenge');
     });
 
@@ -66,7 +72,7 @@ Route::group([], function () {
         Route::get('/home', function () { return view('cognito::home'); })->name('home');
 
         //Route for refresh session
-        Route::post('/session/refresh', [RefreshTokenController::class, 'revalidate']);
+        Route::post('/session/refresh', [RefreshTokenController::class, 'refresh']);
 
         //Route group logout
         Route::group(['prefix' => 'logout', 'controller' => LoginController::class], function() {
