@@ -282,7 +282,7 @@ The package provides routes and controllers for the refresh and revalidate token
 use Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController;
 ...
 Route::post('/token/revalidate', [RefreshTokenController::class, 'revalidate']);
-Route::post('/token/refresh', [RefreshTokenController::class, 'refresh']);
+Route::post('/token/refresh', [RefreshTokenController::class, 'refresh'])->middleware('aws-cognito');
 ```
 
 #### Advanced Refresh Token Options
@@ -291,7 +291,6 @@ In case you want to customize the refresh token process, and write your own cont
 
 ```php
 ...
-use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\Auth\RefreshToken;
 
 class RefreshTokenController extends Controller
@@ -321,7 +320,6 @@ class RefreshTokenController extends Controller
         ...
         return $this->refresh($request);
     } //Function ends
-    ...
 } //Class ends
 ```
 
