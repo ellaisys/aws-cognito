@@ -33,10 +33,58 @@ trait RefreshToken
      */
     private $paramRefreshToken = 'refresh_token';
     private $paramUsername = 'email';
-    private $deviceKey = 'drive_key';
+    private $deviceKey = 'device_key';
 
     /**
      * Generate a new token.
+     *
+     * @param  \Illuminate\Http\Request|Illuminate\Support\Collection  $request
+     *
+     * @return mixed
+     */
+    public function refresh(Request $request, ?array $clientMetadata = null)
+    {
+        // Initialize variables
+        $returnValue = null;
+
+        try {
+            //Initialize variables
+            $refreshToken = $request->has($this->paramRefreshToken) ? $request[$this->paramRefreshToken] : null;
+            $username = $request->has($this->paramUsername) ? $request[$this->paramUsername] : null;
+
+            //Check if the refresh token and username are provided
+            if (empty($refreshToken) || empty($username)) {
+                //Get from authenticated user
+                $authUser = $this->getAuthenticatedUser($request);
+                $username = $username ?? $authUser[$this->paramUsername];
+
+                //Get claim from guard
+                $claim = $this->getClaim($request);
+                $refreshToken = $refreshToken ?? $claim['data']['RefreshToken'] ?? null;                
+                
+                //Merge the value into the request object
+                $request->merge([
+                    $this->paramUsername => $username,
+                    $this->paramRefreshToken => $refreshToken,
+                ]);
+            } //End if
+
+            //Process token refresh
+            $returnValue = $this->revalidate(
+                    $request,
+                    $this->paramUsername, $this->paramRefreshToken,
+                    $clientMetadata
+                );
+        } catch(Exception $exception) {
+            Log::error('RefreshToken:refresh:Exception');
+            throw $exception;
+        } //Try-catch ends
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Generate a new token with the given request.
      *
      * @param  \Illuminate\Http\Request|Illuminate\Support\Collection  $request
      * @param  string  $paramUsername (optional)
@@ -44,9 +92,10 @@ trait RefreshToken
      *
      * @return mixed
      */
-    public function refresh(Request $request,
+    public function revalidate(Request $request,
         string $paramUsername='email',
-        string $paramRefreshToken='refresh_token')
+        string $paramRefreshToken='refresh_token',
+        ?array $clientMetadata = null)
     {
         // Initialize variables
         $returnValue = null;
@@ -60,7 +109,7 @@ trait RefreshToken
             $this->validateRefreshRequest($request);
 
             //Process token refresh
-            $response = $this->processTokenRefresh($request);
+            $response = $this->processTokenRefresh($request, $clientMetadata);
 
             //Return response
             if ($this->isControllerAction) {
@@ -82,7 +131,7 @@ trait RefreshToken
                     ->with('data', $response);
             } //Return response
         } catch(Exception $exception) {
-            Log::error('RefreshToken:refresh:Exception');
+            Log::error('RefreshToken:revalidate:Exception');
             throw $exception;
         } //Try-catch ends
 
@@ -118,7 +167,7 @@ trait RefreshToken
      *
      * @return mixed
      */
-    private function processTokenRefresh(Request $request): mixed
+    private function processTokenRefresh(Request $request, ?array $clientMetadata = null): mixed
     {
         //Initialize variables
         $returnValue = null;
@@ -128,21 +177,15 @@ trait RefreshToken
             $refreshToken = $request->has($this->paramRefreshToken) ? $request[$this->paramRefreshToken] : null;
             $username = $request->has($this->paramUsername) ? $request[$this->paramUsername] : null;
             $deviceKey = $request->has($this->deviceKey) ? $request[$this->deviceKey] : null;
-            $clientMetadata = null;
-
-            //Check if the refresh token and username are provided
-            if (empty($refreshToken) || empty($username)) {
-                //Get from authenticated user
-                $authUser = $this->getAuthenticatedUser($request);
-                $username = $username ?? $authUser[$this->paramUsername];
-                $refreshToken = $refreshToken ?? $authUser[$this->paramRefreshToken];
-            } //End if
 
             //Get guard
             $guard = $this->getGuard($request);
 
             //Get refresh token
-            $response = Auth::guard($guard)->refreshToken($refreshToken, $username, $deviceKey, $clientMetadata);
+            $response = Auth::guard($guard)->refreshToken(
+                    $refreshToken, $username,
+                    $deviceKey, $clientMetadata
+                );
 
             //Return the response object
             $returnValue = $response->getData();
@@ -162,8 +205,8 @@ trait RefreshToken
     protected function rules()
     {
         return [
-            $this->paramRefreshToken => 'sometimes|string',
-            $this->paramUsername => 'sometimes|email',
+            $this->paramRefreshToken => 'required|string',
+            $this->paramUsername => 'required|email',
             $this->deviceKey => 'sometimes|string',
         ];
     } //Function ends
