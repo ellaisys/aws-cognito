@@ -1,0 +1,38 @@
+# **Features**
+
+- [Registration and Confirmation E-Mail (Sign Up)](#registering-users)
+- Forced password change at first login (configurable)
+- [Login (Sign In)](#user-authentication)
+- Token Validation for all Session and Token Guard Requests
+- Remember Me Cookie
+- Single Sign On (Fix: Issue #86)
+- Forgot Password (Resend - configurable)
+- User Deletion
+- Edit User Attributes
+- Reset User Password
+- Confirm Sign Up
+- Easy API Token handling (uses the cache driver)
+- [DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)](#storing-web-sessions-or-api-tokens-in-dynamodb-useful-for-multiservercontainer-implementation)
+- Easy configuration of Token Expiry (Manage using the cognito console, no code or configurations needed)
+- Support for App Client without Secret
+- Support for Cognito Groups, including assigning a default group to a new user
+- Session (Web) now has AccessToken and RefreshToken as part of the claim object
+- [Refresh Token API](#refresh-token)
+- [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
+- [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
+- [MFA Implementation for Session and Token Guards](./docs/README_MFA.md) **Updated**
+- [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
+- [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
+- [Preconfigured routes and controllers for Web and API ](./docs/README_ROUTES.md#routes)
+- [Preconfigured views for Web ](./docs/README_ROUTES.md#web-views-and-components)
+- [FIDO2 Security Keys Passkey](./docs/README_FIDO2.md) **Updated**
+- [SRP Authentication](./docs/README_SRP.md) **New Feature**
+- [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
+
+
+## **What this package provides**
+
+1. A simple way to integrate AWS Cognito into your Laravel application.
+2. Preconfigured set of routes, controllers, and views for Web and API.
+3. You don't need to create an extra field to store the verification token.
+4. You don't have to bother about the Sessions or API tokens, they are managed for you. The session or token is managed via the standard mechanism of Laravel. You have the liberty to keep it where ever you want, no security loop holes.

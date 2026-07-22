@@ -1,3 +1,8 @@
+# **AWS Cognito Laravel Package Changelog**
+
+> [!NOTE]
+> Updated On 2026-07-10
+
 Release 50 (tag v2.0.6)
 - Feat: Issue [#139](https://github.com/ellaisys/aws-cognito/issues/139)
 - Feat: Add new components and scripts for FIDO2 Security Keys OR Passkey based MFA functionality.
