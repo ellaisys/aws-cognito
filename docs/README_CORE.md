@@ -285,6 +285,12 @@ Route::post('/token/revalidate', [RefreshTokenController::class, 'revalidate']);
 Route::post('/token/refresh', [RefreshTokenController::class, 'refresh'])->middleware('aws-cognito');
 ```
 
+A feature that we have implemented is the ability to handle revalidate tokens seamlessly, a URL that you can use in the browser to authenticate the user using the refresh token. This is useful in scenarios where the access token has expired and you want to re-authenticate the user using the refresh token as shown below:
+```http
+GET <base_url>/token/revalidate?email={email}&refresh_token={refresh_token}
+```
+
+
 #### Advanced Refresh Token Options
 
 In case you want to customize the refresh token process, and write your own controller, you can use the `refresh` method provided by the trait. The method takes a collection of user data and refreshes the access token using the refresh token. The method returns a claim object on successful refresh.
