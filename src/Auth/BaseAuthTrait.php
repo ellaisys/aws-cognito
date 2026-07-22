@@ -229,6 +229,30 @@ trait BaseAuthTrait
     } //Function ends
 
     /**
+     * Method to get the claim of the authenticated user based on the request type
+     *
+     * @param Request $request
+     *
+     * @return array
+     * @throws HttpException
+     */
+    protected function getClaim(Request $request): array
+    {
+        try {
+            // Determine the guard based on the request type
+            $guard = $this->getGuard($request);
+
+            // Get the claim for the authenticated user
+            $claim = Auth::guard($guard)->getClaim();
+            if (empty($claim)) { throw new HttpException(400, 'EXCEPTION_INVALID_CLAIM'); }
+            return $claim;
+        } catch (Exception $e) {
+            Log::error('BaseAuthTrait:getClaim:Exception');
+            throw $e;
+        }
+    } //Function ends
+
+    /**
      * Get the data from the query parameter based on the parameter name and encryption type
      *
      * @param  Request $request
@@ -299,6 +323,45 @@ trait BaseAuthTrait
             return Str::random($length-3) . '1A!';
         }
         return Str::password($length);
+    } //Function ends
+
+    protected function getCognitoUser(Request $request)
+    {
+        try {
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            // Get Access Token for the authenticated user
+            $accessToken = $this->getAccessToken($request);
+
+            // Get the user details from AWS Cognito using the access token
+            $response = $client->getUser($accessToken);
+            if (empty($response)) {
+                throw new InvalidUserException('No authenticated user found.');
+            }
+            return $response;
+        } catch (Exception $e) {
+            Log::error('BaseAuthTrait:getCognitoUser:Exception');
+            throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+    protected function getCognitoUserByAdmin(Request $request, string $username='username')
+    {
+        try {
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            // Get the user details from AWS Cognito using the access token
+            $response = $client->adminGetUser($request[$username]);
+            if (empty($response)) {
+                throw new InvalidUserException('No authenticated user found.');
+            }
+            return $response;
+        } catch (Exception $e) {
+            Log::error('BaseAuthTrait:getCognitoUserByAdmin:Exception');
+            throw $e;
+        } //Try-catch ends
     } //Function ends
 
 } //End trait
