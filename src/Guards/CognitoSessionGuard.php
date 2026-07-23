@@ -419,7 +419,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      *
      * @return mixed
      */
-    private function processAwsResult(AwsResult $awsResult, 
+    private function processAwsResult(AwsResult $awsResult,
         bool $raiseEvent = true, bool $remember=false): mixed
     {
         // Initialize variables

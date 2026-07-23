@@ -60,7 +60,7 @@ trait RefreshToken
 
                 //Get claim from guard
                 $claim = $this->getClaim($request);
-                $refreshToken = $refreshToken ?? $claim['data']['RefreshToken'] ?? null;                
+                $refreshToken = $refreshToken ?? $claim['data']['RefreshToken'] ?? null;
                 
                 //Merge the value into the request object
                 $request->merge([

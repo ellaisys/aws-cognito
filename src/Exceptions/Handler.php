@@ -134,7 +134,7 @@ class Handler extends ExceptionHandler
                     'password',
                     'password_confirmation',
                     'current_password',
-                ]),                
+                ]),
             ]);
         } //End if
 
@@ -154,6 +154,7 @@ class Handler extends ExceptionHandler
         // Generic exception report
         $this->reportable(function (Throwable $e): void {
             // You can log to an external service (Sentry, Bugsnag, etc.)
+            Log::error('Exception reported: ' . $e->getMessage());
         });
 
         // Handle API exceptions gracefully

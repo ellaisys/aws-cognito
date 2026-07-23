@@ -51,7 +51,7 @@ trait RegisterMFA
      *
      * @return \mixed
      */
-    public function verify(Request $request, 
+    public function verify(Request $request,
         ?string $code=null, ?string $deviceName=null): mixed
     {
         try {
@@ -216,7 +216,7 @@ trait RegisterMFA
             $client = app()->make(AwsCognitoClient::class);
 
             //Get Authenticated user
-            $authUser = $this->getAuthenticatedUser($request);
+            $this->getAuthenticatedUser($request);
            
             //Get the response from AWS Cognito for the MFA configurations
             $response = $client->adminSetUserMFAPreference($request['username'], $isEnable);
