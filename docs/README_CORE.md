@@ -50,8 +50,11 @@ AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is fal
 - [User Invitation OR Invite User](#user-invitation-or-invite-user)
 - [User Authentication OR Sign In](#user-authentication-or-sign-in)
 - [Log Out OR Sign out](#log-out-or-sign-out)
+- [Forgot Password](#forgot-password)
 - [Refresh Token](#refresh-token)
 - [Delete User](#delete-user)
+- [Single Sign-On (SSO)](#single-sign-on)
+- [Password Validation](#password-validation)
 
 
 ## **Registering Users OR Sign Up**
@@ -158,17 +161,6 @@ In case you want to suppress the invitation mail sent to the new users, set the 
 Similarly, you can also auto-verify the new user by setting the environment variable `AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED` to **true**. This will mark the new user's email address as verified. Default configuration shall not mark the email address as verified and the user will have to verify the email address by clicking on the link sent to the email address.
 
 
-
-
-
-
-
-
-
-
-
-
-
 ## **User Authentication OR Sign In**
 
 Basic password based user authentication is simplified into just one step, the login. It is essential that the `ALLOW_USER_PASSWORD_AUTH` is enabled in the AWS Cognito User Pool. For details on how to enable this, please refer to the [AWS Cognito Configuration - App Client Settings](COGNITOCONFIG.md#step-6-edit-app-client-settings) section.
@@ -267,6 +259,24 @@ Auth::guard('api')->logout(true); //Revoke the Refresh Token.
 ```
 
 
+## **Forgot Password**
+
+As per the AWS Cognito default feature, the forgot password feature is not allowed for users who have not activated their account. We have introduced a feature that allows the password to be resent to the user even if they have not activated their account. This is useful in scenarios where the user has not received the activation email or the activation link has expired.
+
+To enable this feature, you can set the environment variable `AWS_COGNITO_ALLOW_FORGOT_PASSWORD_RESEND` to **true**. The default value is **true**. You can set it to **false** if you do not want to allow the password to be resent to the user.
+
+```env
+AWS_COGNITO_ALLOW_FORGOT_PASSWORD_RESEND=true
+```
+
+The package provides you with a trait that makes the forgot password process very simple. The package provides a couple of traits `SendsPasswordResetEmails` and `ResetsPasswords` that you can add to your controller to make the forgot password process functional.
+
+The flow for the forgot password process is as follows:
+1. The user requests a password reset by providing their email address. You can use the `sendResetLinkEmail` method provided by the `SendsPasswordResetEmails` trait to send a password reset email to the user.
+2. The system sends a password reset code to the user's email address, which is valid for a limited time. The user can use this code to reset their password.
+3. The user provides the password reset code and their new password. Use the `reset` method provided by the `ResetsPasswords` trait to reset the user's password using the code sent to the user.
+
+
 ## **Refresh Token**
 
 The package provides you with a trait that makes the refresh token process very simple. The package provides a trait `RefreshToken` that you can add to your controller to make the refresh token process functional. The namespace for the trait is `Ellaisys\Cognito\Auth\RefreshToken`. The trait has the capability to handle the following refresh token types:
@@ -286,6 +296,7 @@ Route::post('/token/refresh', [RefreshTokenController::class, 'refresh'])->middl
 ```
 
 A feature that we have implemented is the ability to handle revalidate tokens seamlessly, a URL that you can use in the browser to authenticate the user using the refresh token. This is useful in scenarios where the access token has expired and you want to re-authenticate the user using the refresh token as shown below:
+
 ```http
 GET <base_url>/token/revalidate?email={email}&refresh_token={refresh_token}
 ```
@@ -363,106 +374,51 @@ Laravel will take care of the dependency injection by itself.
 ```
 
 
-## **Forgot Password**
+## **Single Sign-On (SSO)**
 
-In case the user has not activated the account, AWS Cognito as a default feature does not allow user of use the forgot password feature. We have introduced the AWS documented feature that allows the password to be resent.
+This package provides *Single Sign-On (SSO)* by using AWS Cognito as the central identity provider. By exposing both web interfaces and REST APIs, applications built with Laravel or any other programming language can delegate authentication to this package while sharing a common AWS Cognito User Pool.
 
-We have made this configurable for the developers so that they can use it as per the business requirement. The configuration takes a boolean value. Default is true (allows resend of forgot password)
+Each application maintains its own local database and business data, while user authentication and identities are managed centrally by AWS Cognito. This allows users to access multiple applications with the same credentials without requiring separate user accounts for each application.
 
-```php
-AWS_COGNITO_ALLOW_FORGOT_PASSWORD_RESEND=true
+
+### *How It Works*
+
+When a user attempts to authenticate, the request is delegated to AWS Cognito. After a successful authentication, the package checks whether the user already exists in the application's local database.
+
+If no local user record exists and the `add_missing_local_user` option is enabled, the package automatically provisions the user using the configured user model before completing the sign-in process.
+
+This allows every application to maintain its own local user records while relying on a shared identity provider for authentication.
+
+### *Configuring the User Model*
+
+The `sso_user_model` option specifies the Eloquent model used when automatically creating local users. For most Laravel applications, this will be:
+
+```php id="f7cb9d"
+App\Models\User::class
 ```
 
+### *Synchronizing User Attributes*
+
+The `cognito_user_fields` option defines which user attributes are synchronized with AWS Cognito during registration.
+
+Any attribute listed in this configuration must also be included in the registration request. If a configured attribute is missing, the package will throw an `InvalidUserFieldException` and the registration will fail.
+
+If your application stores additional profile information, such as `firstname` or `lastname`, include those attributes in `cognito_user_fields`. Otherwise, they will only exist in the local application database and will not be available to other applications participating in SSO.
+
+### *Multiple Applications*
+
+A single AWS Cognito User Pool can be shared by any number of applications, regardless of the technology stack. Since this package exposes both web interfaces and REST APIs, applications written in PHP, .NET, Java, Node.js, Python, Go, or any other language can authenticate users through the package while sharing the same centralized identity store.
+
+When a user signs in to an application for the first time, the package automatically creates the corresponding local user record (when `add_missing_local_user` is enabled). This provides a seamless onboarding experience while allowing each application to maintain its own application-specific data.
+
+### *Password Management*
+
+With SSO enabled, user passwords are managed exclusively by AWS Cognito and are never stored by the application.
+
+If your local `users` table contains a `password` column, it is recommended to make the column nullable, as users created through SSO do not require a locally stored password.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Usage
-Our package is providing you 10 traits you can just add to your Auth Controllers to get our package running.
-
-- Ellaisys\Cognito\Auth\AuthenticatesUsers
-- Ellaisys\Cognito\Auth\ConfirmsPasswords
-- Ellaisys\Cognito\Auth\RefreshToken
-- Ellaisys\Cognito\Auth\RegisterMFA
-
-- Ellaisys\Cognito\Auth\ResetsPasswords
-- Ellaisys\Cognito\Auth\SendsPasswordResetEmails
-
-- Ellaisys\Cognito\Auth\WebAuthPasskey
-
-In the simplest way you just go through your Auth Controllers and use these traits which are currently implemented in Laravel. The Controllers are now also provided and preconfigured with the traits. You can use them as they are or change them to fit your needs.
-
-You can change structure to suit your needs. Please be aware of the @extend statement in the blade file to fit into your project structure.
-
-
-## Single Sign-On
-
-With our package and AWS Cognito we provide you a simple way to use Single Sign-Ons.
-For configuration options take a look at the config [cognito.php](/config/cognito.php).
-
-When you want SSO enabled and a user tries to login into your application, the package checks if the user exists in your AWS Cognito pool. If the user exists, he will be created automatically in your database provided the `add_missing_local_user` is to `true`, and is logged in simultaneously.
-
-That's what we use the fields `sso_user_model` and `cognito_user_fields` for. In `sso_user_model` you define the class of your user model. In most cases this will simply be _App\Models\User_.
-
-With `cognito_user_fields` you can define the fields which should be stored in Cognito. Put attention here. If you define a field which you do not send with the Register Request this will throw you an InvalidUserFieldException and you won't be able to register.
-
-Now that you have registered your users with their attributes in the AWS Cognito pool and your database and you want to attach a second app which should use the same pool. Well, that's actually pretty easy. You can use the API provisions that allows multiple projects to consume the same AWS Cognito pool.
-
-*IMPORTANT: if your users table has a password field you are not going to need this anymore. What you want to do is set this field to be nullable, so that users can be created without passwords. From now on, Passwords are stored in Cognito.
-
-Any additional registration data you have, for example `firstname`, `lastname` needs to be added in
-[cognito.php](/config/cognito.php) cognito_user_fields config to be pushed to Cognito. Otherwise they are only stored locally
-and are not available if you want to use Single Sign On's.*
-
-
-
-
-
-
-## Automatic User Password update for API usage (for New Cognito Users)
-
-In case of the new cognito users, the AWS SDK will send a session key and the user is expected to change the password, in a forced mode. Make sure you force the users to change the password for the first login by new cognito user.
-
-However, if you have an API based implementation, and want to automatically authenticate the user without forcing the password change, you may do that with below setting fields to your `.env` file
-
-```php
-AWS_COGNITO_FORCE_PASSWORD_CHANGE_API=false     //Make true for forcing password change
-AWS_COGNITO_FORCE_PASSWORD_AUTO_UPDATE_API=true //Make false for stopping auto password change
-```
-
-## Support for App Client without Secret enabled
-
-The library now supports where the AWS configuration of App Client with the Client Secret set to disabled. Use the below configuration into the environment file to enable/disable this. The default is marked as enable (i.e. we expect the App Client Secret to be enabled in AWS Cognito configuration)
-
-```php
-AWS_COGNITO_CLIENT_SECRET_ALLOW=false
-```
-
-## Password Validation based of Cognito Configuration
+## **Password Validation**
 
 This library fetches the password policy from the cognito pool configurations. The laravel request validations are done based on the regular expression that is created based on this policy. This validations are performed during the Sign Up (Registation), Sign In (Login), Reset and Change password based flows. The validation messages for the password are also dynamic in nature and change based on the configurations.
 
@@ -471,4 +427,4 @@ This library fetches the password policy from the cognito pool configurations. T
 >We are working on making sure that pipe character is handled soon.
 
 > [!NOTE]
-> The Access Token is now validated with the AWS Cognito certificate. If the certificate is incorrect or expired, it will throw am exception.
+> The Access Token is now validated with the AWS Cognito certificate. If the certificate is incorrect or expired, it will throw an exception.

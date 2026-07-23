@@ -7,14 +7,16 @@ This document provides guidance on configuring the AWS Cognito service and the L
 
 
 ## **Contents**
+
 - [AWS Configurations](COGNITOCONFIG.md)
     + [AWS IAM configuration](COGNITOCONFIG.md#aws-iam-configuration)
     + [AWS Cognito configuration](COGNITOCONFIG.md#aws-cognito-configuration)
+
 - [Laravel Configurations](#laravel-configurations)
     + [ServiceProvider Registration](#serviceprovider-registration)
     + [Registering the Middleware](#registering-the-middleware)
     + [Environment Variables](#environment-variables)
-    + [Environment Variables - Optional](#additional-environment-variables)
+    + [Environment Variables - Optional](#additional-environment-variables-optional)
     + [Changes in Auth Configurations](#changes-in-auth-configurations)
     + [Publishing Configurations](#publishing-configurations)
     + [Database Configurations](#database-configurations)
@@ -22,6 +24,7 @@ This document provides guidance on configuring the AWS Cognito service and the L
         * User Model
     + [Session Storage Configurations](#session-storage-configurations)
         * DynamoDB Storage
+
 - [References](#references)
 
 
@@ -130,6 +133,26 @@ For more details on how to find `AWS_COGNITO_CLIENT_ID`, `AWS_COGNITO_CLIENT_SEC
 
 ### *Additional Environment Variables* (Optional)
 ---
+
+#### Support for App Client without Secret Enabled
+
+The library now supports where the AWS configuration of App Client with the Client Secret set to disabled. Use the below configuration into the environment file to enable/disable this. The default is marked as **true** (i.e. we expect the App Client Secret to be enabled in AWS Cognito configuration)
+
+```php
+AWS_COGNITO_CLIENT_SECRET_ALLOW=false
+```
+
+
+#### Automatic User Password update for API usage (for New Cognito Users)
+
+In case of the new cognito users, the AWS SDK will send a session key and the user is expected to change the password, in a forced mode. Make sure you force the users to change the password for the first login by new cognito user.
+
+However, if you have an API based implementation, and want to automatically authenticate the user without forcing the password change, you may do that with below setting fields to your `.env` file
+
+```php
+AWS_COGNITO_FORCE_PASSWORD_CHANGE_API=false     //Make true for forcing password change
+AWS_COGNITO_FORCE_PASSWORD_AUTO_UPDATE_API=true //Make false for stopping auto password change
+```
 
 
 ### *Changes in Auth Configurations*
