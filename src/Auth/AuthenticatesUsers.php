@@ -99,6 +99,9 @@ trait AuthenticatesUsers
             $returnValue = null;
             $guard = $this->getGuard($request);
 
+            //Raise Pre Auth Event
+            $this->callPreAuthEvent($request);
+
             //Get the password policy
             $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
@@ -166,6 +169,9 @@ trait AuthenticatesUsers
         try {
             // Get the authentication guard
             $guard = $this->getGuard($request);
+
+            //Raise Pre Auth Event
+            $this->callPreAuthEvent($request);
 
             //Generate the SRP_A parameter if not present in the request
             if (!$request->has($paramPassword)) {
