@@ -74,10 +74,11 @@ The validations are built in and API response format is standardized.
     POST      api/cognito/login/challenge ..................................... Ellaisys\Cognito\Http\Controllers\Auth\LoginController@challenge
     PUT       api/cognito/logout ................................................. Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout
     PUT       api/cognito/logout/forced .................................... Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logoutForced
-    POST      api/cognito/password/forgot ........................ Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLinkEmail
+    POST      api/cognito/password/forgot ................... Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLinkEmail
     POST      api/cognito/password/reset .................................. Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController@reset
     POST      api/cognito/register .......................................... Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@register
-    POST      api/cognito/token/refresh ............................... Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
+    POST      api/cognito/token/revalidate ............................ Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
+    POST      api/cognito/token/refresh .................................. Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@refresh
     POST      api/cognito/user/changepassword .......................... Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@change
     POST      api/cognito/user/invite ................................... Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@actionInvite
     GET|HEAD  api/cognito/user/profile ................................ Ellaisys\Cognito\Http\Controllers\Api\UserController@actionGetRemoteUser
@@ -109,11 +110,11 @@ The web routes that are wired via the Controllers, making it easy for users to i
 GET|HEAD  cognito/home ............................................................................................................................... cognito.home
 GET|HEAD  cognito/login ........................................................................................................................ cognito.form.login
 POST      cognito/login ................................................ cognito.action.login.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@login
-POST      cognito/login/auth-challenge .................... cognito.action.auth.challenge.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@challenge
+POST      cognito/login/auth-challenge .............. cognito.action.auth.challenge.submit › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@actionChallenge
 POST      cognito/logout ........................................................... cognito.logout › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logout
 POST      cognito/logout/forced ....................................... cognito.logout_forced › Ellaisys\Cognito\Http\Controllers\Auth\LoginController@logoutForced
 GET|HEAD  cognito/password/forgot .................................................................................................... cognito.form.password.forgot
-POST      cognito/password/forgot .................. cognito.action.password.forgot › Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLink
+POST      cognito/password/forgot ............. cognito.action.password.forgot › Ellaisys\Cognito\Http\Controllers\Auth\ForgotPasswordController@sendResetLinkEmail
 GET|HEAD  cognito/password/reset ...................................................................................................... cognito.form.password.reset
 POST      cognito/password/reset ............................. cognito.action.password.reset › Ellaisys\Cognito\Http\Controllers\Auth\ResetPasswordController@reset
 GET|HEAD  cognito/register .................................................................................................................. cognito.form.register
@@ -122,7 +123,8 @@ GET|HEAD  cognito/register/resend-code .........................................
 POST      cognito/register/resend-code ................. cognito.action.register.resend_code › Ellaisys\Cognito\Http\Controllers\Auth\VerificationController@resend
 GET|HEAD  cognito/register/verify .................................................................................................... cognito.form.register.verify
 POST      cognito/register/verify ........................... cognito.action.register.verify › Ellaisys\Cognito\Http\Controllers\Auth\VerificationController@verify
-POST      cognito/session/refresh ............................................. cognito. › Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
+GET|POST  cognito/session/revalidate ................. cognito.action.session.revalidate › Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
+POST      cognito/session/refresh .......................... cognito.action.session.refresh › Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@refresh
 GET|HEAD  cognito/user/changepassword ................................................................................................ cognito.form.change.password
 POST      cognito/user/changepassword .................... cognito.action.change.password › Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@change
 GET|HEAD  cognito/user/invite ............................................................................................................ cognito.form.user.invite
