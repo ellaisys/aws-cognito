@@ -17,11 +17,13 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Validator;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Enums\CognitoUserStatusTypes;
 
 use Exception;
+use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -46,6 +48,13 @@ trait SendsPasswordResetEmails
         try {
             //Initialize variables
             $returnValue = null;
+
+            //Validate request
+            $validator = Validator::make(
+                $request->all(), $this->rules([$usernameKey => 'required|email']));
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
 
             //Cognito reset link
             $response = $this->sendCognitoResetLinkEmail($request[$usernameKey], $clientMetadata);

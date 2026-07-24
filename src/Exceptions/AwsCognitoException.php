@@ -21,6 +21,7 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class AwsCognitoException extends HttpException
 {
+    const COGNITO_DEFAULT = 'ERROR_COGNITO_DEFAULT';
     const COGNITO_AUTH_USER_UNAUTHORIZED = 'ERROR_COGNITO_AUTH_USER_UNAUTHORIZED';
     const COGNITO_AUTH_USER_RESET_PASS = 'ERROR_COGNITO_AUTH_USER_RESET_PASSWORD';
     const COGNITO_AUTH_USERNAME_EXISTS = 'ERROR_COGNITO_AUTH_USERNAME_EXISTS';
@@ -132,7 +133,7 @@ class AwsCognitoException extends HttpException
         } //End switch
         
         return [
-                $errorCode ?? 'AWS Cognito Error',
+                $errorCode ?? self::COGNITO_DEFAULT,
                 $exception->getStatusCode() ?? 400,
                 [],
                 0

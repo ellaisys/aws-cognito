@@ -71,6 +71,13 @@ class AwsCognitoClient
     const USERNAME_EXISTS = 'UsernameExistsException';
 
     /**
+     * Constant representing the invalid password exception.
+     *
+     * @var string
+     */
+    const INVALID_PASSWORD = 'InvalidPasswordException';
+    
+    /**
      * Constant representing the code mismatch exception.
      *
      * @var string

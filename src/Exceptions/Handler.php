@@ -229,7 +229,8 @@ class Handler extends ExceptionHandler
         $errorKey = $exception->getMessage();
 
         //Get the error message from the language file if available
-        $messageKey = $errorKey ? 'cognito::messages.error.' . $errorKey : null;
+        $messageKey = 'cognito::messages.error.';
+        $messageKey .= $errorKey ?? AwsCognitoException::COGNITO_DEFAULT;
         $errorMessage = ($messageKey && Lang::has($messageKey)) ? trans($messageKey) : null;
 
         switch ($exception->getMessage()) {
@@ -239,7 +240,7 @@ class Handler extends ExceptionHandler
                 break;
 
             default:
-                $errorKey = $errorMessage ?? 'ERROR_COGNITO_DEFAULT';
+                $errorKey = $errorMessage ? $errorKey : AwsCognitoException::COGNITO_DEFAULT;
                 $errorMessage = $errorMessage ?? $exception->getMessage();
                 break;
         } //End Switch
