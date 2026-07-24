@@ -230,9 +230,9 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
                         'status' => $this->challengeData['status'],
                         'email' => $this->challengeData['username'],
                     ]))
-                        ->with('success', 'success')
-                        ->with('force', true)
-                        ->with('message', $this->challengeName);
+                    ->with('status', 'success')
+                    ->with('force', true)
+                    ->with('message', $this->challengeName);
                 } //End if
                 break;
 

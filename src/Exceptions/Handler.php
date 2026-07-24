@@ -358,7 +358,7 @@ class Handler extends ExceptionHandler
         if ($isRedirectToLogin) {
             return redirect()
                 ->route(config('cognito.routes.web.login_page', 'cognito.form.login'))
-                ->withInput($request->input())
+                ->withInput($request->except(['_token', 'password', 'password_confirmation', 'code', 'token', 'pass_code']))
                 ->with('status', 'error')
                 ->with('message', $systemErrorMsg)
                 ->withErrors($errors);
@@ -367,7 +367,7 @@ class Handler extends ExceptionHandler
             $messageOutput = ($messageKey && Lang::has($messageKey)) ? trans($messageKey) : null;
 
             return redirect()->back()
-                ->withInput($request->except('_token', 'password', 'password_confirmation', 'code', 'token', 'pass_code'))
+                ->withInput($request->except(['_token', 'password', 'password_confirmation', 'code', 'token', 'pass_code']))
                 ->with('status', 'error')
                 ->with('message', $messageOutput)
                 ->withErrors($errors);

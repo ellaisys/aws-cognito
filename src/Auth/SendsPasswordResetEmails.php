@@ -91,10 +91,14 @@ trait SendsPasswordResetEmails
                 $returnValue = redirect()
                     ->route(config('cognito.routes.web.password_reset_page'))
                     ->withInput($request->only($usernameKey))
-                    ->with('success', true);
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::messages.auth.password_reset_success'))
+                    ->with('data', $response);
             } else {
                 $returnValue = redirect('/')
-                    ->with('success', true);
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::messages.auth.password_reset_success'))
+                    ->with('data', $response);
             } //End if
         } else {
             $returnValue = redirect()

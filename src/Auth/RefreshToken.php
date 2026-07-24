@@ -53,7 +53,7 @@ trait RefreshToken
             $username = $request->has($this->paramUsername) ? $request[$this->paramUsername] : null;
 
             //Check if the refresh token and username are provided
-            if (empty($refreshToken) && empty($username)) {
+            if (empty($refreshToken) || empty($username)) {
                 //Get from authenticated user
                 $authUser = $this->getAuthenticatedUser($request);
                 $username = $username ?? $authUser[$this->paramUsername];
