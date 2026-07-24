@@ -50,8 +50,9 @@ trait SendsPasswordResetEmails
             $returnValue = null;
 
             //Validate request
-            $validator = Validator::make(
-                $request->all(), $this->rules([$usernameKey => 'required|email']));
+            $validator = Validator::make($request->all(), [
+                $usernameKey => 'required|email:rfc,dns|max:255',
+            ]);
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
