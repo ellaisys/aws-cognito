@@ -13,6 +13,7 @@ namespace Ellaisys\Cognito\Auth;
 
 use Auth;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -551,7 +552,7 @@ trait AuthenticatesUsers
                 } //Return response
             } else { // Challenge condition
                 // If a guard returns a redirect (e.g. forced password change), pass it through.
-                if ($response instanceof \Illuminate\Http\RedirectResponse) {
+                if ($response instanceof RedirectResponse) {
                     return $response;
                 }
 
