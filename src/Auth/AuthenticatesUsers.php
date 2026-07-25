@@ -550,6 +550,15 @@ trait AuthenticatesUsers
                         ->with('data', $response->getData());
                 } //Return response
             } else { // Challenge condition
+                // If a guard returns a redirect (e.g. forced password change), pass it through.
+                if ($response instanceof \Illuminate\Http\RedirectResponse) {
+                    return $response;
+                }
+
+                if (!is_array($response) || !isset($response['challenge_name'])) {
+                    throw new HttpException(400, 'Invalid challenge response received from authentication guard.');
+                }
+
                 //Return response
                 if ($this->isControllerAction) {
                     $returnValue = $response;
