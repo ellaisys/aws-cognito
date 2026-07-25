@@ -554,36 +554,54 @@ trait AuthenticatesUsers
                 // If a guard returns a redirect (e.g. forced password change), pass it through.
                 if ($response instanceof RedirectResponse) {
                     return $response;
-                }
+                } //End if
 
                 if (!is_array($response) || !isset($response['challenge_name'])) {
                     throw new HttpException(400, 'Invalid challenge response received from authentication guard.');
-                }
+                } //End if
 
-                //Return response
-                if ($this->isControllerAction) {
-                    $returnValue = $response;
-                } elseif ($this->getIsJsonResponse($request)) {
-                    $returnValue = $this->response->success($response);
-                } else {
-                    // Set the redirect path for the challenge
-                    $this->redirectTo = config('cognito.routes.web.challenge_page');
-
-                    // Call response redirect with status, message, and data for challenge
-                    $returnValue = redirect()
-                        ->route($this->redirectPath(), [
-                                'step' => 'challenge',
-                                'challenge' => $response['challenge_name']
-                            ])
-                        ->with('status', 'success')
-                        ->with('message', trans('cognito::messages.auth.challenge_generated'))
-                        ->with('data', $response);
-                } //Return response
+                //Return challenge response
+                $returnValue = $this->getChallengeSuccessResponse($request, $response);
             } //End if
         } catch (Exception $exception) {
             Log::error('AuthenticatesUsers:processClaimResponse:Exception');
             throw $exception;
         } //Try-catch ends
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Get the challenge success response based on the request type.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param array $response
+     * @return mixed
+     */
+    private function getChallengeSuccessResponse(Request $request, array $response): mixed
+    {
+        // Initialize variables
+        $returnValue = null;
+
+        //Return response
+        if ($this->isControllerAction) {
+            $returnValue = $response;
+        } elseif ($this->getIsJsonResponse($request)) {
+            $returnValue = $this->response->success($response);
+        } else {
+            // Set the redirect path for the challenge
+            $this->redirectTo = config('cognito.routes.web.challenge_page');
+
+            // Call response redirect with status, message, and data for challenge
+            $returnValue = redirect()
+                ->route($this->redirectPath(), [
+                        'step' => 'challenge',
+                        'challenge' => $response['challenge_name']
+                    ])
+                ->with('status', 'success')
+                ->with('message', trans('cognito::messages.auth.challenge_generated'))
+                ->with('data', $response);
+        } //Return response
 
         return $returnValue;
     } //Function ends

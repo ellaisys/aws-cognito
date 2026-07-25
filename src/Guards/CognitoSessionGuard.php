@@ -288,7 +288,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             //Get authentication token from session
             $session = $this->getSession();
 
-            // Call the parents logout method
+            //Call the parents logout method
             parent::logout();
 
             //Get the claim from session
