@@ -34,7 +34,7 @@
             <input id="code" type="text"
                 class="form-control @error('code') is-invalid @enderror"
                 name="code" @if(!empty($codeValue)) value="{{ $codeValue }}" @endif
-                required autocomplete="off" autofocus />
+                required autocomplete="off" />
 
             @error('code')
                 <span class="invalid-feedback" role="alert">
