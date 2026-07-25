@@ -323,7 +323,7 @@ class AwsCognitoClient
      * @param string $password
      * @return string
      */
-    public function resetPassword(string $code, string $username, string $password)
+    public function resetPassword(string $code, string $username, string $password): string
     {
         try {
             //Initialize variables
@@ -343,14 +343,6 @@ class AwsCognitoClient
             $this->client->confirmForgotPassword($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClient:resetPassword:CognitoIdentityProviderException');
-            if ($exception->getAwsErrorCode() === self::USER_NOT_FOUND) {
-                $returnValue = Password::INVALID_USER;
-            } //End if
-
-            if ($exception->getAwsErrorCode() === self::CODE_MISMATCH || $exception->getAwsErrorCode() === self::EXPIRED_CODE) {
-                $returnValue = Password::INVALID_TOKEN;
-            } //End if
-
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
