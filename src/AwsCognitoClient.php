@@ -156,8 +156,8 @@ class AwsCognitoClient
 
     /**
      * Checks if credentials of a user are valid.
-     *
      * @see http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html
+     *
      * @param string $username
      * @param string $password
      * @return \Aws\Result|bool
@@ -316,7 +316,7 @@ class AwsCognitoClient
     /**
      * Allow users new password based on reset code, this is primarily part of
      * the reset password workflow.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html
      *
      * @param string $code
      * @param string $username
@@ -351,7 +351,7 @@ class AwsCognitoClient
 
     /**
      * Register a user and send them an email to set their password.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html
      *
      * @param $username
      * @param $password (optional) (default=null)
@@ -426,7 +426,6 @@ class AwsCognitoClient
 
     /**
      * Changes the password for a specified user in a user pool.
-     *
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ChangePassword.html
      *
      * @param string $accessToken

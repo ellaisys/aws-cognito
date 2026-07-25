@@ -264,23 +264,33 @@ trait AwsCognitoClientAdminAction
     } //Function ends
 
     /**
+     * Deletes a user from a given user pool.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminDeleteUser.html
+     *
      * @param string $username
      *
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#admindeleteuser
+     * @return \Aws\Result
+     * @throws AwsCognitoException
      */
-    public function deleteUser($username)
+    public function deleteUser($username): AwsResult
     {
-        if (config('cognito.delete_user', false)) {
-            $this->client->adminDeleteUser([
-                'UserPoolId' => $this->poolId,
-                'Username' => $username,
-            ]);
-        } //End if
+        try {
+            if (config('cognito.delete_user', false)) {
+                return $this->client->adminDeleteUser([
+                    'UserPoolId' => $this->poolId,
+                    'Username' => $username,
+                ]);
+            } else {
+                throw new AwsCognitoException(AwsCognitoException::COGNITO_CONFIG_INVALID);
+            } //End if
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:deleteUser:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
     } //Function ends
 
     /**
      * Sets the specified user's password in a user pool as an administrator.
-     *
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminSetUserPassword.html
      *
      * @param string $username
@@ -314,7 +324,7 @@ trait AwsCognitoClientAdminAction
 
     /**
      * Responds to an authentication challenge, as an administrator.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminRespondToAuthChallenge.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminRespondToAuthChallenge.html
      *
      * @param CognitoChallengeTypes $challengeName
      * @param string $session
