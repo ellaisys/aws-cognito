@@ -124,7 +124,9 @@ trait SendsPasswordResetEmails
      * Send a cognito reset link to the given user.
      *
      * @param  \string  $username
-     * @return \bool
+     * @param  \array|null  $clientMetadata (optional)
+     * @return \array
+     * @throws \Exception
      */
     private function sendCognitoResetLinkEmail(string $username, ?array $clientMetadata = null): array
     {
