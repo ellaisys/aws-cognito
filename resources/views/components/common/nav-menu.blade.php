@@ -14,17 +14,19 @@
     <div class="dropdown-divider"></div>
 
     @php
-        $mfaEnabled = config('cognito.mfa_setup')=='MFA_NONE' ? false : true;
+        $mfaEnabled = config('cognito.mfa_setup')!='OFF' ? true : false;
     @endphp
 
     @if (Route::has('cognito.form.user.mfa.activate') && $mfaEnabled)
-    <a class="dropdown-item" href="{{ route('cognito.form.user.mfa.activate') }}">
+    <a class="dropdown-item" href="{{ route('cognito.form.user.mfa.activate') }}"
+        data-role="mfa" data-action="activate">
         {{ __('Activate MFA') }}
     </a>
     @endif
 
     @if (Route::has('cognito.action.user.mfa.deactivate') && $mfaEnabled)
-    <a class="dropdown-item" href="{{ route('cognito.action.user.mfa.deactivate') }}">
+    <a class="dropdown-item" href="{{ route('cognito.action.user.mfa.deactivate') }}"
+        data-role="mfa" data-action="deactivate">
         {{ __('Deactivate MFA') }}
     </a>
     @endif
@@ -32,13 +34,15 @@
     <div class="dropdown-divider"></div>
 
     @if (Route::has('cognito.action.mfa.enable') && $mfaEnabled)
-    <a class="dropdown-item" href="{{ route('cognito.action.mfa.enable') }}">
+    <a class="dropdown-item" href="{{ route('cognito.action.mfa.enable') }}"
+        data-role="mfa" data-action="enable">
         {{ __('Enable MFA') }}
     </a>
     @endif
 
     @if (Route::has('cognito.action.mfa.disable') && $mfaEnabled)
-    <a class="dropdown-item" href="{{ route('cognito.action.mfa.disable') }}">
+    <a class="dropdown-item" href="{{ route('cognito.action.mfa.disable') }}"
+        data-role="mfa" data-action="disable">
         {{ __('Disable MFA') }}
     </a>
     @endif
