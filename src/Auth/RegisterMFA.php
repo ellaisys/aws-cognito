@@ -209,6 +209,14 @@ trait RegisterMFA
         $returnValue = null;
 
         try {
+            if (!$request->has('username')) {
+                //Get Authenticated user
+                $authUser = $this->getAuthenticatedUser($request);
+
+                // Merge the request data with the authenticated user's username
+                $request->merge(['username' => $authUser['email']]);
+            } //End if
+
             // Validate the request data
             $validator = Validator::make($request->all(), [
                 'username' => 'required|string'
@@ -219,9 +227,6 @@ trait RegisterMFA
 
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
-
-            //Get Authenticated user
-            $this->getAuthenticatedUser($request);
            
             //Get the response from AWS Cognito for the MFA configurations
             $response = $client->adminSetUserMFAPreference($request['username'], $isEnable);
