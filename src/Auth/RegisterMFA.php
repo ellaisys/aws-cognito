@@ -47,9 +47,11 @@ trait RegisterMFA
     /**
      * Verify the MFA for the authenticated user
      *
-     * @param  string  $guard (optional)
+     * @param \Illuminate\Http\Request $request
+     * @param string $code (optional)
+     * @param string $deviceName (optional)
      *
-     * @return \mixed
+     * @return mixed
      */
     public function verify(Request $request,
         ?string $code=null, ?string $deviceName=null): mixed
@@ -112,9 +114,9 @@ trait RegisterMFA
     /**
      * Deactivate the MFA for the authenticated user
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      *
-     * @return \mixed
+     * @return mixed
      */
     public function deactivate(Request $request): mixed
     {
@@ -124,10 +126,10 @@ trait RegisterMFA
     /**
      * Toggle the MFA for the authenticated user
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \bool  $isEnable (optional)
+     * @param \Illuminate\Http\Request $request
+     * @param bool $isEnable (optional)
      *
-     * @return \mixed
+     * @return mixed
      * @throws \Exception
      */
     private function toggleMFA(Request $request, bool $isEnable=false, bool $isDirectCall=false): mixed
@@ -170,7 +172,7 @@ trait RegisterMFA
     /**
      * Enable the MFA for the mentioned user
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      *
      * @return mixed
      */
@@ -182,7 +184,7 @@ trait RegisterMFA
     /**
      * Disable the MFA for the mentioned user
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      *
      * @return mixed
      */
@@ -194,10 +196,11 @@ trait RegisterMFA
     /**
      * Change the MFA settings for the mentioned user by the admin
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  bool    $isEnable (optional)
+     * @param \Illuminate\Http\Request $request
+     * @param bool $isEnable (optional)
      *
-     * @return array
+     * @return mixed
+     * @throws \Exception
      */
     private function toggleAdminMFA(Request $request, bool $isEnable=false): mixed
     {
