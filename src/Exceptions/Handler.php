@@ -228,7 +228,7 @@ class Handler extends ExceptionHandler
         $statusCode = Response::HTTP_BAD_REQUEST; //400
         $errorKey = $exception->getMessage();
 
-        //Get the error message from the language file if available
+        // Get the error message from the language file if available
         $messageKey = 'cognito::messages.error.';
         $messageKey .= $errorKey ?? AwsCognitoException::COGNITO_DEFAULT;
         $errorMessage = ($messageKey && Lang::has($messageKey)) ? trans($messageKey) : null;
@@ -241,9 +241,11 @@ class Handler extends ExceptionHandler
 
             default:
                 $errorKey = $errorMessage ? $errorKey : AwsCognitoException::COGNITO_DEFAULT;
-                $errorMessage = $errorMessage ?? $exception->getMessage();
                 break;
         } //End Switch
+
+        // Ensure that the error message is not empty
+        $errorMessage = $errorMessage ?? $exception->getMessage();
 
         return [$statusCode, $errorMessage, $errorKey];
     } //Function ends
