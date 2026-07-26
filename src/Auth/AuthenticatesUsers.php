@@ -673,7 +673,7 @@ trait AuthenticatesUsers
         return [
             'username'          => 'sometimes',
             'session'           => 'required',
-            'challenge_name'    => 'required|string|in:SELECT_CHALLENGE,WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD,PASSWORD_SRP,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER',
+            'challenge_name'    => 'required|string|in:SELECT_CHALLENGE,WEB_AUTHN,EMAIL_OTP,SMS_OTP,SELECT_MFA_TYPE,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD,PASSWORD_SRP,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER',
             'challenge_value'   => 'required|string',
             'challenge_params'  => 'sometimes|string'
         ];

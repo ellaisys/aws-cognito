@@ -227,9 +227,10 @@ trait BaseCognitoGuard
                 ];
                 break;
 
+            case CognitoChallengeTypes::SELECT_MFA_TYPE:
             case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
             case CognitoChallengeTypes::SMS_MFA:
-            case CognitoChallengeTypes::SELECT_MFA_TYPE:
+            case CognitoChallengeTypes::EMAIL_MFA:
             case CognitoChallengeTypes::DEVICE_SRP_AUTH:
             case CognitoChallengeTypes::SELECT_CHALLENGE:
             case CognitoChallengeTypes::SMS_OTP:
