@@ -221,7 +221,8 @@ trait AwsCognitoClientHelper
     {
         try {
             //Validate phone for MFA
-            if (config('cognito.mfa_setup')=="MFA_ENABLED" && empty($attributes['phone_number'])) {
+            $listMfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
+            if ((config('cognito.mfa_setup')!="OFF") && (in_array('SMS_MFA', $listMfaTypes)) && empty($attributes['phone_number'])) {
                 throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING');
             } //End if
             
@@ -260,7 +261,7 @@ trait AwsCognitoClientHelper
                 } //End if
             } //End if
             
-            if (config('cognito.mfa_setup')=="MFA_ENABLED") {
+            if (config('cognito.mfa_setup')!="OFF") {
                 $defaultDeliveryMedium = 'SMS';
                 $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
             } //End if
