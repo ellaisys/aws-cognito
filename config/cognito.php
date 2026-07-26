@@ -193,11 +193,12 @@ return [
     | "SOFTWARE_TOKEN_MFA" and "WEB_AUTHN".
     | The default value is set to "SOFTWARE_TOKEN_MFA".
     |
-    | You can set one or more MFA types as per your requirements.
-    | In case you want to allow both the MFA types, you can set the value to
-    | "SMS_MFA,SOFTWARE_TOKEN_MFA,WEB_AUTHN" separated by comma.
+    | You can set one or more MFA types as per your requirements. In case you
+    | want to allow more MFA types, you can set the values separated by comma,
+    | e.g. "SMS_MFA,SOFTWARE_TOKEN_MFA,WEB_AUTHN".
     |
-    | The first MFA type in the list will be set as preferred MFA type.
+    | In case more than one MFA type is set, the first type in the list will be
+    | set as preferred MFA type.
     |
     */
     'mfa_type' => env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA'),
