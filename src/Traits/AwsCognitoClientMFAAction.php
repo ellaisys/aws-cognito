@@ -218,6 +218,33 @@ trait AwsCognitoClientMFAAction
     } //Function ends
 
     /**
+     * Get user pool MFA configuration.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GetUserPoolMfaConfig.html
+     *
+     * @return \Aws\Result
+     * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
+     */
+    public function getUserPoolMfaConfig(): AwsResult
+    {
+        //Initialize variables
+        $response = null;
+
+        try {
+            //Build payload
+            $payload = [
+                'UserPoolId' => $this->poolId,
+            ];
+
+            $response = $this->client->getUserPoolMfaConfig($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientMFAAction:getUserPoolMfaConfig:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+    /**
      * Set user pool MFA configuration.
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SetUserPoolMfaConfig.html
      *
