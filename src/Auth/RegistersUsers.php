@@ -406,7 +406,8 @@ trait RegistersUsers
             } //End if
 
             //Check the MFA setup config
-            if (config('cognito.mfa_setup')=="MFA_ENABLED" && empty($userFields['phone_number'])) {
+            $listMfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
+            if ((config('cognito.mfa_setup')!="OFF") && (in_array('SMS_MFA', $listMfaTypes)) && empty($userFields['phone_number'])) {
                 throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING');
             } //End if
 
