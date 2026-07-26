@@ -13,6 +13,8 @@ namespace Ellaisys\Cognito\Traits;
 
 use Config;
 
+use Aws\Result as AwsResult;
+
 use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\AwsCognitoClient;
@@ -110,12 +112,15 @@ trait AwsCognitoClientMFAAction
 
     /**
      * Set user MFA preference setting by self/user.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SetUserMFAPreference.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SetUserMFAPreference.html
      *
-     * @param string $username
-     * @return mixed
+     * @param string $accessToken
+     * @param bool $isEnable (optional)
+     *
+     * @return \Aws\Result
+     * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function setUserMFAPreference(string $accessToken, bool $isEnable=false)
+    public function setUserMFAPreference(string $accessToken, bool $isEnable=false):AwsResult
     {
         try {
             //Build payload
@@ -123,7 +128,7 @@ trait AwsCognitoClientMFAAction
                 'AccessToken' => $accessToken,
                 'UserPoolId' => $this->poolId
             ];
-            $payload = array_merge($payload, $this->setMFAPreference($isEnable));
+            $payload = array_merge($payload, $this->buildPreferencePayload($isEnable));
 
             $response = $this->client->setUserMFAPreference($payload);
         } catch (CognitoIdentityProviderException $exception) {
@@ -136,13 +141,15 @@ trait AwsCognitoClientMFAAction
 
     /**
      * Set user MFA preference setting by admin.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminSetUserMFAPreference.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminSetUserMFAPreference.html
      *
      * @param string $username
+     * @param bool $isEnable (optional)
      *
-     * @return mixed
+     * @return \Aws\Result
+     * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function adminSetUserMFAPreference(string $username, bool $isEnable=false)
+    public function adminSetUserMFAPreference(string $username, bool $isEnable=false): AwsResult
     {
         try {
             //Build payload
@@ -150,7 +157,7 @@ trait AwsCognitoClientMFAAction
                 'Username' => $username,
                 'UserPoolId' => $this->poolId
             ];
-            $payload = array_merge($payload, $this->setMFAPreference($isEnable));
+            $payload = array_merge($payload, $this->buildPreferencePayload($isEnable));
 
             $response = $this->client->adminSetUserMFAPreference($payload);
         } catch (CognitoIdentityProviderException $exception) {
@@ -162,84 +169,85 @@ trait AwsCognitoClientMFAAction
     } //Function ends
 
     /**
-     * Private method for Setting MFA preference objects
+     * Private method for Building the MFA preference payload
      *
-     * @return mixed
+     * @param bool $isEnable
+     * @return array
      */
-    private function setMFAPreference(bool $isEnable)
+    private function buildPreferencePayload(bool $isEnable): array
     {
-        try {
-            //Build payload
-            $payload = [];
+        //Initialize variables
+        $returnValue = [];
 
-            $isMfaEnabled = (config('cognito.mfa_setup') == 'MFA_ENABLED')?true:false;
+        try {
+            //Get the MFA type configuration
+            $isMfaEnabled = (config('cognito.mfa_setup') != 'OFF')?true:false;
             $listMfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
 
-            $firstMfaType=null;
-            foreach ($listMfaTypes as $mfaType) {
-                if (empty($firstMfaType)) { $firstMfaType=$mfaType; }
+            if (empty($listMfaTypes) || !is_array($listMfaTypes)) {
+                throw new BadRequestHttpException('No MFA type is configured in the system. Please configure at least one MFA type in the config/cognito.php file.');
+            } //End if
 
-                //Add Email MFA configuration if enabled and selected in mfa_type
-                $payload = array_merge($payload, [
-                    'EmailMfaSettings' => [
-                        'Enabled' => ($isMfaEnabled && $isEnable)?($mfaType=='EMAIL_MFA'):false,
-                        'PreferredMfa' => (($firstMfaType=='EMAIL_MFA') && ($isEnable))
-                    ]
-                ]);
-                
-                //Add SMS MFA configuration if enabled and selected in mfa_type
-                $payload = array_merge($payload, [
-                    'SMSMfaSettings' => [
-                        'Enabled' => ($isMfaEnabled && $isEnable)?($mfaType=='SMS_MFA'):false,
-                        'PreferredMfa' => (($firstMfaType=='SMS_MFA') && ($isEnable))
-                    ]
-                ]);
+            //Set the preferred MFA type as the first type in the list
+            $preferredMfaType = $listMfaTypes[0];
 
-                //Add Software Token MFA configuration if enabled and selected in mfa_type
-                $payload = array_merge($payload, [
-                    'SoftwareTokenMfaSettings' => [
-                        'Enabled' => ($isMfaEnabled && $isEnable)?($mfaType=='SOFTWARE_TOKEN_MFA'):false,
-                        'PreferredMfa' => (($firstMfaType=='SOFTWARE_TOKEN_MFA') && ($isEnable))
-                    ]
-                ]);
-
-                //Add WebAuthn configuration if enabled
-                $payload = array_merge($payload, [
-                    'WebAuthnMfaSettings' => [
-                        'Enabled' => ($isMfaEnabled && $isEnable)?($mfaType=='WEB_AUTHN'):false
-                    ]
-                ]);
-            } //Loop ends
-
-            $response = $payload;
+            // Build MFA preference objects for each MFA type configured in the system
+            $returnValue = [
+                'EmailMfaSettings' => [
+                    'Enabled' => ($isMfaEnabled && $isEnable)?(in_array('EMAIL_MFA', $listMfaTypes)):false,
+                    'PreferredMfa' => (($preferredMfaType=='EMAIL_MFA') && ($isEnable && $isMfaEnabled))
+                ],
+                'SMSMfaSettings' => [
+                    'Enabled' => ($isMfaEnabled && $isEnable)?(in_array('SMS_MFA', $listMfaTypes)):false,
+                    'PreferredMfa' => (($preferredMfaType=='SMS_MFA') && ($isEnable && $isMfaEnabled))
+                ],
+                'SoftwareTokenMfaSettings' => [
+                    'Enabled' => ($isMfaEnabled && $isEnable)?(in_array('SOFTWARE_TOKEN_MFA', $listMfaTypes)):false,
+                    'PreferredMfa' => (($preferredMfaType=='SOFTWARE_TOKEN_MFA') && ($isEnable && $isMfaEnabled))
+                ],
+                'WebAuthnMfaSettings' => [
+                    'Enabled' => ($isMfaEnabled && $isEnable)?(in_array('WEB_AUTHN', $listMfaTypes)):false
+                ]
+            ];
         } catch (Exception $e) {
-            Log::error('AwsCognitoClientMFAAction:setMFAPreference:Exception');
+            Log::error('AwsCognitoClientMFAAction:buildPreferencePayload:Exception');
             throw $e;
         } //Try-catch ends
 
-        return $response;
+        return $returnValue;
     } //Function ends
 
     /**
      * Set user pool MFA configuration.
-      * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SetUserPoolMfaConfig.html
-      *
-      * @param string $mfaConfiguration
-      */
-    public function setUserPoolMfaConfig(?string $mfaConfiguration = 'OPTIONAL')
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SetUserPoolMfaConfig.html
+     *
+     * @return \Aws\Result
+     * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
+     */
+    public function setUserPoolMfaConfig(): AwsResult
     {
+        //Initialize variables
+        $response = null;
+
         try {
-            $isMfaEnabled = (config('cognito.mfa_setup') == 'MFA_ENABLED')?true:false;
+            // Check if MFA is enabled and get the list of MFA types
+            $isMfaEnabled = (config('cognito.mfa_setup') != 'OFF')?true:false;
             $listMfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
 
             //Build payload
             $payload = [
                 'UserPoolId' => $this->poolId,
-                'MfaConfiguration' => $mfaConfiguration,
-                'SoftwareTokenMfaConfiguration' => [
-                    'Enabled' => ($isMfaEnabled && in_array('SOFTWARE_TOKEN_MFA', $listMfaTypes))?true:false,
-                ]
+                'MfaConfiguration' => config('cognito.mfa_setup', 'OFF'),
             ];
+
+            //Add Software Token MFA configuration if enabled and selected in mfa_type
+            if ($isMfaEnabled) {
+                $payload = array_merge($payload, [
+                    'SoftwareTokenMfaConfiguration' => [
+                        'Enabled' => (in_array('SOFTWARE_TOKEN_MFA', $listMfaTypes))?true:false,
+                    ]
+                ]);
+            } //End if
 
             //Add Email MFA configuration if enabled and selected in mfa_type
             if ($isMfaEnabled && in_array('EMAIL_MFA', $listMfaTypes)) {
@@ -263,9 +271,9 @@ trait AwsCognitoClientMFAAction
             } //End if
 
             $response = $this->client->setUserPoolMfaConfig($payload);
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientMFAAction:setUserPoolMfaConfig:Exception');
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientMFAAction:setUserPoolMfaConfig:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $response;
