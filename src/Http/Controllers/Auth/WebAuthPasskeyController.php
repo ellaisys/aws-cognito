@@ -43,7 +43,7 @@ class WebAuthPasskeyController extends Controller
     public function __construct()
     {
         /*
-         * Mandate authentication for all the API's of this controller
+         * Mandate authentication for all the APIs of this controller
          * except the challenge method.
          */
         $this->middleware('aws-cognito')->except([
