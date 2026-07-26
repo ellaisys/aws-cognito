@@ -169,36 +169,41 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito MFA Setup and configurations
+    | Cognito MFA Setup and Configuration
     |--------------------------------------------------------------------------
     |
-    | This option controls the cognito MFA configuration to be used for the
-    | users in the User Pool. The options available are "MFA_NONE" and
-    | "MFA_ENABLED". The default value is set to "MFA_NONE" which means that
-    | the MFA is not enabled for the users.
+    | This option controls the MFA configuration for the Cognito User Pool.
+    | Supported values are "OFF", "ON", and "OPTIONAL". The default value is
+    | "OFF", which disables MFA for all users.
     |
-    | MFA_NONE, MFA_ENABLED
+    | Setting this option to "ON" requires users to configure MFA during
+    | registration or at sign-in before they can continue.
+    |
+    | Setting this option to "OPTIONAL" allows users to enable MFA after
+    | signing in. They can configure it immediately, skip the setup, or
+    | enable it later from their profile settings.
+    |
+    | Valid values: OFF, ON, OPTIONAL
     |
     */
-    'mfa_setup' => env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE'),
+    'mfa_setup' => env('AWS_COGNITO_MFA_SETUP', 'OFF'),
     'force_mfa_code_route_name' => env('AWS_COGNITO_MFA_CODE_ROUTE_NAME', 'cognito.form.login'),
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito MFA Types supported
+    | Cognito MFA Types
     |--------------------------------------------------------------------------
     |
-    | This option controls the default cognito MFA types allowed if the MFA is
-    | enabled for the user. The options available are "EMAIL_MFA", "SMS_MFA",
-    | "SOFTWARE_TOKEN_MFA" and "WEB_AUTHN".
-    | The default value is set to "SOFTWARE_TOKEN_MFA".
+    | This option controls the MFA methods available to users when MFA is
+    | enabled. Supported values are "EMAIL_MFA", "SMS_MFA",
+    | "SOFTWARE_TOKEN_MFA", and "WEB_AUTHN". The default value is
+    | "SOFTWARE_TOKEN_MFA".
     |
-    | You can set one or more MFA types as per your requirements. In case you
-    | want to allow more MFA types, you can set the values separated by comma,
-    | e.g. "SMS_MFA,SOFTWARE_TOKEN_MFA,WEB_AUTHN".
+    | Specify one or more MFA types separated by commas, for example:
+    | "SMS_MFA,SOFTWARE_TOKEN_MFA,WEB_AUTHN".
     |
-    | In case more than one MFA type is set, the first type in the list will be
-    | set as preferred MFA type.
+    | When multiple MFA types are configured, the first value in the list is
+    | used as the preferred MFA method.
     |
     */
     'mfa_type' => env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA'),
