@@ -128,6 +128,7 @@ trait RegisterMFA
      *
      * @param \Illuminate\Http\Request $request
      * @param bool $isEnable (optional)
+     * @param bool $isDirectCall (optional)
      *
      * @return mixed
      * @throws \Exception
