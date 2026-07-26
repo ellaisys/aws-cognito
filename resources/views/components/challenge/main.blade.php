@@ -41,11 +41,12 @@
 
 @push('cognito-challenge-passcode')
     @if (in_array($challengeNameValue, [
-        'SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'SMS_OTP',
-        'EMAIL_OTP', 'PASSWORD_VERIFIER', 'PASSWORD']))
+        'SELECT_MFA_TYPE', 'SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'EMAIL_MFA',
+        'SMS_OTP', 'EMAIL_OTP', 'PASSWORD_VERIFIER', 'PASSWORD']))
 
         <x-cognito::challenge.password
             :challengeNameValue="$challengeNameValue"
+            :challengeParamsValue="$challengeParamsValue"
             :challengeValuePlaceholder="$challengeValuePlaceholder" />
 
     @endif
@@ -78,7 +79,7 @@
                     button.style.display = 'none';
                 }
             else if (['PASSWORD_SRP', 'PASSWORD',
-                'SOFTWARE_TOKEN_MFA', 'SMS_MFA',
+                'SELECT_MFA_TYPE', 'SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'EMAIL_MFA',
                 'SMS_OTP', 'EMAIL_OTP'].includes(btnRole)) {
                     button.addEventListener('click', function(event) {
                         // Set passcode value to challenge_value input before form submission

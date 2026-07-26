@@ -6,7 +6,16 @@ return [
     'welcome' => 'Welcome to our application!',
 
     'email_address' => 'Email Address',
-    'pass_code' => 'Pass Code',
+
+    'view_component' => [
+        'challenge' => [
+            'main' => 'Challenge Main Component',
+            'password' => [
+                'pass_code' => 'Pass Code',
+                'select_mfa_type' => 'Select MFA Type',
+            ],
+        ],
+    ],
 
     'error' => [
         'ERROR_COGNITO_DEFAULT' => 'An error occurred while processing your request. Please try again later.',
@@ -67,5 +76,6 @@ return [
         'password_verifier' => 'Enter your password',
         'device_srp_auth' => 'Generating the Device Token',
         'device_password_verifier' => 'Validating the Device Token',
+        'select_mfa_type' => 'Select the MFA type from the available options',
     ],
 ];
