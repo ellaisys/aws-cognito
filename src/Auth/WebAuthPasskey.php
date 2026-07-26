@@ -33,7 +33,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * Trait WebAuthPasskey
  *
  * @package Ellaisys\Cognito\Auth
- * 
+ *
  * @method mixed start(Request $request)
  * @method mixed complete(Request $request)
  * @method mixed challenge(Request $request, ?string $challengeName = null, ?string $paramUsername='username', ?string $paramPassword='')
