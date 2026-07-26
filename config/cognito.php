@@ -259,11 +259,11 @@ return [
     | verification. When set to false, passkeys will not be available for the
     | authentication.
     |
-    | Factor configuration is set to 'MULTI_FACTOR_WITH_USER_VERIFICATION'.
-    | Sets whether passkeys can be used as multi-factor authentication (MFA).
-    | When set to MULTI_FACTOR_WITH_USER_VERIFICATION, passkey authentication
-    | with user verification satisfies MFA requirements. When set to
-    | 'SINGLE_FACTOR' or not set, passkeys are a single authentication factor.
+    | Factor configuration sets whether passkeys can be used as multi-factor
+    | authentication (MFA). When set to MULTI_FACTOR_WITH_USER_VERIFICATION,
+    | passkey authentication with user verification satisfies MFA requirements.
+    | When set to 'SINGLE_FACTOR', passkeys are a single authentication factor.
+    | Default is set to 'SINGLE_FACTOR'.
     |
     | Relying party id is set to null. The relying party is the server that
     | verifies the authentication assertion from the passkey. This is typically
@@ -278,7 +278,7 @@ return [
     */
     'allow_passkeys' => env('AWS_COGNITO_ALLOW_PASSKEYS', false),
     'web_authn_mfa_configuration' => [
-        'FactorConfiguration' => env('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', 'MULTI_FACTOR_WITH_USER_VERIFICATION'),
+        'FactorConfiguration' => env('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', 'SINGLE_FACTOR'),
         'RelyingPartyId' => env('AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID', 'localhost'),
         'UserVerificationMethod' => env('AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD', 'preferred'),
     ],
