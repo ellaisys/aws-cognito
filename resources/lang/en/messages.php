@@ -10,6 +10,7 @@ return [
 
     'error' => [
         'ERROR_COGNITO_DEFAULT' => 'An error occurred while processing your request. Please try again later.',
+        'ERROR_COGNITO_CONFIG_INVALID' => 'Cognito configuration is invalid. Please contact support.',
         'ERROR_COGNITO_AUTH_USER_UNAUTHORIZED' => 'User authentication error.',
         'ERROR_COGNITO_AUTH_USER_RESET_PASSWORD' => 'User password reset error. Please try again.',
         'ERROR_COGNITO_AUTH_USERNAME_EXISTS' => 'User already exists. Please provide different details.',
