@@ -281,7 +281,7 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
      */
     public function invalidate($forceForever = false)
     {
-        //Return Value
+        //Initialize return value
         $returnValue = null;
 
         try {
@@ -292,36 +292,37 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
             parent::logout();
 
             //Get the claim from session
-            $claim = $session->has(ClaimSession::SESSION_KEY)?$session->get(ClaimSession::SESSION_KEY):null;
-            if (empty($claim)) { $this->forgetCognitoSession($session); throw new InvalidTokenException('EXCEPTION_INVALID_CLAIM'); }
+            $claim = $session->has(ClaimSession::SESSION_KEY) ? $session->get(ClaimSession::SESSION_KEY) : null;
+            if (empty($claim)) {
+                $this->forgetCognitoSession($session);
+                throw new InvalidTokenException('EXCEPTION_INVALID_CLAIM');
+            } //End if
 
-            $accessToken = (!empty($claim))?$claim['token']:null;
+            //Get the access token from the claim
+            $accessToken = $claim['token'] ?? null;
             if (empty($accessToken)) {
                 $session->invalidate();
                 throw new InvalidTokenException('EXCEPTION_INVALID_TOKEN');
-            } else {
-                //Revoke the token from AWS Cognito
-                if ($this->client->signOut($accessToken)) {
+            } //End if
 
-                    //Global logout and invalidate the Refresh Token
-                    if ($forceForever) {
-                        //Get claim data
-                        $dataClaim = (!empty($claim))?$claim['data']:null;
-                        if ($dataClaim) {
-                            //Retrive the Refresh Token from the claim
-                            $refreshToken = $dataClaim['RefreshToken'];
+            //Revoke the token from AWS Cognito
+            if ($this->client->signOut($accessToken)) {
 
-                            //Invalidate the Refresh Token
-                            $this->client->revokeToken($refreshToken);
-                        } //End if
+                //Global logout and invalidate the Refresh Token
+                if ($forceForever) {
+                    //Get claim data
+                    $dataClaim = (!empty($claim))?$claim['data']:null;
+                    if ($dataClaim) {
+                        //Retrive the Refresh Token from the claim
+                        $refreshToken = $dataClaim['RefreshToken'];
+
+                        //Invalidate the Refresh Token
+                        $this->client->revokeToken($refreshToken);
                     } //End if
-
-                    //Remove the token from application storage
-                    $returnValue = $this->forgetCognitoSession($session);
-                } else {
-                    //Remove the token from application storage
-                    $returnValue = $this->forgetCognitoSession($session);
                 } //End if
+
+                //Remove the token from application storage
+                $returnValue = $this->forgetCognitoSession($session);
             } //End if
         } catch (Exception $e) {
             if ($forceForever) { return $this->forgetCognitoSession($session); }
