@@ -79,14 +79,19 @@ Save the changes.
 ---
 
 The package exposes following keys to change the default setting. These keys can be configured in the `.env` file or in the `config/aws-cognito.php` file. The default values are set in the configuration file.
- - The `AWS_COGNITO_MFA_SETUP` should be set to **MFA_ENABLED** to enable the MFA feature. The default value is MFA_NONE resulting into disabled MFA functionality. 
- - The `AWS_COGNITO_MFA_TYPE` can have values **SOFTWARE_TOKEN_MFA** (default) for the Software Token and **SMS_MFA** for the SMS based TOTP.
+ - The `AWS_COGNITO_MFA_SETUP` should be set to **ON** or **OPTIONAL** to enable the MFA feature. The default value is OFF resulting into disabled MFA functionality.
+
+    When the `AWS_COGNITO_MFA_SETUP` is set to **OPTIONAL**, the user can choose to enable or disable the MFA functionality. When the `AWS_COGNITO_MFA_SETUP` is set to **ON**, the user must enable the MFA functionality.
+
+ - The `AWS_COGNITO_MFA_TYPE` can have values **SOFTWARE_TOKEN_MFA** (default) for the Software Token, **SMS_MFA** for the SMS based TOTP, or **EMAIL_MFA** for the Email based TOTP. The default value is **SOFTWARE_TOKEN_MFA**.
+
+    To support multiple MFA types, you can set the value to **SOFTWARE_TOKEN_MFA,SMS_MFA**. The package will handle multiple MFA types and will provide the necessary challenge to the user based on the configuration. The first MFA type in the list will be the default MFA type for the user. The user can change the MFA type in the user profile settings.
 
    The provider configuration aids to send out the SMS from AWS with additional costs. Refer AWS SNS pricing for more details [AWS SMS Pricing](https://aws.amazon.com/sns/sms-pricing/)
 
 ```php
 
-    AWS_COGNITO_MFA_SETUP="MFA_ENABLED"
+    AWS_COGNITO_MFA_SETUP="ON"
     AWS_COGNITO_MFA_TYPE="SOFTWARE_TOKEN_MFA"
 
 ```
