@@ -16,22 +16,35 @@ use Illuminate\Support\Facades\Artisan;
 
 trait CommandTrait
 {
-
-    protected function setEnvValue(string $key, string|bool $value): bool
+    /**
+     * Set the value of a key in the .env file.
+     *
+     * @param string $key
+     * @param string|bool|int|array $value
+     * @return bool
+     */
+    protected function setEnvValue(string $key, string|bool|int|array $value): bool
     {
         $path = app()->environmentFilePath();
 
+        // Check if the .env file exists
         if (! File::exists($path)) {
             return false;
         }
 
+        // Read the current content of the .env file
         $env = File::get($path);
 
+        // Convert the value to a string representation
         if (is_bool($value)) {
             $value = $value ? 'true' : 'false';
-        } else if (is_string($value)) {
+        } elseif (is_string($value)) {
             $value = '"' . addslashes($value) . '"';
-        }
+        } elseif (is_array($value)) {
+            $value = '"' . addslashes(json_encode($value)) . '"';
+        } else {
+            $value = (string) $value;
+        } //End if
 
         if (preg_match("/^{$key}=.*/m", $env)) {
             $env = preg_replace(
@@ -43,6 +56,7 @@ trait CommandTrait
             $env .= PHP_EOL . "{$key}={$value}";
         }
 
+        // Write the updated content back to the .env file
         File::put($path, $env);
 
         // Clear the config cache so Laravel registers the changes

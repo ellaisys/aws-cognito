@@ -425,7 +425,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
     /**
      * Register providers.
-     * 
+     *
      * @return void
      */
     protected function registerProviders(): void

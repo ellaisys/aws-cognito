@@ -28,7 +28,7 @@ class PoolCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'cognito:pool-setting {--config : Get user pool configuration}
+    protected $signature = 'cognito:list-pool-setting {--config : Get user pool configuration}
                                 {--client-config : Get user pool client configuration}
                                 {--mfa-config : Get user pool MFA configuration}';
 
