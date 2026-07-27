@@ -8,9 +8,10 @@
  * file that was distributed with this source code.
  */
 
+use Illuminate\Support\Str;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
-$allowPhoneNumber = env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE') === 'MFA_ENABLED' ||
+$allowPhoneNumber = (env('AWS_COGNITO_MFA_SETUP') !== 'OFF' && Str::contains(env('AWS_COGNITO_MFA_TYPE'), 'SMS_MFA')) ||
     in_array(env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'), ['SMS', 'BOTH']) ||
     env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false);
 
