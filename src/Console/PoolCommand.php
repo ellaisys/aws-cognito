@@ -27,7 +27,9 @@ class PoolCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'cognito:pool-setting';
+    protected $signature = 'cognito:pool-setting {--config : Get user pool configuration}
+                                {--client-config : Get user pool client configuration}
+                                {--mfa-config : Get user pool MFA configuration}';
 
     /**
      * The console command description.
@@ -41,9 +43,67 @@ class PoolCommand extends Command
      */
     public function handle()
     {
-        $this->getUserPoolMfaConfig();
+        if (!array_filter($this->options())) {
+            $this->error('Please provide at least one option: --config, --client-config, or --mfa-config');
+            return;
+        }
+
+        if ($this->option('config')) {
+            $this->getUserPoolConfig();
+        }
+
+        if ($this->option('client-config')) {
+            $this->getUserPoolClientConfig();
+        }
+
+        if ($this->option('mfa-config')) {
+            $this->getUserPoolMfaConfig();
+        }
     }
 
+    /**
+     * Get user pool configuration.
+     */
+    private function getUserPoolConfig()
+    {
+        try {
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Get user pool configuration
+            $response = $client->describeUserPool();
+
+            $this->info('User Pool Configuration:');
+            $this->info(json_encode($response->toArray(), JSON_PRETTY_PRINT));
+
+        } catch (Exception $exception) {
+            $this->error('Error retrieving user pool configuration.');
+        } // Try-catch ends
+    } //Function ends
+
+    /**
+     * Get user pool client configuration.
+     */
+    private function getUserPoolClientConfig()
+    {
+        try {
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Get user pool client configuration
+            $response = $client->describeUserPoolClient();
+
+            $this->info('User Pool Client Configuration:');
+            $this->info(json_encode($response->toArray(), JSON_PRETTY_PRINT));
+
+        } catch (Exception $exception) {
+            $this->error('Error retrieving user pool client configuration.');
+        } // Try-catch ends
+    } //Function ends
+
+    /**
+     * Get user pool MFA configuration.
+     */
     private function getUserPoolMfaConfig()
     {
         try {
@@ -57,7 +117,7 @@ class PoolCommand extends Command
             $this->info(json_encode($response->toArray(), JSON_PRETTY_PRINT));
 
         } catch (Exception $exception) {
-            $this->error('Error retrieving user pool MFA configuration: ' . $exception->getMessage());
+            $this->error('Error retrieving user pool MFA configuration.');
         } // Try-catch ends
     } //Function ends
 
