@@ -4,12 +4,12 @@
 > Updated On 2026-07-10
 
 Release 51 (tag v2.0.7)
-- Feat: Code refactoring and optimization for better performance and maintainability.
+- Feat: Issue [#143](https://github.com/ellaisys/aws-cognito/issues/143) Code refactoring and optimization for better performance and maintainability.
 - Feat: Added support for additional AWS Cognito features and configurations.
-- Feat: Improved error handling and logging for better debugging and monitoring.
+- Feat: Issue [#142](https://github.com/ellaisys/aws-cognito/issues/142) Stability release. Improved error handling and logging for better debugging and monitoring.
 - Feat: PR [#140](https://github.com/ellaisys/aws-cognito/pull/140)
-- Fix: Code smells and minor bug fixes across various components and scripts.
-- Doc: Updated the documentation structure and added more examples for common use cases.
+- Fix: Issue [#145](https://github.com/ellaisys/aws-cognito/issues/145) Code smells and minor bug fixes across various components and scripts.
+- Doc: Issue [#144](https://github.com/ellaisys/aws-cognito/issues/144) Clean and Update the documentation structure.
 
 Release 50 (tag v2.0.6)
 - Feat: Issue [#139](https://github.com/ellaisys/aws-cognito/issues/139)
