@@ -104,8 +104,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
         //Set Blade Components
         $this->registerBladeComponents();
 
-        //Register Commands
-        $this->registerCognitoCommands();
+        //Register Providers
+        $this->registerProviders();
 
         //Route::mixin();
     } //Function ends
@@ -424,17 +424,13 @@ class AwsCognitoServiceProvider extends ServiceProvider
     } //Function ends
 
     /**
-     * Register the package cognito commands.
-     *
+     * Register providers.
+     * 
      * @return void
      */
-    protected function registerCognitoCommands()
+    protected function registerProviders(): void
     {
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                PoolCommand::class,
-            ]);
-        }
+        $this->app->register(ConsoleServiceProvider::class);
     } //Function ends
 
 } //Class ends
