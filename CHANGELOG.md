@@ -3,6 +3,14 @@
 > [!NOTE]
 > Updated On 2026-07-10
 
+Release 51 (tag v2.0.7)
+- Feat: Code refactoring and optimization for better performance and maintainability.
+- Feat: Added support for additional AWS Cognito features and configurations.
+- Feat: Improved error handling and logging for better debugging and monitoring.
+- Feat: PR [#140](https://github.com/ellaisys/aws-cognito/pull/140)
+- Fix: Code smells and minor bug fixes across various components and scripts.
+- Doc: Updated the documentation structure and added more examples for common use cases.
+
 Release 50 (tag v2.0.6)
 - Feat: Issue [#139](https://github.com/ellaisys/aws-cognito/issues/139)
 - Feat: Add new components and scripts for FIDO2 Security Keys OR Passkey based MFA functionality.
