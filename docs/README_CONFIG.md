@@ -1,4 +1,4 @@
-# **Configurations**
+# Configurations
 
 This document provides guidance on configuring the AWS Cognito service and the Laravel application to work with AWS Cognito. It is intended for developers who are familiar with Laravel and AWS services.
 
@@ -6,7 +6,7 @@ This document provides guidance on configuring the AWS Cognito service and the L
 > Updated On 2026-07-10
 
 
-## **Contents**
+## Contents
 
 - [AWS Configurations](COGNITOCONFIG.md)
     + [AWS IAM configuration](COGNITOCONFIG.md#aws-iam-configuration)
@@ -28,19 +28,18 @@ This document provides guidance on configuring the AWS Cognito service and the L
 - [References](#references)
 
 
-## **AWS Configurations**
+## AWS Configurations
 
 This package uses the AWS Cognito Services to provide authentication and authorization services for your Laravel application. To create an account with AWS, please refer to the [Amazon Management Console](https://console.aws.amazon.com/cognito/home).
 
 The AWS configurations are required to be set up in order to use the AWS Cognito service. The detailed steps for setting up the AWS Cognito service are provided in the [AWS Configurations](COGNITOCONFIG.md) document. Please refer to that document for detailed instructions on how to set up the AWS Cognito service.
 
 
-## **Laravel Configurations**
+## Laravel Configurations
 
 Laravel configurations are required to be set up in order to use the AWS Cognito service with your Laravel application. The following sections provide detailed instructions on how to set up the Laravel configurations.
 
 ### *ServiceProvider Registration*
----
 
 *<u>Laravel 5.4 and before</u>*
 
@@ -60,7 +59,6 @@ With Laravel versions 5.5 and above, the service provider is automatically regis
 
 
 ### *Registering the Middleware*
----
 
 To use the AWS Cognito middleware, you need to register it in your Laravel application. The middleware is responsible for handling the authentication and authorization of requests to your application.
 
@@ -108,7 +106,6 @@ Route::middleware(['aws-cognito'])->group(function () {
 
 
 ### *Environment Variables*
----
 
 In order to use AWS Cognito, you will need to add the following minimum configurations to your Laravel application. You can do this by adding the following fields to your `.env` file:
 
@@ -132,7 +129,6 @@ For more details on how to find `AWS_COGNITO_CLIENT_ID`, `AWS_COGNITO_CLIENT_SEC
 
 
 ### *Additional Environment Variables* (Optional)
----
 
 #### Support for App Client without Secret Enabled
 
@@ -156,7 +152,6 @@ AWS_COGNITO_FORCE_PASSWORD_AUTO_UPDATE_API=true //Make false for stopping auto p
 
 
 ### *Changes in Auth Configurations*
----
 
 In order to use AWS Cognito as your authentication driver, you will need to make the following changes to your `config/auth.php` file:
 ```php
@@ -174,7 +169,6 @@ In order to use AWS Cognito as your authentication driver, you will need to make
 
 
 ### *Publishing Configurations* (Optional)
----
 
 You can publish the AWS Cognito configuration file using the following command:
 ```sh
@@ -183,7 +177,6 @@ php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServ
 
 
 ### *Database Configurations*
----
 
 We are using Laravel's built-in database migration system to manage the database schema for AWS Cognito. We are assuming that you have already configured your database connection in the `.env` file. If you haven't done so, please refer to the [Laravel Database Configuration](https://laravel.com/docs/10.x/database#configuration) documentation for more information.
 
@@ -224,7 +217,6 @@ AWS_COGNITO_USER_SUBJECT_UUID="sub"
 ```
 
 ### *Model Configurations*
----
 
 This section provides guidance on how to configure your Application models to work with AWS Cognito.
 
@@ -279,7 +271,6 @@ class User extends Authenticatable
 
 
 ### *Session Storage Configurations*
----
 
 The AWS Cognito service provider uses Laravel's built-in session management system to manage the session storage. By default, the session storage is set to `file` driver. You can change the session storage driver to `database`,  `dynamodb` in your `.env` file.
 
@@ -321,6 +312,6 @@ DYNAMODB_ENDPOINT="https://dynamodb.us-west-2.amazonaws.com" // You can change t
 Refer the [AWS DynamoDB Documentation](https://docs.aws.amazon.com/general/latest/gr/ddb.html) and refer the endpoints provided in **Service endpoints** section.
 
 
-## **References**
+## References
 - [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html)
 - [AWS DynamoDB Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html)

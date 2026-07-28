@@ -1,4 +1,4 @@
-# **Features**
+# Features
 
 - [Registration and Confirmation E-Mail (Sign Up)](#registering-users)
 - Forced password change at first login (configurable)
@@ -30,7 +30,7 @@
 - [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
 
 
-## **What this package provides**
+## What this package provides
 
 1. A simple way to integrate AWS Cognito into your Laravel application.
 2. Preconfigured set of routes, controllers, and views for Web and API.

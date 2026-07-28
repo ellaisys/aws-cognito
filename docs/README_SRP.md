@@ -1,10 +1,10 @@
-# **SRP (Secure Remote Password) Authentication**
+# SRP (Secure Remote Password) Authentication
 
 > [!IMPORTANT]
 > We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to implement SRP Authentication functionality within your application.
 
 
-## **Contents**
+## Contents
 - [Introduction](#introduction)
 - [Configurations](#configurations)
 - [Features](#features)
@@ -17,29 +17,27 @@
 - [Key Points](#key-points)
 
 
-## **Introduction**
+## Introduction
 
 SRP is a Secure Remote Password protocol that allows users to authenticate without transmitting their password over the network. Instead, the authentication process uses cryptographic operations using an augmented password-authenticated key exchange (PAKE) protocol.
 
 This is a **Zero-Knowledge Password Proof (ZKPP)** method. This document explains how you can use this in the context of AWS Cognito and Laravel package.
 
 
-## **Configurations**
+## Configurations
 - [AWS Configurations](#aws-configurations)
 - [Laravel Configurations](#laravel-configurations)
 
 
 ### *AWS Configurations*
----
 
 Ensure your AWS Cognito User Pool is configured to allow `USER_SRP_AUTH` as an authentication flow. For that go to your User Pool in AWS Console, navigate to "App clients", select your app client, and check the option for "SRP (Secure Remote Password) authentication flow **ALLOW_USER_SRP_AUTH**" as shown below:
 <img src="../assets/images/aws_cognito_srp_flow.png" width="100%" alt="cognito app client settings"/>
 
 ### *Laravel Configurations*
----
 
 
-## **Blade Component** (web app)
+## Blade Component (web app)
 
 The package provides a blade component for `SRP authentication`. The SRP authentication component is integrated into the `challenge component`.
 
@@ -88,7 +86,7 @@ Using this component will simplify the implementation of the SRP authentication 
 
 The data is **secure** on the client side, as per the cyber security standards, and the necessary scripts and methods are provided in the component to implement the SRP feature in your application.
 
-## **API Documentation**
+## API Documentation
 
 This Laravel Package provides the necessary methods to implement SRP authentication functionality provided by AWS Cognito. The available challenges are dynamically provided from the trait making the user experience aligned to the AWS SDK.
 
@@ -206,7 +204,7 @@ The `challenge_value` field contains the stringified JSON object with the follow
 The server side, the package will process this challenge response and call AWS Cognito's endpoint to verify the password proof. If the proof is correct, AWS Cognito will authenticate the user and return an authentication token.
 
 
-## **References**
+## References
 
 - [AWS Cognito Authentication Flow Documentation](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html)
 - [SRP Protocol Specification (RFC 2945)](https://tools.ietf.org/html/rfc2945)
@@ -216,7 +214,7 @@ The server side, the package will process this challenge response and call AWS C
 - [Zero-Knowledge Password Proofs (ZKPP)](https://en.wikipedia.org/wiki/Zero-knowledge_proof)
 
 
-## **Key Points:**
+## Key Points:
 - **Phase 1 (calculateSrpA)**: Uses only `N` and `g`. Generates a random `a`. NO password, username, or salt needed.
 - **Phase 2 (calculatePasswordProof)**: Uses `salt`, `password`, and `username` received from server
 - **a** must be generated using cryptographically secure random number generator
@@ -257,7 +255,6 @@ g = 2
 In AWS Cognito SRP authentication, **N and g are provided by the Cognito server** automatically. However, you don't need to **manually fetch or calculate N and g** - the library handles this automatically!
 
 ### *SRP Group Standards*
----
 
 **RFC 2409 - SRP Group 1 (1024-bit):**
 ```
@@ -275,7 +272,6 @@ AWS Cognito typically uses **RFC 2409 (1024-bit) with g=2**.
 
 
 ### *Parameter Summary Table*
----
 
 | Parameter | What It Is | Where It Comes From | Typical Size | Used In |
 |-----------|-----------|-------------------|--------------|---------|
@@ -286,7 +282,6 @@ AWS Cognito typically uses **RFC 2409 (1024-bit) with g=2**.
 
 
 ### *Why These Parameters Matter*
----
 
 1. **Security**: Larger N (2048-bit) provides better security than smaller N (1024-bit)
 2. **Authentication**: Different N and g values define different SRP groups; both parties must use the same group

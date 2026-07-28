@@ -1,4 +1,4 @@
-# **Multi-Factor Authentication (MFA)**
+# Multi-Factor Authentication (MFA)
 
 This package provides the Multi-Factor Authentication (MFA) functionality using AWS Cognito. This documentation provides the necessary information to implement the MFA functionality in your Laravel application.
 
@@ -9,7 +9,7 @@ This package provides the Multi-Factor Authentication (MFA) functionality using 
 > We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to handle MFA challenge verification within your application.
 
 
-## **Contents**
+## Contents
 
 - [Introduction](#introduction)
 - [Configurations](#configurations)
@@ -23,20 +23,19 @@ This package provides the Multi-Factor Authentication (MFA) functionality using 
 - [Key Points](#key-points)
 
 
-## **Introduction**
+## Introduction
 
 Multi-Factor Authentication (MFA) is a security feature that adds an extra layer of protection to user accounts by requiring users to provide additional verification during the login process. This package provides support for MFA using AWS Cognito, allowing developers to implement MFA in their Laravel applications.
 
 The library currently provides the MFA for the Software Token and SMS based TOPT.
 
 
-## **Configurations**
+## Configurations
 
 - [AWS Configurations](#aws-configurations)
 - [Laravel Configurations](#laravel-configurations)
 
 ### *AWS Configurations*
----
 
 In order to use the MFA functionality, you need to configure the AWS Cognito User Pool with the necessary settings. Enable the **Multi-Factor Authentication (MFA)** option.
 
@@ -76,7 +75,6 @@ Save the changes.
 ![Cognito MFA Flow #3](../assets/images/aws_cognito_mfa_flow4.png)
 
 ### *Laravel Configurations*
----
 
 The package exposes following keys to change the default setting. These keys can be configured in the `.env` file or in the `config/aws-cognito.php` file. The default values are set in the configuration file.
  - The `AWS_COGNITO_MFA_SETUP` should be set to **ON** or **OPTIONAL** to enable the MFA feature. The default value is OFF resulting into disabled MFA functionality.
@@ -96,7 +94,7 @@ The package exposes following keys to change the default setting. These keys can
 
 ```
 
-## **Features**
+## Features
 
 - [Login (MFA Enabled)](#login-with-mfa)
 - [Software Token MFA](#software-token-mfa-functionality)
@@ -106,7 +104,7 @@ The package exposes following keys to change the default setting. These keys can
 - [Enable MFA](#enable-mfa)
 - [Disable MFA](#disable-mfa)
 
-## **Blade Component** (web app)
+## Blade Component (web app)
 
 The package provides a blade component for 
 1. `MFA management`, and 
@@ -115,7 +113,6 @@ The package provides a blade component for
 The MFA based authentication component is integrated into the `challenge` component.
 
 ### *MFA based Authentication*
----
 
 Use the `challenge` component in your challenge page to handle the MFA authentication flow. The component will handle the generation of the necessary values for the MFA proof and will send them back to the server in response to the challenge.
 
@@ -159,7 +156,7 @@ Using this component will simplify the implementation of the MFA authentication 
 
 The data is **secure**, as per the cyber security standards, and the necessary scripts and methods are provided in the component to implement the MFA feature in your application.
 
-## **API Documentation**
+## API Documentation
 
 This Laravel Package provides the necessary methods to implement MFA based authentication functionality provided by AWS Cognito. The available challenges are dynamically provided from the trait making the user experience aligned to the AWS SDK.
 
@@ -327,7 +324,7 @@ Authorization: Bearer <access_token>
 ```
 
 
-## **API Routes**
+## API Routes
 
 > [!NOTE]
 > We are releasing the API predefined routes as a new feature from V1.3.0.
@@ -337,5 +334,5 @@ Authorization: Bearer <access_token>
 For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
 
 
-## **References**
+## References
 - [AWS Cognito MFA](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-mfa.html)

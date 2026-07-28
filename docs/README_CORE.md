@@ -1,6 +1,6 @@
 # **AWS Cognito Core Functionality**
 
-## **Contents**
+## Contents
 - [Introduction](#introduction)
 - [Configurations](#configurations)
 - [Features](#features)
@@ -12,10 +12,10 @@
 - [References](#references)
 
 
-## **Introduction**
+## Introduction
 
 
-## **Configurations**
+## Configurations
 - [AWS Configurations](#aws-configurations)
 - [Laravel Configurations](#laravel-configurations)
 
@@ -41,7 +41,7 @@ AWS_COGNITO_NEW_USER_MESSAGE_ACTION="SUPPRESS" //optional - default value is nul
 AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is false.
 ```
 
-## **Features**
+## Features
 
 - [Registering Users OR Sign Up](#registering-users-or-sign-up)
     + [Self Registration](#self-registration)
@@ -57,7 +57,7 @@ AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is fal
 - [Password Validation](#password-validation)
 
 
-## **Registering Users OR Sign Up**
+## Registering Users OR Sign Up
 
 The registration process is simplified into just two steps, self registration and verification. They are detailed below in detail. The overall process is now simplified to just a couple of steps. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
@@ -67,7 +67,6 @@ This package also supports the AWS Cognito Groups. You can assign a default grou
 
 
 ### *Self Registration*
----
 
 The package provides you with a trait that makes the registration process very simple. The package provides a trait `RegistersUsers` that you can add to your controller to make the registration process functional. The namespace for the trait is `Ellaisys\Cognito\Auth\RegistersUsers`. The trait has the capability to handle the following registration types:
     - `register` (self registration), and
@@ -125,7 +124,6 @@ The trait triggers `PreRegistrationEvent` and `PostRegistrationEvent` events bef
 
 
 ### *Verification of User*
----
 
 The verification of the user is handled by the `VerifiesEmails` trait. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
@@ -152,7 +150,7 @@ Route::group(['prefix' => 'register/verify'], function() {
 ```
 
 
-## **User Invitation OR Invite User**
+## User Invitation OR Invite User
 
 A new user can be invited by an administrator into the application. The invitation process is simplified into simple steps, `invite` and `verification`. However, you can also auto-verify the user. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
@@ -161,7 +159,7 @@ In case you want to suppress the invitation mail sent to the new users, set the 
 Similarly, you can also auto-verify the new user by setting the environment variable `AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED` to **true**. This will mark the new user's email address as verified. Default configuration shall not mark the email address as verified and the user will have to verify the email address by clicking on the link sent to the email address.
 
 
-## **User Authentication OR Sign In**
+## User Authentication OR Sign In
 
 Basic password based user authentication is simplified into just one step, the login. It is essential that the `ALLOW_USER_PASSWORD_AUTH` is enabled in the AWS Cognito User Pool. For details on how to enable this, please refer to the [AWS Cognito Configuration - App Client Settings](COGNITOCONFIG.md#step-6-edit-app-client-settings) section.
 
@@ -226,7 +224,7 @@ class LoginController extends Controller
 ```
 
 
-## **Log Out OR Sign out**
+## Log Out OR Sign out
 
 The package provides you with a trait that makes the logout process very simple. The package provides a trait `AuthenticatesUsers` that you can add to your controller to make the logout process functional. The namespace for the trait is `Ellaisys\Cognito\Auth\AuthenticatesUsers`. The trait has the capability to handle the following logout types:
     - `logout` (Logout, but persists the refresh token), and
@@ -259,7 +257,7 @@ Auth::guard('api')->logout(true); //Revoke the Refresh Token.
 ```
 
 
-## **Forgot Password**
+## Forgot Password
 
 As per the AWS Cognito default feature, the forgot password feature is not allowed for users who have not activated their account. We have introduced a feature that allows the password to be resent to the user even if they have not activated their account. This is useful in scenarios where the user has not received the activation email or the activation link has expired.
 
@@ -277,7 +275,7 @@ The flow for the forgot password process is as follows:
 3. The user provides the password reset code and their new password. Use the `reset` method provided by the `ResetsPasswords` trait to reset the user's password using the code sent to the user.
 
 
-## **Refresh Token**
+## Refresh Token
 
 The package provides you with a trait that makes the refresh token process very simple. The package provides a trait `RefreshToken` that you can add to your controller to make the refresh token process functional. The namespace for the trait is `Ellaisys\Cognito\Auth\RefreshToken`. The trait has the capability to handle the following refresh token types:
     - `refresh` (Refresh the access token using the refresh token)
@@ -341,7 +339,7 @@ class RefreshTokenController extends Controller
 ```
 
 
-## **Delete User**
+## Delete User
 
 If you want to give your users the ability to delete themselves from your app you can use our deleteUser function
 from the CognitoClient.
@@ -374,7 +372,7 @@ Laravel will take care of the dependency injection by itself.
 ```
 
 
-## **Single Sign-On (SSO)**
+## Single Sign-On (SSO)
 
 This package provides *Single Sign-On (SSO)* by using AWS Cognito as the central identity provider. By exposing both web interfaces and REST APIs, applications built with Laravel or any other programming language can delegate authentication to this package while sharing a common AWS Cognito User Pool.
 
@@ -418,13 +416,13 @@ With SSO enabled, user passwords are managed exclusively by AWS Cognito and are 
 If your local `users` table contains a `password` column, it is recommended to make the column nullable, as users created through SSO do not require a locally stored password.
 
 
-## **Password Validation**
+## Password Validation
 
 This library fetches the password policy from the cognito pool configurations. The laravel request validations are done based on the regular expression that is created based on this policy. This validations are performed during the Sign Up (Registation), Sign In (Login), Reset and Change password based flows. The validation messages for the password are also dynamic in nature and change based on the configurations.
 
->[!IMPORTANT]
->In case of special characters, we are supporting all except the pipe character **|** for now.
->We are working on making sure that pipe character is handled soon.
+> [!IMPORTANT]
+> In case of special characters, we are supporting all except the pipe character **|** for now.
+> We are working on making sure that pipe character is handled soon.
 
 > [!NOTE]
 > The Access Token is now validated with the AWS Cognito certificate. If the certificate is incorrect or expired, it will throw an exception.

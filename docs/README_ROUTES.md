@@ -1,4 +1,4 @@
-# **Preconfigured Routes for Web and API Functionality**
+# Preconfigured Routes for Web and API Functionality
 
 > [!IMPORTANT]
 > We have released the **Device Authentication** feature from V2.0.6. The routes were amended.
@@ -6,7 +6,7 @@
 To help faster implementations, we have now provided with routes for web and APIs in this package. This includes Controllers, Views and updated Configuration file.
 
 
-## **Contents**
+## Contents
 
 - [Configurations](#configurations)
 - [Features](#features)
@@ -17,7 +17,7 @@ To help faster implementations, we have now provided with routes for web and API
 - [Web Views and Components](#web-views-and-components)
 
 
-## **Configurations**
+## Configurations
 
 Default Laravel configurations should work flawlessly. You can customize the package to a large extent.
 
@@ -34,13 +34,13 @@ AWS_COGNITO_WEB_PREFIX="cognito"
 > In case you have published the prior cognito configuration file in your config folder, you may need to delete that and republish again. Please take backup of the cognito.php in case you have modified anything.
 
 
-## **Features**
+## Features
 
 - [Preconfigured Routes & Controllers](#routes)
 - [Web Views and Components]()
 
 
-## **Routes**
+## Routes
 
 >[!NOTE]
 >Preconfigured Web and API routes are introduced as a new feature from V2.0.0.
@@ -59,7 +59,6 @@ php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServ
 ```
 
 ### *API Routes*
----
 
 The Web and API routes that are wired to the same Controller, making it easy for users to implement. The API returns standardized JSON response and the response format is consistent across all API endpoints.
 
@@ -102,7 +101,6 @@ The validations are built in and API response format is standardized.
 
 
 ### *Web Routes*
----
 
 The web routes that are wired via the Controllers, making it easy for users to implement. The validations are built in and response is wired to blade views. The views can be 
 
@@ -145,7 +143,7 @@ POST      cognito/login/passkey/challenge ....... cognito.action.auth.passkey.ch
 ```
 
 
-## **Ignore the routes and controllers**
+## Ignore the routes and controllers
 
 If you would like to prevent AWS Cognito's routes and/or views from running entirely, you may use the ignoreRoutes and ignoreViews methods provided by AWS Cognito. Typically, this method should be called in the register method of your AppServiceProvider:
 
@@ -163,9 +161,9 @@ public function register(): void
 ```
 
 
-## **Web Views and Components**
+## Web Views and Components
 
-The package provides preconfigured blade views and components, for quick developent. The views are based on Bootstrap stylesheet.
+The package provides preconfigured blade views and components, for quick development. The views are based on Bootstrap stylesheet.
 
 If you need to overwrite the views that ship with this package, you can publish them using the vendor:publish Artisan command make required changes.
 

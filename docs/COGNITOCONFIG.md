@@ -1,4 +1,4 @@
-# **AWS Configurations**
+# AWS Configurations
 
 This document provides guidance on configuring AWS services, specifically AWS Cognito. Ensure you have the necessary permissions and knowledge to perform these configurations.
 
@@ -6,13 +6,13 @@ This document provides guidance on configuring AWS services, specifically AWS Co
 > Updated On 2026-07-10
 
 
-## **Contents**
+## Contents
 - [AWS IAM configuration](#aws-iam-configuration)
 - [AWS Cognito configuration](#aws-cognito-configuration)
 - [References](#references)
 
 
-## **AWS IAM configuration**
+## AWS IAM configuration
 
 You will need a new `IAM Role` with the following Access Rights:
 
@@ -23,7 +23,7 @@ You will need a new `IAM Role` with the following Access Rights:
 From this IAM User you must use the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in the laravel environment file.
 
 
-## **AWS Cognito configuration**
+## AWS Cognito configuration
 
 This document is shared for those requiring assistance or clarification in configuring the **AWS Cognito**. Make sure you have a valid **AWS account** and have successfully authenticated into it.
 
@@ -41,13 +41,11 @@ In case of MFA (Multi-Factor Authentication), SRP, Device Authentication require
 > Focus on the sections highlighted in **RED** and **YELLOW** boxes. These are for modification and attention, respectively. The other sections are for your information only.
 
 ### *Step 1: AWS Cognito Service*
----
 
 ![AWS Cognito Service](../assets/images/aws_cognito_flow1.png)
 
 
 ### *Step 2: Create the New User Pool*
----
 
 ![AWS Cognito - Create New User Pool](../assets/images/aws_cognito_flow2.png)
 
@@ -59,7 +57,6 @@ Enable **Self Registration** if you want your users to be able to register thems
 
 
 ### *Step 3: New User Pool Created*
----
 
 ![AWS Cognito - New User Pool Created](../assets/images/aws_cognito_flow3.png)
 
@@ -67,7 +64,6 @@ Once the new user pool is created, navigate by selecting the **User pools** from
 
 
 ### *Step 4: User Pool Overview*
----
 
 ![AWS Cognito - User Pool Overview](../assets/images/aws_cognito_flow4.png)
 
@@ -79,7 +75,6 @@ Select the **App clients** from the left menu, under the **Application** section
 
 
 ### *Step 5: App Client Overview*
----
 
 ![AWS Cognito - App Client](../assets/images/aws_cognito_flow5.png)
 
@@ -90,7 +85,6 @@ You can copy the values by clicking the blue copy icon next to the values (highl
 
 
 ### *Step 6: Edit App Client Settings*
----
 
 ![AWS Cognito - Edit App Client Settings](../assets/images/aws_cognito_flow6.png)
 
@@ -111,7 +105,6 @@ Save the changes by clicking the **Save Changes** button at the bottom of the pa
 
 
 ### *Step 7: Review and Amend Login Page Settings*
----
 
 ![AWS Cognito - Review and Amend Login Page Settings](../assets/images/aws_cognito_flow7.png)
 
@@ -119,7 +112,6 @@ In the **App client** overview page, select the **Login page** from the tab belo
 
 
 ### *Step 8: Login Page Settings*
----
 
 ![AWS Cognito - Login Page Settings](../assets/images/aws_cognito_flow8.png)
 
@@ -140,7 +132,6 @@ Save the changes by clicking the **Save Changes** button at the bottom of the pa
 
 
 ### *Step 9: User Group Management* (Optional)
----
 
 AWS Cognito allows you to create user groups to manage users with similar access levels or roles. This step is optional and can be skipped if you do not require user groups. The package allows, users to be mapped to groups for easier management. If you want to create user groups, follow the steps below:
 
@@ -160,7 +151,6 @@ You can also assign users to these groups by navigating to the newly created gro
 
 
 ### *Step 10: Sign-in Settings*
----
 
 In the **Sign-in** settings, you can configure the attributes that users can use to sign in to your application.
 
@@ -176,7 +166,6 @@ Select the options as shown in the image above. However, for the advanced users,
 
 
 ### *Step 11: Sign-up Settings*
----
 
 In the **Sign-up** settings, you can configure the attributes that users need to provide during registration.
 
@@ -195,7 +184,6 @@ In order to enable self-registration, select the **Self-service sign-up** sectio
 
 
 ### *Step 12: Amend Message Templates* (Optional)
----
 
 In the **Message Templates** settings, under the **Branding** subsection, you can customize the email and SMS messages sent to users during various stages of the authentication process, such as account verification, password reset, and multi-factor authentication.
 
@@ -206,7 +194,7 @@ Select the template in the list, and click on the **Edit** button to customize t
 ![AWS Cognito - Message Templates](../assets/images/aws_cognito_flow31.png)
 
 
-## **References**
+## References
 - [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html)
 - [AWS Cognito User Pool Settings](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools.html)
 - [Import a user CSV file to your Cognito Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-using-import-tool.html)

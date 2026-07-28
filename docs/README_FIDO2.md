@@ -1,4 +1,4 @@
-# **FIDO2 Security OR Passkey Functionality**
+# FIDO2 Security OR Passkey Functionality
 
 This package provides the FIDO2 Security Keys OR Passkey based functionality. This is a passwordless authentication approach, where the user can use the security key or passkey to authenticate.
 
@@ -9,7 +9,7 @@ This package provides the FIDO2 Security Keys OR Passkey based functionality. Th
 > We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to implement the FIDO2 Security Keys OR Passkey based functionality within your application. All FIDO2 Security features are supported.
 
 
-## **Contents**
+## Contents
 - [Introduction](#introduction)
 - [Configurations](#configurations)
 - [Features](#features)
@@ -21,7 +21,7 @@ This package provides the FIDO2 Security Keys OR Passkey based functionality. Th
 - [References](#references)
 
 
-## **Introduction**
+## Introduction
 This package feature provides the FIDO2 Security Keys OR Passkey based functionality. This is a passwordless authentication approach, where the user can use the security key or passkey to authenticate. 
 
 This is a ***Zero-Knowledge Authentication*** method.
@@ -33,13 +33,13 @@ The AWS Cognito currently provides following methods:
 - Device based Biometric Authentication (i.e. Touch ID, Face ID)
 
 
-## **Configurations**
+## Configurations
+
 - [AWS Configurations](#aws-configurations)
 - [Laravel Configurations](#laravel-configurations)
 
 
 ### *AWS Configurations*
----
 
 In order to use the FIDO2 Security Keys OR Passkey based functionality, you need to configure the AWS Cognito User Pool with the necessary settings.
 
@@ -66,7 +66,6 @@ In the production environment, you need to set the server domain as the domain n
 This is required for the FIDO2 Security Keys OR Passkey based authentication. The relying party id is used to identify the application during the authentication process.
 
 ### *Laravel Configurations*
----
 
 The package allows some configurations, which can be set in the .env file. The default values are set in the configuration file. You can change the default values by setting the keys in the .env file.
 
@@ -85,18 +84,17 @@ AWS_COGNITO_ALLOW_PASSKEYS=true
 ```
 
 
-## **Features**
+## Features
 
 - [Passkey Management](#passkey-management-functionality)
 - [Login (Passkey Enabled)](#login-with-passkey-functionality)
 
 
-## **Blade Component** (web app)
+## Blade Component (web app)
 
 The package provides a blade component for `passkey management` and `passkey authentication`. The passkey authentication component is integrated into the `challenge component`.
 
 ### *Passkey Management Functionality*
----
 
 The package provides a blade component that you can use to implement the passkey registration functionality in your pages.
 You can use the component in your blade files as shown below. The component has all the required scripts, routes and methods to implement the passkey registration functionality in your application. The component uses the `WebAuthPasskey` trait, which provides the necessary methods to implement this functionality in your application.
@@ -134,7 +132,6 @@ The data attributes are used to trigger the necessary javascript functions to im
 
 
 ### *Passkey Authentication Functionality*
----
 
 The package provides a blade component that you can use to implement the passkey login functionality in your **challenge page**.
 
@@ -178,7 +175,7 @@ Using this component will simplify the implementation of the passkey authenticat
 The data is **secure** on the client side, as per the FIDO2 standards, and the necessary scripts and methods are provided in the component to implement the passkey feature in your application.
 
 
-## **API Documentation**
+## API Documentation
 
 This Laravel Package provides the necessary methods to implement passkey functionality provided by AWS Cognito. The available challenges are dynamically provided from the trait making the user experience aligned to the AWS SDK.
 
@@ -201,7 +198,6 @@ This controller uses the trait `WebAuthPasskey` referenced above.
 
 
 ### *Passkey Registration with FIDO Authenticator*
----
 
 Alternately, the package also provides API routes that you can use to implement the passkey registration functionality in your application. The API routes are as follows: The passkey registration process involves two steps.
 
@@ -285,7 +281,6 @@ The response for the API call would look like this with the HTTP Status Code 200
 
 
 ### *Passkey Authentication Functionality*
----
 
 The package provides API routes that you can use to implement the passkey login functionality in your application.
 
@@ -419,7 +414,7 @@ The response for the API call would look like this with the HTTP Status Code 200
 The response object will contain the `access token`, `refresh token` and the `id token`. The user can then use the access token to access the protected resources in the application.
 
 
-## **API Routes**
+## API Routes
 
 > [!NOTE]
 > We are releasing the API predefined routes as a new feature from V1.3.0.
@@ -429,7 +424,7 @@ The response object will contain the `access token`, `refresh token` and the `id
 For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
 
 
-## **References**
+## References
 
 - [FIDO2 Security Keys](https://fidoalliance.org/fido2/)
 - [WebAuthn](https://webauthn.guide/)

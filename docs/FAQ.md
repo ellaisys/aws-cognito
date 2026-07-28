@@ -1,4 +1,4 @@
-# **Frequently Asked Questions**
+# Frequently Asked Questions
 
 > [!NOTE]
 > Last Updated: 2026-07-27

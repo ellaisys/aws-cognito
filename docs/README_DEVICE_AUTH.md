@@ -1,4 +1,4 @@
-# **Device Authentication**
+# Device Authentication
 
 This document provides a comprehensive guide on implementing device authentication using AWS Cognito in a Laravel application. It covers the necessary configurations, features, and API documentation required to enable secure device management and authentication.
 
@@ -9,7 +9,7 @@ This document provides a comprehensive guide on implementing device authenticati
 > We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to implement Device Authentication functionality within your application.
 
 
-## **Contents**
+## Contents
 - [Introduction](#introduction)
 - [Configurations](#configurations)
 - [Features](#features)
@@ -22,7 +22,7 @@ This document provides a comprehensive guide on implementing device authenticati
 - [Key Points](#key-points)
 
 
-## **Introduction**
+## Introduction
 With Amazon Cognito user pools, you can associate each of your users' devices with a unique device identifier: a device key. When you present the device key and perform device authentication at sign-in, you can configure your application with a trusted device authentication flow. Device authentication is a security feature that allows users to register and authenticate their devices with AWS Cognito. This feature enhances security by enabling multi-factor authentication (MFA) and device tracking, ensuring that only trusted devices can access user accounts. 
 
 When a user logs in from a new device, they may be prompted to register the new device. Once registered, the device can be remembered for future logins, reducing the need for repeated MFA prompts. This feature is particularly useful for applications that require high security, such as banking or healthcare apps.
@@ -32,13 +32,12 @@ The device authentication process involves using logic similar to the SRP (Secur
 This document explains how you can use this in the context of AWS Cognito and Laravel package.
 
 
-## **Configurations**
+## Configurations
 - [AWS Configurations](#aws-configurations)
 - [Laravel Configurations](#laravel-configurations)
 
 
 ### *AWS Configurations*
----
 
 Configure your user pool to remember devices in the Sign-in menu of your user pool, under Device tracking as shown below:
 <img src="../assets/images/aws_cognito_device_flow1.png" width="100%" alt="cognito device flow"/>
@@ -50,9 +49,8 @@ For more information on configuring device authentication in AWS Cognito, refer 
 
 
 ### *Laravel Configurations*
----
 
-## **Blade Component** (web app)
+## Blade Component (web app)
 
 The package provides a blade component for 
 1. `device management`, and 
@@ -62,7 +60,6 @@ The device authentication component is integrated into the `challenge component`
 
 
 ### *Device Management Functionality*
----
 
 The package provides a blade component that you can use to implement the device `registration` and device `deletion` functionality in your pages.
 
@@ -103,7 +100,6 @@ The data attributes are used to trigger the necessary javascript functions to im
 ```
 
 ### *Device Authentication Functionality*
----
 
 The package provides a couple of blade components that you should use to implement the device login functionality in your **login page** and **challenge page**.
 
@@ -182,7 +178,7 @@ Using this component will simplify the implementation of the device authenticati
 The data is **secure** on the client side, as per the cyber security standards, and the necessary scripts and methods are provided in the component to implement the device feature in your application.
 
 
-## **API Documentation**
+## API Documentation
 
 The CRUD methods are provided in the trait, as follows:
 - list (List all the registered devices for the user)
@@ -198,7 +194,6 @@ php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServ
 ```
 
 ### *Registering a New Device*
----
 
 When a user logs in from a new device, they will be prompted to register the device. The registration process involves generating a unique device key and associating it with the user's account. This claim data is provided with additional **NewDeviceMetadata** having DeviceGroupKey and DeviceKey.
 
@@ -248,7 +243,6 @@ If the `UserConfirmationNecessary` is true, the user will be prompted to confirm
 
 
 ### *Update Device Status* (optional - only if user confirmation is required)
----
 
 To set the confirmation, you use the following API endpoint to confirm the device registration.
 
@@ -268,7 +262,6 @@ If the response is successful, the device will be marked as remembered send back
 
 
 ### *Delete a Registered Device*
----
 
 To delete a registered device, you can use the following API endpoint. This will remove the device from the user's account and prevent it from being used for future authentication attempts.
 
@@ -287,7 +280,6 @@ Make sure, you remove the device credentials from the client side storage (e.g.,
 
 
 ### *Device Authentication Flow*
----
 
 The flow consists of the following actions that are performed in sequence to authenticate a registered device:
 1. [*Login With Device*](#step-1-login-with-device) - Initiates the device authentication process by sending the device key and receiving the authentication challenge from AWS Cognito.
@@ -437,7 +429,7 @@ Do not change the keys or the case as they are expected by the server for calcul
 
 The server side, the package will process this challenge response and call AWS Cognito's endpoint to verify the device proof. If the proof is correct, AWS Cognito will authenticate the user and return an authentication token.
 
-## **API Routes**
+## API Routes
 
 > [!NOTE]
 > We are releasing the API predefined routes as a new feature from V1.3.0.
@@ -456,11 +448,11 @@ The package provides a set of API routes that you can use to implement the devic
 ```
 
 
-## **References**
+## References
 
 - [AWS Cognito - Working with user devices in your user pool](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-device-tracking.html)
 
-## **Key Points**
+## Key Points
 - **Phase 1 (calculateSrpA)**: Uses only `N` and `g`. Generates a random `a`. NO password, username, or salt needed.
 - **Phase 2 (calculateDeviceProof)**: Uses `salt`, `password`, and `username` received from server
 - **a** must be generated using cryptographically secure random number generator
@@ -469,7 +461,6 @@ The package provides a set of API routes that you can use to implement the devic
 - SRP_A is typically a very large number (1024-bit to 2048-bit range)
 
 ### *Understanding SRP Parameters: N and g*
----
 
 #### **What is N (Modulus)?**
 
@@ -518,7 +509,6 @@ g = 2
 AWS Cognito typically uses **RFC 2409 (1024-bit) with g=2**.
 
 #### **Parameter Summary Table**
----
 
 | Parameter | What It Is | Where It Comes From | Typical Size | Used In |
 |-----------|-----------|-------------------|--------------|---------|
