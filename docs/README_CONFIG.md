@@ -17,6 +17,10 @@ This document provides guidance on configuring the AWS Cognito service and the L
     + [Registering the Middleware](#registering-the-middleware)
     + [Environment Variables](#environment-variables)
     + [Environment Variables - Optional](#additional-environment-variables-optional)
+        * Session Timeout Configuration
+        * Support for App Client without Secret Enabled
+        * Override Password Change Requirement for New Cognito Users
+
     + [Changes in Auth Configurations](#changes-in-auth-configurations)
     + [Publishing Configurations](#publishing-configurations)
     + [Database Configurations](#database-configurations)
@@ -124,11 +128,20 @@ AWS_COGNITO_VERSION="latest" //optional - default value is 'latest'
 
 For more details on how to find `AWS_COGNITO_CLIENT_ID`, `AWS_COGNITO_CLIENT_SECRET` and `AWS_COGNITO_USER_POOL_ID` for your application, please refer to the [AWS Configurations](#aws-configurations).
 
-> [!NOTE]
-> To sync the web session timeout with the cognito access token ttl value, set the `SESSION_LIFETIME` parameter in the .env file. This value is in minutes with the default value being 120 mins i.e. 2 hours. This will ensure that the laravel session times out at the same time as the access token.
-
 
 ### *Additional Environment Variables* (Optional)
+
+#### Session Timeout Configuration
+
+You can configure the session timeout in your `.env` file, aligned with the cognito access token validity, use the `SESSION_LIFETIME` and `AUTH_PASSWORD_TIMEOUT` parameters. This value is in minutes with the default value being 120 mins i.e. 2 hours. This will ensure that the laravel session times out at the same time as the access token. For example:
+
+```php
+SESSION_LIFETIME=120 // in minutes
+AUTH_PASSWORD_TIMEOUT=7200 // in seconds
+```
+
+The `SESSION_LIFETIME` parameter can be traced into the file `config/session.php` under the `lifetime` key. The `AUTH_PASSWORD_TIMEOUT` parameter is used to set the password timeout for the Laravel application. The default value for `AUTH_PASSWORD_TIMEOUT` is 10800 seconds (i.e. 3 hours) and can be traced into the file `config/auth.php` under the `passwords.users.expire` key. You can change these values as per your requirements.
+
 
 #### Support for App Client without Secret Enabled
 
@@ -139,11 +152,13 @@ AWS_COGNITO_CLIENT_SECRET_ALLOW=false
 ```
 
 
-#### Automatic User Password update for API usage (for New Cognito Users)
+#### Override Password Change Requirement for New Cognito Users
 
-In case of the new cognito users, the AWS SDK will send a session key and the user is expected to change the password, in a forced mode. Make sure you force the users to change the password for the first login by new cognito user.
+When a newly created Amazon Cognito user signs in for the first time, Cognito returns a session token and responds with the `NEW_PASSWORD_REQUIRED` challenge. This requires the user to set a new password before authentication can be completed.
 
-However, if you have an API based implementation, and want to automatically authenticate the user without forcing the password change, you may do that with below setting fields to your `.env` file
+For web-based applications, we recommend following this flow and requiring users to change their password on their first sign-in.
+
+If you are building an API-only application and prefer to authenticate users without requiring an immediate password change, you can enable the following configuration by adding these settings to your `.env` file:
 
 ```php
 AWS_COGNITO_FORCE_PASSWORD_CHANGE_API=false     //Make true for forcing password change
