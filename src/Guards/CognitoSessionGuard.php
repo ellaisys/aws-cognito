@@ -222,20 +222,6 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
         $challengeType = CognitoChallengeTypes::from($this->challengeName);
         switch ($challengeType) {
             case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
-            case CognitoChallengeTypes::RESET_REQUIRED:
-                if (config('cognito.force_password_change_web', false)) {
-                    $returnValue =  redirect(route(config('cognito.force_redirect_route_name'), [
-                        'challenge_name' => $this->challengeName,
-                        'session_token' => $this->challengeData['session_token'],
-                        'status' => $this->challengeData['status'],
-                        'email' => $this->challengeData['username'],
-                    ]))
-                    ->with('status', 'success')
-                    ->with('force', true)
-                    ->with('message', $this->challengeName);
-                } //End if
-                break;
-
             case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
             case CognitoChallengeTypes::SMS_MFA:
             case CognitoChallengeTypes::DEVICE_SRP_AUTH:

@@ -39,7 +39,7 @@
             id="challenge_value_label">{{ __('cognito::messages.view_component.challenge.password.pass_code') }}</label>
 
         <div class="col-md-6">
-            <input type="{{ in_array($challengeNameValue, ['PASSWORD', 'PASSWORD_VERIFIER']) ? 'password' : 'text' }}"
+            <input type="{{ in_array($challengeNameValue, ['PASSWORD', 'PASSWORD_VERIFIER', 'NEW_PASSWORD_REQUIRED']) ? 'password' : 'text' }}"
                 id="pass_code" name="pass_code"
                 class="form-control @error('pass_code') is-invalid @enderror"
                 placeholder="{{ $challengeValuePlaceholder ?? '' }}"

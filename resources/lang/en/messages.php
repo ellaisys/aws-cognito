@@ -21,7 +21,7 @@ return [
         'ERROR_COGNITO_DEFAULT' => 'An error occurred while processing your request. Please try again later.',
         'ERROR_COGNITO_CONFIG_INVALID' => 'Cognito configuration is invalid. Please contact support.',
         'ERROR_COGNITO_AUTH_USER_UNAUTHORIZED' => 'User authentication error.',
-        'ERROR_COGNITO_AUTH_USER_RESET_PASSWORD' => 'User password reset error. Please try again.',
+        'ERROR_COGNITO_AUTH_USER_RESET_PASSWORD' => 'Password reset required for the user. Please reset your password to continue.',
         'ERROR_COGNITO_AUTH_USERNAME_EXISTS' => 'User already exists. Please provide different details.',
         'ERROR_COGNITO_AUTH_CODE_INVALID' => 'Invalid confirmation code. Please check the code and try again.',
         'ERROR_COGNITO_USERNAME_INVALID' => 'Invalid username. Please check the username and try again.',
@@ -77,5 +77,6 @@ return [
         'device_srp_auth' => 'Generating the Device Token',
         'device_password_verifier' => 'Validating the Device Token',
         'select_mfa_type' => 'Select the MFA type from the available options',
+        'new_password_required' => 'Set a new password to continue',
     ],
 ];

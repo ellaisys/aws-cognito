@@ -227,6 +227,7 @@ trait BaseCognitoGuard
                 ];
                 break;
 
+            case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
             case CognitoChallengeTypes::SELECT_MFA_TYPE:
             case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
             case CognitoChallengeTypes::SMS_MFA:
@@ -236,17 +237,10 @@ trait BaseCognitoGuard
             case CognitoChallengeTypes::SMS_OTP:
             case CognitoChallengeTypes::EMAIL_OTP:
             case CognitoChallengeTypes::WEB_AUTHN:
+            default:    
                 $returnValue = [
                     'session_token' => isset($result['Session']) ? $result['Session'] : null
                 ];
-                break;
-
-            default:
-                if (in_array($challengeType, config('cognito.forced_challenge_names'))) {
-                    $returnValue = [
-                        'session_token' => isset($result['Session']) ? $result['Session'] : null,
-                    ];
-                } //End if
                 break;
         } //End switch
 

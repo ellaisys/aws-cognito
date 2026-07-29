@@ -42,7 +42,7 @@
 @push('cognito-challenge-passcode')
     @if (in_array($challengeNameValue, [
         'SELECT_MFA_TYPE', 'SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'EMAIL_MFA',
-        'SMS_OTP', 'EMAIL_OTP', 'PASSWORD_VERIFIER', 'PASSWORD']))
+        'SMS_OTP', 'EMAIL_OTP', 'PASSWORD_VERIFIER', 'PASSWORD', 'NEW_PASSWORD_REQUIRED']))
 
         <x-cognito::challenge.password
             :challengeNameValue="$challengeNameValue"
@@ -78,7 +78,7 @@
                     button.disabled = true;
                     button.style.display = 'none';
                 }
-            else if (['PASSWORD_SRP', 'PASSWORD',
+            else if (['PASSWORD_SRP', 'PASSWORD', 'NEW_PASSWORD_REQUIRED',
                 'SELECT_MFA_TYPE', 'SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'EMAIL_MFA',
                 'SMS_OTP', 'EMAIL_OTP'].includes(btnRole)) {
                     button.addEventListener('click', function(event) {

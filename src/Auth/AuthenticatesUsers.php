@@ -551,11 +551,6 @@ trait AuthenticatesUsers
                         ->with('data', $response->getData());
                 } //Return response
             } else { // Challenge condition
-                // If a guard returns a redirect (e.g. forced password change), pass it through.
-                if ($response instanceof RedirectResponse) {
-                    return $response;
-                } //End if
-
                 if (!is_array($response) || !isset($response['challenge_name'])) {
                     throw new HttpException(400, 'Invalid challenge response received from authentication guard.');
                 } //End if
@@ -673,7 +668,7 @@ trait AuthenticatesUsers
         return [
             'username'          => 'sometimes',
             'session'           => 'required',
-            'challenge_name'    => 'required|string|in:SELECT_CHALLENGE,WEB_AUTHN,EMAIL_OTP,SMS_OTP,SELECT_MFA_TYPE,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD,PASSWORD_SRP,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER',
+            'challenge_name'    => 'required|string|in:SELECT_CHALLENGE,WEB_AUTHN,EMAIL_OTP,SMS_OTP,SELECT_MFA_TYPE,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD,PASSWORD_SRP,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER,NEW_PASSWORD_REQUIRED',
             'challenge_value'   => 'required|string',
             'challenge_params'  => 'sometimes|string'
         ];
