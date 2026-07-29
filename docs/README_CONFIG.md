@@ -19,7 +19,6 @@ This document provides guidance on configuring the AWS Cognito service and the L
     + [Environment Variables - Optional](#additional-environment-variables-optional)
         * Session Timeout Configuration
         * Support for App Client without Secret Enabled
-        * Override Password Change Requirement for New Cognito Users
 
     + [Changes in Auth Configurations](#changes-in-auth-configurations)
     + [Publishing Configurations](#publishing-configurations)
@@ -149,20 +148,6 @@ The library now supports where the AWS configuration of App Client with the Clie
 
 ```php
 AWS_COGNITO_CLIENT_SECRET_ALLOW=false
-```
-
-
-#### Override Password Change Requirement for New Cognito Users
-
-When a newly created Amazon Cognito user signs in for the first time, Cognito returns a session token and responds with the `NEW_PASSWORD_REQUIRED` challenge. This requires the user to set a new password before authentication can be completed.
-
-For web-based applications, we recommend following this flow and requiring users to change their password on their first sign-in.
-
-If you are building an API-only application and prefer to authenticate users without requiring an immediate password change, you can enable the following configuration by adding these settings to your `.env` file:
-
-```php
-AWS_COGNITO_FORCE_PASSWORD_CHANGE_API=false     //Make true for forcing password change
-AWS_COGNITO_FORCE_PASSWORD_AUTO_UPDATE_API=true //Make false for stopping auto password change
 ```
 
 
