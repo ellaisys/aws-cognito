@@ -214,35 +214,21 @@ class CognitoSessionGuard extends SessionGuard implements StatefulGuard
     /**
      * Handle the AWS Challenge
      *
-     * @return mixed
+     * @return array
      */
-    private function handleAWSChallenge() {
-        $returnValue = null;
+    private function handleAWSChallenge(): array
+    {
+        //Invalidate the session
+        $session = $this->getSession();
+    
+        /**
+         * Note: We do not flush the session here, because other guards may be
+         * sharing this session. Instead, we just regenerate the session id
+         * (to keep session-fixation protection) without flushing the session.
+         */
+        $session->migrate(true);
 
-        $challengeType = CognitoChallengeTypes::from($this->challengeName);
-        switch ($challengeType) {
-            case CognitoChallengeTypes::NEW_PASSWORD_REQUIRED:
-            case CognitoChallengeTypes::SOFTWARE_TOKEN_MFA:
-            case CognitoChallengeTypes::SMS_MFA:
-            case CognitoChallengeTypes::DEVICE_SRP_AUTH:
-            case CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER:
-            case CognitoChallengeTypes::PASSWORD_VERIFIER:
-            default:
-                //Invalidate the session
-                $session = $this->getSession();
-            
-                /*
-                 * Note: We do not flush the session here, because other guards may be
-                 * sharing this session. Instead, we just regenerate the session id
-                 * (to keep session-fixation protection) without flushing the session.
-                 */
-                $session->migrate(true);
-
-                $returnValue = $this->challengeData;
-                break;
-        } //End switch
-
-        return $returnValue;
+        return $this->challengeData;
     } //Function ends
 
     /**

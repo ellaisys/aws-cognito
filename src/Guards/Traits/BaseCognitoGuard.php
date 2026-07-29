@@ -212,9 +212,13 @@ trait BaseCognitoGuard
     } //Function ends
 
     /**
-     * handle Cognito Challenge
+     * Handle Cognito Challenge
+     * @param \Aws\Result $result
+     * @param \Illuminate\Support\Collection $credentials
+     * @return array
      */
-    protected function handleCognitoChallenge(AwsResult $result, Collection $credentials) {
+    protected function handleCognitoChallenge(AwsResult $result, Collection $credentials): array
+    {
         //Return value
         $returnValue = [];
         
@@ -237,7 +241,7 @@ trait BaseCognitoGuard
             case CognitoChallengeTypes::SMS_OTP:
             case CognitoChallengeTypes::EMAIL_OTP:
             case CognitoChallengeTypes::WEB_AUTHN:
-            default:    
+            default:
                 $returnValue = [
                     'session_token' => isset($result['Session']) ? $result['Session'] : null
                 ];
