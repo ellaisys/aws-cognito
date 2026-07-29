@@ -107,6 +107,18 @@ class PoolCommand extends Command
 
                 //Set the value in .env file
                 $this->setEnvValue('AWS_COGNITO_ALLOW_PASSKEYS', $allowPasskeys ? true : false);
+
+                $accessTokenValidity = $userPoolClient['AccessTokenValidity'] ?? 60; // Default to 60 minutes if not set
+                $multiplyFactor = $userPoolClient['TokenValidityUnits']['AccessToken'] ?? 'minutes'; // Default to minutes if not set
+                if ($multiplyFactor === 'hours') {
+                    $accessTokenValidity *= 60; // Convert hours to minutes
+                } elseif ($multiplyFactor === 'days') {
+                    $accessTokenValidity *= 1440; // Convert days to minutes
+                }
+
+                //Set the value in .env file
+                $this->setEnvValue('SESSION_LIFETIME', $accessTokenValidity);
+                $this->setEnvValue('AUTH_PASSWORD_TIMEOUT', $accessTokenValidity*60); // Convert minutes to seconds
             } //End if
 
             $this->info('User Pool Client Configuration:');
