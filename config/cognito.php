@@ -188,7 +188,6 @@ return [
     |
     */
     'mfa_setup' => env('AWS_COGNITO_MFA_SETUP', 'OFF'),
-    'force_mfa_code_route_name' => env('AWS_COGNITO_MFA_CODE_ROUTE_NAME', 'cognito.form.login'),
 
     /*
     |--------------------------------------------------------------------------
