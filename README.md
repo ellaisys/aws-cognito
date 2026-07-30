@@ -101,7 +101,7 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
         | Session Authentication :heavy_check_mark: |
         | API Authentication :heavy_check_mark: |
         | Laravel Guards :heavy_check_mark: |
-        More
+        [More](./docs/FEATURES.md#features)
 
     - [SRP](./docs/README_SRP.md) ***New Feature***
     - [Remembered Devices](./docs/README_DEVICE_AUTH.md) ***New Feature***

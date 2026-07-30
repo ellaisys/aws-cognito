@@ -1,5 +1,10 @@
 # Features
 
+This document provides a list of features provided by this package. It is not a complete list of features provided by AWS Cognito. For a complete list of features, please refer individual sections of this document.
+
+> [!NOTE]
+> Updated On 2026-07-10
+
 ### Functional
 
 - [Registering Users OR Sign Up](README_CORE.md#registering-users-or-sign-up)
@@ -32,7 +37,7 @@
 - Session (Web) now has AccessToken and RefreshToken as part of the claim object
 - [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
 - [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
-- [Preconfigured routes and controllers for Web and API ](README_ROUTES.md#routes)
+- [Preconfigured routes and controllers for Web and API ](README_ROUTES.md)
 - [Preconfigured views for Web ](README_ROUTES.md#web-views-and-components)
 
 
