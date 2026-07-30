@@ -11,8 +11,9 @@ To help faster implementations, we have now provided with routes for web and API
 - [Configurations](#configurations)
 - [Features](#features)
 - [Routes](#routes)
-  - [API Routes](#api-routes)
-  - [Web Routes](#web-routes)
+    + [API Routes](#api-routes)
+    + [Web Routes](#web-routes)
+
 - [Ignore the routes and controllers](#ignore-the-routes-and-controllers)
 - [Web Views and Components](#web-views-and-components)
 

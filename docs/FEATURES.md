@@ -1,33 +1,39 @@
 # Features
 
-- [Registration and Confirmation E-Mail (Sign Up)](#registering-users)
-- Forced password change at first login (configurable)
-- [Login (Sign In)](#user-authentication)
-- Token Validation for all Session and Token Guard Requests
-- Remember Me Cookie
-- Single Sign On (Fix: Issue #86)
-- Forgot Password (Resend - configurable)
-- User Deletion
-- Edit User Attributes
-- Reset User Password
-- Confirm Sign Up
-- Easy API Token handling (uses the cache driver)
-- [DynamoDB support for Web Sessions and API Tokens (useful for server redundency OR multiple containers)](#storing-web-sessions-or-api-tokens-in-dynamodb-useful-for-multiservercontainer-implementation)
-- Easy configuration of Token Expiry (Manage using the cognito console, no code or configurations needed)
+### Functional
+
+- [Registering Users OR Sign Up](README_CORE.md#registering-users-or-sign-up)
+    + [Self Registration](README_CORE.md#self-registration)
+    + [Verification of User / Confirm Sign Up](README_CORE.md#verification-of-user)
+
+- [User Invitation OR Invite User](README_CORE.md#user-invitation-or-invite-user)
+- [User Authentication OR Sign In](README_CORE.md#user-authentication-or-sign-in)
+- [Log Out OR Sign out](README_CORE.md#log-out-or-sign-out)
+    + [Sign out and remove access tokens](README_CORE.md#sign-out-and-remove-access-tokens)
+
+- [Forgot Password](README_CORE.md#forgot-password)
+- [Refresh Token](README_CORE.md#refresh-token)
+- [Delete User](README_CORE.md#delete-user)
+- [Single Sign-On (SSO)](README_CORE.md#single-sign-on)
+- [Password Validation](README_CORE.md#password-validation)
+- [Token Validation](README_CORE.md#token-validation)
+- [Multi-Factor Authentication (MFA)](./docs/README_MFA.md)
+- [FIDO2 Security Keys Passkey](./docs/README_FIDO2.md)
+- [SRP Authentication](./docs/README_SRP.md)
+- [Device Authentication](./docs/README_DEVICE_AUTH.md)
+
+
+### Technical
+
+- Easy API Token handling (uses the cache driver). Refer [Changes in Auth Configurations](README_CONFIG.md#changes-in-auth-configurations)
+- DynamoDB support for Web Sessions and API Tokens. It is useful for server redundency OR multiple containers. Refer [Session Storage Configurations](README_CONFIG.md#dynamodb-storage)
 - Support for App Client without Secret
 - Support for Cognito Groups, including assigning a default group to a new user
 - Session (Web) now has AccessToken and RefreshToken as part of the claim object
-- [Refresh Token API](#refresh-token)
-- [Logout (Sign Out) - Remove access tokens from AWS](#signout-remove-access-token)
-- [Forced Logout (Sign Out) - Revoke the RefreshToken from AWS](#signout-remove-access-token)
-- [MFA Implementation for Session and Token Guards](./docs/README_MFA.md) **Updated**
 - [Password validation based on Cognito Configuration](#password-validation-based-of-cognito-configuration)
 - [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
-- [Preconfigured routes and controllers for Web and API ](./docs/README_ROUTES.md#routes)
-- [Preconfigured views for Web ](./docs/README_ROUTES.md#web-views-and-components)
-- [FIDO2 Security Keys Passkey](./docs/README_FIDO2.md) **Updated**
-- [SRP Authentication](./docs/README_SRP.md) **New Feature**
-- [Device Authentication](./docs/README_DEVICE_AUTH.md) **New Feature**
+- [Preconfigured routes and controllers for Web and API ](README_ROUTES.md#routes)
+- [Preconfigured views for Web ](README_ROUTES.md#web-views-and-components)
 
 
 ## What this package provides

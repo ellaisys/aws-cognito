@@ -30,9 +30,11 @@
 The package allows some configurations, which can be set in the .env file. The default values are set in the configuration file. You can change the default values by setting the keys in the .env file.
 
 ```env
+# Enable self registration for users
+AWS_COGNITO_REGISTRATION_ENABLED=true //optional - default value is false.
+
 # Configuration for user group assignment for registered or invited users.
 AWS_COGNITO_DEFAULT_USER_GROUP="Customers" //optional - default value is null.
-
 
 AWS_COGNITO_FORCE_NEW_USER_PASSWORD=true //optional - default value is false.
 
@@ -50,11 +52,14 @@ AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is fal
 - [User Invitation OR Invite User](#user-invitation-or-invite-user)
 - [User Authentication OR Sign In](#user-authentication-or-sign-in)
 - [Log Out OR Sign out](#log-out-or-sign-out)
+    + [Sign out and remove access tokens](#sign-out-and-remove-access-tokens)
+
 - [Forgot Password](#forgot-password)
 - [Refresh Token](#refresh-token)
 - [Delete User](#delete-user)
 - [Single Sign-On (SSO)](#single-sign-on)
 - [Password Validation](#password-validation)
+- [Token Validation](#token-validation)
 
 
 ## Registering Users OR Sign Up
@@ -73,6 +78,8 @@ The package provides you with a trait that makes the registration process very s
     - `invite` (admin invited registration).
 
 You will need to configure the AWS Cognito User Pool to allow [Self Registration](COGNITOCONFIG.md#step-11-sign-up-settings). If this is not enabled, then the users will have to be created by an administrator by inviting them to the application.
+
+Also, you will need to configure the `AWS_COGNITO_REGISTRATION_ENABLED` key in the environment file to **true** to allow self registration. The default value is set to false. Refer to the [Laravel Configurations](#laravel-configurations) section for more details.
 
 After the user is successfully registered, the status of the user is `UNCONFIRMED` and email is `UNVERIFIED`. A verification email is sent to the user's email and/or phone number.
 
@@ -230,7 +237,10 @@ The package provides you with a trait that makes the logout process very simple.
     - `logout` (Logout, but persists the refresh token), and
     - `logout(true)` (Logout, and revoke the refresh token)
 
-In multiple application scenarios, you may want to logout the user from one application then use the `logout()` method to persist the refresh token. This will allow the user to maintain the session in other applications. In case you want to logout the user from all applications, you can use the `logout(true)` method to revoke the refresh token. This will require the user to authenticate again in all applications. This is useful in Single Sign-On scenarios where you want to logout the user from all applications. This is detailed in the [Single Sign-On](#single-sign-on) section.
+In multiple application scenarios, you may want to logout the user from one application then use the `logout()` method to persist the refresh token. This will allow the user to maintain the session in other applications.
+
+### Sign out and remove access tokens
+In case you want to logout the user from all applications, you can use the `logout(true)` method to revoke the refresh token. This prohibits the user from using the refresh token to get a new access token. This will require the user to authenticate again in all applications. This is useful in Single Sign-On scenarios where you want to logout the user from all applications. This is detailed in the [Single Sign-On](#single-sign-on) section.
 
 If you are using the routes provided by us, you can use the preconfigured controller with following routes. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
@@ -424,5 +434,7 @@ This library fetches the password policy from the cognito pool configurations. T
 > In case of special characters, we are supporting all except the pipe character **|** for now.
 > We are working on making sure that pipe character is handled soon.
 
-> [!NOTE]
-> The Access Token is now validated with the AWS Cognito certificate. If the certificate is incorrect or expired, it will throw an exception.
+
+## Token Validation
+
+The Access Token is validated for all Session and Token Guard Requests. The Access Token is now validated with the AWS Cognito certificate. If the certificate is incorrect or expired, it will throw an exception.

@@ -25,6 +25,7 @@ This document provides guidance on configuring the AWS Cognito service and the L
     + [Database Configurations](#database-configurations)
     + [Model Configurations](#model-configurations)
         * User Model
+
     + [Session Storage Configurations](#session-storage-configurations)
         * DynamoDB Storage
 
@@ -129,6 +130,9 @@ For more details on how to find `AWS_COGNITO_CLIENT_ID`, `AWS_COGNITO_CLIENT_SEC
 
 
 ### *Additional Environment Variables* (Optional)
+
+The following environment variables are optional and can be used to customize the behavior of the AWS Cognito service. You can add these fields to your `.env` file as per your requirements. The default values are provided in the `config/cognito.php` file. You can change these values as per your requirements.
+
 
 #### Session Timeout Configuration
 
