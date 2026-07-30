@@ -21,11 +21,17 @@
 
 
 ### *AWS Configurations*
----
+
+For authentication to work, you need to configure the AWS Cognito User Pool and App Client settings. The package provides a detailed guide on how to configure the AWS Cognito User Pool and App Client settings. Please refer to the [AWS Cognito Configuration](COGNITOCONFIG.md) section for more details.
+
+For password based authentication to work, you need to configure the App Client settings and enable `ALLOW_USER_PASSWORD_AUTH`. Similarly, for refresh token based authentication to work, you need to enable `ALLOW_REFRESH_TOKEN_AUTH` as shown below in the image.
+
+![AWS Cognito - Authentication Method Settings](../assets/images/aws_cognito_core_flow01.png)
+
+Use the admin based authentication by enabling `ALLOW_ADMIN_USER_PASSWORD_AUTH`. This is useful in scenarios where you want to authenticate the user using the admin credentials.
 
 
 ### *Laravel Configurations*
----
 
 The package allows some configurations, which can be set in the .env file. The default values are set in the configuration file. You can change the default values by setting the keys in the .env file.
 
@@ -62,7 +68,7 @@ AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is fal
 - [Token Validation](#token-validation)
 
 
-## Registering Users OR Sign Up
+### Registering Users OR Sign Up
 
 The registration process is simplified into just two steps, self registration and verification. They are detailed below in detail. The overall process is now simplified to just a couple of steps. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
@@ -71,7 +77,7 @@ To enable user defined password to be set during registration or invitation, the
 This package also supports the AWS Cognito Groups. You can assign a default group to a new user when registering or inviting. This can be configured in the environment file. Use the key `AWS_COGNITO_DEFAULT_USER_GROUP` to set the default group name. The group name should be as per the configuration done via AWS Cognito Management Console. The default value is set to null. 
 
 
-### *Self Registration*
+#### *Self Registration*
 
 The package provides you with a trait that makes the registration process very simple. The package provides a trait `RegistersUsers` that you can add to your controller to make the registration process functional. The namespace for the trait is `Ellaisys\Cognito\Auth\RegistersUsers`. The trait has the capability to handle the following registration types:
     - `register` (self registration), and
@@ -96,7 +102,7 @@ Route::group(['prefix' => 'register'], function() {
 });
 ```
 
-#### Advanced Registration Options
+##### Advanced Registration Options
 
 In case you want to customize the registration process, and write your own controller, you can use the `register` method provided by the trait. The method takes a collection of user data and creates a new user in the AWS Cognito User Pool. The method returns user object on successful registration.
 
@@ -130,7 +136,7 @@ class RegisterController extends Controller
 The trait triggers `PreRegistrationEvent` and `PostRegistrationEvent` events before and after the registration process. You can listen to these events and perform any additional actions as per your business requirement.
 
 
-### *Verification of User*
+#### *Verification of User*
 
 The verification of the user is handled by the `VerifiesEmails` trait. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
@@ -157,7 +163,7 @@ Route::group(['prefix' => 'register/verify'], function() {
 ```
 
 
-## User Invitation OR Invite User
+### User Invitation OR Invite User
 
 A new user can be invited by an administrator into the application. The invitation process is simplified into simple steps, `invite` and `verification`. However, you can also auto-verify the user. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
 
@@ -166,7 +172,7 @@ In case you want to suppress the invitation mail sent to the new users, set the 
 Similarly, you can also auto-verify the new user by setting the environment variable `AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED` to **true**. This will mark the new user's email address as verified. Default configuration shall not mark the email address as verified and the user will have to verify the email address by clicking on the link sent to the email address.
 
 
-## User Authentication OR Sign In
+### User Authentication OR Sign In
 
 Basic password based user authentication is simplified into just one step, the login. It is essential that the `ALLOW_USER_PASSWORD_AUTH` is enabled in the AWS Cognito User Pool. For details on how to enable this, please refer to the [AWS Cognito Configuration - App Client Settings](COGNITOCONFIG.md#step-6-edit-app-client-settings) section.
 
@@ -192,7 +198,7 @@ Route::post('/login/challenge', [LoginController::class, 'actionChallenge']);
 The trait triggers `PreAuthEvent`, `PostAuthSuccessEvent` and `PostAuthFailedEvent` events before and after the login process. You can listen to these events and perform any additional actions as per your business requirement.
 
 
-#### Advanced Authentication Options
+##### Advanced Authentication Options
 
 For advanced authentication options, you can use the `attemptLogin` method provided by the trait. The method takes a collection of user data and authenticates the user in the AWS Cognito User Pool. The method returns a claim object on successful authentication. The credential object in the request should contain the `username` and `password` parameters for Basic Authentication. The method also takes an optional parameter to specify the authentication flow type. The default value is `USER_PASSWORD_AUTH`.
 
@@ -231,7 +237,7 @@ class LoginController extends Controller
 ```
 
 
-## Log Out OR Sign out
+### Log Out OR Sign out
 
 The package provides you with a trait that makes the logout process very simple. The package provides a trait `AuthenticatesUsers` that you can add to your controller to make the logout process functional. The namespace for the trait is `Ellaisys\Cognito\Auth\AuthenticatesUsers`. The trait has the capability to handle the following logout types:
     - `logout` (Logout, but persists the refresh token), and
@@ -239,7 +245,7 @@ The package provides you with a trait that makes the logout process very simple.
 
 In multiple application scenarios, you may want to logout the user from one application then use the `logout()` method to persist the refresh token. This will allow the user to maintain the session in other applications.
 
-### Sign out and remove access tokens
+#### Sign out and remove access tokens
 In case you want to logout the user from all applications, you can use the `logout(true)` method to revoke the refresh token. This prohibits the user from using the refresh token to get a new access token. This will require the user to authenticate again in all applications. This is useful in Single Sign-On scenarios where you want to logout the user from all applications. This is detailed in the [Single Sign-On](#single-sign-on) section.
 
 If you are using the routes provided by us, you can use the preconfigured controller with following routes. You can use the preconfigured controller and routes provided by us or you can implement your own controller and routes.
@@ -254,7 +260,7 @@ Route::post('/logout/forced', [LoginController::class, 'logoutForced']);
 
 The trait triggers a `PreLogoutEvent` and `PostLogoutEvent` during the logout process. You can listen to these events and perform any additional actions as per your business requirement.
 
-#### Advanced Logout Options
+##### Advanced Logout Options
 
 For advanced logout options, you can use the `logout` method provided by the trait. The method takes a boolean parameter to indicate whether to revoke the refresh token or not. The method returns a boolean value indicating whether the logout was successful or not.
 
@@ -267,7 +273,7 @@ Auth::guard('api')->logout(true); //Revoke the Refresh Token.
 ```
 
 
-## Forgot Password
+### Forgot Password
 
 As per the AWS Cognito default feature, the forgot password feature is not allowed for users who have not activated their account. We have introduced a feature that allows the password to be resent to the user even if they have not activated their account. This is useful in scenarios where the user has not received the activation email or the activation link has expired.
 
@@ -285,7 +291,7 @@ The flow for the forgot password process is as follows:
 3. The user provides the password reset code and their new password. Use the `reset` method provided by the `ResetsPasswords` trait to reset the user's password using the code sent to the user.
 
 
-## Refresh Token
+### Refresh Token
 
 The package provides you with a trait that makes the refresh token process very simple. The package provides a trait `RefreshToken` that you can add to your controller to make the refresh token process functional. The namespace for the trait is `Ellaisys\Cognito\Auth\RefreshToken`. The trait has the capability to handle the following refresh token types:
     - `refresh` (Refresh the access token using the refresh token)
@@ -349,7 +355,7 @@ class RefreshTokenController extends Controller
 ```
 
 
-## Delete User
+### Delete User
 
 If you want to give your users the ability to delete themselves from your app you can use our deleteUser function
 from the CognitoClient.
@@ -382,14 +388,14 @@ Laravel will take care of the dependency injection by itself.
 ```
 
 
-## Single Sign-On (SSO)
+### Single Sign-On (SSO)
 
 This package provides *Single Sign-On (SSO)* by using AWS Cognito as the central identity provider. By exposing both web interfaces and REST APIs, applications built with Laravel or any other programming language can delegate authentication to this package while sharing a common AWS Cognito User Pool.
 
 Each application maintains its own local database and business data, while user authentication and identities are managed centrally by AWS Cognito. This allows users to access multiple applications with the same credentials without requiring separate user accounts for each application.
 
 
-### *How It Works*
+#### *How It Works*
 
 When a user attempts to authenticate, the request is delegated to AWS Cognito. After a successful authentication, the package checks whether the user already exists in the application's local database.
 
@@ -397,7 +403,7 @@ If no local user record exists and the `add_missing_local_user` option is enable
 
 This allows every application to maintain its own local user records while relying on a shared identity provider for authentication.
 
-### *Configuring the User Model*
+#### *Configuring the User Model*
 
 The `sso_user_model` option specifies the Eloquent model used when automatically creating local users. For most Laravel applications, this will be:
 
@@ -405,7 +411,7 @@ The `sso_user_model` option specifies the Eloquent model used when automatically
 App\Models\User::class
 ```
 
-### *Synchronizing User Attributes*
+#### *Synchronizing User Attributes*
 
 The `cognito_user_fields` option defines which user attributes are synchronized with AWS Cognito during registration.
 
@@ -413,20 +419,20 @@ Any attribute listed in this configuration must also be included in the registra
 
 If your application stores additional profile information, such as `firstname` or `lastname`, include those attributes in `cognito_user_fields`. Otherwise, they will only exist in the local application database and will not be available to other applications participating in SSO.
 
-### *Multiple Applications*
+#### *Multiple Applications*
 
 A single AWS Cognito User Pool can be shared by any number of applications, regardless of the technology stack. Since this package exposes both web interfaces and REST APIs, applications written in PHP, .NET, Java, Node.js, Python, Go, or any other language can authenticate users through the package while sharing the same centralized identity store.
 
 When a user signs in to an application for the first time, the package automatically creates the corresponding local user record (when `add_missing_local_user` is enabled). This provides a seamless onboarding experience while allowing each application to maintain its own application-specific data.
 
-### *Password Management*
+#### *Password Management*
 
 With SSO enabled, user passwords are managed exclusively by AWS Cognito and are never stored by the application.
 
 If your local `users` table contains a `password` column, it is recommended to make the column nullable, as users created through SSO do not require a locally stored password.
 
 
-## Password Validation
+### Password Validation
 
 This package automatically retrieves the password policy configured in your AWS Cognito User Pool and generates the corresponding Laravel validation rules at runtime. This ensures that password validation within your application always stays in sync with your Cognito configuration, without requiring you to duplicate or manually maintain password rules.
 
@@ -439,7 +445,17 @@ Password validation is automatically applied to all password-based flows, includ
 
 Validation error messages are also generated dynamically based on your Cognito password policy, providing users with accurate guidance that reflects your current configuration.
 
+Refer the [AWS Cognito Configuration - Password Policy](COGNITOCONFIG.md#step-10-authentication-method-settings) section for details on how to configure your password policy in AWS Cognito. The reference section below provides a link to the AWS documentation for more information on password policies.
 
-## Token Validation
 
-The Access Token is validated for all Session and Token Guard Requests. The Access Token is now validated with the AWS Cognito certificate. If the certificate is incorrect or expired, it will throw an exception.
+### Token Validation
+
+Access Tokens are automatically validated for all session-based and token guard authentication requests.
+
+The package verifies the token signature using the public keys published by your AWS Cognito User Pool. If the token signature is invalid, the signing certificate cannot be verified, or the token has expired, authentication will fail and an exception will be thrown.
+
+This ensures that only valid Access Tokens issued by your Cognito User Pool are accepted by your application.
+
+
+## References
+- [AWS Cognito Password Policy](https://docs.aws.amazon.com/cognito/latest/developerguide/managing-users-passwords.html#user-pool-settings-policies)
