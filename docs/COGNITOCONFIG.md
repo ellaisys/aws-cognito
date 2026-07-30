@@ -150,7 +150,20 @@ You can also assign users to these groups by navigating to the newly created gro
 ![AWS Cognito - Login Page Settings](../assets/images/aws_cognito_flow17.png)
 
 
-### *Step 10: Sign-in Settings*
+### *Step 10: Authentication Method Settings*
+
+In the **Authentication Methods** settings, you can configure the authentication methods that users can use to sign in to your application. There are multiple important settings that you can configure in this section as shown in the image below.
+
+![AWS Cognito - Authentication Method Settings](../assets/images/aws_cognito_flow20.png)
+
+Key settings to consider include:
+- Email Configuration: Configure the email settings for your user pool. You can choose to use the default Amazon Cognito email service or configure a custom email provider.
+- SMS Configuration: Configure the SMS settings for your user pool. You can choose to use the default Amazon Cognito SMS service or configure a custom SMS provider.
+- Password Policy: Configure the password policy for your user pool. You can set requirements for password length, complexity, and expiration.
+- Passkey Configuration: Configure the passkey policy for your user pool.
+
+
+### *Step 11: Sign-in Settings*
 
 In the **Sign-in** settings, you can configure the attributes that users can use to sign in to your application.
 
@@ -165,7 +178,7 @@ Select the account recovery settings based on your application requirements. You
 Select the options as shown in the image above. However, for the advanced users, you can change the settings based on your application requirements.
 
 
-### *Step 11: Sign-up Settings*
+### *Step 12: Sign-up Settings*
 
 In the **Sign-up** settings, you can configure the attributes that users need to provide during registration.
 
@@ -183,7 +196,7 @@ In order to enable self-registration, select the **Self-service sign-up** sectio
 ![AWS Cognito - Sign-up Settings](../assets/images/aws_cognito_flow27.png)
 
 
-### *Step 12: Amend Message Templates* (Optional)
+### *Step 13: Amend Message Templates* (Optional)
 
 In the **Message Templates** settings, under the **Branding** subsection, you can customize the email and SMS messages sent to users during various stages of the authentication process, such as account verification, password reset, and multi-factor authentication.
 
@@ -199,4 +212,5 @@ Select the template in the list, and click on the **Edit** button to customize t
 - [AWS Cognito User Pool Settings](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools.html)
 - [Import a user CSV file to your Cognito Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-using-import-tool.html)
 - [AWS Cognito App Client Settings](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html)
+- [AWS Cognito Password Policy](https://docs.aws.amazon.com/cognito/latest/developerguide/managing-users-passwords.html#user-pool-settings-policies)
 - [AWS Cognito Security](https://docs.aws.amazon.com/cognito/latest/developerguide/security.html)
