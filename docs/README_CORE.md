@@ -428,11 +428,16 @@ If your local `users` table contains a `password` column, it is recommended to m
 
 ## Password Validation
 
-This library fetches the password policy from the cognito pool configurations. The laravel request validations are done based on the regular expression that is created based on this policy. This validations are performed during the Sign Up (Registation), Sign In (Login), Reset and Change password based flows. The validation messages for the password are also dynamic in nature and change based on the configurations.
+This package automatically retrieves the password policy configured in your AWS Cognito User Pool and generates the corresponding Laravel validation rules at runtime. This ensures that password validation within your application always stays in sync with your Cognito configuration, without requiring you to duplicate or manually maintain password rules.
 
-> [!IMPORTANT]
-> In case of special characters, we are supporting all except the pipe character **|** for now.
-> We are working on making sure that pipe character is handled soon.
+Password validation is automatically applied to all password-based flows, including:
+
+* Sign Up (Registration)
+* Sign In (Login)
+* Password Reset
+* Password Change
+
+Validation error messages are also generated dynamically based on your Cognito password policy, providing users with accurate guidance that reflects your current configuration.
 
 
 ## Token Validation
