@@ -3,7 +3,7 @@
 This document provides guidance on configuring AWS services, specifically AWS Cognito. Ensure you have the necessary permissions and knowledge to perform these configurations.
 
 > [!NOTE]
-> Updated On 2026-07-10
+> Updated On 2026-07-30
 
 
 ## Contents
