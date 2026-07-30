@@ -406,7 +406,8 @@ trait RegistersUsers
 
             //Check the new user password config
             if (config('cognito.force_new_user_password', true)) {
-                $rules = array_merge($rules, [ $this->paramPassword => 'required|confirmed|regex:'.$this->passwordPolicy['regex']]);
+                $rules = array_merge($rules, [ $this->paramPassword => [
+                    'required', 'confirmed', 'regex:'.$this->passwordPolicy['regex']]]);
             } //End if
 
             //Check the MFA setup config

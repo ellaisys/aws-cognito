@@ -115,7 +115,7 @@ trait AuthenticatesUsers
                 ]),
                 [
                     $paramUsername => 'required|string',
-                    $paramPassword => 'required|regex:' . $passwordPolicy['regex'],
+                    $paramPassword => ['required', 'regex:' . $passwordPolicy['regex']],
                     $deviceKeyParam => 'sometimes|string'
                 ], [
                     'regex' => 'Must contain atleast ' . $passwordPolicy['message']

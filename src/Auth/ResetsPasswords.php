@@ -152,7 +152,7 @@ trait ResetsPasswords
             $this->paramToken       => 'required_without:'.$this->paramCode,
             $this->paramCode        => 'required_without:'.$this->paramToken,
             $this->paramUsername    => 'required|email',
-            $this->paramPassword    => 'required|confirmed|regex:'.$this->passwordPolicy['regex'],
+            $this->paramPassword    => ['required', 'confirmed', 'regex:'.$this->passwordPolicy['regex']],
         ];
     } //Function ends
 
