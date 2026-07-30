@@ -91,6 +91,10 @@ trait RegistersUsers
 
             //Redirect to verification page if registration type is register
             if ($this->registrationType=='register') {
+                if (!config('cognito.registration_enabled', true)) {
+                    throw new HttpException(400, 'Registration is disabled.');
+                } //End if
+
                 $this->redirectTo = config('cognito.routes.web.register_verify_page');
             } //End if
 

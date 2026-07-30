@@ -36,7 +36,7 @@
                 {{ __('Login with password') }}
             </button>
 
-            @if (Route::has('cognito.form.register'))
+            @if (Route::has('cognito.form.register') && config('cognito.registration_enabled', true))
                 <a class="btn btn-link float-end" href="{{ route('cognito.form.register') }}">
                     {{ __('Register?') }}
                 </a>

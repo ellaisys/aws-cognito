@@ -169,6 +169,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Registration Enabled
+    |--------------------------------------------------------------------------
+    | This option controls whether self registration is enabled for new users.
+    | Set to true to allow self registration, or false to disable it.
+    |
+    */
+    'registration_enabled' => env('AWS_COGNITO_REGISTRATION_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cognito MFA Setup and Configuration
     |--------------------------------------------------------------------------
     |
