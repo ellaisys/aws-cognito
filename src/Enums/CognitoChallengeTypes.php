@@ -32,6 +32,7 @@ enum CognitoChallengeTypes: string
    //MFA challenges
    case MFA_SETUP = 'MFA_SETUP';
    case SELECT_MFA_TYPE = 'SELECT_MFA_TYPE';
+   case EMAIL_MFA = 'EMAIL_MFA';
    case SMS_MFA = 'SMS_MFA';
    case SOFTWARE_TOKEN_MFA = 'SOFTWARE_TOKEN_MFA';
 

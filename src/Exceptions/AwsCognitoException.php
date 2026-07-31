@@ -21,9 +21,11 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class AwsCognitoException extends HttpException
 {
+    const COGNITO_DEFAULT = 'ERROR_COGNITO_DEFAULT';
+    const COGNITO_CONFIG_INVALID = 'ERROR_COGNITO_CONFIG_INVALID';
     const COGNITO_AUTH_USER_UNAUTHORIZED = 'ERROR_COGNITO_AUTH_USER_UNAUTHORIZED';
     const COGNITO_AUTH_USER_RESET_PASS = 'ERROR_COGNITO_AUTH_USER_RESET_PASSWORD';
-    const COGNITO_AUTH_USERNAME_EXITS = 'ERROR_COGNITO_AUTH_USERNAME_EXITS';
+    const COGNITO_AUTH_USERNAME_EXISTS = 'ERROR_COGNITO_AUTH_USERNAME_EXISTS';
     const COGNITO_AUTH_CODE_INVALID = 'ERROR_COGNITO_AUTH_CODE_INVALID';
     const COGNITO_USERNAME_INVALID = 'ERROR_COGNITO_USERNAME_INVALID';
     const COGNITO_USER_INVALID = 'ERROR_COGNITO_USER_INVALID';
@@ -32,6 +34,8 @@ class AwsCognitoException extends HttpException
     const COGNITO_AUTH_POOL_CONFIG_INVALID = 'ERROR_COGNITO_AUTH_POOL_CONFIG_INVALID';
     const COGNITO_THROTTLING_LIMIT = 'ERROR_COGNITO_THROTTLING_LIMIT';
     const COGNITO_WEB_AUTH_INVALID = 'ERROR_COGNITO_WEB_AUTH_INVALID';
+    const COGNITO_INVALID_PASSWORD = 'ERROR_COGNITO_INVALID_PASSWORD';
+    const COGNITO_MFA = 'ERROR_COGNITO_MFA';
 
     //cognito.validation.reset_required.invalid_user
 
@@ -87,7 +91,12 @@ class AwsCognitoException extends HttpException
                 break;
 
             case 'UsernameExistsException':
-                $errorCode = self::COGNITO_AUTH_USERNAME_EXITS;
+                $errorCode = self::COGNITO_AUTH_USERNAME_EXISTS;
+                break;
+
+            case 'EnableSoftwareTokenMFAException':
+            case 'SoftwareTokenMFANotFoundException':
+                $errorCode = self::COGNITO_MFA;
                 break;
 
             case 'CodeMismatchException':
@@ -111,6 +120,10 @@ class AwsCognitoException extends HttpException
             case 'InvalidUserPoolConfigurationException':
                 $errorCode = self::COGNITO_AUTH_POOL_CONFIG_INVALID;
                 break;
+
+            case 'InvalidPasswordException':
+                $errorCode = self::COGNITO_INVALID_PASSWORD;
+                break;
             
             case 'ResourceNotFoundException':
             case 'InvalidParameterException':
@@ -121,8 +134,8 @@ class AwsCognitoException extends HttpException
         } //End switch
         
         return [
-                $errorCode,
-                $exception->getStatusCode(),
+                $errorCode ?? self::COGNITO_DEFAULT,
+                $exception->getStatusCode() ?? 400,
                 [],
                 0
             ];

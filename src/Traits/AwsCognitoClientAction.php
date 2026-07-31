@@ -33,12 +33,11 @@ trait AwsCognitoClientAction
 {
     /**
      * Declares an authentication flow and initiates sign-in for a user in the Amazon Cognito user directory
-     *
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html
-     * @param CognitoAuthFlowTypes $authFlow
+     * @param \CognitoAuthFlowTypes $authFlow
      * @param array $payloadData
      * @param string $username
-     * @return AwsResult
+     * @return \AwsResult
      */
     public function initiateAuth(CognitoAuthFlowTypes $authFlow,
         array $payloadData, string $username): AwsResult
@@ -66,11 +65,11 @@ trait AwsCognitoClientAction
 
     /**
      * Get user details.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GetUser.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GetUser.html
      *
      * @param string $accessToken
      *
-     * @return AwsResult
+     * @return \AwsResult
      */
     public function getUser(string $accessToken): AwsResult
     {
@@ -86,14 +85,14 @@ trait AwsCognitoClientAction
 
     /**
      * Responds to an authentication challenge
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html
      *
-     * @param CognitoChallengeTypes $challengeName
+     * @param \CognitoChallengeTypes $challengeName
      * @param string $session
      * @param string $challengeValue
      * @param string $username
      *
-     * @return AwsResult
+     * @return \AwsResult
      */
     public function respondToAuthChallenge(
         CognitoChallengeTypes $challengeName, string $session,
@@ -131,6 +130,43 @@ trait AwsCognitoClientAction
         } //Try-catch ends
 
         return $response;
+    } //Function ends
+
+    /**
+     * Get user pool details.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DescribeUserPool.html
+     *
+     * @return \AwsResult
+     */
+    public function describeUserPool(): AwsResult
+    {
+        try {
+            return $this->client->describeUserPool([
+                'UserPoolId' => $this->poolId
+            ]);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAction:describeUserPool:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
+    } //Function ends
+
+    /**
+     * Get user pool client details.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DescribeUserPoolClient.html
+     *
+     * @return \AwsResult
+     */
+    public function describeUserPoolClient(): AwsResult
+    {
+        try {
+            return $this->client->describeUserPoolClient([
+                'UserPoolId' => $this->poolId,
+                'ClientId' => $this->clientId
+            ]);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAction:describeUserPoolClient:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
     } //Function ends
 
 } //Trait ends

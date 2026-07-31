@@ -119,46 +119,21 @@ class CognitoTokenGuard extends TokenGuard
     {
         $returnValue = null;
         try {
-            //convert to collection
+            // Convert to collection
             $request = collect($request);
 
-            //Build the payload
+            // Build the payload
             $payloadCognito = $this->buildCognitoPayload($request, $paramUsername,
                 $paramPassword, $authFlow);
 
-            //Check if the payload has valid AWS credentials
-            $responseCognito = collect($this->hasValidAWSCredentials($payloadCognito, $authFlow));
-            if ($responseCognito) {
-                if ($this->claim) {
-                    $credentials = collect([
-                        config('cognito.user_subject_uuid') => $this->claim->getSub()
-                    ]);
+            // Check if the payload has valid AWS credentials
+            $responseCognito = $this->hasValidAWSCredentials($payloadCognito, $authFlow);
 
-                    //Check if the user exists
-                    $this->lastAttempted = $user = $this->hasValidLocalCredentials($credentials);
-
-                    //Login the user into the token guard
-                    $returnValue = $this->login($user);
-                } elseif ($this->challengeName) {
-                    //Get the key
-                    $key = $this->challengeData['session_token'];
-
-                    //Save the challenge data
-                    $this->setChallengeData($key);
-
-                    $returnValue = $this->challengeData;
-                } else {
-                    throw new AwsCognitoException();
-                } //End if
-            } else {
-                throw new InvalidUserException();
-            } //End if
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('CognitoTokenGuard:attempt:CognitoIdentityProviderException:'.$e->getAwsErrorCode());
-            throw AwsCognitoException::create($e);
-        } catch (Exception $e) {
-            Log::error('CognitoTokenGuard:attempt:Exception:'. $e->getMessage());
-            throw $e;
+            // Process the AWS Cognito response
+            $returnValue = $this->processAwsResult($responseCognito);
+        } catch (Exception $exception) {
+            Log::error('CognitoTokenGuard:attempt:Exception');
+            throw $exception;
         } //Try-catch ends
 
         return $returnValue;
@@ -284,7 +259,7 @@ class CognitoTokenGuard extends TokenGuard
      * Get the token for the current request.
      * @return string
      */
-    public function getTokenForRequest ()
+    public function getTokenForRequest()
     {
         //Get claim
         $claim = $this->getClaim();
@@ -301,7 +276,7 @@ class CognitoTokenGuard extends TokenGuard
      *
      * @return User
      */
-    public function getUser (string $identifierValue, string $identifierKey='sub')
+    public function getUser(string $identifierValue, string $identifierKey='sub')
     {
         return ($this->provider->getModel())::where(
             config('cognito.user_subject_uuid', $identifierKey), $identifierValue
@@ -322,29 +297,87 @@ class CognitoTokenGuard extends TokenGuard
     {
         $returnValue = null;
         try {
+            // Attempt to authenticate the user using the provided challenge
             $responseCognito = $this->attemptBaseChallenge($challenge);
-            if ($responseCognito) {
-                if ($this->claim) {
-                    $credentials = collect([
-                        config('cognito.user_subject_uuid') => $this->claim->getSub()
-                    ]);
 
-                    //Check if the user exists
-                    $this->lastAttempted = $user = $this->hasValidLocalCredentials($credentials);
-
-                    //Login the user into the token guard
-                    $returnValue = $this->login($user);
-                } elseif ($this->challengeName) {
-                    $returnValue = $this->challengeData;
-                } else {
-                    throw new AwsCognitoException(AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED);
-                } //End if
-            } else {
-                throw new InvalidUserException();
-            } //End if
-        } catch(AwsCognitoException | InvalidUserException | Exception $e) {
+            // Process the AWS Cognito response
+            $returnValue = $this->processAwsResult($responseCognito);
+        } catch(Exception $exception) {
             Log::error('CognitoTokenGuard:attemptChallengeAuth:Exception');
-            throw $e;
+            throw $exception;
+        } //Try-catch ends
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Refresh the token using the provided refresh token and username.
+     * @param  string  $refreshToken
+     * @param  string  $username
+     * @param string|null  $deviceKey
+     * @param array|null  $clientMetadata
+     *
+     * @throws
+     *
+     * @return mixed
+     */
+    public function refreshToken(string $refreshToken, string $username,
+        ?string $deviceKey = null, ?array $clientMetadata = null): mixed
+    {
+        $returnValue = null;
+        try {
+            // Attempt to refresh the token using AWS Cognito
+            $responseCognito = $this->attemptRefreshToken($refreshToken, $username, $deviceKey, $clientMetadata);
+
+            // Process the AWS Cognito response
+            $returnValue = $this->processAwsResult($responseCognito);
+        } catch(Exception $exception) {
+            Log::error('CognitoTokenGuard:refreshToken:Exception');
+            throw $exception;
+        } //Try-catch ends
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Process the AWS Cognito response and return the appropriate result.
+     * @param AwsResult  $awsResult
+     * @param bool  $raiseEvent
+     *
+     * @throws
+     *
+     * @return mixed
+     */
+    private function processAwsResult(AwsResult $awsResult): mixed
+    {
+        // Initialize variables
+        $returnValue = null;
+
+        try {
+            if ($awsResult && $this->claim) {
+                $credentials = collect([
+                    config('cognito.user_subject_uuid') => $this->claim->getSub()
+                ]);
+
+                //Check if the user exists
+                $this->lastAttempted = $user = $this->hasValidLocalCredentials($credentials);
+
+                //Login the user into the token guard
+                $returnValue = $this->login($user);
+            } elseif ($awsResult && $this->challengeName) {
+                //Get the key
+                $key = $this->challengeData['session_token'];
+
+                //Save the challenge data
+                $this->setChallengeData($key);
+
+                $returnValue = $this->challengeData;
+            } else {
+                throw new AwsCognitoException(AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED);
+            } //End if
+        } catch(Exception $exception) {
+            Log::error('CognitoTokenGuard:processAwsResult:Exception');
+            throw $exception;
         } //Try-catch ends
 
         return $returnValue;

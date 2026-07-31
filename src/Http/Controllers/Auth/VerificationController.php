@@ -11,19 +11,12 @@
 
 namespace Ellaisys\Cognito\Http\Controllers\Auth;
 
-use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
 
 use Ellaisys\Cognito\Auth\VerifiesEmails;
-
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-
-use Ellaisys\Cognito\Events\Auth\PreRegistrationEvent;
-use Ellaisys\Cognito\Events\Auth\PostRegistrationEvent;
 
 use Exception;
 
@@ -58,12 +51,10 @@ class VerificationController extends Controller
     {
         $this->middleware('guest');
 
-        //Set flag to indicate action called from controller
+        // Controller action flag
         $this->setIsControllerAction(false);
 
         parent::__construct();
-
-        // $this->middleware('signed')->only('verify');
     } //Function ends
 
 } //Class ends

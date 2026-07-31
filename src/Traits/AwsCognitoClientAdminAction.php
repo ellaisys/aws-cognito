@@ -168,33 +168,6 @@ trait AwsCognitoClientAdminAction
     } //Function ends
 
     /**
-     * Gets configuration information and metadata of the specified user pool.
-     *
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#describeuserpool
-     *
-     * @return mixed
-     */
-    public function describeUserPool(): mixed
-    {
-        try {
-            return $this->client->describeUserPool([
-                'UserPoolId' => $this->poolId
-            ]);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('AwsCognitoClientAdminAction:describeUserPool:CognitoIdentityProviderException');
-            if ($e->getAwsErrorCode() === self::COGNITO_NOT_AUTHORIZED_ERROR) {
-                return true;
-            } //End if
-
-            throw $e;
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientAdminAction:describeUserPool:Exception');
-            throw $e;
-        } //Try-catch ends
-        return true;
-    } //Function ends
-
-    /**
      * Get user details with username
      * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminGetUser.html
      *
@@ -264,31 +237,43 @@ trait AwsCognitoClientAdminAction
     } //Function ends
 
     /**
+     * Deletes a user from a given user pool.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminDeleteUser.html
+     *
      * @param string $username
      *
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#admindeleteuser
+     * @return \Aws\Result
+     * @throws AwsCognitoException
      */
-    public function deleteUser($username)
+    public function deleteUser($username): AwsResult
     {
-        if (config('cognito.delete_user', false)) {
-            $this->client->adminDeleteUser([
-                'UserPoolId' => $this->poolId,
-                'Username' => $username,
-            ]);
-        } //End if
+        try {
+            if (config('cognito.delete_user', false)) {
+                return $this->client->adminDeleteUser([
+                    'UserPoolId' => $this->poolId,
+                    'Username' => $username,
+                ]);
+            } else {
+                throw new AwsCognitoException(AwsCognitoException::COGNITO_CONFIG_INVALID);
+            } //End if
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:deleteUser:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
     } //Function ends
 
     /**
-     * Sets the specified user's password in a user pool as an administrator.
-     *
+     * Sets the specified user's password in a user pool (as an administrator).
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminSetUserPassword.html
      *
      * @param string $username
      * @param string $password
-     * @param bool $permanent
-     * @return bool
+     * @param bool $permanent (default: false) - Indicates whether the password is permanent or temporary.
+     *
+     * @return string
      */
-    public function setUserPassword($username, $password, $permanent = true)
+    public function adminSetUserPassword(string $username, string $password,
+        bool $permanent = false): string
     {
         try {
             $this->client->adminSetUserPassword([
@@ -297,16 +282,17 @@ trait AwsCognitoClientAdminAction
                 'Username' => $username,
                 'UserPoolId' => $this->poolId,
             ]);
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::USER_NOT_FOUND) {
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminSetUserPassword:CognitoIdentityProviderException');
+            if ($exception->getAwsErrorCode() === self::USER_NOT_FOUND) {
                 return Password::INVALID_USER;
             } //End if
 
-            if ($e->getAwsErrorCode() === self::INVALID_PASSWORD) {
-                return Lang::has('passwords.password') ? 'passwords.password' : $e->getAwsErrorMessage();
+            if ($exception->getAwsErrorCode() === self::INVALID_PASSWORD) {
+                return Lang::has('passwords.password') ? 'passwords.password' : $exception->getAwsErrorMessage();
             } //End if
 
-            throw $e;
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return Password::PASSWORD_RESET;
@@ -314,7 +300,7 @@ trait AwsCognitoClientAdminAction
 
     /**
      * Responds to an authentication challenge, as an administrator.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminRespondToAuthChallenge.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminRespondToAuthChallenge.html
      *
      * @param CognitoChallengeTypes $challengeName
      * @param string $session

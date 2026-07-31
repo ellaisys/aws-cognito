@@ -44,7 +44,7 @@ Route::group([], function () {
     //Forgot password
     Route::group(['prefix' => 'password'], function() {
         Route::get('/forgot',  function () { return view('cognito::pages.auth.passwords.email'); })->name('form.password.forgot');
-        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLink'])->name('action.password.forgot');
+        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('action.password.forgot');
         Route::get('/reset',  function () { return view('cognito::pages.auth.passwords.reset'); })->name('form.password.reset');
         Route::post('/reset', [ResetPasswordController::class, 'reset'])->name('action.password.reset');
     });
@@ -55,9 +55,15 @@ Route::group([], function () {
         Route::post('/', [LoginController::class, 'login'])->name('action.login.submit');
         Route::post('/srp', [LoginController::class, 'loginSRP'])->name('action.auth.srp.challenge');
         Route::post('/auth-challenge', [LoginController::class, 'actionChallenge'])->name('action.auth.challenge.submit');
-        Route::any('/{step}', function (string $step) {
+
+        //Route for revalidate token
+        Route::match(['get', 'post'], '/token/revalidate', [RefreshTokenController::class, 'revalidate'])->name('action.session.revalidate');
+
+        Route::match(['get', 'post'], '/{step}', function (string $step) {
             return view('cognito::pages.auth.login', ['step' => $step]);
         })->name('form.login.step');
+
+        //Route for passkey challenge
         Route::post('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge'])->name('action.auth.passkey.challenge');
     });
 
@@ -66,7 +72,7 @@ Route::group([], function () {
         Route::get('/home', function () { return view('cognito::home'); })->name('home');
 
         //Route for refresh session
-        Route::post('/session/refresh', [RefreshTokenController::class, 'revalidate']);
+        Route::post('/session/refresh', [RefreshTokenController::class, 'refresh'])->name('action.session.refresh');
 
         //Route group logout
         Route::group(['prefix' => 'logout', 'controller' => LoginController::class], function() {

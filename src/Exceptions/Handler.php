@@ -20,6 +20,7 @@ use Psr\Log\LogLevel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Lang;
 
 use Ellaisys\Cognito\Services\JsonResponseService;
 use Ellaisys\Cognito\Contracts\ExceptionContract;
@@ -92,18 +93,64 @@ class Handler extends ExceptionHandler
     }
 
     /**
+     * Report or log an exception.
+     *
+     * @param  \Throwable  $e
+     *
+     * @return void
+     *
+     * @throws \Exception
+     */
+    public function report(Throwable $exception): void
+    {
+        $systemErrorCode = null;
+        $systemErrorMsg = null;
+
+        // Handle AWS Cognito exceptions to extract more user-friendly messages
+        $parentError = $exception->getPrevious();
+        if ($parentError instanceof CognitoIdentityProviderException) {
+            $systemErrorCode = $parentError->getAwsErrorCode();
+            $systemErrorMsg = $parentError->getAwsErrorMessage();
+        }
+
+        // Prepare error data for logging
+        $errorData = [
+            'message'        => $exception->getMessage(),
+            'system_code'    => $systemErrorCode,
+            'system_message' => $systemErrorMsg,
+            'execution_time' => number_format(microtime(true) - LARAVEL_START, 4),
+            'ip'             => request()->ip(),
+        ];
+
+        //Add system messages when in debug mode
+        if (config('app.debug')) {
+            $errorData['debug'] = array_merge($errorData['debug'] ?? [], [
+                'exception' => get_class($exception),
+                'trace' => collect($exception->getTrace())->take(3),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'method'    => request()->method(),
+                'input'     => request()->except([
+                    'password',
+                    'password_confirmation',
+                    'current_password',
+                ]),
+            ]);
+        } //End if
+
+        // Log the error with detailed information
+        Log::error($exception->getMessage(), $errorData);
+
+        parent::report($exception);
+    } //Function ends
+
+    /**
      * Register the exception handling callbacks for the application.
      *
      * @return void
      */
     public function register()
     {
-        // Generic exception report
-        $this->reportable(function (Throwable $e) {
-            // You can log to an external service (Sentry, Bugsnag, etc.)
-            Log::error($e->getMessage());
-        });
-
         // Handle API exceptions gracefully
         $this->renderable(function (Throwable $e, $request) {
             return $this->handleException($e, $request);
@@ -175,42 +222,30 @@ class Handler extends ExceptionHandler
      *
      * @return array
      */
-    protected function handleAwsCognitoException(Exception $e): array
+    protected function handleAwsCognitoException(Exception $exception): array
     {
+        // Default value of Status code and error message
         $statusCode = Response::HTTP_BAD_REQUEST; //400
-        switch ($e->getMessage()) {
+        $errorKey = $exception->getMessage();
+
+        // Get the error message from the language file if available
+        $messageKey = 'cognito::messages.error.';
+        $messageKey .= $errorKey ?? AwsCognitoException::COGNITO_DEFAULT;
+        $errorMessage = ($messageKey && Lang::has($messageKey)) ? trans($messageKey) : null;
+
+        switch ($exception->getMessage()) {
+            case AwsCognitoException::COGNITO_WEB_AUTH_INVALID:
             case AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED:
                 $statusCode = Response::HTTP_UNAUTHORIZED; //401
-                $errorMessage = 'User authentication error';
-                $errorKey = AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED;
-                break;
-
-            case AwsCognitoException::COGNITO_AUTH_USER_RESET_PASS:
-                $errorMessage = 'User password reset error';
-                $errorKey = AwsCognitoException::COGNITO_AUTH_USER_RESET_PASS;
-                break;
-
-            case AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS:
-                $errorMessage = 'User already exists';
-                $errorKey = AwsCognitoException::COGNITO_AUTH_USERNAME_EXITS;
-                break;
-
-            case AwsCognitoException::COGNITO_AUTH_CODE_INVALID:
-                $errorMessage = 'Invalid confirmation code';
-                $errorKey = AwsCognitoException::COGNITO_AUTH_CODE_INVALID;
-                break;
-
-            case AwsCognitoException::COGNITO_AUTH_POOL_CONFIG_INVALID:
-                $errorMessage = 'Cognito pool configuration error';
-                $errorKey = AwsCognitoException::COGNITO_AUTH_POOL_CONFIG_INVALID;
                 break;
 
             default:
-                $statusCode = $e->getCode();
-                $errorMessage = $e->getMessage();
-                $errorKey = 'ERROR_COGNITO_DEFAULT';
+                $errorKey = $errorMessage ? $errorKey : AwsCognitoException::COGNITO_DEFAULT;
                 break;
         } //End Switch
+
+        // Ensure that the error message is not empty
+        $errorMessage = $errorMessage ?? $exception->getMessage();
 
         return [$statusCode, $errorMessage, $errorKey];
     } //Function ends
@@ -292,10 +327,10 @@ class Handler extends ExceptionHandler
         string $errorKey = null,
         bool $isRedirectToLogin = false): mixed
     {
-        $systemErrorMsg = (!$isRedirectToLogin)?$e->getMessage():$message;
-        $parentError = $e->getPrevious();
+        $systemErrorMsg = null;
 
         // Handle AWS Cognito exceptions to extract more user-friendly messages
+        $parentError = $e->getPrevious();
         if ($parentError instanceof CognitoIdentityProviderException) {
             $systemErrorMsg = $parentError->getAwsErrorMessage();
         }
@@ -306,10 +341,16 @@ class Handler extends ExceptionHandler
         if ($isRedirectToLogin) {
             return redirect()
                 ->route(config('cognito.routes.web.login_page', 'cognito.form.login'))
+                ->withInput($request->except(['_token', 'password', 'password_confirmation', 'code', 'token', 'pass_code']))
+                ->with('status', 'error')
+                ->with('message', $message)
                 ->withErrors($errors);
         } else {
-            return redirect()->back()
-                ->withInput($request->input())
+            return redirect()
+                ->back()
+                ->withInput($request->except(['_token', 'password', 'password_confirmation', 'code', 'token', 'pass_code']))
+                ->with('status', 'error')
+                ->with('message', $message)
                 ->withErrors($errors);
         }
     } //Function ends

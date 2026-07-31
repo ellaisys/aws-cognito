@@ -12,7 +12,6 @@
 
                     @php
                         $step = request()->route('step');
-                        $step = (bool) config('cognito.allow_passkeys', false) ? $step : 'password';
                     @endphp
 
                     @switch($step)

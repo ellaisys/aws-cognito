@@ -29,6 +29,8 @@ use Ellaisys\Cognito\Views\Components\Challenge;
 use Ellaisys\Cognito\Views\Components\DeviceAuth;
 use Ellaisys\Cognito\Views\Components\PasskeyWebAuthn;
 
+use Ellaisys\Cognito\Console\PoolCommand;
+
 use Ellaisys\Cognito\Providers\StorageProvider;
 
 use Illuminate\Support\Arr;
@@ -101,6 +103,9 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
         //Set Blade Components
         $this->registerBladeComponents();
+
+        //Register Providers
+        $this->registerProviders();
 
         //Route::mixin();
     } //Function ends
@@ -417,5 +422,15 @@ class AwsCognitoServiceProvider extends ServiceProvider
         $this->app->alias('ellaisys.aws.cognito.exception', AwsCognitoExceptionHandler::class);
 
     } //Function ends
-    
+
+    /**
+     * Register providers.
+     *
+     * @return void
+     */
+    protected function registerProviders(): void
+    {
+        $this->app->register(ConsoleServiceProvider::class);
+    } //Function ends
+
 } //Class ends

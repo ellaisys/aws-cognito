@@ -1,22 +1,100 @@
-# **SRP (Secure Remote Password) Authentication**
+# SRP (Secure Remote Password) Authentication
 
-## **Overview**
+> [!IMPORTANT]
+> We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to implement SRP Authentication functionality within your application.
 
-SRP is a secure authentication protocol that allows users to authenticate without transmitting their password over the network. Instead, the authentication process uses cryptographic operations based on the user's password. This is a **Zero-Knowledge Authentication** method. This document explains how you can use this in the context of AWS Cognito and Laravel package.
 
-## **Configuration**
+## Contents
+- [Introduction](#introduction)
+- [Configurations](#configurations)
+- [Features](#features)
+- Quick Start
+    - [Blade Component](#blade-component-web-app)
+- Advanced Topics
+    - [API Documentation](#api-documentation)
+    - [API Routes](#api-routes)
+- [References](#references)
+- [Key Points](#key-points)
+
+
+## Introduction
+
+SRP is a Secure Remote Password protocol that allows users to authenticate without transmitting their password over the network. Instead, the authentication process uses cryptographic operations using an augmented password-authenticated key exchange (PAKE) protocol.
+
+This is a **Zero-Knowledge Password Proof (ZKPP)** method. This document explains how you can use this in the context of AWS Cognito and Laravel package.
+
+
+## Configurations
+- [AWS Configurations](#aws-configurations)
+- [Laravel Configurations](#laravel-configurations)
+
+
+### *AWS Configurations*
 
 Ensure your AWS Cognito User Pool is configured to allow `USER_SRP_AUTH` as an authentication flow. For that go to your User Pool in AWS Console, navigate to "App clients", select your app client, and check the option for "SRP (Secure Remote Password) authentication flow **ALLOW_USER_SRP_AUTH**" as shown below:
 <img src="../assets/images/aws_cognito_srp_flow.png" width="100%" alt="cognito app client settings"/>
 
+### *Laravel Configurations*
 
-## **SRP Authentication Flow**
+
+## Blade Component (web app)
+
+The package provides a blade component for `SRP authentication`. The SRP authentication component is integrated into the `challenge component`.
+
+
+### *SRP Authentication Functionality*
+
+For SRP based authentication, use the `challenge` component in your challenge page to handle the authentication flow. The component will handle the generation of the necessary values and will send them back to the server in response to the challenge.
+
+```html
+    <form id="auth-challenge-form" method="POST" ...>
+        ...
+        <!-- pass the form name provided as a parameter to the component -->
+        <x-cognito::challenge
+            :challenge-form-name="'auth-challenge-form'" />
+        ...
+        ...
+        @php
+            $data = (session('data')) ?? null;
+            $challengeNameValue = 'NONE';
+
+            if ($data && isset($data['status']) && $data['status'] == 'challenge') {
+                $challengeNameValue = isset($data['challenge_name']) ?
+                    strtoupper($data['challenge_name']) :
+                    $challengeNameValue;
+            } //End if
+        @endphp
+        ...
+        ...
+        <div> <!-- Shows the passcode input field for the Password/OTP/TOTP based challenges only  -->
+            @stack('cognito-challenge-passcode')
+        </div>
+        ...
+        ...
+        <!-- Button with data-action and data-role attribute -->
+        <button type="submit"
+            data-action="challenge-submit" data-role="{{ $challengeNameValue }}">
+            Submit</button>
+        ...
+    </form>
+
+    @stack('cognito-challenge-scripts')
+    ...
+```
+
+Using this component will simplify the implementation of the SRP authentication functionality in your application.
+
+The data is **secure** on the client side, as per the cyber security standards, and the necessary scripts and methods are provided in the component to implement the SRP feature in your application.
+
+## API Documentation
+
+This Laravel Package provides the necessary methods to implement SRP authentication functionality provided by AWS Cognito. The available challenges are dynamically provided from the trait making the user experience aligned to the AWS SDK.
 
 For this package, a new service is provided **Ellaisys\Cognito\Services\AwsCognitoSrpService** which implements the SRP authentication flow. The flow consists of the following methods:
 1. *generateEphemeral* - Generates the SRP_A value on the client side, along with the private ephemeral value 'a'.
 2. *processChallenge* - Builds the response to the PASSWORD_VERIFIER challenge using the SRP_B, salt, and secret block received from the server.
 
-### **Step 1: SRP_A Generation**
+#### <u>***Step 1***</u>: SRP_A Generation
 
 The package expects the client (browser/mobile app) to compute the SRP_A value before sending it to the server. This is a critical part of the SRP protocol, as it ensures that the actual password is never transmitted. However, for ease you can have the package compute SRP_A on the server side as well, but this is not recommended for security reasons.
 **IMPORTANT: SRP_A is calculated BEFORE receiving the salt from the server.**
@@ -31,19 +109,21 @@ Where:
 - **N** = Large prime modulus (provided by AWS Cognito)
 - **mod** = Modulo operation
 
-### **Step 2: Initiate Authentication**
+#### <u>***Step 2***</u>: Initiate Authentication
 
 The client sends the following to the server:
 
-```
+```sh
+
 POST /login/srp
 Content-Type: application/json
-
+Accept: application/json
 {
-  "username": "user@example.com",
-  "srp_a": "<optional_computed_SRP_A_value>",
-  "session_token": "<optional_computed_random_number>"
+    "username": "user@example.com",
+    "srp_a": "<optional_computed_SRP_A_value>",
+    "session_token": "<optional_computed_random_number>"
 }
+
 ```
 
 The `srp_a` field here contains the **pre-computed SRP_A value** (not the actual user password). if you choose not to compute SRP_A on the client side, you can omit this field and the package will compute it for you on the server side. 
@@ -61,7 +141,7 @@ Example:
 6. The client uses the session token to retrieve the private ephemeral value `a` from memory and processes the server's challenge response to compute the password proof, which is then sent back to the server for verification.
 7. The client also sends the private ephemeral value `a` back to the now as a session value in the next step when responding to the server's challenge, so that the server can use it to verify the password proof and authenticate the user.
 
-### **Step 3: Server-Side Processing**
+#### <u>***Step 3***</u>: Server-Side Processing
 
 The server receives the request and calls AWS Cognito's endpoint. AWS Cognito processes the SRP_A value and responds with a challenge that includes the following parameters:
 
@@ -73,7 +153,7 @@ AWS Cognito responds with:
 - **Session**: Session token for the ongoing authentication process
 - **ChallengeName**: Typically "PASSWORD_VERIFIER" indicating the next step in the authentication process
 
-### **Step 4: Password Proof Calculation**
+#### <u>***Step 4***</u>: Password Proof Calculation
 
 Generate the password hash (with SHA256 encryption) using the pool name (without region), username and the user's password. You can use the following formula to calculate the password proof:
 
@@ -84,41 +164,57 @@ Generate the password hash (with SHA256 encryption) using the pool name (without
 
     // Hash with SHA256 and set the hashed value in the challenge value input
     let passKeyHash = await hashEncrypt(passKey, 'SHA-256');
+    
 ```
 
 Send that value back to the server in response to the challenge with **PASSKEY_HASH** as the key.
 
-### **Step 5: Respond to the Auth Challenge**
+#### <u>***Step 5***</u>: Respond to the Auth Challenge
 
 The client sends the following to the server:
 
-```
+```sh
+
 POST /login/auth-challenge
 Content-Type: application/json
-
+Accept: application/json
 {
-  "challenge_name": "PASSWORD_VERIFIER",
-  "session": "<session_token_as_private_ephemeral_value_a>",
-  "username": "<username_for_srp>",
-  "challenge_value": "<computed_challenge_value>"
+    "challenge_name": "PASSWORD_VERIFIER",
+    "session": "<session_token_as_private_ephemeral_value_a>",
+    "username": "<username_for_srp>",
+    "challenge_value": "<computed_challenge_value>"
 }
+
 ```
 
 The `challenge_value` field contains the stringified JSON object with the following structure. Do not change the keys or the case as they are expected by the server for calculating the **PASSWORD_CLAIM_SIGNATURE** and authenticating the user:
 
-```
+```json
+
 {
-  "SALT": "<salt_from_step-2>",
-  "SECRET_BLOCK": "<secret_block_from_step-2>",
-  "SRP_B": "<SRP_B_from_step-2>",
-  "USER_ID_FOR_SRP": "<username_for_srp_from_step-2>",
-  "PASSKEY_HASH": "<computed_password_proof_hash>"
+    "SALT": "<salt_from_step-2>",
+    "SECRET_BLOCK": "<secret_block_from_step-2>",
+    "SRP_B": "<SRP_B_from_step-2>",
+    "USER_ID_FOR_SRP": "<username_for_srp_from_step-2>",
+    "PASSKEY_HASH": "<computed_password_proof_hash>"
 }
+
 ```
 
 The server side, the package will process this challenge response and call AWS Cognito's endpoint to verify the password proof. If the proof is correct, AWS Cognito will authenticate the user and return an authentication token.
 
-## **Key Points:**
+
+## References
+
+- [AWS Cognito Authentication Flow Documentation](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html)
+- [SRP Protocol Specification (RFC 2945)](https://tools.ietf.org/html/rfc2945)
+- [SRP Protocol Version 6 (RFC 5054)](https://tools.ietf.org/html/rfc5054)
+- [Amazon Cognito Identity JS GitHub](https://github.com/aws-amplify/amplify-js/tree/main/packages/amazon-cognito-identity-js)
+- [Secure Remote Password Protocol - Wikipedia](https://en.wikipedia.org/wiki/Secure_Remote_Password_protocol)
+- [Zero-Knowledge Password Proofs (ZKPP)](https://en.wikipedia.org/wiki/Zero-knowledge_proof)
+
+
+## Key Points:
 - **Phase 1 (calculateSrpA)**: Uses only `N` and `g`. Generates a random `a`. NO password, username, or salt needed.
 - **Phase 2 (calculatePasswordProof)**: Uses `salt`, `password`, and `username` received from server
 - **a** must be generated using cryptographically secure random number generator
@@ -126,9 +222,9 @@ The server side, the package will process this challenge response and call AWS C
 - The values must be converted to appropriate formats (hex, base64) for transmission
 - SRP_A is typically a very large number (1024-bit to 2048-bit range)
 
-## **Understanding SRP Parameters: N and g**
+### *Understanding SRP Parameters: N and g*
 
-### **What is N (Modulus)?**
+### *What is N (Modulus)?*
 
 **N** is a very large **prime number** used in the SRP protocol:
 - **Bit Size**: Typically 1024-bit or 2048-bit (AWS Cognito uses 1024-bit)
@@ -141,7 +237,7 @@ Example (simplified):
 N = 2^1024 - 2^960 - 1 + 2^64 * floor(2^894 * pi + 129093)
 ```
 
-### **What is g (Generator)?**
+### *What is g (Generator)?*
 
 **g** is a small **generator** (primitive root) of the multiplicative group modulo N:
 - **Typical Value**: Usually **2** or **5**
@@ -154,11 +250,11 @@ Example:
 g = 2
 ```
 
-### **How to Obtain N and g**
+### *How to Obtain N and g*
 
 In AWS Cognito SRP authentication, **N and g are provided by the Cognito server** automatically. However, you don't need to **manually fetch or calculate N and g** - the library handles this automatically!
 
-### **SRP Group Standards**
+### *SRP Group Standards*
 
 **RFC 2409 - SRP Group 1 (1024-bit):**
 ```
@@ -174,7 +270,8 @@ g = 2
 
 AWS Cognito typically uses **RFC 2409 (1024-bit) with g=2**.
 
-### **Parameter Summary Table**
+
+### *Parameter Summary Table*
 
 | Parameter | What It Is | Where It Comes From | Typical Size | Used In |
 |-----------|-----------|-------------------|--------------|---------|
@@ -183,18 +280,10 @@ AWS Cognito typically uses **RFC 2409 (1024-bit) with g=2**.
 | **a** | Secret random integer | Generated by client | 128-256 bits | SRP_A calculation |
 | **SRP_A** | g^a mod N | Calculated by client | Same as N (1024 or 2048 bits) | Sent to server |
 
-### **Why These Parameters Matter**
+
+### *Why These Parameters Matter*
 
 1. **Security**: Larger N (2048-bit) provides better security than smaller N (1024-bit)
 2. **Authentication**: Different N and g values define different SRP groups; both parties must use the same group
 3. **Performance**: Larger N means longer calculation time for modular exponentiation
 4. **Standardization**: RFC standards ensure interoperability between different implementations
-
-
-## **References**
-
-- [AWS Cognito Authentication Flow Documentation](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html)
-- [SRP Protocol Specification (RFC 2945)](https://tools.ietf.org/html/rfc2945)
-- [SRP Protocol Version 6 (RFC 5054)](https://tools.ietf.org/html/rfc5054)
-- [Amazon Cognito Identity JS GitHub](https://github.com/aws-amplify/amplify-js/tree/main/packages/amazon-cognito-identity-js)
-

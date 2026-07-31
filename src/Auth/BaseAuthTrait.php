@@ -12,6 +12,9 @@
 namespace Ellaisys\Cognito\Auth;
 
 use Auth;
+
+use Aws\Result as AwsResult;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
@@ -23,6 +26,7 @@ use Ellaisys\Cognito\AwsCognitoClient;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
+use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -98,7 +102,7 @@ trait BaseAuthTrait
     /**
      * Method to check if the response is to be in json format
      *
-     * @param Request $request
+     * @param \Request $request
      *
      * @return bool
      */
@@ -157,7 +161,9 @@ trait BaseAuthTrait
     /**
      * The method to get the guard to be used for authentication based on the request type
      *
-     * @return bool
+     * @param \Request $request
+     *
+     * @return string
      */
     protected function getGuard(Request $request): string
     {
@@ -173,10 +179,10 @@ trait BaseAuthTrait
     /**
      * Method to get the authenticated user based on the request type
      *
-     * @param Request $request
+     * @param \Request $request
      *
      * @return mixed
-     * @throws InvalidUserException
+     * @throws \InvalidUserException
      */
     protected function getAuthenticatedUser(Request $request)
     {
@@ -207,10 +213,10 @@ trait BaseAuthTrait
     /**
      * Method to get the access token of the authenticated user based on the request type
      *
-     * @param Request $request
+     * @param \Request $request
      *
      * @return string
-     * @throws HttpException
+     * @throws \HttpException
      */
     protected function getAccessToken(Request $request): string
     {
@@ -225,17 +231,43 @@ trait BaseAuthTrait
         } catch (Exception $e) {
             Log::error('BaseAuthTrait:getAccessToken:Exception');
             throw $e;
-        }
+        } //Try-catch ends
+    } //Function ends
+
+    /**
+     * Method to get the claim of the authenticated user based on the request type
+     *
+     * @param \Request $request
+     *
+     * @return array
+     * @throws \HttpException
+     */
+    protected function getClaim(Request $request): array
+    {
+        try {
+            // Determine the guard based on the request type
+            $guard = $this->getGuard($request);
+
+            // Get the claim for the authenticated user
+            $claim = Auth::guard($guard)->getClaim();
+            if (empty($claim)) { throw new HttpException(400, 'EXCEPTION_INVALID_CLAIM'); }
+            return $claim;
+        } catch (Exception $e) {
+            Log::error('BaseAuthTrait:getClaim:Exception');
+            throw $e;
+        } //Try-catch ends
     } //Function ends
 
     /**
      * Get the data from the query parameter based on the parameter name and encryption type
      *
-     * @param  Request $request
-     * @param  string $paramName (optional)
-     * @param  EncryptionTypes $encryptionType (optional)
-     * @param  bool $filterEmail (optional)
-     * @return mixed
+     * @param \Request $request
+     * @param string $paramName (optional)
+     * @param \EncryptionTypes $encryptionType (optional)
+     * @param bool $filterEmail (optional)
+     *
+     * @return string|null
+     * @throws \Exception
      */
     protected function getDataFromQueryParam(Request $request,
         string $paramName='email',
@@ -285,11 +317,13 @@ trait BaseAuthTrait
         } catch (Exception $e) {
             Log::error('BaseAuthTrait:getDataFromQueryParam:Exception');
             return null;
-        }
+        } //Try-catch ends
     } //Function ends
 
     /**
      * Generate password based on configuration and Laravel version.
+     *
+     * @param int $length (optional) The length of the generated password. Default is 12.
      *
      * @return string
      */
@@ -299,6 +333,62 @@ trait BaseAuthTrait
             return Str::random($length-3) . '1A!';
         }
         return Str::password($length);
+    } //Function ends
+
+    /**
+     * Get the authenticated user from AWS Cognito based on the access token
+     *
+     * @param \Request $request
+     *
+     * @return \AwsResult
+     * @throws \InvalidUserException
+     */
+    protected function getCognitoUser(Request $request): AwsResult
+    {
+        try {
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            // Get Access Token for the authenticated user
+            $accessToken = $this->getAccessToken($request);
+
+            // Get the user details from AWS Cognito using the access token
+            $response = $client->getUser($accessToken);
+            if (empty($response)) {
+                throw new InvalidUserException('No authenticated user found.');
+            }
+            return $response;
+        } catch (Exception $e) {
+            Log::error('BaseAuthTrait:getCognitoUser:Exception');
+            throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+    /**
+     * Get the authenticated user from AWS Cognito by the username (admin action)
+     *
+     * @param \Request $request
+     * @param string $username
+     *
+     * @return \AwsResult
+     * @throws \InvalidUserException
+     */
+    protected function getCognitoUserByAdmin(Request $request, string $username='username'): AwsResult
+    {
+        try {
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            // Get the user details from AWS Cognito using the access token
+            $response = $client->adminGetUser($request[$username]);
+            if (empty($response)) {
+                throw new InvalidUserException('No authenticated user found.');
+            }
+            return $response;
+        } catch (Exception $e) {
+            Log::error('BaseAuthTrait:getCognitoUserByAdmin:Exception');
+            throw $e;
+        } //Try-catch ends
     } //Function ends
 
 } //End trait

@@ -41,11 +41,12 @@
 
 @push('cognito-challenge-passcode')
     @if (in_array($challengeNameValue, [
-        'SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'SMS_OTP',
-        'EMAIL_OTP', 'PASSWORD_VERIFIER', 'PASSWORD']))
+        'SELECT_MFA_TYPE', 'SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'EMAIL_MFA',
+        'SMS_OTP', 'EMAIL_OTP', 'PASSWORD_VERIFIER', 'PASSWORD', 'NEW_PASSWORD_REQUIRED']))
 
         <x-cognito::challenge.password
             :challengeNameValue="$challengeNameValue"
+            :challengeParamsValue="$challengeParamsValue"
             :challengeValuePlaceholder="$challengeValuePlaceholder" />
 
     @endif
@@ -77,8 +78,8 @@
                     button.disabled = true;
                     button.style.display = 'none';
                 }
-            else if (['PASSWORD_SRP', 'PASSWORD',
-                'SOFTWARE_TOKEN_MFA', 'SMS_MFA',
+            else if (['PASSWORD_SRP', 'PASSWORD', 'NEW_PASSWORD_REQUIRED',
+                'SELECT_MFA_TYPE', 'SOFTWARE_TOKEN_MFA', 'SMS_MFA', 'EMAIL_MFA',
                 'SMS_OTP', 'EMAIL_OTP'].includes(btnRole)) {
                     button.addEventListener('click', function(event) {
                         // Set passcode value to challenge_value input before form submission
@@ -136,7 +137,7 @@
                 // Process the challenge based on the challenge name
                 await processChallenge();
 
-                if ((!frmChallenge.checkValidity()) || (!this.challengeCheckValidity())) {
+                if ((!frmChallenge.checkValidity()) || (!challengeCheckValidity())) {
                     // Show validation errors if the form is not valid
                     frmChallenge.reportValidity();
                     this.alert("An error occurred while processing the challenge. Please try again.", "error");
@@ -194,6 +195,12 @@
             } // End try-catch
         } // Function ends
 
+        /**
+         * Function to check the validity of required challenge data fields.
+         * It iterates through all elements with the data-role "challenge-data"
+         * and checks if they are filled. If any required field is empty,
+         * it sets a custom validity message and prevents form submission.
+         */
         function challengeCheckValidity() {
             const elemsRequired = document.querySelectorAll('[data-role="challenge-data"][required]');
             let isValid = true;
@@ -206,6 +213,7 @@
                     isValid = isValid && true;
                 }
             }
+            return isValid;
         } // Function ends
 
         /**

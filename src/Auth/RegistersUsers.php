@@ -55,8 +55,7 @@ trait RegistersUsers
      *
      * @var string
      */
-    private string $statusMsg = 'Registration successful. Please verify your email to continue.';
-    private string $messageKey = 'messages.auth.registration_success';
+    private string $messageKey = 'cognito::messages.auth.registration_success';
 
     /**
      * Handle a registration invite for the application.
@@ -68,12 +67,10 @@ trait RegistersUsers
     {
         $this->registrationType = 'invite';
         $this->redirectTo = config('cognito.routes.web.home_page');
-
-        $this->statusMsg = 'User invited successfully. An invitation email has been sent to the user.';
-        $this->messageKey = 'messages.auth.invitation_success';
+        $this->messageKey = 'cognito::messages.auth.invitation_success';
 
         return $this->register(
-            $request, $clientMetadata, true
+            $request, $clientMetadata
         );
 
     } //Function ends
@@ -84,8 +81,7 @@ trait RegistersUsers
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function register(Request $request, ?array $clientMetadata = null,
-        bool $usePassedRegistrationType = false)
+    public function register(Request $request, ?array $clientMetadata = null): mixed
     {
         try {
             // Initialize variables
@@ -93,13 +89,12 @@ trait RegistersUsers
             $cognitoRegistered=false;
             $user = null;
 
-            //Set the registration type
-            if (!$usePassedRegistrationType) {
-                $this->registrationType = config('cognito.registration_type', 'register');
-            } //End if
-
             //Redirect to verification page if registration type is register
             if ($this->registrationType=='register') {
+                if (!config('cognito.registration_enabled', true)) {
+                    throw new HttpException(400, 'Registration is disabled.');
+                } //End if
+
                 $this->redirectTo = config('cognito.routes.web.register_verify_page');
             } //End if
 
@@ -147,7 +142,8 @@ trait RegistersUsers
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
-                    ->with('status', $this->statusMsg)
+                    ->withInput($request->except('password', 'password_confirmation'))
+                    ->with('status', 'success')
                     ->with('message', trans($this->messageKey));
             } //End if
 
@@ -410,11 +406,13 @@ trait RegistersUsers
 
             //Check the new user password config
             if (config('cognito.force_new_user_password', true)) {
-                $rules = array_merge($rules, [ $this->paramPassword => 'required|confirmed|regex:'.$this->passwordPolicy['regex']]);
+                $rules = array_merge($rules, [ $this->paramPassword => [
+                    'required', 'confirmed', 'regex:'.$this->passwordPolicy['regex']]]);
             } //End if
 
             //Check the MFA setup config
-            if (config('cognito.mfa_setup')=="MFA_ENABLED" && empty($userFields['phone_number'])) {
+            $listMfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
+            if ((config('cognito.mfa_setup')!="OFF") && (in_array('SMS_MFA', $listMfaTypes)) && empty($userFields['phone_number'])) {
                 throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING');
             } //End if
 

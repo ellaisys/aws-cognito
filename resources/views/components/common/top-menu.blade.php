@@ -12,7 +12,7 @@
             </li>
         @endif
 
-        @if (Route::has('cognito.form.register'))
+        @if (Route::has('cognito.form.register') && config('cognito.registration_enabled', true))
             <li class="nav-item">
                 @if(Route::is('cognito.form.register'))
                     <button class="nav-link active disabled" aria-disabled="true">{{ __('Register') }}</button>

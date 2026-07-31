@@ -46,9 +46,12 @@ Route::group([
         Route::post('/passkey/challenge', [WebAuthPasskeyController::class, 'challenge']);
     });
 
+    //Route for revalidate token
+    Route::post('/token/revalidate', [RefreshTokenController::class, 'revalidate']);
+
     //Forgot password routes
     Route::group(['prefix' => 'password'], function() {
-        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLink']);
+        Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail']);
         Route::post('/reset', [ResetPasswordController::class, 'reset']);
     });
 
@@ -96,7 +99,7 @@ Route::group([
         });
 
         //Route for refresh token
-        Route::post('/token/refresh', [RefreshTokenController::class, 'revalidate']);
+        Route::post('/token/refresh', [RefreshTokenController::class, 'refresh']);
 
         //Route for device operations
         Route::group(['prefix' => 'device', 'controller' => DeviceController::class], function() {

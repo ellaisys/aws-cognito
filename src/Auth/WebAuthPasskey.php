@@ -29,6 +29,16 @@ use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
+/**
+ * Trait WebAuthPasskey
+ *
+ * @package Ellaisys\Cognito\Auth
+ *
+ * @method mixed start(Request $request)
+ * @method mixed complete(Request $request)
+ * @method mixed challenge(Request $request, ?string $challengeName = null, ?string $paramUsername='username', ?string $paramPassword='')
+ * @method mixed delete(Request $request)
+ */
 trait WebAuthPasskey
 {
     use BaseAuthTrait;
@@ -38,9 +48,10 @@ trait WebAuthPasskey
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return mixed
+     * @throws \Exception
      */
-    public function start(Request $request)
+    public function start(Request $request): mixed
     {
         try {
             // Initialize variables
@@ -78,9 +89,10 @@ trait WebAuthPasskey
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return mixed
+     * @throws \Exception
      */
-    public function complete(Request $request)
+    public function complete(Request $request): mixed
     {
         try {
             // Initialize variables
@@ -142,12 +154,12 @@ trait WebAuthPasskey
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return mixed
      */
     public function challenge(Request $request,
         ?string $challengeName = null,
         ?string $paramUsername='username',
-        ?string $paramPassword='')
+        ?string $paramPassword=''): mixed
     {
         try {
             // Initialize variables
@@ -205,13 +217,12 @@ trait WebAuthPasskey
 
     /**
      * Action to delete a registered passkey authenticator for the currently signed-in user.
-     * TO BE TESTED
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return mixed
      */
-    public function delete(Request $request)
+    public function delete(Request $request): mixed
     {
         try {
             // Initialize variables
