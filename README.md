@@ -25,6 +25,7 @@
     + [Demo Application & Code](#demo-application--code)
     + [Compatibility](#compatibility)
 - [Features](#features)
+- [Architecture and Design](#architecture-and-design)
 - [Installation](#installation)
 - [Quick Start & Configurations](./docs/README_CONFIG.md#contents)
 - [References](#references)
@@ -112,6 +113,13 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 
 - Laravel
     - [Preconfigured Routes and Controllers](./docs/README_ROUTES.md) ***Updated***
+
+
+## Architecture and Design
+
+The following diagram illustrates the high level architecture and design of this package, highlighting its integration with Laravel's authentication system and AWS Cognito services.
+
+![Laravel Authentication using AWS Cognito - Architecture and Design](./assets/images/aws_cognito_package_architecture.png)
 
 
 ## Installation

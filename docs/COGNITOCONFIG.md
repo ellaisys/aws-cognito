@@ -12,15 +12,31 @@ This document provides guidance on configuring AWS services, specifically AWS Co
 - [References](#references)
 
 
-## AWS IAM configuration
+## AWS IAM Configuration
 
-You will need a new `IAM Role` with the following Access Rights:
+Before using this package, you must create an **AWS IAM user** and **IAM role** with permissions to manage and interact with Amazon Cognito resources.
 
-- AmazonCognitoDeveloperAuthenticatedIdentities
-- AmazonCognitoPowerUser
-- AmazonESCognitoAccess
+The IAM identity must have the following AWS managed policies attached:
 
-From this IAM User you must use the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in the laravel environment file.
+* `AmazonCognitoDeveloperAuthenticatedIdentities`
+* `AmazonCognitoPowerUser`
+* `AmazonESCognitoAccess`
+
+> **Note**
+> Follow the principle of least privilege whenever possible. In production environments, consider creating a custom IAM policy that grants only the permissions required by your application instead of using broad managed policies.
+
+Once the IAM user has been created, generate an **Access Key** for programmatic access. Add the generated credentials to your Laravel application's `.env` file:
+
+```env
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+```
+
+These credentials are used by the AWS SDK to authenticate requests made by the package to your Amazon Cognito resources.
+
+Refer the below image for the IAM user creation, role assignment process and creating the access key for programmatic access. Make sure to download the access key file and store it securely, as it will not be retrievable again from the AWS console.
+
+![AWS IAM User Creation](../assets/images/aws_iam_flow1.png)
 
 
 ## AWS Cognito configuration
