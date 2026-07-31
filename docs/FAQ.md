@@ -3,6 +3,7 @@
 > [!NOTE]
 > Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
 
+
 ## Does this package support the Cognito Hosted UI?
 
 Yes.
