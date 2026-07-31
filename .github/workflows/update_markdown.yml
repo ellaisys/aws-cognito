@@ -1,16 +1,15 @@
-name: Update Markdown Last Updated
+name: Update Documentation Metadata
 
 on:
   push:
     branches:
-      - '**'
+      - main # Change if your default branch is different
 
 permissions:
   contents: write
 
 jobs:
-  update-markdown:
-    # Prevent the workflow from running on its own commit
+  update-docs:
     if: github.actor != 'github-actions[bot]'
 
     runs-on: ubuntu-latest
@@ -25,18 +24,18 @@ jobs:
         id: changed
         shell: bash
         run: |
-          FILES=$(git diff --name-only \
+          files=$(git diff --name-only \
             "${{ github.event.before }}" \
             "${{ github.sha }}" \
             -- '*.md')
 
           {
             echo 'files<<EOF'
-            echo "$FILES"
+            echo "$files"
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
-      - name: Update Last Updated
+      - name: Update metadata
         if: steps.changed.outputs.files != ''
         shell: bash
         run: |
@@ -45,11 +44,11 @@ jobs:
           while IFS= read -r file; do
             [ -z "$file" ] && continue
 
-            if grep -q "^> Last Updated:" "$file"; then
+            if grep -q '<!-- AUTO:last_updated -->' "$file"; then
               echo "Updating $file"
 
-              sed -E -i \
-                "s|^> Last Updated: .*|> Last Updated: ${DATE}|" \
+              perl -0777 -i -pe \
+                "s|<!-- AUTO:last_updated -->.*?<!-- /AUTO:last_updated -->|<!-- AUTO:last_updated -->${DATE}<!-- /AUTO:last_updated -->|gs" \
                 "$file"
             fi
           done <<< "${{ steps.changed.outputs.files }}"
@@ -58,14 +57,14 @@ jobs:
         shell: bash
         run: |
           if git diff --quiet; then
-            echo "No changes to commit."
+            echo "Nothing changed."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add '*.md'
-          git commit -m "docs: update Last Updated dates"
+          git add .
 
-          git push# This is a basic workflow that is manually triggered
+          git commit -m "docs: update documentation metadata"
+          git push
