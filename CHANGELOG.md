@@ -1,7 +1,7 @@
-# **AWS Cognito Laravel Package Changelog**
+# AWS Cognito Laravel Package Changelog
 
 > [!NOTE]
-> Updated On 2026-07-30
+> Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
 
 [Release 51 (tag v2.0.7)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.7)
 - Feat: Issue [#143](https://github.com/ellaisys/aws-cognito/issues/143) Code refactoring and optimization for better performance and maintainability.

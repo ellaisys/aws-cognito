@@ -1,9 +1,9 @@
 # Device Authentication
 
-This document provides a comprehensive guide on implementing device authentication using AWS Cognito in a Laravel application. It covers the necessary configurations, features, and API documentation required to enable secure device management and authentication.
-
 > [!NOTE]
-> Updated On 2026-07-10
+> Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
+
+This document provides a comprehensive guide on implementing device authentication using AWS Cognito in a Laravel application. It covers the necessary configurations, features, and API documentation required to enable secure device management and authentication.
 
 > [!IMPORTANT]
 > We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to implement Device Authentication functionality within your application.

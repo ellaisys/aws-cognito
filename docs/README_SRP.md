@@ -1,7 +1,11 @@
 # SRP (Secure Remote Password) Authentication
 
-> [!IMPORTANT]
-> We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to implement SRP Authentication functionality within your application.
+> [!NOTE]
+> Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
+
+The package provides the Secure Remote Password (SRP) authentication functionality using AWS Cognito. This is a password-authenticated key exchange (PAKE) protocol that allows users to authenticate without transmitting their password over the network.
+
+We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to implement SRP Authentication functionality within your application.
 
 
 ## Contents

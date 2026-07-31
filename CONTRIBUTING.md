@@ -1,4 +1,8 @@
 # Contributing Guidelines
+
+> [!NOTE]
+> Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
+
 Thank you for considering contributing to our project! We appreciate your interest and support. This document provides guidelines for contributing to our project on GitHub. Please take a moment to review this information before getting started.
 
 # Table of Contents

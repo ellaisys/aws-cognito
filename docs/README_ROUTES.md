@@ -1,9 +1,9 @@
 # Preconfigured Routes for Web and API Functionality
 
-> [!IMPORTANT]
-> We have released the **Device Authentication** feature from V2.0.6. The routes were amended.
+> [!NOTE]
+> Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
 
-To help faster implementations, we have now provided with routes for web and APIs in this package. This includes Controllers, Views and updated Configuration file.
+To help faster implementations, we have now provided with routes for web and APIs in this package. This includes Controllers, Views and updated Configuration file. We have released the **Device Authentication** feature from V2.0.6. The routes were amended.
 
 
 ## Contents

@@ -1,9 +1,9 @@
 # AWS Configurations
 
-This document provides guidance on configuring AWS services, specifically AWS Cognito. Ensure you have the necessary permissions and knowledge to perform these configurations.
-
 > [!NOTE]
-> Updated On 2026-07-30
+> Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
+
+This document provides guidance on configuring AWS services, specifically AWS Cognito. Ensure you have the necessary permissions and knowledge to perform these configurations.
 
 
 ## Contents

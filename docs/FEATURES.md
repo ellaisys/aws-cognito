@@ -1,9 +1,10 @@
 # Features
 
+> [!NOTE]
+> Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
+
 This document provides a list of features provided by this package. It is not a complete list of features provided by AWS Cognito. For a complete list of features, please refer individual sections of this document.
 
-> [!NOTE]
-> Updated On 2026-07-30
 
 ### Functional
 
