@@ -1,7 +1,7 @@
 # SRP (Secure Remote Password) Authentication
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-07-31<!-- /AUTO:last_updated -->
 
 The package provides the Secure Remote Password (SRP) authentication functionality using AWS Cognito. This is a password-authenticated key exchange (PAKE) protocol that allows users to authenticate without transmitting their password over the network.
 

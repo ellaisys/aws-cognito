@@ -1,7 +1,7 @@
 # **AWS Cognito Core Functionality**
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-07-31<!-- /AUTO:last_updated -->
 
 ## Contents
 - [Introduction](#introduction)

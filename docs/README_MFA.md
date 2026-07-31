@@ -1,7 +1,7 @@
 # Multi-Factor Authentication (MFA)
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-07-31<!-- /AUTO:last_updated -->
 
 This package provides the Multi-Factor Authentication (MFA) functionality using AWS Cognito. This documentation provides the necessary information to implement the MFA functionality in your Laravel application.
 

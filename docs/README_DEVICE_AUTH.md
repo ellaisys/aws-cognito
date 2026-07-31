@@ -1,7 +1,7 @@
 # Device Authentication
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-07-27<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-07-31<!-- /AUTO:last_updated -->
 
 This document provides a comprehensive guide on implementing device authentication using AWS Cognito in a Laravel application. It covers the necessary configurations, features, and API documentation required to enable secure device management and authentication.
 
