@@ -113,7 +113,7 @@ Route::middleware(['aws-cognito'])->group(function () {
 
 In order to use AWS Cognito, you will need to add the following minimum configurations to your Laravel application. You can do this by adding the following fields to your `.env` file:
 
-```php
+```env
 # AWS configurations for cloud storage
 AWS_ACCESS_KEY_ID="Axxxxxxxxxxxxxxxxxxxxxxxx6"
 AWS_SECRET_ACCESS_KEY="mxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+"
@@ -138,7 +138,7 @@ The following environment variables are optional and can be used to customize th
 
 You can configure the session timeout in your `.env` file, aligned with the cognito access token validity, use the `SESSION_LIFETIME` and `AUTH_PASSWORD_TIMEOUT` parameters. This value is in minutes with the default value being 120 mins i.e. 2 hours. This will ensure that the laravel session times out at the same time as the access token. For example:
 
-```php
+```env
 SESSION_LIFETIME=120 // in minutes
 AUTH_PASSWORD_TIMEOUT=7200 // in seconds
 ```
@@ -150,7 +150,7 @@ The `SESSION_LIFETIME` parameter can be traced into the file `config/session.php
 
 The library now supports where the AWS configuration of App Client with the Client Secret set to disabled. Use the below configuration into the environment file to enable/disable this. The default is marked as **true** (i.e. we expect the App Client Secret to be enabled in AWS Cognito configuration)
 
-```php
+```env
 AWS_COGNITO_CLIENT_SECRET_ALLOW=false
 ```
 
@@ -216,7 +216,7 @@ public function register(): void
 In case you are using the `ignoreMigrations` method, you will need to create your own migrations for updating the **users** table. Please ensure that you add the following columns to your **users** table:
 - `sub` (type:string, nullable:yes, index:yes) - This column is used to store the Cognito user subject UUID. This column is used to map the Cognito user to the local user table. The default value of this column is `sub`. You can change this value by setting the `AWS_COGNITO_USER_SUBJECT_UUID` environment variable.
 
-```php
+```env
 AWS_COGNITO_USER_SUBJECT_UUID="sub"
 ```
 
@@ -297,7 +297,7 @@ The library is capable of handling the DynamoDB with ease. All that you need to 
 
 Add/Edit the following fields to your `.env` file and set the values according to your AWS settings:
 
-```php
+```env
 # Cache Configuration
 CACHE_DRIVER="dynamodb"
 DYNAMODB_CACHE_TABLE="table-name-of-your-choice" //This should match the table name provided above
