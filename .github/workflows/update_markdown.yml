@@ -3,7 +3,7 @@ name: Update Documentation Metadata
 on:
   push:
     branches:
-      - main # Change if your default branch is different
+      - master # Change if your default branch is different
 
 permissions:
   contents: write
@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
