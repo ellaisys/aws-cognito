@@ -3,7 +3,6 @@
 namespace Ellaisys\Cognito\Tests\Exceptions;
 
 use PHPUnit\Framework\TestCase;
-use PHPUnit\Framework\Attributes\DataProvider;
 use Ellaisys\Cognito\Exceptions\NoTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
@@ -11,7 +10,9 @@ use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 
 class HttpExceptionConstructorsTest extends TestCase
 {
-    #[DataProvider('exceptionProvider')]
+    /**
+     * @dataProvider exceptionProvider
+     */
     public function test_it_sets_default_http_status_and_message(string $exceptionClass, int $expectedStatusCode, string $expectedMessage): void
     {
         $exception = new $exceptionClass();
