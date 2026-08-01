@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Ellaisys\Cognito\Traits;
 
 use Config;
@@ -145,43 +154,11 @@ trait AwsCognitoClientPasskeyAction
         string $username, ?string $challenge)
     {
         try {
-            //Build payload
-            $payload = [
-                'AuthFlow' => $authFlow->value,
-                'ClientId' => $this->clientId
-            ];
-
-            //Set Auth Parameters based on the Auth Flow
-            switch ($authFlow) {
-                case CognitoAuthFlowTypes::USER_AUTH:
-                    $payload['AuthParameters'] = [
-                        'USERNAME' => $username,
-                        'PREFERRED_CHALLENGE' => $challenge
-                    ];
-                    break;
-
-                case CognitoAuthFlowTypes::CUSTOM_AUTH:
-                default:
-                    $payload['AuthParameters'] = [
-                        'USERNAME' => $username
-                    ];
-                    break;
-            } //End switch
-
-            //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload['AuthParameters'] = array_merge($payload['AuthParameters'], [
-                    'SECRET_HASH' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
-
-            $response = $this->client->initiateAuth($payload);
-        } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClientPasskeyAction:authWebAuthnCredential:CognitoIdentityProviderException');
+            return $this->authenticate($authFlow, $username, null, null, $challenge);
+        } catch (Exception $exception) {
+            Log::error('AwsCognitoClientPasskeyAction:authWebAuthnCredential:Exception');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
     
 } //Trait ends

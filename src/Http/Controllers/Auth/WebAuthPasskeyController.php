@@ -11,7 +11,6 @@
 
 namespace Ellaisys\Cognito\Http\Controllers\Auth;
 
-use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -19,9 +18,6 @@ use Ellaisys\Cognito\Http\Controllers\BaseCognitoController as Controller;
 
 use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\Auth\WebAuthPasskey;
-
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Support\Facades\Validator;
 
 use Exception;
 
@@ -46,12 +42,15 @@ class WebAuthPasskeyController extends Controller
      */
     public function __construct()
     {
-        //Mandate authentication for all the API's of this controller
+        /*
+         * Mandate authentication for all the APIs of this controller
+         * except the challenge method.
+         */
         $this->middleware('aws-cognito')->except([
                 'challenge'
             ]);
 
-        //Set flag to indicate action called from controller
+        // Controller action flag
         $this->setIsControllerAction(false);
 
         parent::__construct();

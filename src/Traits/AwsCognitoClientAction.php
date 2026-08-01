@@ -1,12 +1,25 @@
 <?php
 
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Ellaisys\Cognito\Traits;
 
 use Config;
 use Carbon\Carbon;
 
-use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
+use Aws\Result as AwsResult;
+
 use Illuminate\Support\Facades\Log;
+
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -19,47 +32,87 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 trait AwsCognitoClientAction
 {
     /**
+     * Declares an authentication flow and initiates sign-in for a user in the Amazon Cognito user directory
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html
+     * @param \CognitoAuthFlowTypes $authFlow
+     * @param array $payloadData
+     * @param string $username
+     * @return \AwsResult
+     */
+    public function initiateAuth(CognitoAuthFlowTypes $authFlow,
+        array $payloadData, string $username): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'AuthFlow' => $authFlow->value,
+                'ClientId' => $this->clientId
+            ];
+
+            $payload = array_merge($payload, $payloadData);
+
+            //Add Secret Hash in case of Client Secret being configured
+            $payload = $this->cognitoSecretHash($username, $payload);
+
+            $response = $this->client->initiateAuth($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAction:initiateAuth:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
+
+        return $response;
+    } //Function ends
+
+    /**
      * Get user details.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GetUser.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GetUser.html
      *
      * @param string $accessToken
      *
-     * @return mixed
+     * @return \AwsResult
      */
-    public function getUser(string $accessToken): mixed
+    public function getUser(string $accessToken): AwsResult
     {
         try {
             return $this->client->getUser([
                 'AccessToken' => $accessToken
             ]);
-        } catch (CognitoIdentityProviderException $e) {
+        } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAction:getUser:CognitoIdentityProviderException');
-            throw $e;
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
     } //Function ends
 
     /**
      * Responds to an authentication challenge
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html
      *
-     * @param CognitoChallengeTypes $challengeName
+     * @param \CognitoChallengeTypes $challengeName
      * @param string $session
      * @param string $challengeValue
      * @param string $username
      *
-     * @return \Aws\Result
+     * @return \AwsResult
      */
     public function respondToAuthChallenge(
         CognitoChallengeTypes $challengeName, string $session,
-        string $challengeValue, string $username)
+        string $challengeValue, string $username): AwsResult
     {
         try {
             //Build payload
             $payload = [
                 'ClientId' => $this->clientId,
-                'Session' => $session,
                 'ChallengeName' => $challengeName->value,
             ];
+
+            //Set session for challenge types that require it
+            if (!in_array($challengeName, [
+                    CognitoChallengeTypes::PASSWORD_VERIFIER,
+                    CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER
+                ], true))
+            {
+                $payload['Session'] = $session;
+            } //End if
 
             //Set challenge response
             $payload['ChallengeResponses'] = $this->buildChallengePayload(
@@ -67,12 +120,7 @@ trait AwsCognitoClientAction
             );
 
             //Add Secret Hash in case of Client Secret being configured
-            if ($this->boolClientSecret) {
-                $payload['ChallengeResponses'] = array_merge(
-                    $payload['ChallengeResponses'], [
-                        'SECRET_HASH' => $this->cognitoSecretHash($username)
-                ]);
-            } //End if
+            $payload = $this->cognitoSecretHash($username, $payload);
 
             //Execute the payload
             $response = $this->client->respondToAuthChallenge($payload);
@@ -82,6 +130,43 @@ trait AwsCognitoClientAction
         } //Try-catch ends
 
         return $response;
+    } //Function ends
+
+    /**
+     * Get user pool details.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DescribeUserPool.html
+     *
+     * @return \AwsResult
+     */
+    public function describeUserPool(): AwsResult
+    {
+        try {
+            return $this->client->describeUserPool([
+                'UserPoolId' => $this->poolId
+            ]);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAction:describeUserPool:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
+    } //Function ends
+
+    /**
+     * Get user pool client details.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DescribeUserPoolClient.html
+     *
+     * @return \AwsResult
+     */
+    public function describeUserPoolClient(): AwsResult
+    {
+        try {
+            return $this->client->describeUserPoolClient([
+                'UserPoolId' => $this->poolId,
+                'ClientId' => $this->clientId
+            ]);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAction:describeUserPoolClient:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
     } //Function ends
 
 } //Trait ends

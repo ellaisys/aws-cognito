@@ -1,0 +1,70 @@
+name: Update Documentation Metadata
+
+on:
+  push:
+    branches:
+      - master # Change if your default branch is different
+
+permissions:
+  contents: write
+
+jobs:
+  update-docs:
+    if: github.actor != 'github-actions[bot]'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find changed Markdown files
+        id: changed
+        shell: bash
+        run: |
+          files=$(git diff --name-only \
+            "${{ github.event.before }}" \
+            "${{ github.sha }}" \
+            -- '*.md')
+
+          {
+            echo 'files<<EOF'
+            echo "$files"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update metadata
+        if: steps.changed.outputs.files != ''
+        shell: bash
+        run: |
+          DATE=$(date +'%Y-%m-%d')
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+
+            if grep -q '<!-- AUTO:last_updated -->' "$file"; then
+              echo "Updating $file"
+
+              perl -0777 -i -pe \
+                "s|<!-- AUTO:last_updated -->.*?<!-- /AUTO:last_updated -->|<!-- AUTO:last_updated -->${DATE}<!-- /AUTO:last_updated -->|gs" \
+                "$file"
+            fi
+          done <<< "${{ steps.changed.outputs.files }}"
+
+      - name: Commit changes
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          git commit -m "docs: update documentation metadata"
+          git push

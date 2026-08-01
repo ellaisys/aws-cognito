@@ -36,14 +36,14 @@ trait VerifiesEmails
      *
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function verify(Request $request, ?array $clientMetadata = null): mixed
     {
-        try {
-            // Initialize variables
-            $returnValue = null;
+        // Initialize variables
+        $returnValue = null;
 
+        try {
             // If email is present in query parameters, decode it before validation and processing
             $email = $this->getDataFromQueryParam($request, 'email', EncryptionTypes::DEFAULT, true);
             if (!empty($email)) {
@@ -76,10 +76,10 @@ trait VerifiesEmails
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
-                    ->with('status', 'Verification successful. Please login to continue.')
+                    ->with('status', 'success')
                     ->with('username', $payload['email'])
                     ->with('session', $response['Session'] ?? null)
-                    ->with('message', trans('messages.auth.registration_verification_success'));
+                    ->with('message', trans('cognito::messages.auth.registration_verification_success'));
             } //End if
         } catch (Exception $e) {
             Log::error('VerifiesEmails:verify:Exception');
@@ -97,10 +97,10 @@ trait VerifiesEmails
      */
     public function resend(Request $request, ?array $clientMetadata = null): mixed
     {
-        try {
-            // Initialize variables
-            $returnValue = null;
+        // Initialize variables
+        $returnValue = null;
 
+        try {
             // If email is present in query parameters, decode it before validation and processing
             $email = $this->getDataFromQueryParam($request, 'email', EncryptionTypes::DEFAULT, true);
             if (!empty($email)) {
@@ -132,9 +132,9 @@ trait VerifiesEmails
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
-                    ->with('status', 'Resend code request successful. Please verify your email.')
+                    ->with('status', 'success')
                     ->with('username', $payload['email'])
-                    ->with('message', trans('messages.auth.registration_code_resend_success'));
+                    ->with('message', trans('cognito::messages.auth.registration_code_resend_success'));
             } //End if
         } catch (Exception $e) {
             Log::error('VerifiesEmails:resend:Exception');

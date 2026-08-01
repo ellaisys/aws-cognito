@@ -24,7 +24,6 @@ class BaseCognitoController extends BaseController
      */
     protected $response;
 
-
     /**
      * Default constructor.
      */

@@ -11,7 +11,6 @@
 
 namespace Ellaisys\Cognito\Http\Controllers\Auth;
 
-use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -67,33 +66,6 @@ class RegisterController extends Controller
     } //Function ends
 
     /**
-     * Get a validator for an incoming registration request.
-     *
-     * @param  array  $data
-     * @return \Illuminate\Contracts\Validation\Validator
-     */
-    protected function validator(array $data)
-    {
-        return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
-    } //Function ends
-
-    /**
-     * Create a new user instance after a valid registration.
-     *
-     * @param  array  $data
-     * @return \Illuminate\Database\Eloquent\Model
-     */
-    protected function create(array $data)
-    {
-        $user = Auth::getProvider()->getModel();
-        return $user::create($data);
-    } //Function ends
-
-    /**
      * Action to invite the a new user
      *
      * @param  \Illuminate\Http\Request  $request
@@ -105,9 +77,6 @@ class RegisterController extends Controller
             $returnValue = null;
             $user = null;
 
-            //Raise pre registration event
-            $this->callPreRegistrationEvent($request);
-
             if ($isInviteAction) {
                 //Validate request and get invite data
                 $user = $this->invite($request, $this->clientMetadata);
@@ -117,16 +86,15 @@ class RegisterController extends Controller
             } //End if
 
             if (!empty($user)) {
-                //Raise post registration event
-                $this->callPostRegistrationEvent($request, $user->toArray());
-
                 if($this->getIsJsonResponse($request)) {
                     $returnValue = $this->response->success($user);
                 } else {
                     $returnValue = redirect()
                         ->route($this->redirectPath())
-                        ->with('status', 'Registration successful. Please login to continue.')
-                        ->with('message', trans('messages.auth.registration_success'));
+                        ->withInput($request->except('password', 'password_confirmation'))
+                        ->with('status', 'success')
+                        ->with('message', trans($this->messageKey))
+                        ->with('data', $user);
                 } //End if
                 return $returnValue;
             } else {
@@ -146,32 +114,11 @@ class RegisterController extends Controller
     public function actionInvite(Request $request)
     {
         try {
-            $this->actionRegister($request, true);
+            return $this->actionRegister($request, true);
         } catch (Exception $e) {
             Log::error('RegisterController:actionInvite:Exception');
             throw $e;
         } //End try-catch
-    } //Function ends
-
-    private function callPreRegistrationEvent(Request $request): void
-    {
-        //Raise pre registration event
-        event(new PreRegistrationEvent(
-            $this->registrationType,
-            $request->except('password'),
-            $request->ip()
-        ));
-    } //Function ends
-
-    private function callPostRegistrationEvent(Request $request, array $user): void
-    {
-        //Raise post registration event
-        event(new PostRegistrationEvent(
-            $this->registrationType,
-            $user,
-            $request->except('password'),
-            $request->ip()
-        ));
     } //Function ends
 
 } //Class ends

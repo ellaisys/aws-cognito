@@ -1,129 +1,253 @@
-## **MFA Functionality**
+# Multi-Factor Authentication (MFA)
+
+> [!NOTE]
+> Last Updated: <!-- AUTO:last_updated -->2026-07-31<!-- /AUTO:last_updated -->
+
+This package provides the Multi-Factor Authentication (MFA) functionality using AWS Cognito. This documentation provides the necessary information to implement the MFA functionality in your Laravel application.
+
+> [!IMPORTANT]
+> We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to handle MFA challenge verification within your application.
+
+
+## Contents
+
+- [Introduction](#introduction)
+- [Configurations](#configurations)
+- [Features](#features)
+- Quick Start
+    - [Blade Component](#blade-component-web-app)
+- Advanced Topics
+    - [API Documentation](#api-documentation)
+    - [API Routes](#api-routes)
+- [References](#references)
+- [Key Points](#key-points)
+
+
+## Introduction
+
+Multi-Factor Authentication (MFA) is a security feature that adds an extra layer of protection to user accounts by requiring users to provide additional verification during the login process. This package provides support for MFA using AWS Cognito, allowing developers to implement MFA in their Laravel applications.
+
 The library currently provides the MFA for the Software Token and SMS based TOPT.
 
-## **Configurations**
-The package provides a trait that you can add to your controller to make the MFA methods running.
-- Ellaisys\Cognito\Auth\RegisterMFA
 
-Also, configure below keys into the .env file to change the default setting. 
- - The **AWS_COGNITO_MFA_SETUP** should be set to MFA_ENABLED to enable the MFA feature. The default value is MFA_NONE resulting into disabled MFA functionality. 
- - The **AWS_COGNITO_MFA_TYPE** can have values SOFTWARE_TOKEN_MFA (default) for the Software Token and SMS_MFA for the SMS based TOTP.
+## Configurations
+
+- [AWS Configurations](#aws-configurations)
+- [Laravel Configurations](#laravel-configurations)
+
+### *AWS Configurations*
+
+In order to use the MFA functionality, you need to configure the AWS Cognito User Pool with the necessary settings. Enable the **Multi-Factor Authentication (MFA)** option.
+
+Select your AWS Cognito User Pool and navigate to the `Authentication` > `Sign-in`.
+
+#### Step 1A: First time MFA configuration
+Select `Overview` in the left navigation and browse to the `Set up MFA` section on the right panel. Click on the `Edit MFA` link to configure the MFA settings.
+
+![Cognito MFA Flow #1A](../assets/images/aws_cognito_mfa_flow1.png)
+
+#### Step 1B: Amend the existing MFA configuration
+
+If you have already configured the MFA settings, the above step 1A will not be available.
+
+In that case, you can expand `Authentication` in the left navigation, and click the `Sign In` option. Then, browse to the `Multi-Factor Authentication (MFA)` section on the right panel. Click on the `Edit` link to configure the MFA settings, as shown below.
+
+![Cognito MFA Flow #1B](../assets/images/aws_cognito_mfa_flow2.png)
+
+#### Step 2: Select the MFA enforcement and methods in the AWS Cognito User Pool
+![Cognito MFA Flow #2](../assets/images/aws_cognito_mfa_flow3.png)
+
+Select the desired enforcement and methods for MFA in the AWS Cognito User Pool. The available options are:
+
+- MFA Enforcement
+    + Required (forces all users to set up MFA)
+    + Optional (allows users to choose whether to set up MFA)
+
+- MFA Methods
+    + Authenticator apps for `SOFTWARE_TOKEN_MFA`
+    + SMS messages for `SMS_MFA`
+    + Email Messages for `EMAIL_MFA` (not supported in this package)
+    + User Passkeys
+    
+Save the changes.
+
+#### Step 3: Confirmation of saved MFA settings
+![Cognito MFA Flow #3](../assets/images/aws_cognito_mfa_flow4.png)
+
+### *Laravel Configurations*
+
+The package exposes following keys to change the default setting. These keys can be configured in the `.env` file or in the `config/aws-cognito.php` file. The default values are set in the configuration file.
+ - The `AWS_COGNITO_MFA_SETUP` should be set to **ON** or **OPTIONAL** to enable the MFA feature. The default value is OFF resulting into disabled MFA functionality.
+
+    When the `AWS_COGNITO_MFA_SETUP` is set to **OPTIONAL**, the user can choose to enable or disable the MFA functionality. When the `AWS_COGNITO_MFA_SETUP` is set to **ON**, the user must enable the MFA functionality.
+
+ - The `AWS_COGNITO_MFA_TYPE` can have values **SOFTWARE_TOKEN_MFA** (default) for the Software Token, **SMS_MFA** for the SMS based TOTP, or **EMAIL_MFA** for the Email based TOTP. The default value is **SOFTWARE_TOKEN_MFA**.
+
+    To support multiple MFA types, you can set the value to **SOFTWARE_TOKEN_MFA,SMS_MFA**. The package will handle multiple MFA types and will provide the necessary challenge to the user based on the configuration. The first MFA type in the list will be the default MFA type for the user. The user can change the MFA type in the user profile settings.
 
    The provider configuration aids to send out the SMS from AWS with additional costs. Refer AWS SNS pricing for more details [AWS SMS Pricing](https://aws.amazon.com/sns/sms-pricing/)
 
 ```php
 
-    AWS_COGNITO_MFA_SETUP="MFA_ENABLED"
+    AWS_COGNITO_MFA_SETUP="ON"
     AWS_COGNITO_MFA_TYPE="SOFTWARE_TOKEN_MFA"
 
 ```
 
-## **Features**
-- [Login (MFA Enabled)](#login)
-- [Activate MFA](#activate-mfa-software-token-only)
-- [Verify MFA Token](#verify-mfa-software-token-only)
-- [Deactivate MFA](#deactivate-mfa-software-token-only)
-- [Enable MFA](#enabledisable-mfa)
-- [Disable MFA](#enabledisable-mfa)
+## Features
 
-# **API Routes**
->[!IMPORTANT]
->We are releasign the API predefined routes as a new feature from V1.3.0.
-> php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+- [Login (MFA Enabled)](#login-with-mfa)
+- [Software Token MFA](#software-token-mfa-functionality)
+    + [Activate MFA](#1-activate-mfa)
+    + [Verify MFA Token](#2-verify-mfa)
+    + [Deactivate MFA](#3-deactivate-mfa)
+- [Enable MFA](#enable-mfa)
+- [Disable MFA](#disable-mfa)
 
-For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
+## Blade Component (web app)
 
-### **Login**
-The login shall require two steps for implementation of the overall authentication using the MFA approach. The first step shall generate the challenge, identified as a session token. The second step involves the OTP/TOTP code against that session token.
+The package provides a blade component for 
+1. `MFA management`, and 
+2. `MFA based authentication`
 
-#### API based Approach
-The first step API is common for the MFA enabled / disabled implementation.
+The MFA based authentication component is integrated into the `challenge` component.
 
-```php
+### *MFA based Authentication*
 
-    public function actionLogin(Request $request)
-    {
-        //Create credentials object
-        $collection = collect($request->all());
-
-        if ($claim = $this->attemptLogin($collection, 'api', 'username', 'password', true)) {
-
-            if ($claim instanceof AwsCognitoClaim) {
-                return $claim->getData();
-            } else {
-                return $claim;
-            } //End if
-        }
-    } //Function ends
-
-```
-If the MFA is disabled, the response shall have the access token, refresh token and the id token.
-```json
-
-```
-
-In case the MFA is enabled and activated, then the response will be as shown below.
-```json
-    {
-        "status": "SOFTWARE_TOKEN_MFA",
-        "session": "AYABeEkKMeJKkzhx3MK-GzS3ISIAH
-        QABAAdTZXJ2aWNlABBDb2duaXRvVXNlclBvb2xzAA
-        ...
-        ...
-        jVrz53Y1uJ3I30w46CpL9xlB50IbVJ0SNYY_tuFsLc
-        GjYfDpn7XQcd6-fXWovCIYoMH5Q"
-    }
-```
-
-#### Web Application Approach
-The first step for the web application is same for MFA enabled / disabled implementation. However now you can use the provided blade components to accept the SMS TOTP or Software Token code.
+Use the `challenge` component in your challenge page to handle the MFA authentication flow. The component will handle the generation of the necessary values for the MFA proof and will send them back to the server in response to the challenge.
 
 ```html
-    @extends('layouts.app')
+    <form id="auth-challenge-form" method="POST" ...>
+        ...
+        <!-- pass the form name provided as a parameter to the component -->
+        <x-cognito::challenge
+            :challenge-form-name="'auth-challenge-form'" />
+        ...
+        ...
+        @php
+            $data = (session('data')) ?? null;
+            $challengeNameValue = 'NONE';
 
-    @section('content')
-        <div class="container">
-            @if (!((request()->has('status')) && (request()->has('session_token'))))
-            <div class="row justify-content-center">
-                <!-- Write your login page here -->
-            </div>
-            @endif
-
-            <!-- Below is the blade component view -->
-            <x-cognito::mfa.code />
-
+            if ($data && isset($data['status']) && $data['status'] == 'challenge') {
+                $challengeNameValue = isset($data['challenge_name']) ?
+                    strtoupper($data['challenge_name']) :
+                    $challengeNameValue;
+            } //End if
+        @endphp
+        ...
+        ...
+        <div> <!-- Shows the passcode input field for the Password/OTP/TOTP based challenges only  -->
+            @stack('cognito-challenge-passcode')
         </div>
-    @endsection
+        ...
+        ...
+        <!-- Button with data-action and data-role attribute -->
+        <button type="submit"
+            data-action="challenge-submit" data-role="{{ $challengeNameValue }}">
+            Submit</button>
+        ...
+    </form>
+
+    @stack('cognito-challenge-scripts')
+    ...
 ```
 
-### **Activate MFA (Software Token Only)**
+Using this component will simplify the implementation of the MFA authentication functionality in your application.
+
+The data is **secure**, as per the cyber security standards, and the necessary scripts and methods are provided in the component to implement the MFA feature in your application.
+
+## API Documentation
+
+This Laravel Package provides the necessary methods to implement MFA based authentication functionality provided by AWS Cognito. The available challenges are dynamically provided from the trait making the user experience aligned to the AWS SDK.
+
+The package provides a trait `RegisterMFA` that you can add to your controller to provide custom functionality. The namespace for the trait is `Ellaisys\Cognito\Auth\RegisterMFA`.
+
+### *Login with MFA*
+---
+
+The login shall require two steps for complete the overall authentication using the MFA approach. 
+1. Sign In using the username and password. This step shall generate the challenge.
+2. The second step involves passing the OTP/TOTP `code` against that challenge.
+
+#### <u>***Step 1***</u>: Sign In using username and password
+
+```sh
+POST /login
+Content-Type: application/json
+Accept: application/json
+{
+    "username": "<username>",
+    "password": "<password>"
+}
+```
+
+In case the MFA is enabled and activated, then the response will be as shown below. This example generates the challenge for the user to respond with the code from the authenticator application.
+
+```json
+{
+    "status": "challenge",
+    "challenge_name": "SOFTWARE_TOKEN_MFA",
+    "session_token": "AYABeEkKMeJKkzhx3MK-GzS3ISIAH
+    QABAAdTZXJ2aWNlABBDb2duaXRvVXNlclBvb2xzAA
+    ...
+    ...
+    jVrz53Y1uJ3I30w46CpL9xlB50IbVJ0SNYY_tuFsLc
+    GjYfDpn7XQcd6-fXWovCIYoMH5Q",
+    "challenge_params": {
+        "FRIENDLY_DEVICE_NAME": "<friendly_device_name>",
+        "USER_ID_FOR_SRP": "<username>"
+    },
+    "username": "<username>"
+}
+```
+
+#### <u>***Step 2***</u>: Respond to the challenge with the code from the authenticator application
+
+```sh
+POST /challenge
+Content-Type: application/json
+Accept: application/json
+{
+    "challenge_name": "SOFTWARE_TOKEN_MFA",
+    "session": "<session_token_from_step_1>",
+    "username": "<username>",
+    "challenge_value": "<code_from_authenticator_app>"
+}
+```
+
+### *Software Token MFA Functionality*
+---
+
+The Software Token MFA functionality allows users to enable and manage MFA using a software-based authenticator application. The package provides the necessary methods to activate, verify, and deactivate the Software Token MFA for users.
+
+#### Activate MFA
+
 The activate process allows the user to configure the Software MFA. To configure the Software Token MFA setting on the mobile device, a key or the scan code (easy to consume), is available for use on any of the authenticator applications (i.e. Google Authentictor OR Microsoft Authenticator).
 
-The process completes when the code is verified using the [Verified MFA](#verify-mfa-software-token-only) step.
+The process completes when the code is verified using the [Verify MFA](#2-verify-mfa) step.
 
-#### Web and API based Approach
+##### Web and API based Approach
+
 The function call looks as shown below. Just reference the the method activateMFA, with the guard name as a parameter, in the trait that you added above in configuration. This shall activate the Software MFA token.
 
 ```php
-
-    public function actionActivate()
-    {
-	try {
-            return $this->activateMFA('api'); //Pass the guard name for web/api calls
-        } catch(Exception $e) {
-			throw $e;
-        } //Try-catch ends
-    } //Function ends
-
+public function actionActivate()
+{
+try {
+        return $this->activateMFA('api'); //Pass the guard name for web/api calls
+    } catch(Exception $e) {
+        throw $e;
+    } //Try-catch ends
+} //Function ends
 ```
 The response that you will get for the API call would look this
 
 ```json
-    {
-        "SecretCode": "ESKPE46WBNOAB7QXXXXXXXXXXXXXXXXXXXPFIVJVJFEPDP2NNIA",
-        "SecretCodeQR": "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=otpauth://totp/ApplicationName (john@doe.com)?secret=ESKPE46WBNOAB7QXXXXXXXXXXXXXXXXXXXPFIVJVJFEPDP2NNIA&issuer=ApplicationName&choe=UTF-8",
-        "TotpUri": "otpauth://totp/ApplicationName (john@doe.com)?secret=ESKPE46WBNOAB7QXXXXXXXXXXXXXXXXXXXPFIVJVJFEPDP2NNIA&issuer=ApplicationName"
-    }
+{
+    "SecretCode": "ESKPE46WBNOAB7QXXXXXXXXXXXXXXXXXXXPFIVJVJFEPDP2NNIA",
+    "SecretCodeQR": "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=otpauth://totp/ApplicationName (john@doe.com)?secret=ESKPE46WBNOAB7QXXXXXXXXXXXXXXXXXXXPFIVJVJFEPDP2NNIA&issuer=ApplicationName&choe=UTF-8",
+    "TotpUri": "otpauth://totp/ApplicationName (john@doe.com)?secret=ESKPE46WBNOAB7QXXXXXXXXXXXXXXXXXXXPFIVJVJFEPDP2NNIA&issuer=ApplicationName"
+}
 ```
 and the web response, you can design a page like this to show the code for activating the Software MFA token.
 
@@ -132,65 +256,83 @@ and the web response, you can design a page like this to show the code for activ
 >[!IMPORTANT]
 >In case you want to change the QR Generator library, you can change the value in the configuration file with the key **mfa_qr_library**. Alternately, you can set the string in the environment file identified by **AWS_COGNITO_MFA_QR_LIBRARY**. 
 
-### **Verify MFA (Software Token Only)**
+#### Verify MFA
+
 In order to complete the activation process, the verification is an essential step. As part of this verification process, you need to enter the code (available in the authenticator application) while submitting the request. The implementation needs to be updated depending on the web or API controller. The response will be HTTP Status Code 200.
 
 ```php
-
-    public function actionVerify(string $code)
-    {
-	try {
-            return $this->verifyMFA('api', $code); //Pass the guard name for web/api calls and the MFA code from the device
-        } catch(Exception $e) {
-			throw $e;
-        } //Try-catch ends
-    } //Function ends
-
+public function actionVerify(string $code)
+{
+try {
+        return $this->verifyMFA('api', $code); //Pass the guard name for web/api calls and the MFA code from the device
+    } catch(Exception $e) {
+        throw $e;
+    } //Try-catch ends
+} //Function ends
 ```
 
 
-### **Deactivate MFA (Software Token Only)**
-In order to deactivate the MFA for a user, this process can be called to deactivate the MFA. In most practical situations, you can skip this implementation. This uses the access token for deactivation.
+#### Deactivate MFA
 
-In order to enable/disable another user based on your RBAC implementation, you can use the [Enable/Diable Feature](#enabledisable-mfa)
+In order to deactivate the MFA for the authenticated user, this endpoint can be called to deactivate the MFA. In most practical situations, you can skip this implementation, based on your application requirements. However, if you want to provide this feature, you can implement the following method in your controller.
 
-```php
+In order to enable/disable a user's MFA setting by an admin, based on your RBAC implementation, you can use the [Enable](#enable-mfa) and [Disable](#disable-mfa) endpoints.
 
-    public function actionDeactivateMFA()
-    {
-	try {
-            return $this->deactivateMFA('api'); //Pass the guard name for web/api calls
-        } catch(Exception $e) {
-			throw $e;
-        } //Try-catch ends
-    } //Function ends
+Below curl helps deactivate the user's MFA, returning the HTTP Success Code.
 
+```sh
+POST /user/mfa/deactivate
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <access_token>
 ```
 
-### **Enable/Disable MFA**
-This feature allows the admin user to enable/disable a user's MFA (both Software Token and SMS) using an email address. The developer must implement the RBAC to ensure this feature is not misused.
 
-Below methods in the trait help to enable or disable the MFA returning the HTTP Success Code.
+### *Enable MFA*
+---
 
-```php
+This feature allows the admin user to enable MFA using an email address. The developer must implement the RBAC to ensure this feature is not misused.
 
-    public function actionEnableMFA(Request $request, string $userEmail)
-    {
-	try {
-            $return $this->enableMFA('web', $userEmail); //Pass the guard name for web/api calls
-        } catch(Exception $e) {
-			throw $e;
-        } //Try-catch ends
-    } //Function ends
+Below curl helps enable the MFA returning the HTTP Success Code.
 
-
-    public function actionDisableMFA(Request $request, string $userEmail)
-    {
-	try {
-            $return $this->disableMFA('web', $userEmail); //Pass the guard name for web/api calls
-        } catch(Exception $e) {
-			throw $e;
-        } //Try-catch ends
-    } //Function ends
-
+```sh
+POST /user/mfa/enable
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <access_token>
+{
+    "username": "<username>"
+}
 ```
+
+
+### *Disable MFA*
+---
+
+This feature allows the admin user to disable MFA using an email address. The developer must implement the RBAC to ensure this feature is not misused.
+
+Below curl helps disable the MFA returning the HTTP Success Code.
+
+```sh
+POST /user/mfa/disable
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <access_token>
+{
+    "username": "<username>"
+}
+```
+
+
+## API Routes
+
+> [!NOTE]
+> We are releasing the API predefined routes as a new feature from V1.3.0.
+>
+> php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="controllers"
+
+For the list of published routes and configurations, please refer [API Routes](../docs/README_ROUTES.md#api-routes)
+
+
+## References
+- [AWS Cognito MFA](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-mfa.html)

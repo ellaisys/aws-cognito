@@ -13,30 +13,68 @@
 
     <div class="dropdown-divider"></div>
 
-    @if (Route::has('cognito.form.user.mfa.activate'))
-    <a class="dropdown-item" href="{{ route('cognito.form.user.mfa.activate') }}">
+    @php
+        $mfaEnabled = config('cognito.mfa_setup')!='OFF' ? true : false;
+    @endphp
+
+    @if (Route::has('cognito.form.user.mfa.activate') && $mfaEnabled)
+    <a class="dropdown-item" href="{{ route('cognito.form.user.mfa.activate') }}"
+        data-role="mfa" data-action="activate">
         {{ __('Activate MFA') }}
     </a>
     @endif
 
-    @if (Route::has('cognito.action.user.mfa.deactivate'))
-    <a class="dropdown-item" href="{{ route('cognito.action.user.mfa.deactivate') }}">
+    @if (Route::has('cognito.action.user.mfa.deactivate') && $mfaEnabled)
+    <a class="dropdown-item" href="{{ route('cognito.action.user.mfa.deactivate') }}"
+        data-role="mfa" data-action="deactivate">
         {{ __('Deactivate MFA') }}
     </a>
     @endif
 
     <div class="dropdown-divider"></div>
 
-    @if (Route::has('cognito.action.mfa.enable'))
-    <a class="dropdown-item" href="{{ route('cognito.action.mfa.enable') }}">
+    @if (Route::has('cognito.action.mfa.enable') && $mfaEnabled)
+    <a class="dropdown-item" href="{{ route('cognito.action.mfa.enable') }}"
+        data-role="mfa" data-action="enable">
         {{ __('Enable MFA') }}
     </a>
     @endif
 
-    @if (Route::has('cognito.action.mfa.disable'))
-    <a class="dropdown-item" href="{{ route('cognito.action.mfa.disable') }}">
+    @if (Route::has('cognito.action.mfa.disable') && $mfaEnabled)
+    <a class="dropdown-item" href="{{ route('cognito.action.mfa.disable') }}"
+        data-role="mfa" data-action="disable">
         {{ __('Disable MFA') }}
     </a>
+    @endif
+
+    <div class="dropdown-divider"></div>
+
+    @php
+        $passkeyEnabled = (Auth::user() && isset(Auth::user()->is_webauthn_enabled)) ? Auth::user()->is_webauthn_enabled : false;
+    @endphp
+
+    @if (Route::has('cognito.action.user.passkey.delete') && config('cognito.allow_passkeys') && $passkeyEnabled)
+    <button type="button" class="dropdown-item"
+        data-role="passkey-webauthn" data-action="delete"
+        data-userkey="{{ base64_encode(Auth::user()->email) }}">
+        {{ __('Delete Passkey') }}
+    </button>
+    @endif
+
+    <div class="dropdown-divider"></div>
+
+    @if (Route::has('cognito.action.user.device.create'))
+    <button class="dropdown-item"
+        data-role="device-auth" data-action="register">
+        {{ __('Register Device') }}
+    </button>
+    @endif
+
+    @if (Route::has('cognito.action.user.device.delete'))
+    <button class="dropdown-item"
+        data-role="device-auth" data-action="delete">
+        {{ __('Unregister Device') }}
+    </button>
     @endif
 
     <div class="dropdown-divider"></div>

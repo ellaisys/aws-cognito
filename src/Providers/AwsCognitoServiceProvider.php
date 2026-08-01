@@ -18,11 +18,18 @@ use Ellaisys\Cognito\AwsCognitoUserPool;
 use Ellaisys\Cognito\Guards\CognitoSessionGuard;
 use Ellaisys\Cognito\Guards\CognitoTokenGuard;
 use Ellaisys\Cognito\Services\AwsCognitoJwksService;
+use Ellaisys\Cognito\Services\AwsCognitoSrpService;
 use Ellaisys\Cognito\Services\JsonResponseService;
 
 use Ellaisys\Cognito\Http\Parser\Parser;
 use Ellaisys\Cognito\Http\Parser\AuthHeaders;
 use Ellaisys\Cognito\Http\Parser\ClaimSession;
+
+use Ellaisys\Cognito\Views\Components\Challenge;
+use Ellaisys\Cognito\Views\Components\DeviceAuth;
+use Ellaisys\Cognito\Views\Components\PasskeyWebAuthn;
+
+use Ellaisys\Cognito\Console\PoolCommand;
 
 use Ellaisys\Cognito\Providers\StorageProvider;
 
@@ -97,6 +104,9 @@ class AwsCognitoServiceProvider extends ServiceProvider
         //Set Blade Components
         $this->registerBladeComponents();
 
+        //Register Providers
+        $this->registerProviders();
+
         //Route::mixin();
     } //Function ends
 
@@ -123,20 +133,27 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function registerPublishing()
     {
         if ($this->app->runningInConsole()) {
-            //Publish config
+            // Publish config
             $this->publishes([
                 __DIR__ . '/../../config/cognito.php' => $this->app->configPath('cognito.php'),
             ], 'config');
 
+            // Publish Migrations
             $this->publishes([
                 __DIR__ . '/../../database/migrations' => $this->app->databasePath('migrations'),
             ], 'migrations');
 
+            // Publish Views
             $this->publishes([
                 __DIR__ . '/../../resources/views' => $this->app->resourcePath('views/vendor/ellaisys/aws-cognito'),
             ], 'views');
 
-            //Publish Controllers
+            // Publish JavaScripts
+            $this->publishes([
+                __DIR__ . '/../../resources/assets/js' => public_path('vendor/ellaisys/aws-cognito/js'),
+            ], 'js');
+
+            // Publish Controllers
             $this->publishes([
                 __DIR__ . '/../../src/Http/Controllers/' => app_path('Http/Controllers/')
             ], 'controllers');
@@ -228,7 +245,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
         });
 
         //Storage Provider
-        $this->app->singleton('ellaisys.aws.cognito.provider.storage', function (Application $app) {
+        $this->app->singleton('ellaisys.aws.cognito.provider.storage', function () {
             return new StorageProvider(
                 config('cognito.storage_provider')
             );
@@ -252,6 +269,16 @@ class AwsCognitoServiceProvider extends ServiceProvider
         $this->app->singleton(AwsCognitoJwksService::class, function () {
             return new AwsCognitoJwksService(
                 config('cognito.region'),
+                config('cognito.user_pool_id')
+            );
+        });
+
+        //AWS SRP Service
+        $this->app->singleton(AwsCognitoSrpService::class, function (Application $app) {
+            return new AwsCognitoSrpService(
+                $app['ellaisys.aws.cognito.provider.storage'],
+                config('cognito.cache_prefix.srp'),
+                config('cognito.app_client_id'),
                 config('cognito.user_pool_id')
             );
         });
@@ -324,7 +351,6 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function extendApiAuthGuard()
     {
         Auth::extend('cognito-token', function (Application $app, $name, array $config) {
-
             $guard = new CognitoTokenGuard(
                 $app['ellaisys.aws.cognito'],
                 $app->make(AwsCognitoClient::class),
@@ -349,6 +375,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
         if (AwsCognito::$registersViews) {
             $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cognito');
         }
+
+        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'cognito');
     } //Function ends
 
     /**
@@ -368,9 +396,13 @@ class AwsCognitoServiceProvider extends ServiceProvider
      */
     protected function registerBladeComponents()
     {
-        //Provision to register blade components and directives
+        //Provision to register all blade components and directives
         Blade::componentNamespace('Ellaisys\\Cognito\\Views\\Components', 'cognito');
 
+        //Register individual blade components
+        Blade::component('challenge', Challenge::class);
+        Blade::component('passkey-webauthn', PasskeyWebAuthn::class);
+        Blade::component('device-auth', DeviceAuth::class);
     } //Function ends
 
     /**
@@ -390,5 +422,15 @@ class AwsCognitoServiceProvider extends ServiceProvider
         $this->app->alias('ellaisys.aws.cognito.exception', AwsCognitoExceptionHandler::class);
 
     } //Function ends
-    
+
+    /**
+     * Register providers.
+     *
+     * @return void
+     */
+    protected function registerProviders(): void
+    {
+        $this->app->register(ConsoleServiceProvider::class);
+    } //Function ends
+
 } //Class ends

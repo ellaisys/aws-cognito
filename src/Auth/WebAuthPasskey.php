@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito\Auth;
 
+use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Validator;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 
+use Ellaisys\Cognito\Events\Auth\PostPasskeyCompleteEvent;
+
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -26,6 +29,16 @@ use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
+/**
+ * Trait WebAuthPasskey
+ *
+ * @package Ellaisys\Cognito\Auth
+ *
+ * @method mixed start(Request $request)
+ * @method mixed complete(Request $request)
+ * @method mixed challenge(Request $request, ?string $challengeName = null, ?string $paramUsername='username', ?string $paramPassword='')
+ * @method mixed delete(Request $request)
+ */
 trait WebAuthPasskey
 {
     use BaseAuthTrait;
@@ -35,9 +48,10 @@ trait WebAuthPasskey
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return mixed
+     * @throws \Exception
      */
-    public function start(Request $request)
+    public function start(Request $request): mixed
     {
         try {
             // Initialize variables
@@ -75,9 +89,10 @@ trait WebAuthPasskey
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return mixed
+     * @throws \Exception
      */
-    public function complete(Request $request)
+    public function complete(Request $request): mixed
     {
         try {
             // Initialize variables
@@ -103,6 +118,19 @@ trait WebAuthPasskey
                 json_decode($request['credential'], true)
             );
 
+            //Get Authenticated user
+            $model = $this->getAuthenticatedUser($request);
+            if (method_exists($model, 'hasPasskeyTrait')) {
+                $model->is_webauthn_enabled = true;
+                $model->save();
+            } //End if
+
+            //Fire PostPasskeyCompleteEvent
+            event(new PostPasskeyCompleteEvent(
+                    $model->toArray(),
+                    $response->toArray(), $request->ip()
+                ));
+
             //Return response
             if ($this->isControllerAction) {
                 $returnValue = $response;
@@ -126,22 +154,26 @@ trait WebAuthPasskey
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return mixed
      */
-    public function challenge(Request $request, ?string $challengeName = null)
+    public function challenge(Request $request,
+        ?string $challengeName = null,
+        ?string $paramUsername='username',
+        ?string $paramPassword=''): mixed
     {
         try {
             // Initialize variables
             $returnValue = null;
+            $guard = $this->getGuard($request);
 
             if (!empty($challengeName)) {
                 $request->merge(['challenge_name' => $challengeName]);
             } //End if
 
             // If username present in query parameters is email, decode it before validation and processing
-            $email = $this->getDataFromQueryParam($request, 'username', EncryptionTypes::URL_ENCODE, true);
+            $email = $this->getDataFromQueryParam($request, $paramUsername, EncryptionTypes::URL_ENCODE, true);
             if (!empty($email)) {
-                $request->merge(['username' => $email]);
+                $request->merge([$paramUsername => $email]);
             } //End if
 
             //Convert challenge name to upper case if present in the request
@@ -151,22 +183,19 @@ trait WebAuthPasskey
         
             //Validate payload
             $validator = Validator::make($request->all(), [
-                'username' => ['required'],
+                $paramUsername => ['required'],
                 'challenge_name' => ['sometimes', 'in:WEB_AUTHN,EMAIL_OTP,SMS_OTP']
             ]);
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
 
-            //Create AWS Cognito Client
-            $client = app()->make(AwsCognitoClient::class);
-
-            //Get the response from AWS Cognito for authenticating with passkey credentials
-            $response = $client->authWebAuthnCredential(
-                CognitoAuthFlowTypes::USER_AUTH,
-                $request['username'],
-                $request['challenge_name'] ?? null
-            );
+            //Authenticate User
+            $response = Auth::guard($guard)->attempt(
+                    $request->all(), false,
+                    $paramUsername, $paramPassword,
+                    CognitoAuthFlowTypes::USER_AUTH
+                );
 
             //Return response
             if ($this->isControllerAction) {
@@ -188,13 +217,12 @@ trait WebAuthPasskey
 
     /**
      * Action to delete a registered passkey authenticator for the currently signed-in user.
-     * TO BE TESTED
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return mixed
      */
-    public function delete(Request $request)
+    public function delete(Request $request): mixed
     {
         try {
             // Initialize variables
@@ -219,6 +247,13 @@ trait WebAuthPasskey
                 $accessToken,
                 $request['credential_id']
             );
+
+            //Get Authenticated user
+            $model = $this->getAuthenticatedUser($request);
+            if (method_exists($model, 'hasPasskeyTrait') && $model->hasPasskeyTrait()) {
+                $model->is_webauthn_enabled = false;
+                $model->save();
+            } //End if
 
             //Return response
             if ($this->isControllerAction) {

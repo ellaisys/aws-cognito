@@ -120,7 +120,7 @@ class StorageProvider
      *
      * @return bool
      */
-    public function destroy($key, bool $forceForever = false)
+    public function destroy($key)
     {
         if ($this->has($key)) {
             return $this->cache()->forget($key);

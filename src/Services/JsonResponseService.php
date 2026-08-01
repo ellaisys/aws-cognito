@@ -44,6 +44,15 @@ class JsonResponseService
             } //End if
         } //End if
 
+        //In case of AWS Cognito response, log the metadata for debugging
+        if (array_key_exists('@metadata', $resource)) {
+            $metadata = $resource['@metadata'];
+            $statusCode = $metadata['statusCode'] ?? $statusCode;
+
+            //Remove metadata from the response
+            unset($resource['@metadata']);
+        } //End if
+
         return $this->putAdditionalMeta(
                 $resource, 'success', null,
                 $statusCode, $message
@@ -107,6 +116,8 @@ class JsonResponseService
         if ((!empty($e)) && ($e instanceof Exception)) {
             $systemErrorCode = $e->getCode();
             $systemErrorMsg = $e->getMessage();
+
+            // Handle AWS Cognito exceptions to extract more user-friendly messages
             $parentError = $e->getPrevious();
             if ($parentError instanceof CognitoIdentityProviderException) {
                 $systemErrorCode = $parentError->getAwsErrorCode();
@@ -117,7 +128,8 @@ class JsonResponseService
             $meta['error'] = [
                 'code' => $statusCode,
                 'message' => $message,
-                'key' => $errorKey
+                'key' => $errorKey,
+                'meta' => $systemErrorMsg
             ];
 
             //Add system messages when in debug mode

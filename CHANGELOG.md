@@ -1,4 +1,42 @@
-Release 47 (tag v2.0.3)
+# AWS Cognito Laravel Package Changelog
+
+> [!NOTE]
+> Last Updated: <!-- AUTO:last_updated -->2026-07-31<!-- /AUTO:last_updated -->
+
+[Release 51 (tag v2.0.7)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.7)
+- Feat: Issue [#143](https://github.com/ellaisys/aws-cognito/issues/143) Code refactoring and optimization for better performance and maintainability.
+- Feat: Added support for additional AWS Cognito features and configurations.
+- Feat: Issue [#142](https://github.com/ellaisys/aws-cognito/issues/142) Stability release. Improved error handling and logging for better debugging and monitoring.
+- Feat: PR [#140](https://github.com/ellaisys/aws-cognito/pull/140)
+- Feat: Added self-registration configuration for users.
+- Fix: Issue [#145](https://github.com/ellaisys/aws-cognito/issues/145) Code smells and minor bug fixes across various components and scripts.
+- Doc: Issue [#144](https://github.com/ellaisys/aws-cognito/issues/144) Clean and Update the documentation structure.
+
+[Release 50 (tag v2.0.6)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.6)
+- Feat: Issue [#139](https://github.com/ellaisys/aws-cognito/issues/139)
+- Feat: Add new components and scripts for FIDO2 Security Keys OR Passkey based MFA functionality.
+- Feat: Implemented Device Management and Authentication flow as blade component.
+- Feat: Implemented the scripts to handle BigInt and its operations.
+- Feat: Implemented the ability to handle all challenge response components.
+- Refactor: Updated the user interface to include options for FIDO2 MFA during login and registration flows.
+- Doc: Update readme with FIDO2 MFA configuration instructions and details.
+
+[Release 49 (tag v2.0.5)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.5)
+- Feat: Issue [#132](https://github.com/ellaisys/aws-cognito/issues/132)
+- Feat: Implement the SRP Protocol based authentication and routes for api and web guards.
+- Fix: Refactor of the authentication flow to centralise challenge handling and parameterise status messages.
+- Refactor: Centralized the initiateAuth and secret-hash injection across auth calls.
+- Doc: Update readme with SRP authentication instructions and details.
+
+[Release 48 (tag v2.0.4)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.4)
+- Feat: Issue [#135](https://github.com/ellaisys/aws-cognito/issues/135)
+- Feat: Issue [#136](https://github.com/ellaisys/aws-cognito/issues/136)
+- Feat: Add new traits (ManagesPasskey, ManagesRegistration, ManagesSubject, CognitoAuthenticatable) to persist is_webauthn_enabled, register_type, registered_at, and sub (subject key) on the user model.
+- Fix: Refactor of RegistersUsers/RegisterController to centralise local-user creation, raise pre/post registration events, and parameterise status messages for register vs. invite flows.
+- Feat: WebAuthPasskey::complete/delete now toggle is_webauthn_enabled on the user, fire a new PostPasskeyCompleteEvent. 
+- Feat: The home view/nav menu gain passkey-delete UI; all event constructors gain Log::debug calls and many files get a license header.
+
+[Release 47 (tag v2.0.3)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.3)
 - Fix: Issue [#124](https://github.com/ellaisys/aws-cognito/issues/124)
 - Feat: FIDO2/Passkey support for AWS Cognito client configuration
 - Feat: Implemented the registration flow with verification and resending verification code.
@@ -12,28 +50,28 @@ Release 47 (tag v2.0.3)
 - Docs: Added readme with FIDO2/Passkey configuration instructions
 - Docs: Updated readme
 
-Release 46 (tag v2.0.2)
+[Release 46 (tag v2.0.2)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.2)
 - Feat: Issue [#129](https://github.com/ellaisys/aws-cognito/issues/129)
 - Feat: Added new enums for Cognito user statuses and auth flows; expanded challenge enum usage across guards/middleware/client.
 - Feat: Implemented a web-based “Invite User” flow (routes, controller wiring, nav link, and Blade views/components).
 - Fix: Refactored exception handling to centralize JSON vs web redirect response building.
 - Docs: Update readme
 
-Release 45 (tag v2.0.1)
+[Release 45 (tag v2.0.1)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.1)
 - Fix: Issue [#127](https://github.com/ellaisys/aws-cognito/issues/127)
 - Fix: Weak encryption in php-jwt (CVE-2025-45769)
 
-Release 44 (tag v2.0.0)
+[Release 44 (tag v2.0.0)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.0)
 - Feat: Issue [#70](https://github.com/ellaisys/aws-cognito/issues/70) Add web views as partials
 - Feat: Preconfigured routes and controllers for Web and API
 - Docs: Updated readme
 
-Release 43 (tag v1.4.1)
+[Release 43 (tag v1.4.1)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.4.1)
 - Fix: Remove Laravel version debug log by @aaronhuisinga in [PR #123](https://github.com/ellaisys/aws-cognito/pull/123)
 - Fix: PHP 8.4 implicit nullable parameter deprecations by @joshkautz in [PR #122](https://github.com/ellaisys/aws-cognito/pull/122)
 - Fix: update the support email address
 
-Release 42 (tag v1.4.0)
+[Release 42 (tag v1.4.0)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.4.0)
  - Feat: Support for Laravel 11 and Laravel 12
  - Feat: Add registration type (invite, register) flow
  - Feat: Update the user email verification at first login flow
@@ -41,88 +79,88 @@ Release 42 (tag v1.4.0)
  - Fix: Issue [#110](https://github.com/ellaisys/aws-cognito/issues/110)
  - Fix: Issue [#113](https://github.com/ellaisys/aws-cognito/issues/113)
 
-Release 41 (tag v1.3.1)
+[Release 41 (tag v1.3.1)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.3.1)
  - Fix: Issue #114, Crash in CognitoTokenGuard for NEW_PASSWORD_REQUIRED challenge
  
-Release 40 (tag v1.3.0)
+[Release 40 (tag v1.3.0)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.3.0)
  - Feat: Issue #50, Architecture change to map the local and cognito users with sub (SubjectId)
  - Fix: Issue #86, SSO enabled the user is now created for both guards
  - Fix: Code optimization 
 
-Release 39 (tag v1.2.5)
+[Release 39 (tag v1.2.5)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.2.5)
  - Fix: AWS JWT Token validation timeout
  - Fix: Non declared variable references
  - Fix: Sonar cloud code compliance
 
-Release 38 (tag v1.2.4)
+[Release 38 (tag v1.2.4)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.2.4)
  - Feat: AWS JWT Token validation
 
-Release 37 (tag v1.2.3)
+[Release 37 (tag v1.2.3)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.2.3)
  - Fix: Update the QR library for MFA. The Google Fonts library was depricated.
 
-Release 36 (tag v1.2.2)
+[Release 36 (tag v1.2.2)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.2.2)
  - Fix: Password validation for special characters
 
-Release 35 (tag v1.2.1)
+[Release 35 (tag v1.2.1)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.2.1)
  - Fix: Issue #81 (Anonymous migrations issue in laravel)
 
-Release 34 (tag v1.2.0)
+[Release 34 (tag v1.2.0)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.2.0)
  - Feat: Add sub (cognito uuid) column to user table, and fill during registration.
  - Feat: Provision for user defined passwords.
  - Feat: Password validation based on Cognito Configuration
 
-Release 33 (tag v1.1.6)
+[Release 33 (tag v1.1.6)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.1.6)
  - Fix: Issue #74
 
-Release 32 (tag v1.1.5)
+[Release 32 (tag v1.1.5)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.1.5)
  - Fix: Issue #67
  - Minor updates to code document and removal of log statement
 
-Release 31 (tag v1.1.4)
+[Release 31 (tag v1.1.4)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.1.4)
  - Minor updates to code document and removal of log statement
 
-Release 30 (tag v1.1.3)
+[Release 30 (tag v1.1.3)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.1.3)
  - Fix composer alias to 1.0-dev
 
-Release 29 (tag v1.1.2)
+[Release 29 (tag v1.1.2)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.1.2)
  - Fix composer alias 
  - Doc: Update Readme
  
- Release 28 (tag v1.1.1)
+[Release 28 (tag v1.1.1)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.1.1)
  - Feature: MFA implementation with Software Token and SMS
  
- Release 27 (tag v1.1.0)
+[Release 27 (tag v1.1.0)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.1.0)
  - Feature: MFA implementation with Software Token
 
-Release 26 (tag v1.0.11)
+[Release 26 (tag v1.0.11)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.0.11)
  - Feature: Forced signout with RefreshToken revoked.
 
-Release 25 (tag v1.0.10)
+[Release 25 (tag v1.0.10)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.0.10)
  - Feature: Sign Out / Logout of the Access Token from AWS Cognito
  - Feature: Refresh Token method added to the API storage
 
-Release 24 (tag v1.0.9)
+[Release 24 (tag v1.0.9)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.0.9)
  - Fix: Issue 49 (error with reset passwords expecting json value)
 
-Release 23 (tag v1.0.8):
+[Release 23 (tag v1.0.8)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.0.8)
  - Feature: Added the cognito claim (AccessToken and RefreshToken) to the session parameter.
  
-Release 22 (tag v1.0.7):
+[Release 22 (tag v1.0.7)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.0.7)
  - Feature: Add user to the Cognito Group
  - Feature: Get all the user's groups in cognito
  - Fix: Exception handling of the local user creation in Laravel 9.x
  - Fix: No Token Exception at Web Login
 
-Release 21 (tag v1.0.6): 
+[Release 21 (tag v1.0.6)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.0.6)
  - Fix: Issue 28 (security issue in middleware)
 
-Release 20 (tag v1.0.5):
+[Release 20 (tag v1.0.5)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.0.5)
  - Feature: Support for Cognito configuration, where Client Secret is disabled
  - Feature: New User email suppress feature using message action configuration
  - Feature: New User auto verification of email address is made configurable
  - Fix: Modified the exception handling for authentication to show AWS Cognito errors
  - Fix: Exception handling in forgot password for non-cognito users 
 
-Release 19 (tag v1.0.4): 
+[Release 19 (tag v1.0.4)](https://github.com/ellaisys/aws-cognito/releases/tag/v1.0.4)
  - Feature: Forgot password RESEND option
  

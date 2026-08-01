@@ -1,4 +1,8 @@
 # Security Guidelines
+
+> [!NOTE]
+> Last Updated: <!-- AUTO:last_updated -->2026-07-31<!-- /AUTO:last_updated -->
+
 The security of our project and its users is of utmost importance to us. We are committed to maintaining a secure environment and addressing any security vulnerabilities promptly. This document outlines guidelines for reporting security issues and our approach to handling them. Please read this information carefully and follow the instructions provided.
 
 ## Reporting Security Issues

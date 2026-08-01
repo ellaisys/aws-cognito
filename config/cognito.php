@@ -8,9 +8,9 @@
  * file that was distributed with this source code.
  */
 
-use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
+use Illuminate\Support\Str;
 
-$allowPhoneNumber = env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE') === 'MFA_ENABLED' ||
+$allowPhoneNumber = (env('AWS_COGNITO_MFA_SETUP') !== 'OFF' && Str::contains(env('AWS_COGNITO_MFA_TYPE'), 'SMS_MFA')) ||
     in_array(env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'), ['SMS', 'BOTH']) ||
     env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false);
 
@@ -102,21 +102,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | AWS Cognito Home Route Name
-    |--------------------------------------------------------------------------
-    |
-    | This is the home route name where the page redirects post successful
-    | authentication. This will work with and without the MFA enabled using
-    | the AWS Cognito based authentication. This is applicable for web routes
-    | only.
-    |
-    | The default value is set to 'home'.
-    |
-    */
-    'redirect_to_route_name' => env('AWS_COGNITO_HOME_ROUTE_NAME', 'cognito.home'),
-
-    /*
-    |--------------------------------------------------------------------------
     | Cognito Fields & DB Mapping
     |--------------------------------------------------------------------------
     |
@@ -184,35 +169,50 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito MFA Setup and configurations
+    | Registration Enabled
     |--------------------------------------------------------------------------
-    |
-    | This option controls the cognito MFA configuration to be used for the
-    | users in the User Pool. The options available are "MFA_NONE" and
-    | "MFA_ENABLED". The default value is set to "MFA_NONE" which means that
-    | the MFA is not enabled for the users.
-    |
-    | MFA_NONE, MFA_ENABLED
+    | This option controls whether self registration is enabled for new users.
+    | Set to true to allow self registration, or false to disable it.
     |
     */
-    'mfa_setup' => env('AWS_COGNITO_MFA_SETUP', 'MFA_NONE'),
-    'force_mfa_code_route_name' => env('AWS_COGNITO_MFA_CODE_ROUTE_NAME', 'cognito.form.login'),
+    'registration_enabled' => env('AWS_COGNITO_REGISTRATION_ENABLED', true),
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito MFA Types supported
+    | Cognito MFA Setup and Configuration
     |--------------------------------------------------------------------------
     |
-    | This option controls the default cognito MFA types allowed if the MFA is
-    | enabled for the user. The options available are "EMAIL_MFA", "SMS_MFA",
-    | "SOFTWARE_TOKEN_MFA" and "WEB_AUTHN".
-    | The default value is set to "SOFTWARE_TOKEN_MFA".
+    | This option controls the MFA configuration for the Cognito User Pool.
+    | Supported values are "OFF", "ON", and "OPTIONAL". The default value is
+    | "OFF", which disables MFA for all users.
     |
-    | You can set one or more MFA types as per your requirements.
-    | In case you want to allow both the MFA types, you can set the value to
-    | "SMS_MFA,SOFTWARE_TOKEN_MFA,WEB_AUTHN" separated by comma.
+    | Setting this option to "ON" requires users to configure MFA during
+    | registration or at sign-in before they can continue.
     |
-    | The first MFA type in the list will be set as preferred MFA type.
+    | Setting this option to "OPTIONAL" allows users to enable MFA after
+    | signing in. They can configure it immediately, skip the setup, or
+    | enable it later from their profile settings.
+    |
+    | Valid values: OFF, ON, OPTIONAL
+    |
+    */
+    'mfa_setup' => env('AWS_COGNITO_MFA_SETUP', 'OFF'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito MFA Types
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the MFA methods available to users when MFA is
+    | enabled. Supported values are "EMAIL_MFA", "SMS_MFA",
+    | "SOFTWARE_TOKEN_MFA", and "WEB_AUTHN". The default value is
+    | "SOFTWARE_TOKEN_MFA".
+    |
+    | Specify one or more MFA types separated by commas, for example:
+    | "SMS_MFA,SOFTWARE_TOKEN_MFA,WEB_AUTHN".
+    |
+    | When multiple MFA types are configured, the first value in the list is
+    | used as the preferred MFA method.
     |
     */
     'mfa_type' => env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA'),
@@ -268,11 +268,11 @@ return [
     | verification. When set to false, passkeys will not be available for the
     | authentication.
     |
-    | Factor configuration is set to 'MULTI_FACTOR_WITH_USER_VERIFICATION'.
-    | Sets whether passkeys can be used as multi-factor authentication (MFA).
-    | When set to MULTI_FACTOR_WITH_USER_VERIFICATION, passkey authentication
-    | with user verification satisfies MFA requirements. When set to
-    | 'SINGLE_FACTOR' or not set, passkeys are a single authentication factor.
+    | Factor configuration sets whether passkeys can be used as multi-factor
+    | authentication (MFA). When set to MULTI_FACTOR_WITH_USER_VERIFICATION,
+    | passkey authentication with user verification satisfies MFA requirements.
+    | When set to 'SINGLE_FACTOR', passkeys are a single authentication factor.
+    | Default is set to 'SINGLE_FACTOR'.
     |
     | Relying party id is set to null. The relying party is the server that
     | verifies the authentication assertion from the passkey. This is typically
@@ -287,7 +287,7 @@ return [
     */
     'allow_passkeys' => env('AWS_COGNITO_ALLOW_PASSKEYS', false),
     'web_authn_mfa_configuration' => [
-        'FactorConfiguration' => env('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', 'MULTI_FACTOR_WITH_USER_VERIFICATION'),
+        'FactorConfiguration' => env('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', 'SINGLE_FACTOR'),
         'RelyingPartyId' => env('AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID', 'localhost'),
         'UserVerificationMethod' => env('AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD', 'preferred'),
     ],
@@ -304,7 +304,7 @@ return [
     'delete_user'               => env('AWS_COGNITO_DELETE_USER', false),
 
     // Package configurations
-    'sso_user_model'        => env('AWS_COGNITO_USER_MODEL', 'App\Models\User'),
+    'sso_user_model'        => env('AWS_COGNITO_USER_MODEL', 'App\\Models\\User'),
 
     /*
     |--------------------------------------------------------------------------
@@ -319,63 +319,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito Challenge Status Names for Forced Password Change.
+    | Cache Prefix
     |--------------------------------------------------------------------------
     |
-    | This option controls the package action based on the Challenge Status
-    | received from the AWS Cognito Authentication. If the challenge status
-    | is 'NEW_PASSWORD_REQUIRED' and/or 'RESET_REQUIRED', this
-    | configuration will force the user to change their password.
+    | This option controls the cache prefix used for storing values such that
+    | it does not cause any conflict with your existing cache keys. This is
+    | particularly useful when you have multiple applications sharing the same
+    | cache store.
+    | In most cases, you will not need to change this value, but you can set
+    | it as per your requirements.
     |
     */
-    'forced_challenge_names' => [
-        CognitoChallengeTypes::NEW_PASSWORD_REQUIRED,
-        CognitoChallengeTypes::RESET_REQUIRED
+    'cache_prefix' => [
+        'srp' => env('AWS_COGNITO_CACHE_PREFIX_SRP', 'aws.cognito.srp')
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Force Password Change by the User based on Cognito Status in Web Request
-    | (Session Guard)
-    |--------------------------------------------------------------------------
-    |
-    | This setting controls the action, in case the AWS Cognito authentication
-    | response includes the Challenge Names defined by 'forced_challenge_names'
-    | configuration in this file. The below flag, if set to 'true', will force
-    | the web application user to be directed to certain route view/page.
-    |
-    | In case the route name needs to be changed, you can set the below parameter
-    | and map it in web.php route page.
-    |
-    */
-    'force_password_change_web' => env('AWS_COGNITO_FORCE_PASSWORD_CHANGE_WEB', true),
-    'force_redirect_route_name' => env('AWS_COGNITO_FORCE_PASSWORD_ROUTE_NAME', 'cognito.form.change.password'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Force Password Change by User based on Cognito Status in API Request (Token Guard)
-    |--------------------------------------------------------------------------
-    |
-    | This setting controls the action, in case the AWS Cognito authentication
-    | response includes the Challenge Names defined by 'forced_challenge_names'
-    | configuration in this file. The below flag, if set to 'true', will force
-    | the user requesting API authentication by sharing the data required for
-    | changing the password.
-    |
-    */
-    'force_password_change_api' => env('AWS_COGNITO_FORCE_PASSWORD_CHANGE_API', true),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Force Auto Password Update based on Cognito Status in API Request (Token Guard)
-    |--------------------------------------------------------------------------
-    |
-    | This option enables the password to be auto updated into the AWS Cognito
-    | User Pool. This feature will work only if the 'force_password_change_api'
-    | is set to false.
-    |
-    */
-    'force_password_auto_update_api' => env('AWS_COGNITO_FORCE_PASSWORD_AUTO_UPDATE_API', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -464,17 +421,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Registration Type
-    |--------------------------------------------------------------------------
-    | This option controls the registration type for new users. The options
-    | available are "register" and "invite". The default value is set to
-    | "register".
-    |
-    */
-    'registration_type' => env('AWS_COGNITO_REGISTRATION_TYPE', 'register'),
-
-    /*
-    |--------------------------------------------------------------------------
     | Views
     |--------------------------------------------------------------------------
     | This option controls the views for the package. You can set the layout
@@ -496,6 +442,28 @@ return [
            'default_root_page' => env('AWS_COGNITO_DEFAULT_ROOT_PAGE', ''),
            'login_page' => env('AWS_COGNITO_LOGIN_PAGE', 'cognito.form.login'),
            'home_page' => env('AWS_COGNITO_HOME_ROUTE_NAME', 'cognito.home'),
+           'register_page' => env('AWS_COGNITO_REGISTER_PAGE', 'cognito.form.register'),
+           'register_verify_page' => env('AWS_COGNITO_VERIFY_REGISTER_PAGE', 'cognito.form.register.verify'),
+           'password_forgot_page' => env('AWS_COGNITO_PASSWORD_FORGOT_PAGE', 'cognito.form.password.forgot'),
+           'password_reset_page' => env('AWS_COGNITO_PASSWORD_RESET_PAGE', 'cognito.form.password.reset'),
+           'challenge_page' => env('AWS_COGNITO_CHALLENGE_PAGE', 'cognito.form.login.step'),
         ]
-    ]
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | SRP Parameters
+    |--------------------------------------------------------------------------
+    | This option controls the SRP parameters used for the authentication. These
+    | parameters are used for the SRP authentication flow with AWS Cognito. The
+    | default values are set to the recommended values for the SRP authentication.
+    |
+    */
+    'srp_parameters' => [
+        // Generator value (as hex)
+        'G_HEX' => env('AWS_COGNITO_SRP_G_HEX', '2'),
+
+        // Large prime number (as hex) - 3072-bit group from AWS Cognito
+        'N_HEX' => env('AWS_COGNITO_SRP_N_HEX', 'FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E208E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF'),
+    ],
 ];

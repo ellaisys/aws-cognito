@@ -46,45 +46,12 @@ class RefreshTokenController extends Controller
      */
     public function __construct()
     {
-        //Mandate authentication for all the API's of this controller
-        $this->middleware('aws-cognito');
+        $this->middleware('aws-cognito')->except(['revalidate']);
+
+        //Set flag to indicate action called from controller
+        $this->setIsControllerAction(false);
 
         parent::__construct();
     }
-
-    /**
-     * Action to revalidate the token
-     *
-     * @param Request $request
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function revalidate(Request $request)
-    {
-        try {
-            //Initialize parameters
-            $returnValue = null;
-            $guard = 'web';
-            $isJsonResponse = false;
-
-            //Check if request is json
-            if ($this->isJson($request)) {
-                $isJsonResponse = true;
-                $guard = 'api';
-            } //End if
-
-            //Call the refresh token API
-            $response = $this->refresh($request, $guard);
-
-            //Return the response
-            if ($isJsonResponse) {
-                $returnValue = $this->response->success($response);
-            }
-            return $returnValue;
-        } catch (Exception $e) {
-            Log::error('RefreshTokenController:revalidate:Exception');
-            return $e;
-        }
-    } //Function ends
 
 } //Class ends

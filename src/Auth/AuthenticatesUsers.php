@@ -13,15 +13,27 @@ namespace Ellaisys\Cognito\Auth;
 
 use Auth;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
+use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\AwsCognitoUserPool;
 
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
+
+use Ellaisys\Cognito\Services\AwsCognitoJwksService;
+use Ellaisys\Cognito\Services\AwsCognitoSrpService;
+
+use Ellaisys\Cognito\Events\Auth\PreAuthEvent;
+use Ellaisys\Cognito\Events\Auth\PostAuthSuccessEvent;
+use Ellaisys\Cognito\Events\Auth\PostAuthFailedEvent;
+use Ellaisys\Cognito\Events\Auth\PreLogoutEvent;
+use Ellaisys\Cognito\Events\Auth\PostLogoutEvent;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -70,51 +82,64 @@ trait AuthenticatesUsers
      * Attempt to log the user into the application.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  \CognitoAuthFlowTypes  $authFlow (optional)
      * @param  \string  $paramUsername (optional)
      * @param  \string  $paramPassword (optional)
+     * @param  \string  $deviceKeyParam (optional)
      *
      * @return mixed
      */
     protected function attemptLogin(Request $request,
+        CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH,
         string $paramUsername='email',
-        string $paramPassword='password')
+        string $paramPassword='password',
+        string $deviceKeyParam = 'device_key')
     {
         try {
             // Initialize variables
             $returnValue = null;
             $guard = $this->getGuard($request);
 
+            //Raise Pre Auth Event
+            $this->callPreAuthEvent($request);
+
             //Get the password policy
             $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
-            $validator = Validator::make($request->only([$paramPassword]), [
-                $paramPassword => 'required|regex:'.$passwordPolicy['regex']
-            ], [
-                'regex' => 'Must contain atleast ' . $passwordPolicy['message']
-            ]);
+            $validator = Validator::make(
+                $request->only([
+                    $paramUsername,
+                    $paramPassword,
+                    $deviceKeyParam
+                ]),
+                [
+                    $paramUsername => 'required|string',
+                    $paramPassword => ['required', 'regex:' . $passwordPolicy['regex']],
+                    $deviceKeyParam => 'sometimes|string'
+                ], [
+                    'regex' => 'Must contain atleast ' . $passwordPolicy['message']
+                ]);
             if ($validator->fails()) {
-                Log::error($validator->errors());
                 throw new ValidationException($validator);
             } //End if
 
             //Authenticate User
-            $returnValue = Auth::guard($guard)->attempt(
+            $response = Auth::guard($guard)->attempt(
                     $request->all(), false,
                     $paramUsername, $paramPassword,
-                    CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH
+                    $authFlow
                 );
-        } catch (Exception $e) {
+
+            //Return response
+            $returnValue = $this->processClaimResponse($request, $response);
+        } catch (Exception $exception) {
             Log::error('AuthenticatesUsers:attemptLogin:Exception');
-            if ($e instanceof ValidationException || ($this->isRaiseException)) {
-                throw $e;
-            } //End if
 
-            if ($e instanceof CognitoIdentityProviderException) {
-                $this->sendFailedCognitoResponse($e, $paramUsername);
-            }
+            //Rise Post Auth Failed Event
+            $this->callPostAuthErrorEvent($request, $exception, $paramPassword);
 
-            $returnValue = $this->sendFailedLoginResponse($e, $this->isJsonResponse, $paramUsername);
+            throw $exception;
         } //Try-catch ends
 
         return $returnValue;
@@ -124,40 +149,129 @@ trait AuthenticatesUsers
      * Attempt to log the user into the application using SRP authentication flow.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  \CognitoAuthFlowTypes  $authFlow (optional)
      * @param  \string  $paramUsername (optional)
      * @param  \string  $paramPassword (optional)
+     * @param  \string  $sessionTokenParam (optional)
+     * @param  \string  $deviceKeyParam (optional)
      *
      * @return mixed
      */
     protected function attemptLoginSRP(Request $request,
-        string $paramUsername='email',
-        string $paramPassword='password')
+        CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_SRP_AUTH,
+        string $paramUsername = 'email',
+        string $paramPassword = 'password',
+        string $sessionTokenParam = 'session_token',
+        string $deviceKeyParam = 'device_key')
     {
+        // Initialize variables
+        $returnValue = null;
+
         try {
-            // Initialize variables
-            $returnValue = null;
+            // Get the authentication guard
             $guard = $this->getGuard($request);
 
+            //Raise Pre Auth Event
+            $this->callPreAuthEvent($request);
+
+            //Generate the SRP_A parameter if not present in the request
+            if (!$request->has($paramPassword)) {
+                // Generate public and private ephemeral values
+                $srpService = app()->make(AwsCognitoSrpService::class);
+                $ephemeral = $srpService->generateEphemeral();
+
+                //Request password authentication using SRP flow
+                $request->merge([
+                    $paramPassword => $ephemeral['public_key'], // SRP_A value
+                    $sessionTokenParam => $ephemeral['session_token']
+                ]);
+            } //End if
+
             //Validate request
-            $validator = Validator::make($request->only([$paramPassword]), [
-                $paramPassword => 'required'
-            ]);
+            $validator = Validator::make(
+                $request->only([$paramUsername, $paramPassword, $sessionTokenParam, $deviceKeyParam]),
+                [
+                    $paramUsername  => 'required|string',
+                    $paramPassword  => 'required|string',
+                    $sessionTokenParam => 'required|string',
+                    $deviceKeyParam    => 'sometimes|string'
+                ]);
             if ($validator->fails()) {
-                Log::error($validator->errors());
                 throw new ValidationException($validator);
             } //End if
 
             //Authenticate User
-            $returnValue = Auth::guard($guard)->attempt(
+            $response = Auth::guard($guard)->attempt(
                     $request->all(), false,
                     $paramUsername, $paramPassword,
-                    CognitoAuthFlowTypes::USER_SRP_AUTH
+                    $authFlow
                 );
-        } catch (Exception $e) {
+
+            //Return response
+            $returnValue = $this->processClaimResponse($request, $response);
+        } catch (Exception $exception) {
             Log::error('AuthenticatesUsers:attemptLoginSRP:Exception');
-            throw $e;
+
+            //Rise Post Auth Failed Event
+            $this->callPostAuthErrorEvent($request, $exception, $paramPassword);
+
+            throw $exception;
         } //Try-catch ends
 
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Logout action for the API based approach.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public function logout(Request $request, bool $forced = false)
+    {
+        $returnValue = null;
+        try {
+            //Initialize parameters
+            $guard = $this->getGuard($request);
+
+            //Raise Pre Logout Event
+            event(new PreLogoutEvent(
+                    $request->toArray(),
+                    $request->ip()
+                ));
+
+            //Logout user
+            Auth::guard($guard)->logout($forced);
+            $response = ['message' => 'Successfully logged out'];
+
+            //Raise Post Logout Event
+            event(new PostLogoutEvent(
+                    $request->toArray(),
+                    $request->ip()
+                ));
+
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $request->session()->invalidate();
+
+                // Set the redirect path to the login page defined in the configuration
+                $this->redirectTo = config('cognito.routes.web.login_page');
+
+                // Call response redirect with status, message, and data
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::messages.auth.logout_success'))
+                    ->with('data', $response);
+            } //Return response
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:logout:Exception');
+            throw $e;
+        } //End try-catch
         return $returnValue;
     } //Function ends
 
@@ -167,17 +281,20 @@ trait AuthenticatesUsers
      *
      * @return mixed
      */
-    protected function attemptLoginChallenge(Request $request): mixed
+    protected function challenge(Request $request): mixed
     {
+        $returnValue = null;
         try {
             // Initialize variables
-            $returnValue = null;
             $guard = $this->getGuard($request);
 
             //Convert challenge name to upper case if present in the request
             if ($request->has('challenge_name')) {
                 $request->merge(['challenge_name' => strtoupper($request['challenge_name'])]);
             } //End if
+
+            //Build the challenge data based on the challenge type
+            $request = $this->buildChallengeRequestData($request);
 
             //Validate payload
             $validator = Validator::make($request->all(), $this->rulesChallenge());
@@ -198,10 +315,17 @@ trait AuthenticatesUsers
             } //End if
 
             //Authenticate User
-            $returnValue = Auth::guard($guard)->attemptChallengeAuth($challenge);
-        } catch (Exception $e) {
-            Log::error('AuthenticatesUsers:attemptLoginChallenge:Exception');
-            throw $e;
+            $response = Auth::guard($guard)->attemptChallengeAuth($challenge);
+
+            //Return response
+           $returnValue = $this->processClaimResponse($request, $response);
+        } catch (Exception $exception) {
+            Log::error('AuthenticatesUsers:challenge:Exception');
+
+            //Rise Post Auth Failed Event
+            $this->callPostAuthErrorEvent($request, $exception);
+
+            throw $exception;
         }
         return $returnValue;
     } //Function ends
@@ -250,11 +374,288 @@ trait AuthenticatesUsers
                 } //End switch
             } //End if
         } catch (Exception $e) {
-            Log::error('AuthenticatesUsers:getUserNameFromChallengeSession:Exception');
+            Log::error('AuthenticatesUsers:getUsernameFromChallengeSession:Exception');
             throw $e;
         } //Try-catch ends
 
         return $username;
+    } //Function ends
+
+    /**
+     * Build the challenge request data based on the challenge type
+     *
+     * @param Request $request
+     * @return Request
+     * @throws ValidationException
+     */
+    private function buildChallengeRequestData(Request &$request): Request
+    {
+        try {
+            if ($request->has('challenge_name')) {
+                $challangeName = CognitoChallengeTypes::from($request['challenge_name']);
+                if ($challangeName == CognitoChallengeTypes::SELECT_CHALLENGE &&
+                    $request->has('challenge_value') &&
+                    $request['challenge_value'] == 'PASSWORD_SRP') {
+                    $request = $this->buildChallengeRequestDataForSRP($request);
+                } elseif ($challangeName == CognitoChallengeTypes::PASSWORD_SRP) {
+                    $request = $this->buildChallengeRequestDataForSRP($request);
+                } elseif ($challangeName == CognitoChallengeTypes::PASSWORD_VERIFIER) {
+                    $request = $this->buildChallengeRequestDataForPasswordVerifier($request, false);
+                } elseif ($challangeName == CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER) {
+                    $request = $this->buildChallengeRequestDataForPasswordVerifier($request, true);
+                } else{
+                    // Do Nothing
+                }
+            } //End if
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:buildChallengeRequestData:Exception');
+            throw $e;
+        } //Try-catch ends
+
+        return $request;
+    } //Function ends
+
+    /**
+     * Build the challenge request data for SRP authentication flow when
+     * the challenge name is PASSWORD_SRP
+     *
+     * @param Request $request
+     * @return Request
+     * @throws ValidationException
+     */
+    private function buildChallengeRequestDataForSRP(Request &$request): Request
+    {
+        try {
+            // Get the SRP parameters and generate A and a
+            $srpService = app()->make(AwsCognitoSrpService::class);
+
+            // Generate the SRP parameters and get the challenge response parameters
+            $ephemeral = $srpService->generateEphemeral($request['session'] ?? null);
+
+            // Append to existing challenge value if present as PASSWORD_SRP
+            $challengeValue = null;
+            if ($request->has('challenge_value') && $request['challenge_value'] == 'PASSWORD_SRP') {
+                $challengeValue = json_encode([
+                    'ANSWER' => $request['challenge_value'],
+                    'SRP_A' => $ephemeral['public_key']
+                ]);
+            } else {
+                $challengeValue = $ephemeral['public_key']; // SRP_A value
+            } //End if
+
+            // Add challenge response parameters to the request
+            $request->merge([
+                'session' => $ephemeral['session_token'],
+                'challenge_value' => $challengeValue
+            ]);
+        } catch (Exception $e) {
+            Log::error('AuthenticatesUsers:buildChallengeRequestDataForSRP:Exception');
+            throw $e;
+        } //Try-catch ends
+
+        return $request;
+    } //Function ends
+
+    /**
+     * Build the challenge request data for SRP authentication flow when
+     * the challenge name is PASSWORD_VERIFIER or DEVICE_PASSWORD_VERIFIER
+     *
+     * @param Request $request
+     * @param bool $isDeviceAuth (optional)
+     * @return Request
+     * @throws ValidationException
+     */
+    private function buildChallengeRequestDataForPasswordVerifier(Request &$request,
+        bool $isDeviceAuth = false): Request
+    {
+        try {
+            //Validate challenge payload
+            $payload = json_decode($request['challenge_value'], true);
+            if ($payload === null) {
+                throw ValidationException::withMessages([
+                        'challenge_value' => 'Missing or invalid challenge value'
+                    ]);
+            } //End if
+            $validator = Validator::make(
+                    $payload,
+                    $this->rulesChallengeValue($isDeviceAuth)
+                );
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            } //End if
+
+            //Get the SRP parameters and generate A and a
+            $srpService = app()->make(AwsCognitoSrpService::class);
+
+            /**
+             * Set the device authentication flag in the SRP service to
+             * indicate if this is a device authentication challenge
+             */
+            $srpService->setIsDeviceAuth($isDeviceAuth);
+
+            // Process the challenge and get the response parameters
+            $challengeValue = $srpService->processChallenge(
+                    $request['challenge_value'],
+                    $request['session'],
+                    $request['challenge_params'] ?? null
+                );
+
+            //Add challenge response parameters to the request
+            $request->merge([
+                'challenge_value' => json_encode($challengeValue)
+            ]);
+        } catch (Exception $exception) {
+            Log::error('AuthenticatesUsers:buildChallengeRequestDataForPasswordVerifier:Exception');
+            throw $exception;
+        } //Try-catch ends
+
+        return $request;
+    } //Function ends
+
+    /**
+     * Process the claim response from Cognito authentication.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $response
+     *
+     * @return mixed
+     */
+    private function processClaimResponse(Request $request, $response): mixed
+    {
+        // Initialize variables
+        $returnValue = null;
+
+        try {
+            // Check if the response is an instance of AwsCognitoClaim
+            if ($response instanceof AwsCognitoClaim) { // Successful authentication
+                //Call the post-authentication success event
+                $this->callPostAuthSuccessEvent($request);
+
+                //Return response
+                if ($this->isControllerAction) {
+                    $returnValue = $response;
+                } elseif ($this->getIsJsonResponse($request)) {
+                    $returnValue = $this->response->success($response->getData());
+                } else {
+                    // Regenerate the session to prevent session fixation attacks
+                    $request->session()->regenerate();
+
+                    // Set the redirect path to the home page defined in the configuration
+                    $this->redirectTo = config('cognito.routes.web.home_page');
+
+                    // Call response redirect with status, message, and data
+                    $returnValue = redirect()
+                        ->route($this->redirectPath())
+                        ->with('status', 'success')
+                        ->with('message', trans('cognito::messages.auth.login_success'))
+                        ->with('data', $response->getData());
+                } //Return response
+            } else { // Challenge condition
+                if (!is_array($response) || !isset($response['challenge_name'])) {
+                    throw new HttpException(400, 'Invalid challenge response received from authentication guard.');
+                } //End if
+
+                //Return challenge response
+                $returnValue = $this->getChallengeSuccessResponse($request, $response);
+            } //End if
+        } catch (Exception $exception) {
+            Log::error('AuthenticatesUsers:processClaimResponse:Exception');
+            throw $exception;
+        } //Try-catch ends
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Get the challenge success response based on the request type.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param array $response
+     * @return mixed
+     */
+    private function getChallengeSuccessResponse(Request $request, array $response): mixed
+    {
+        // Initialize variables
+        $returnValue = null;
+
+        //Return response
+        if ($this->isControllerAction) {
+            $returnValue = $response;
+        } elseif ($this->getIsJsonResponse($request)) {
+            $returnValue = $this->response->success($response);
+        } else {
+            // Set the redirect path for the challenge
+            $this->redirectTo = config('cognito.routes.web.challenge_page');
+
+            // Call response redirect with status, message, and data for challenge
+            $returnValue = redirect()
+                ->route($this->redirectPath(), [
+                        'step' => 'challenge',
+                        'challenge' => $response['challenge_name']
+                    ])
+                ->with('status', 'success')
+                ->with('message', trans('cognito::messages.auth.challenge_generated'))
+                ->with('data', $response);
+        } //Return response
+
+        return $returnValue;
+    } //Function ends
+
+    /**
+     * Call the pre-authentication event.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return void
+     */
+    private function callPreAuthEvent(Request $request): void
+    {
+        //Raise pre registration event
+        event(new PreAuthEvent(
+            $request->except($this->passwordField),
+            $request->ip()
+        ));
+    } //Function ends
+
+    /**
+     * Call the post-authentication success event.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param string $guard
+     * @return void
+     */
+    private function callPostAuthSuccessEvent(
+        Request $request, string $paramPassword='password'): void
+    {
+        // Initialize parameters
+        $guard = $this->getGuard($request);
+
+        // Get the authenticated user
+        $user = Auth::guard($guard)->user();
+
+        // Raise Post Auth Success Event
+        event(new PostAuthSuccessEvent(
+            $user->toArray(),
+            $request->except($paramPassword),
+            $request->ip()
+        ));
+    } //Function ends
+
+    /**
+     * Call the post-authentication error event.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \Exception $e
+     * @return void
+     */
+    private function callPostAuthErrorEvent(
+        Request $request, Exception $exception,
+        string $paramPassword='password'): void
+    {
+        //Rise Post Auth Failed Event
+        event(new PostAuthFailedEvent(
+            $request->except($paramPassword),
+            $exception, $request->ip()
+        ));
     } //Function ends
 
     /**
@@ -267,62 +668,35 @@ trait AuthenticatesUsers
         return [
             'username'          => 'sometimes',
             'session'           => 'required',
-            'challenge_name'    => 'required|in:WEB_AUTHN,EMAIL_OTP,SMS_OTP,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD_VERIFIER',
-            'challenge_value'   => 'required',
+            'challenge_name'    => 'required|string|in:SELECT_CHALLENGE,WEB_AUTHN,EMAIL_OTP,SMS_OTP,SELECT_MFA_TYPE,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD,PASSWORD_SRP,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER,NEW_PASSWORD_REQUIRED',
+            'challenge_value'   => 'required|string',
+            'challenge_params'  => 'sometimes|string'
         ];
     } //Function ends
 
     /**
-     * Handle Failed Cognito Exception
+     * Get the challenge validation rules.
      *
-     * @param CognitoIdentityProviderException $exception
+     * @return array
      */
-    private function sendFailedCognitoResponse(
-        CognitoIdentityProviderException $exception,
-        string $paramName='email')
+    protected function rulesChallengeValue(bool $isDeviceAuth = false)
     {
-        throw ValidationException::withMessages([
-            $paramName => $exception->getAwsErrorMessage(),
-        ]);
-    } //Function ends
+        $rules = [
+            'PASSWORD_CLAIM_SIGNATURE'      => 'sometimes|string',
+            'PASSWORD_CLAIM_SECRET_BLOCK'   => 'required|string',
+            'TIMESTAMP'                     => 'required|string',
 
-    /**
-     * Handle Generic Exception
-     *
-     * @param  \Collection $request
-     * @param  \Exception $exception
-     */
-    private function sendFailedLoginResponse($exception,
-        bool $isJsonResponse=false, string $paramName='email')
-    {
-        $errorCode = 400;
-        $errorMessageCode = 'cognito.validation.auth.failed';
-        $message = 'FailedLoginResponse';
-        if (!empty($exception)) {
-            if ($exception instanceof CognitoIdentityProviderException) {
-                $errorMessageCode = $exception->getAwsErrorCode();
-                $message = $exception->getAwsErrorMessage();
-            } elseif ($exception instanceof ValidationException) {
-                throw $exception;
-            } else {
-                $errorCode = $exception->getStatusCode();
-                $message = $exception->getMessage();
-            } //End if
+            'PASSKEY_HASH'                  => 'required_without:PASSWORD_CLAIM_SIGNATURE|string',
+            'MESSAGE_BASE64'                => 'sometimes|string',
+        ];
+
+        // Add device authentication specific rules
+        if ($isDeviceAuth) {
+            $rules['DEVICE_KEY'] = 'required|string';
+            $rules['DEVICE_GROUP_KEY'] = 'required_with:PASSKEY_HASH|string';
         } //End if
 
-        if ($isJsonResponse) {
-            return response()->json([
-                'error' => $errorMessageCode,
-                'message' => $message
-            ], $errorCode);
-        } else {
-            return redirect()
-                ->back()
-                ->withErrors([
-                    'error' => $errorMessageCode,
-                    $paramName => $message,
-                ]);
-        } //End if
+        return $rules;
     } //Function ends
 
 } //Trait ends

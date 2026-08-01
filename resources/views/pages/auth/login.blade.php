@@ -2,7 +2,6 @@
 
 @section('content')
 <div class="container">
-    @if (!((config('cognito.mfa')!='MFA_NONE') && (request()->has('status')) && (request()->has('session_token'))))
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
@@ -10,10 +9,11 @@
 
                 <div class="card-body">
                     <x-cognito::common.alert />
+
                     @php
                         $step = request()->route('step');
-                        $step = (bool) config('cognito.allow_passkeys', false) ? $step : 'password';
                     @endphp
+
                     @switch($step)
                         @case('options')
                             <x-cognito::forms.auth.options-form />
@@ -33,7 +33,5 @@
             </div>
         </div>
     </div>
-    @endif
-    <x-cognito::mfa.code-form />
 </div>
 @endsection

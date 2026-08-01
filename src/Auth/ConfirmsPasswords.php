@@ -247,8 +247,8 @@ trait ConfirmsPasswords
         try {
             return [
                 $this->paramUsername => 'sometimes|email',
-                $this->paramPasswordOld => 'required|regex:'.$this->passwordPolicy['regex'],
-                $this->paramPasswordNew => 'required|confirmed|regex:'.$this->passwordPolicy['regex'],
+                $this->paramPasswordOld => ['required', 'regex:'.$this->passwordPolicy['regex']],
+                $this->paramPasswordNew => ['required', 'confirmed', 'regex:'.$this->passwordPolicy['regex']],
             ];
         } catch (Exception $e) {
             Log::error('ConfirmsPasswords:rules:Exception');
