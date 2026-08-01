@@ -2,8 +2,9 @@
 
 namespace Ellaisys\Cognito\Tests\Exceptions;
 
-use Exception;
 use PHPUnit\Framework\TestCase;
+
+use Exception;
 use Ellaisys\Cognito\Exceptions\DBConnectionException;
 
 class DBConnectionExceptionTest extends TestCase

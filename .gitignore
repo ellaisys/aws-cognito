@@ -1,2 +1,3 @@
-
+# Ignore following directories
 /vendor/
+/tests/reports/

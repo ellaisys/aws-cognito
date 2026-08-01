@@ -4,12 +4,13 @@ namespace Ellaisys\Cognito\Tests\Exceptions;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
+
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class AwsCognitoExceptionTest extends TestCase
 {
-    #[DataProvider('awsErrorCodeProvider')]
+    #[DataProvider('AwsErrorCodeProvider')]
     public function test_it_maps_aws_error_codes(string $awsErrorCode, string $expectedCode): void
     {
         $previous = $this->createMock(CognitoIdentityProviderException::class);
@@ -33,7 +34,7 @@ class AwsCognitoExceptionTest extends TestCase
         $this->assertSame($previous, $exception->getPrevious());
     }
 
-    public static function awsErrorCodeProvider(): array
+    public static function AwsErrorCodeProvider(): array
     {
         return [
             'password reset required' => ['PasswordResetRequiredException', AwsCognitoException::COGNITO_AUTH_USER_RESET_PASS],
