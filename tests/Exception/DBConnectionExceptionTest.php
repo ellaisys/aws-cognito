@@ -1,7 +1,8 @@
 <?php
 
-namespace Ellaisys\Cognito\Tests\Exceptions;
+namespace Ellaisys\Cognito\Tests\Exception;
 
+//use Ellaisys\Cognito\Tests\TestCase;
 use PHPUnit\Framework\TestCase;
 
 use Exception;

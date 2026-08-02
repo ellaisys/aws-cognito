@@ -1,0 +1,18 @@
+<?php
+
+namespace Ellaisys\Cognito\Tests\Feature;
+
+// use Illuminate\Foundation\Testing\RefreshDatabase;
+// use Ellaisys\Cognito\Tests\TestCase;
+use PHPUnit\Framework\TestCase;
+
+class ExampleTest extends TestCase
+{
+    /**
+     * A basic test example.
+     */
+    public function test_the_application_returns_a_successful_response(): void
+    {
+        $this->assertTrue(true);
+    }
+}

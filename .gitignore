@@ -1,3 +1,7 @@
+# Ignore the following files
+.DS_Store
+.phpunit.cache
+
 # Ignore following directories
 /vendor/
 /tests/reports/
