@@ -1,7 +1,10 @@
 # Ignore the following files
 .DS_Store
+composer.phar
+composer.lock
 .phpunit.cache
+.phpunit.result.cache
 
 # Ignore following directories
-/vendor/
-/tests/reports/
+/vendor
+/tests/reports

@@ -2,7 +2,51 @@
     "name": "ellaisys/aws-cognito",
     "description": "Laravel Authentication using AWS Cognito (Web and API)",
     "keywords": [
-        "php", "laravel", "aws", "cognito", "aws cognito", "auth", "authentication", "oauth", "user pool", "ellaisys", "mfa", "multi-factor authentication", "2fa", "two-factor authentication", "password", "reset", "forgot password", "change password", "update password", "email", "phone", "sms", "verification", "user confirmation", "access token", "reset token", "email recovery", "verify code", "confirm code", "sms", "token verify", "aws sdk", "aws sdk php", "identity pool", "srp protocol", "secure remote password protocol", "device authentication", "fido", "fido2", "webauthn", "passkey", "passwordless", "jwt", "json web token", "jwt token"
+        "php",
+        "laravel",
+        "aws",
+        "cognito",
+        "aws cognito",
+        "auth",
+        "authentication",
+        "oauth",
+        "user pool",
+        "ellaisys",
+        "mfa",
+        "multi-factor authentication",
+        "2fa",
+        "two-factor authentication",
+        "password",
+        "reset",
+        "forgot password",
+        "change password",
+        "update password",
+        "email",
+        "phone",
+        "sms",
+        "verification",
+        "user confirmation",
+        "access token",
+        "reset token",
+        "email recovery",
+        "verify code",
+        "confirm code",
+        "sms",
+        "token verify",
+        "aws sdk",
+        "aws sdk php",
+        "identity pool",
+        "srp protocol",
+        "secure remote password protocol",
+        "device authentication",
+        "fido",
+        "fido2",
+        "webauthn",
+        "passkey",
+        "passwordless",
+        "jwt",
+        "json web token",
+        "jwt token"
     ],
     "type": "library",
     "license": "MIT",
@@ -57,12 +101,15 @@
     },
     "autoload": {
         "psr-4": {
-          "Ellaisys\\Cognito\\": "src/"
+            "Ellaisys\\Cognito\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Ellaisys\\Cognito\\Tests\\": "tests/"
+            "Ellaisys\\Cognito\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
         }
     },
     "extra": {
@@ -70,11 +117,28 @@
             "providers": [
                 "Ellaisys\\Cognito\\Providers\\AwsCognitoServiceProvider"
             ],
-            "aliases": {
-            }
+            "aliases": []
         },
         "branch-alias": {
             "dev-master": "1.0-dev"
         }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ],
+        "test": [
+            "@clear",
+            "@php vendor/bin/phpunit"
+        ]
     }
 }
