@@ -118,9 +118,12 @@ class Handler extends ExceptionHandler
             'message'        => $exception->getMessage(),
             'system_code'    => $systemErrorCode,
             'system_message' => $systemErrorMsg,
-            'execution_time' => number_format(microtime(true) - LARAVEL_START, 4),
-            'ip'             => request()->ip(),
+            'ip'             => request()->ip()
         ];
+
+        if (defined('LARAVEL_START')) {
+            $errorData['execution_time'] = number_format(microtime(true) - LARAVEL_START, 4);
+        }
 
         //Add system messages when in debug mode
         if (config('app.debug')) {

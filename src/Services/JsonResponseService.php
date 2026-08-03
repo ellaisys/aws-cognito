@@ -108,9 +108,12 @@ class JsonResponseService
         $meta   = [
             'message'        => $message,
             'status'         => $status,
-            'error'          => null,
-            'execution_time' => number_format(microtime(true) - LARAVEL_START, 4),
+            'error'          => null
         ];
+
+        if (defined('LARAVEL_START')) {
+            $meta['execution_time'] = number_format(microtime(true) - LARAVEL_START, 4);
+        }
 
         //Add exception message
         if ((!empty($e)) && ($e instanceof Exception)) {
