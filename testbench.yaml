@@ -8,7 +8,7 @@ migrations:
   - workbench/database/migrations
 
 seeders:
-  - workbench/database/seeders
+  - Workbench\Database\Seeders\DatabaseSeeder
 
 env:
   APP_NAME: "Testbench"  
@@ -26,10 +26,12 @@ workbench:
     factories: true
     views: true
   build:
+    - purge-skeleton
     - asset-publish
     - create-sqlite-db
     - db-wipe
-    - migrate-fresh
+    - migrate:fresh:
+      --seed: true
   assets:
     - laravel-assets
   sync:
