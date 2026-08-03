@@ -4,6 +4,7 @@ composer.phar
 composer.lock
 .phpunit.cache
 .phpunit.result.cache
+/workbench/.env
 
 # Ignore following directories
 /vendor
