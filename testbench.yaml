@@ -7,6 +7,12 @@ providers:
 migrations:
   - workbench/database/migrations
 
+seeders:
+  - workbench/database/seeders
+
+env:
+  APP_NAME: "Testbench"  
+
 workbench:
   start: '/'
   install: true
@@ -30,3 +36,8 @@ workbench:
     - from: storage
       to: workbench/storage
       reverse: true
+
+purge:
+  directories:
+    - public/build
+    - public/vendor/*
