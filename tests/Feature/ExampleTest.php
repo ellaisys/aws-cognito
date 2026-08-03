@@ -3,8 +3,7 @@
 namespace Ellaisys\Cognito\Tests\Feature;
 
 // use Illuminate\Foundation\Testing\RefreshDatabase;
-// use Ellaisys\Cognito\Tests\TestCase;
-use PHPUnit\Framework\TestCase;
+use Ellaisys\Cognito\Tests\TestCase;
 
 class ExampleTest extends TestCase
 {

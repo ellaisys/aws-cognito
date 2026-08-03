@@ -2,8 +2,7 @@
 
 namespace Ellaisys\Cognito\Tests\Unit;
 
-//use Ellaisys\Cognito\Tests\TestCase;
-use PHPUnit\Framework\TestCase;
+use Ellaisys\Cognito\Tests\TestCase;
 
 class ExampleTest extends TestCase
 {

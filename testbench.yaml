@@ -1,0 +1,32 @@
+laravel: '@testbench'
+
+providers:
+  - Ellaisys\Cognito\Providers\AwsCognitoServiceProvider
+  - Workbench\App\Providers\WorkbenchServiceProvider
+
+migrations:
+  - workbench/database/migrations
+
+workbench:
+  start: '/'
+  install: true
+  health: true
+  discovers:
+    config: true
+    web: true
+    api: true
+    commands: true
+    components: false
+    factories: true
+    views: true
+  build:
+    - asset-publish
+    - create-sqlite-db
+    - db-wipe
+    - migrate-fresh
+  assets:
+    - laravel-assets
+  sync:
+    - from: storage
+      to: workbench/storage
+      reverse: true

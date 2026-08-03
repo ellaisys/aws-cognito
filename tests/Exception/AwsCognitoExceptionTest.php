@@ -4,9 +4,9 @@ namespace Ellaisys\Cognito\Tests\Exception;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 
-//use Ellaisys\Cognito\Tests\TestCase;
-use PHPUnit\Framework\TestCase;
+use Ellaisys\Cognito\Tests\TestCase;
 
+use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 

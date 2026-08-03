@@ -4,8 +4,7 @@ namespace Ellaisys\Cognito\Tests\Exception;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 
-//use Ellaisys\Cognito\Tests\TestCase;
-use PHPUnit\Framework\TestCase;
+use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Exceptions\NoTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
