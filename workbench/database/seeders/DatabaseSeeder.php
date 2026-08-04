@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         UserFactory::new()->create([
             'name' => 'Testbench Cognito Registered User',
             'email' => 'ellaisys+tb_register_0408V01@gmail.com',
-            'sub' => 'ffe9c457-a220-49b2-9b2a-b7e10e8dde45',
+            'sub' => '21b30d0a-1091-702f-05ee-407c9d467eea',
             'register_type' => 'register',
             'registered_at' => now(),
         ]);
