@@ -4,16 +4,19 @@ namespace Ellaisys\Cognito\Tests;
 
 use Illuminate\Support\Str;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-use InvalidArgumentException;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 use Ellaisys\Cognito\Providers\AwsCognitoServiceProvider;
 
+use InvalidArgumentException;
+
 abstract class TestCase extends OrchestraTestCase
 {
     use WithWorkbench;
+    use RefreshDatabase;
 
     /**
      * Define environment setup.
