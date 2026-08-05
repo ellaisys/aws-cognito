@@ -35,6 +35,9 @@ workbench:
   assets:
     - laravel-assets
   sync:
+    - from: config
+      to: workbench/config
+      reverse: true
     - from: storage
       to: workbench/storage
       reverse: true

@@ -2,13 +2,18 @@
 .DS_Store
 composer.phar
 composer.lock
-.phpunit.cache
 .phpunit.result.cache
 
 # Ignore following directories
+/.phpunit.cache
 /vendor
 /tests/reports
 
 # Ignore workbench files and directories
 /workbench/.env
 /workbench/storage
+/workbench/config/*
+!/workbench/config/auth.php
+
+# Whitelist all .gitkeep files
+!**/.gitkeep
