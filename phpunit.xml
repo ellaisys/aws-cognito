@@ -8,18 +8,8 @@
     cacheDirectory=".phpunit.cache"
     backupStaticProperties="false"
 >
-    <!-- <coverage ignoreDeprecatedCodeUnits="true"
-        disableCodeCoverageIgnore="true">
-        <report>
-            <clover outputFile="clover.xml"/>
-            <cobertura outputFile="cobertura.xml"/>
-            <crap4j outputFile="crap4j.xml" threshold="50"/>
-            <html outputDirectory="html-coverage" lowUpperBound="50" highLowerBound="90"/>
-            <php outputFile="coverage.php"/>
-            <text outputFile="coverage.txt" showUncoveredFiles="false" showOnlySummary="true"/>
-            <xml outputDirectory="xml-coverage"/>
-        </report>
-    </coverage> -->
+    <coverage ignoreDeprecatedCodeUnits="true" />
+
     <testsuites>
         <testsuite name="Unit">
             <directory suffix="Test.php">./tests/Unit</directory>
@@ -31,31 +21,27 @@
             <directory suffix="Test.php">./tests/Exception</directory>
         </testsuite>
     </testsuites>
+
     <php>
-        <const name="valid_credentials" value="eyJ1c2VybmFtZSI6ImVsbGFpc3lzK3RiX3JlZ2lzdGVyXzA0MDhWMDFAZ21haWwuY29tIiwicGFzc3dvcmQiOiJWYWxpZFBhc3N3b3JkMTIzISJ9"/>
-        <const name="token_type" value="bearer"/>
-        <var name="claim" value=""/>
-        <var name="access_token" value=""/>
-        <var name="refresh_token" value=""/>
-        <env name="APP_NAME" value="Testbench"/>
-        <env name="APP_ENV" value="testing"/>
-        <env name="APP_KEY" value="base64:dY2RGwL3lXtuyRgSV5UQNAdVmJpe8b4dOremiVpHn7w="/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="AUTH_VALID_CREDENTIALS" value="eyJ1c2VybmFtZSI6ImVsbGFpc3lzK3RiX3JlZ2lzdGVyXzA0MDhWMDFAZ21haWwuY29tIiwicGFzc3dvcmQiOiJWYWxpZFBhc3N3b3JkMTIzISJ9" force="true"/>
+        <env name="AUTH_TOKEN_TYPE" value="bearer" force="true"/>
+        <env name="APP_NAME" value="Testbench" force="true"/>
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_KEY" value="base64:dY2RGwL3lXtuyRgSV5UQNAdVmJpe8b4dOremiVpHn7w=" force="true"/>
+        <env name="DB_CONNECTION" value="sqlite" force="true"/>
+        <env name="DB_DATABASE" value=":memory:" force="true"/>
     </php>
+
     <source>
         <include>
             <directory suffix=".php">src/</directory>
-            <directory suffix=".php">routes/</directory>
-            <directory suffix=".php">resources/</directory>
-            <directory suffix=".php">database/migrations</directory>
-            <directory suffix=".php">config/</directory>
         </include>
     </source>
+
     <logging>
-        <junit outputFile="tests/reports/junit.xml"/>
-        <teamcity outputFile="tests/reports/teamcity.txt"/>
-        <testdoxHtml outputFile="tests/reports/testdox.html"/>
-        <testdoxText outputFile="tests/reports/testdox.txt"/>
+        <junit outputFile="build/reports/junit.xml"/>
+        <teamcity outputFile="build/reports/teamcity.txt"/>
+        <testdoxHtml outputFile="build/reports/testdox.html"/>
+        <testdoxText outputFile="build/reports/testdox.txt"/>
     </logging>
 </phpunit>

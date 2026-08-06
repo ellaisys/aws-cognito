@@ -8,6 +8,7 @@ composer.lock
 /.phpunit.cache
 /vendor
 /tests/reports
+/build
 
 # Ignore workbench files and directories
 /workbench/.env
