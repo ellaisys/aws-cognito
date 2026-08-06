@@ -80,9 +80,6 @@ class LoginTest extends TestCase
 
         if (session()->has('claim')) {
             self::$claim = session('claim');
-            $GLOBALS['claim'] = self::$claim; // Store claim in global variable for phpunit.xml
-            $GLOBALS['access_token'] = self::$claim['data']['AccessToken'] ?? '';
-            $GLOBALS['refresh_token'] = self::$claim['data']['RefreshToken'] ?? '';
         }
 
         // Assert that the claim is not null
