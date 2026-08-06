@@ -67,16 +67,14 @@ class LoginTest extends TestCase
     {
         $this->post(route('cognito.action.login.submit'), $this->getValidCredentials())
             ->assertStatus(302)
-            ->assertRedirect(route('cognito.home'));
+            ->assertRedirect(route('cognito.home'))
+            ->assertSessionHas('status', 'success')
+            ->assertSessionHas('message')
+            ->assertSessionHas('claim')
+            ->assertSessionHasNoErrors();
 
         // Assert that the user is authenticated
         $this->assertAuthenticated();
-
-        // Check if the claim is stored in the session
-        $this->assertTrue(
-            session()->has('claim'),
-            'Claim is not stored in the session after login.'
-        );
 
         if (session()->has('claim')) {
             self::$claim = session('claim');
