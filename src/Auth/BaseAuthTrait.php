@@ -321,18 +321,45 @@ trait BaseAuthTrait
     } //Function ends
 
     /**
-     * Generate password based on configuration and Laravel version.
+     * Generate a random password compatible with the default AWS Cognito
+     * password policy.
      *
-     * @param int $length (optional) The length of the generated password. Default is 12.
+     * Ensures the password contains at least:
+     * - One uppercase letter
+     * - One lowercase letter
+     * - One digit
+     * - One special character
+     *
+     * @param int $length The total password length. Minimum is 8.
      *
      * @return string
      */
     protected function generateRandomPassword(int $length = 12): string
     {
-        if (version_compare(Application::VERSION, '10.0.0', '<')) {
-            return Str::random($length-3) . '1A!';
+        $length = max($length, 8);
+
+        $lower   = 'abcdefghijklmnopqrstuvwxyz';
+        $upper   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $numbers = '0123456789';
+        $symbols = '!@#$%^&*()-_=+[]{}<>?';
+
+        // Ensure one character from each required set.
+        $password = [
+            $lower[random_int(0, strlen($lower) - 1)],
+            $upper[random_int(0, strlen($upper) - 1)],
+            $numbers[random_int(0, strlen($numbers) - 1)],
+            $symbols[random_int(0, strlen($symbols) - 1)],
+        ];
+
+        $all = $lower . $upper . $numbers . $symbols;
+
+        while (count($password) < $length) {
+            $password[] = $all[random_int(0, strlen($all) - 1)];
         }
-        return Str::password($length);
+
+        shuffle($password);
+
+        return implode('', $password);
     } //Function ends
 
     /**
