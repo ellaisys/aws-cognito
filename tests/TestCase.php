@@ -74,10 +74,10 @@ abstract class TestCase extends OrchestraTestCase
      */
     protected function getValidCredentials(): array
     {
-        $validCredentialsEncodedJson = defined('valid_credentials') ? constant('valid_credentials') : null;
+        $validCredentialsEncodedJson = getenv('AUTH_VALID_CREDENTIALS') ?? null;
 
         if (!$validCredentialsEncodedJson) {
-            throw new InvalidArgumentException('The "valid_credentials" constant is not defined.');
+            throw new InvalidArgumentException('The "AUTH_VALID_CREDENTIALS" constant is not defined.');
         }
 
         $validCredentialsJson = base64_decode($validCredentialsEncodedJson, true);
