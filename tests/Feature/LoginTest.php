@@ -23,7 +23,7 @@ use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
 class LoginTest extends TestCase
 {
     use AwsCognitoTrait;
-    
+
     // Runs before each test method
     protected function setUp(): void
     {
