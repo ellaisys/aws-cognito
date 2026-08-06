@@ -45,7 +45,7 @@ class RefreshTokenTest extends TestCase
     {
         $this->assertTrue($this->validateUserPoolClientConfig(
             Enums\CognitoAuthFlowTypes::REFRESH_TOKEN_AUTH));
-    } //Function ends    
+    } //Function ends
 
     /**
      * Test that a user can log in with a correct refresh token
