@@ -70,8 +70,7 @@ trait AwsCognitoTrait
             //Get user pool MFA configuration
             $response = $client->getUserPoolMfaConfig();
 
-            return $response->get('MfaConfiguration');
-
+            return $response->toArray();
         } catch (Exception $exception) {
             throw $exception;
         } // Try-catch ends

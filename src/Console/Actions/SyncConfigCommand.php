@@ -56,10 +56,7 @@ class SyncConfigCommand extends Command
             if ($this->option('down')) {
                 $this->info('Fetching user pool configuration...');
                 $this->getUserPoolConfigUpdEnv();
-            }
-
-            $this->info($returnValue['message'] ?? 'Configuration:');
-            $this->info(json_encode($returnValue['data'] ?? [], JSON_PRETTY_PRINT));
+            } // End if
         } catch (Exception $exception) {
             Log::error('SyncConfigCommand:handle:Exception');
             $this->error('Error syncing configuration data.' . $exception->getMessage());
