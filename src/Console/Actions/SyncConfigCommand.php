@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Enums;
+use Ellaisys\Cognito\Console\Traits\UtilsTrait;
 use Ellaisys\Cognito\Console\Traits\AwsCognitoTrait;
 
 use Exception;
@@ -23,6 +24,7 @@ use Exception;
 class SyncConfigCommand extends Command
 {
     use AwsCognitoTrait;
+    use UtilsTrait;
 
     /**
      * The name and signature of the console command.
