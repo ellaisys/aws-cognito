@@ -16,12 +16,13 @@ use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Enums;
+use Ellaisys\Cognito\Console\Traits\UtilsTrait;
 
 use Exception;
 
 class PoolCommand extends Command
 {
-    use CommandTrait;
+    use UtilsTrait;
 
     /**
      * The name and signature of the console command.
@@ -76,7 +77,7 @@ class PoolCommand extends Command
 
             if ($userPoolClient = $response->get('UserPool')) {
                 //Set the value in .env file
-                $this->setEnvValue('AWS_COGNITO_MFA_SETUP', $userPoolClient['MfaConfiguration'] ?? 'OFF');
+                $this->setEnv('AWS_COGNITO_MFA_SETUP', $userPoolClient['MfaConfiguration'] ?? 'OFF');
             } //End if
 
             $this->info('User Pool Configuration:');
@@ -98,28 +99,6 @@ class PoolCommand extends Command
 
             //Get user pool client configuration
             $response = $client->describeUserPoolClient();
-
-            if ($userPoolClient = $response->get('UserPoolClient')) {
-                $explicitAuthFlows = $userPoolClient['ExplicitAuthFlows'] ?? [];
-
-                // Check for AuthFlowTypes
-                $allowPasskeys = (in_array(Enums\CognitoAuthFlowTypes::USER_AUTH, $explicitAuthFlows));
-
-                //Set the value in .env file
-                $this->setEnvValue('AWS_COGNITO_ALLOW_PASSKEYS', $allowPasskeys ? true : false);
-
-                $accessTokenValidity = $userPoolClient['AccessTokenValidity'] ?? 60; // Default to 60 minutes if not set
-                $multiplyFactor = $userPoolClient['TokenValidityUnits']['AccessToken'] ?? 'minutes'; // Default to minutes if not set
-                if ($multiplyFactor === 'hours') {
-                    $accessTokenValidity *= 60; // Convert hours to minutes
-                } elseif ($multiplyFactor === 'days') {
-                    $accessTokenValidity *= 1440; // Convert days to minutes
-                }
-
-                //Set the value in .env file
-                $this->setEnvValue('SESSION_LIFETIME', $accessTokenValidity);
-                $this->setEnvValue('AUTH_PASSWORD_TIMEOUT', $accessTokenValidity*60); // Convert minutes to seconds
-            } //End if
 
             $this->info('User Pool Client Configuration:');
             $this->info(json_encode($response->toArray(), JSON_PRETTY_PRINT));

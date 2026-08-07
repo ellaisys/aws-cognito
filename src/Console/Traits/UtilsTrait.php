@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Console;
+namespace Ellaisys\Cognito\Console\Traits;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
-trait CommandTrait
+trait UtilsTrait
 {
     /**
      * Set the value of a key in the .env file.
@@ -23,7 +23,7 @@ trait CommandTrait
      * @param string|bool|int|array $value
      * @return bool
      */
-    protected function setEnvValue(string $key, string|bool|int|array $value): bool
+    protected function setEnv(string $key, string|bool|int|array $value): bool
     {
         $path = app()->environmentFilePath();
 
