@@ -39,7 +39,8 @@ class ConsoleServiceProvider extends ServiceProvider
     {
         return collect([
             // Actions Commands
-            Console\PoolCommand::class,
+            Console\Actions\ListConfigCommand::class,
+            Console\Actions\SyncConfigCommand::class,
         ]);
     } //Function ends
 
