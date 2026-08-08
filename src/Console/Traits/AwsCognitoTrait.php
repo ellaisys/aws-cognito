@@ -11,6 +11,8 @@
 
 namespace Ellaisys\Cognito\Console\Traits;
 
+use Illuminate\Support\Facades\Log;
+
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Enums;
 
@@ -20,6 +22,8 @@ trait AwsCognitoTrait
 {
     /**
      * Get user pool configuration.
+     *
+     * @return array
      */
     protected function getUserPoolConfig(): array
     {
@@ -32,13 +36,14 @@ trait AwsCognitoTrait
 
             return $response->get('UserPool');
         } catch (Exception $exception) {
+            Log::error('AwsCognitoTrait:getUserPoolConfig:Exception');
             throw $exception;
         } // Try-catch ends
     } //Function ends
 
     /**
      * Get user pool client configuration
-     * 
+     *
      * @return array
      */
     protected function getUserPoolClientConfig(): array
@@ -52,13 +57,14 @@ trait AwsCognitoTrait
 
             return $response->get('UserPoolClient');
         } catch (Exception $exception) {
+            Log::error('AwsCognitoTrait:getUserPoolClientConfig:Exception');
             throw $exception;
         } // Try-catch ends
     } //Function ends
 
     /**
      * Get user pool MFA configuration.
-     * 
+     *
      * @return array
      */
     protected function getUserPoolMfaConfig(): array
@@ -72,6 +78,7 @@ trait AwsCognitoTrait
 
             return $response->toArray();
         } catch (Exception $exception) {
+            Log::error('AwsCognitoTrait:getUserPoolMfaConfig:Exception');
             throw $exception;
         } // Try-catch ends
     } //Function ends

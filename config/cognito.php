@@ -143,6 +143,73 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cognito Password Policy - Pool Configuration
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito password policy. You can set the
+    | password policy in your AWS Cognito User Pool configuration, and the value
+    | should be set to the base64 encoded value of the password policy JSON.
+    |
+    | The default value is set to an empty string, which means default policy is used.
+    |
+    */
+    'password_policy' => (array) json_decode(base64_decode(env('AWS_COGNITO_PASSWORD_POLICY', ''))),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Sign In Policy - Pool Configuration
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito sign in policy. You can set the
+    | sign in policy in your AWS Cognito User Pool configuration, and the value
+    | should be set to a comma-separated list of allowed sign in policies.
+    | The options available are "PASSWORD", "WEB_AUTHN", "EMAIL_OTP", and
+    | "SMS_OTP". You can set multiple options separated by commas.
+    |
+    | The default value is set to 'PASSWORD', which means only password sign in
+    | is allowed.
+    */
+    'signin_policy' => (array) explode(',', env('AWS_COGNITO_SIGNIN_POLICY', 'PASSWORD')),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Allowed Auth Flows - Client Configuration
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito allowed auth flows. You can set
+    | the allowed auth flows in your AWS Cognito User Pool Client configuration,
+    | and the value should be set to a comma-separated list of allowed values.
+    | The options available are "ALLOW_USER_AUTH", "ALLOW_USER_PASSWORD_AUTH",
+    | "ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_CUSTOM_AUTH", "ALLOW_USER_SRP_AUTH",
+    | "ALLOW_ADMIN_USER_PASSWORD_AUTH".
+    | The default value is set as below to allow password based authentication
+    | and refresh token authentication.
+    */
+    'allowed_auth_flows' => (array) explode(',', env('AWS_COGNITO_ALLOWED_AUTH_FLOWS', 'ALLOW_USER_PASSWORD_AUTH,ALLOW_REFRESH_TOKEN_AUTH')),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Enable Token Revocation - Client Configuration
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito enable token revocation. You can
+    | set the enable token revocation in your AWS Cognito User Pool Client
+    | configuration, and the value should be set to true or false.
+    | Setting to false will disable the token revocation feature, which means
+    | that the token revocation or forced logout will not occur.
+    | The default value is set to true.
+    */
+    'enable_token_revocation' => (bool) env('AWS_COGNITO_ENABLE_TOKEN_REVOCATION', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Auth Session Validity - Client Configuration
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito auth session validity. You can
+    | set the auth session validity in your AWS Cognito User Pool Client
+    | configuration, and the value should be set to an integer value in seconds.
+    | The default value is set to 180 seconds (3 minutes).
+    */
+    'auth_session_validity' => (int) env('AWS_COGNITO_AUTH_SESSION_VALIDITY', 180),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cognito New User
     |--------------------------------------------------------------------------
     |
