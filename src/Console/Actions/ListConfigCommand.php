@@ -30,8 +30,8 @@ class ListConfigCommand extends Command
      * @var string
      */
     protected $signature = 'cognito:list-config {--pool : Get user pool configuration}
-                                {--client-config : Get user pool client configuration}
-                                {--mfa-config : Get user pool MFA configuration}';
+                                {--client : Get user pool client configuration}
+                                {--mfa : Get user pool MFA configuration}';
 
     /**
      * The console command description.
@@ -48,7 +48,7 @@ class ListConfigCommand extends Command
         try {
 
             if (!array_filter($this->options())) {
-                $this->error('Please provide at least one option: --pool, --client-config, or --mfa-config');
+                $this->error('Please provide at least one option: --pool, --client, or --mfa');
                 return;
             }
 
@@ -61,12 +61,12 @@ class ListConfigCommand extends Command
                 $returnValue['data'] = $this->getUserPoolConfig();
             }
 
-            if ($this->option('client-config')) {
+            if ($this->option('client')) {
                 $returnValue['message'] = 'User pool client configuration.';
                 $returnValue['data'] = $this->getUserPoolClientConfig();
             }
 
-            if ($this->option('mfa-config')) {
+            if ($this->option('mfa')) {
                 $returnValue['message'] = 'User pool MFA configuration.';
                 $returnValue['data'] = $this->getUserPoolMfaConfig();
             }
