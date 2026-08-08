@@ -431,13 +431,13 @@ trait BaseAuthTrait
     protected function validateCognitoFlow(CognitoAuthFlowTypes $authFlow): void
     {
         try {
-            $allowedFlows = config('cognito.allowed_flows');
+            $allowedFlows = config('cognito.allowed_auth_flows');
             if (!is_array($allowedFlows) || !in_array('ALLOW_' . $authFlow->value, $allowedFlows)) {
                 throw new AwsCognitoException(AwsCognitoException::COGNITO_CONFIG_INVALID);
             } //End if
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             Log::error('BaseAuthTrait:validateCognitoFlow:Exception');
-            throw $e;
+            throw $exception;
         } //Try-catch ends
     } //Function ends
 
