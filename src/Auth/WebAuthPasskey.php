@@ -161,9 +161,14 @@ trait WebAuthPasskey
         ?string $paramUsername='username',
         ?string $paramPassword=''): mixed
     {
+        // Initialize variables
+        $returnValue = null;
+
         try {
-            // Initialize variables
-            $returnValue = null;
+            // Validate Cognito auth flow
+            $this->validateCognitoFlow(CognitoAuthFlowTypes::USER_AUTH);
+
+            // Get the authentication guard
             $guard = $this->getGuard($request);
 
             if (!empty($challengeName)) {

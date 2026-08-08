@@ -24,6 +24,9 @@ use Illuminate\Foundation\Application;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 
+use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
+use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
+
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
@@ -414,6 +417,26 @@ trait BaseAuthTrait
             return $response;
         } catch (Exception $e) {
             Log::error('BaseAuthTrait:getCognitoUserByAdmin:Exception');
+            throw $e;
+        } //Try-catch ends
+    } //Function ends
+
+    /**
+     * Validate if the provided Cognito auth flow is allowed based on the configuration
+     *
+     * @param \CognitoAuthFlowTypes $authFlow
+     *
+     * @throws \AwsCognitoException
+     */
+    protected function validateCognitoFlow(CognitoAuthFlowTypes $authFlow): void
+    {
+        try {
+            $allowedFlows = config('cognito.allowed_flows');
+            if (!is_array($allowedFlows) || !in_array('ALLOW_' . $authFlow->value, $allowedFlows)) {
+                throw new AwsCognitoException(AwsCognitoException::COGNITO_CONFIG_INVALID);
+            } //End if
+        } catch (Exception $e) {
+            Log::error('BaseAuthTrait:validateCognitoFlow:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends
