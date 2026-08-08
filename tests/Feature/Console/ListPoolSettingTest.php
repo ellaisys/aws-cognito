@@ -12,35 +12,40 @@
 namespace Ellaisys\Cognito\Tests\Feature\Console;
 
 use Illuminate\Support\Facades\Config;
+use Illuminate\Foundation\Bootstrap\HandleExceptions;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Depends;
 
-use Ellaisys\Cognito\Enums;
 use Ellaisys\Cognito\Tests\TestCase;
-use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
 
 class ListPoolSettingTest extends TestCase
 {
+
     /**
      * Test the list pool setting command.
      */
     #[Test]
     public function test_list_pool_setting_command(): void
     {
-        // Run the command with the --config option
-        $this->artisan('cognito:list-pool-setting --config')
-            ->expectsOutput('User Pool Configuration:')
-            ->assertExitCode(0);
+        try {
+            // Run the command with the --pool option
+            $this->artisan('cognito:list-config --pool')
+                ->expectsOutput('User pool configuration.')
+                ->assertExitCode(0);
 
-        // Run the command with the --client-config option
-        $this->artisan('cognito:list-pool-setting --client-config')
-            ->expectsOutput('User Pool Client Configuration:')
-            ->assertExitCode(0);
+            // Run the command with the --client option
+            $this->artisan('cognito:list-config --client')
+                ->expectsOutput('User pool client configuration.')
+                ->assertExitCode(0);
 
-        // Run the command with the --mfa-config option
-        $this->artisan('cognito:list-pool-setting --mfa-config')
-            ->expectsOutput('User Pool MFA Configuration:')
-            ->assertExitCode(0);
+            // Run the command with the --mfa option
+            $this->artisan('cognito:list-config --mfa')
+                ->expectsOutput('User pool MFA configuration.')
+                ->assertExitCode(0);
+        } catch (\Throwable $e) {
+            // Handle any exceptions that occur during bootstrapping
+            $this->fail('Exception during bootstrapping: ' . $e->getMessage());
+        }
     } //Function ends
 } //Class ends
