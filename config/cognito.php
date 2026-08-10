@@ -44,7 +44,7 @@ return [
     'app_client_id'     => env('AWS_COGNITO_CLIENT_ID'),
     'app_client_secret' => env('AWS_COGNITO_CLIENT_SECRET'),
     'user_pool_id'      => env('AWS_COGNITO_USER_POOL_ID'),
-    'region'            => env('AWS_COGNITO_REGION', 'us-east-1'),
+    'region'            => env('AWS_COGNITO_REGION', env('AWS_DEFAULT_REGION', 'us-east-1')),
     'version'           => env('AWS_COGNITO_VERSION', 'latest'),
 
     /*
@@ -242,7 +242,7 @@ return [
     | Set to true to allow self registration, or false to disable it.
     |
     */
-    'registration_enabled' => env('AWS_COGNITO_REGISTRATION_ENABLED', true),
+    'registration_enabled' => (bool) env('AWS_COGNITO_REGISTRATION_ENABLED', true),
 
     /*
     |--------------------------------------------------------------------------
