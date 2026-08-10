@@ -224,7 +224,7 @@ trait AwsCognitoClientMFAAction
      * @return \Aws\Result
      * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function getUserPoolMfaConfig(): AwsResult
+    public function getUserPoolMfaConfig(?string $userPoolId = null): AwsResult
     {
         //Initialize variables
         $response = null;
@@ -232,7 +232,7 @@ trait AwsCognitoClientMFAAction
         try {
             //Build payload
             $payload = [
-                'UserPoolId' => $this->poolId,
+                'UserPoolId' => $userPoolId ?? $this->poolId,
             ];
 
             $response = $this->client->getUserPoolMfaConfig($payload);

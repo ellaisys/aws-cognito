@@ -54,7 +54,7 @@ class ListConfigCommand extends Command
 
             $returnValue = [];
 
-            $this->info('Fetching user pool configuration...');
+            $this->info('Fetching data...');
 
             if ($this->option('pool')) {
                 $returnValue['message'] = 'User pool configuration.';

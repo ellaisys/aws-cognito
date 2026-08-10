@@ -63,8 +63,9 @@ trait UtilsTrait
         Artisan::call('config:clear');
 
         // Update on the screen
+        $this->newLine();
         $this->info("Updated .env {$key}: {$value}");
-
+        
         return true;
     } //Function ends
 
