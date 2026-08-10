@@ -133,9 +133,9 @@ class AwsCognitoClient
      */
     public function __construct(
         CognitoIdentityProviderClient $client,
-        string $clientId,
-        string $clientSecret,
-        string $poolId,
+        ?string $clientId,
+        ?string $clientSecret,
+        ?string $poolId,
         bool $boolClientSecret
     )
     {

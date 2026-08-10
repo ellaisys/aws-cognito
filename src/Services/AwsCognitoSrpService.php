@@ -85,7 +85,7 @@ class AwsCognitoSrpService
      */
     public function __construct(
         StorageProvider $provider, string $cachePrefix,
-        string $clientId, string $poolId)
+        ?string $clientId, ?string $poolId)
     {
         $this->provider = $provider;
         $this->cachePrefix = $cachePrefix;

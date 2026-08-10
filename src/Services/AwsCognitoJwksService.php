@@ -45,7 +45,7 @@ class AwsCognitoJwksService
      *
      * @return void
      */
-    public function __construct(string $region, string $poolId)
+    public function __construct(?string $region, ?string $poolId)
     {
         $this->region = $region;
         $this->poolId = $poolId;

@@ -274,7 +274,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
         $this->app->singleton(AwsCognitoJwksService::class, function () {
             return new AwsCognitoJwksService(
                 config('cognito.region'),
-                config('cognito.user_pool_id')
+                config('cognito.user_pool_id', null)
             );
         });
 
@@ -283,8 +283,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
             return new AwsCognitoSrpService(
                 $app['ellaisys.aws.cognito.provider.storage'],
                 config('cognito.cache_prefix.srp'),
-                config('cognito.app_client_id'),
-                config('cognito.user_pool_id')
+                config('cognito.app_client_id', null),
+                config('cognito.user_pool_id', null)
             );
         });
     } //Function ends
@@ -311,9 +311,9 @@ class AwsCognitoServiceProvider extends ServiceProvider
             //Instancite the AWS Cognito Client
             return new AwsCognitoClient(
                 new CognitoIdentityProviderClient($aws_config),
-                config('cognito.app_client_id'),
-                config('cognito.app_client_secret'),
-                config('cognito.user_pool_id'),
+                config('cognito.app_client_id', null),
+                config('cognito.app_client_secret', null),
+                config('cognito.user_pool_id', null),
                 config('cognito.app_client_secret_allow', true)
             );
         });
