@@ -43,7 +43,7 @@ The AWS configurations are required to be set up in order to use the AWS Cognito
 
 Laravel configurations are required to be set up in order to use the AWS Cognito service with your Laravel application. The following sections provide detailed instructions on how to set up the Laravel configurations.
 
-Make use of the cognito console commands to automatically set up the configurations in your Laravel application. Refer to the [Cognito Console Commands](COGNITOCONSOLE.md) document for detailed instructions on how to use the console commands.
+Make use of the cognito console commands to automatically set up the configurations in your Laravel application. Refer to the [Cognito Console Commands](README_CONSOLE.md) document for detailed instructions on how to use the console commands.
 
 ### *ServiceProvider Registration*
 
