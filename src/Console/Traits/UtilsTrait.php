@@ -20,10 +20,10 @@ trait UtilsTrait
      * Set the value of a key in the .env file.
      *
      * @param string $key
-     * @param string|bool|int|array $value
+     * @param string|bool|int|array|null $value
      * @return bool
      */
-    protected function setEnv(string $key, string|bool|int|array $value): bool
+    protected function setEnv(string $key, string|bool|int|array|null $value): bool
     {
         $path = app()->environmentFilePath();
 
