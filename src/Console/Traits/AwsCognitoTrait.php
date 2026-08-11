@@ -196,18 +196,19 @@ trait AwsCognitoTrait
      *
      * @return array
      */
-    final protected function createDefaultGroup(?string $userPoolId = null): array
+    final protected function createUserPoolGroup(string $groupName,
+        ?string $description = 'Default Group', ?string $userPoolId = null): array
     {
         try {
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
             //Get user pool group configuration
-            $response = $client->getGroup('default', 'Default Group', null, null, $userPoolId);
+            $response = $client->createGroup($groupName, $description, null, null, $userPoolId);
 
             return $response->get('Group');
         } catch (Exception $exception) {
-            Log::error('AwsCognitoTrait:getUserPoolGroupConfig:Exception');
+            Log::error('AwsCognitoTrait:createUserPoolGroup:Exception');
             throw $exception;
         } // Try-catch ends
     } //Function ends
