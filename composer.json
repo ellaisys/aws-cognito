@@ -128,6 +128,9 @@
             "@clear",
             "@prepare"
         ],
+        "post-install-cmd" : [
+            "php artisan cognito:install"
+        ],
         "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "build": "@php vendor/bin/testbench workbench:build --ansi",

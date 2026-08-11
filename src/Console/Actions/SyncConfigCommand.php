@@ -44,6 +44,20 @@ class SyncConfigCommand extends Command
     protected $description = 'Sync user pool configuration';
 
     /**
+     * The user pool ID.
+     *
+     * @var string|null
+     */
+    private ?string $userPoolId = null;
+
+    /**
+     * The user pool client ID.
+     *
+     * @var string|null
+     */
+    private ?string $clientId = null;
+
+    /**
      * Execute the console command.
      */
     public function handle()
@@ -57,79 +71,89 @@ class SyncConfigCommand extends Command
                 return Command::FAILURE;
             } //End if
 
+            $this->newLine();
+            $this->info('Sync the configurations.');
+            $this->newLine();
+
             // Get the user pool ID from the argument or from the .env file
-            $userPoolId = $this->argument('pool_id') ?: null;
+            $this->userPoolId = $this->argument('pool_id') ?: null;
 
             // Get the user pool client ID from the argument or from the .env file
-            $clientId = $this->argument('client_id') ?: null;
+            $this->clientId = $this->argument('client_id') ?: null;
 
             if ($this->option('down')) {
+                $this->newLine();
                 $this->info('Fetching user pool configuration...');
-                $this->getUserPoolConfigUpdEnv($userPoolId);
+                $this->getUserPoolConfigUpdEnv();
+
+                $this->newLine();
                 $this->info('Fetching user pool client configuration...');
-                $this->getUserPoolClientConfigUpdEnv($userPoolId, $clientId);
+                $this->getUserPoolClientConfigUpdEnv();
+
+                $this->newLine();
                 $this->info('Fetching user pool MFA configuration...');
-                $this->getUserPoolMfaConfigUpdEnv($userPoolId);
+                $this->getUserPoolMfaConfigUpdEnv();
             } // End if
+
+            return Command::SUCCESS;
         } catch (Exception $exception) {
             Log::error('SyncConfigCommand:handle:Exception');
-            $this->error('Error syncing configuration data.' . $exception->getMessage());
+            $this->components->error($exception->getMessage());
+            return Command::FAILURE;
         } // Try-catch ends
     } //Function ends
 
     /**
      * Get User Pool configuration and update .env file.
      */
-    private function getUserPoolConfigUpdEnv(?string $userPoolId = null): void
+    private function getUserPoolConfigUpdEnv(): void
     {
         try {
             // Get user pool configuration from AWS Cognito
-            if ($userPool = $this->getUserPoolConfig($userPoolId)) {
+            if ($userPool = $this->getUserPoolConfig($this->userPoolId)) {
                 Log::info(json_encode($userPool, JSON_PRETTY_PRINT));
 
                 $passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?? [];
-                $signinPolicy = $userPool['Policies']['SignInPolicy'] ?? [];
-                if (empty($passwordPolicy) || empty($signinPolicy)) {
-                    throw new Exception('PasswordPolicy or SignInPolicy is empty. Please check your AWS Cognito user pool configuration.');
+                if (!empty($passwordPolicy)) {
+                    // Set the value in .env file (Password Policy - Base 64 encoded data)
+                    $this->setEnv('AWS_COGNITO_PASSWORD_POLICY',
+                        base64_encode(json_encode($passwordPolicy)));
                 } // End if
 
-                // Set the value in .env file (Password Policy - Base 64 encoded data)
-                $this->setEnv('AWS_COGNITO_PASSWORD_POLICY', base64_encode(json_encode($passwordPolicy)));
-
-                // Set the value in .env file (Sign In Policy)
-                $this->setEnv('AWS_COGNITO_SIGNIN_POLICY', implode(',', $signinPolicy['AllowedFirstAuthFactors'] ?? []));
+                $signinPolicy = $userPool['Policies']['SignInPolicy'] ?? [];
+                if (!empty($signinPolicy)) {
+                    // Set the value in .env file (Sign In Policy)
+                    $this->setEnv('AWS_COGNITO_SIGNIN_POLICY',
+                        implode(',', $signinPolicy['AllowedFirstAuthFactors'] ?? []));
+                } // End if
 
                 // Set the value in .env file
                 $this->setEnv('AWS_COGNITO_MFA_SETUP', $userPool['MfaConfiguration'] ?? 'OFF');
             } // End if
         } catch (Exception $exception) {
             Log::error('SyncConfigCommand:getUserPoolConfigUpdEnv:Exception');
-            throw new Exception('Error fetching user pool configuration data.' . $exception->getMessage());
+            throw $exception;
         } // Try-catch ends
     } //Function ends
 
     /**
      * Get User Pool Client configuration and update .env file.
      */
-    private function getUserPoolClientConfigUpdEnv(?string $userPoolId = null,
-        ?string $clientId = null): void
+    private function getUserPoolClientConfigUpdEnv(): void
     {
         try {
             // Get user pool client configuration from AWS Cognito
-            if ($userPoolClient = $this->getUserPoolClientConfig($userPoolId, $clientId)) {
-                Log::info(json_encode($userPoolClient, JSON_PRETTY_PRINT));
+            if ($userPoolClient = $this->getUserPoolClientConfig($this->userPoolId, $this->clientId)) {
 
                 // Set the value in .env file
                 $this->setEnv('AWS_COGNITO_CLIENT_SECRET', $userPoolClient['ClientSecret'] ?? '');
 
                 // Check for ExplicitAuthFlows
                 $explicitAuthFlows = $userPoolClient['ExplicitAuthFlows'] ?? [];
-                if (empty($explicitAuthFlows)) {
-                    throw new Exception('ExplicitAuthFlows is empty. Please check your AWS Cognito user pool client configuration.');
+                if (!empty($explicitAuthFlows)) {
+                    //Set the value in .env file
+                    $this->setEnv('AWS_COGNITO_ALLOWED_AUTH_FLOWS', implode(',', $explicitAuthFlows));
                 } // End if
-
-                //Set the value in .env file
-                $this->setEnv('AWS_COGNITO_ALLOWED_AUTH_FLOWS', implode(',', $explicitAuthFlows));
 
                 // Check for AuthFlowTypes
                 $allowPasskeys = (in_array('ALLOW_' . Enums\CognitoAuthFlowTypes::USER_AUTH->value, $explicitAuthFlows));
@@ -159,18 +183,18 @@ class SyncConfigCommand extends Command
             } // End if
         } catch (Exception $exception) {
             Log::error('SyncConfigCommand:getUserPoolClientConfigUpdEnv:Exception');
-            throw new Exception('Error fetching user pool client configuration data.' . $exception->getMessage());
+            throw $exception;
         } // Try-catch ends
     } //Function ends
 
     /**
      * Get User Pool MFA configuration and update .env file.
      */
-    private function getUserPoolMfaConfigUpdEnv(?string $userPoolId = null): void
+    private function getUserPoolMfaConfigUpdEnv(): void
     {
         try {
             // Get user pool MFA configuration from AWS Cognito
-            if ($userPoolMfaConfig = $this->getUserPoolMfaConfig($userPoolId)) {
+            if ($userPoolMfaConfig = $this->getUserPoolMfaConfig($this->userPoolId)) {
                 Log::info(json_encode($userPoolMfaConfig, JSON_PRETTY_PRINT));
 
                 // Check Software Token MFA configuration
@@ -193,7 +217,7 @@ class SyncConfigCommand extends Command
             } // End if
         } catch (Exception $exception) {
             Log::error('SyncConfigCommand:getUserPoolMfaConfigUpdEnv:Exception');
-            throw new Exception('Error fetching user pool MFA configuration data.' . $exception->getMessage());
+            throw $exception;
         } // Try-catch ends
     } //Function ends
 

@@ -64,7 +64,7 @@ trait UtilsTrait
 
         // Update on the screen
         $this->newLine();
-        $this->info("Updated .env {$key}: {$value}");
+        $this->line("✓ Updated {$key}: {$value}");
         
         return true;
     } //Function ends

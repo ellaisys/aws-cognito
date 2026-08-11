@@ -21,6 +21,7 @@ use Ellaisys\Cognito\Console\Traits\AwsCognitoTrait;
 use Ellaisys\Cognito\Console\Traits\UtilsTrait;
 
 use Exception;
+use RuntimeException;
 
 class InstallCommand extends Command
 {
@@ -47,6 +48,25 @@ class InstallCommand extends Command
     public function handle()
     {
         try {
+            // Display the header
+            $this->displayHeader();
+
+            // Confirm installation
+            if (! $this->confirm('Configure AWS Cognito now?', true))
+            {
+                $this->components->warn('Installation cancelled.');
+                return self::SUCCESS;
+            } // End if
+
+            // Confirm AWS credentials
+            if (! $this->confirm('Are your AWS credentials configured and ready to use?', true))
+            {
+                $this->components->warn(
+                    'Please configure your AWS credentials before running the installer.'
+                );
+                return self::SUCCESS;
+            } // End if
+
             // Check for AWS connectivity
             if ($this->checkHygieneData() === Command::FAILURE) {
                 return Command::FAILURE;
@@ -65,7 +85,7 @@ class InstallCommand extends Command
             return self::SUCCESS;
         } catch (Exception $exception) {
             Log::error('InstallCommand:handle:Exception');
-            $this->error($exception->getMessage());
+            $this->components->error($exception->getMessage());
             return Command::FAILURE;
         } // Try-catch ends
         return Command::SUCCESS;
@@ -79,17 +99,23 @@ class InstallCommand extends Command
     private function checkHygieneData(): int
     {
         try {
-            $this->info('Checking AWS configurations ...');
+            $this->info('Checking AWS configurations...');
             $bar = $this->output->createProgressBar(4);
             $bar->start();
 
-            env('AWS_ACCESS_KEY_ID') ?: $this->error('AWS_ACCESS_KEY_ID is not set in .env file.');
+            if (empty(env('AWS_ACCESS_KEY_ID'))) {
+                throw new RuntimeException('AWS_ACCESS_KEY_ID is not set in .env file.');
+            }
             $bar->advance();
 
-            env('AWS_SECRET_ACCESS_KEY') ?: $this->error('AWS_SECRET_ACCESS_KEY is not set in .env file.');
+            if (empty(env('AWS_SECRET_ACCESS_KEY'))) {
+                throw new RuntimeException('AWS_SECRET_ACCESS_KEY is not set in .env file.');
+            }
             $bar->advance();
 
-            env('AWS_DEFAULT_REGION') ?: $this->error('AWS_DEFAULT_REGION is not set in .env file.');
+            if (empty(env('AWS_DEFAULT_REGION'))) {
+                throw new RuntimeException('AWS_DEFAULT_REGION is not set in .env file.');
+            }
             $bar->advance();
 
             // Check if AWS_COGNITO_REGION is set and matches AWS_DEFAULT_REGION
@@ -101,8 +127,12 @@ class InstallCommand extends Command
             // Check AWS connectivity
             $response = $this->getUserPools();
             $bar->advance();
-
             $bar->finish();
+
+            // Display success message
+            $this->newLine();
+            $this->info('✓ AWS connectivity is established');
+            $this->newLine();
 
             return Command::SUCCESS;
         } catch (Exception $exception) {
@@ -119,12 +149,12 @@ class InstallCommand extends Command
     private function setEnvironment(): int
     {
         try {
+            // Prompt the user for web and API route prefixes
+            $prefixWeb = $this->ask( 'Enter the web route prefix (e.g. cognito)', 'cognito' );
+            $prefixApi = $this->ask( 'Enter the API route prefix (e.g. api/cognito)', 'cognito' );
 
-            $prefixWeb = $this->ask('What is the prefix for your web routes? e.g. /cognito/login', 'cognito');
-            $prefixApi = $this->ask('What is the prefix for your API routes? e.g. /api/cognito/login', 'cognito');
-
-            $this->info('Setting environment variables ...');
-            $bar = $this->output->createProgressBar(6);
+            $this->info('Setting environment variables...');
+            $bar = $this->output->createProgressBar(7);
             $bar->start();
 
             // Set AWS_COGNITO_VERSION to latest
@@ -147,16 +177,20 @@ class InstallCommand extends Command
             $this->setEnv('AWS_COGNITO_ALLOW_PHONE_NUMBER', false);
             $bar->advance();
 
-            // Set AWS_COGNITO_WEB_PREFIX and AWS_COGNITO_API_PREFIX
+            // Set AWS_COGNITO_WEB_PREFIX
             $this->setEnv('AWS_COGNITO_WEB_PREFIX', $prefixWeb);
-            $this->setEnv('AWS_COGNITO_API_PREFIX', $prefixApi);
             $bar->advance();
 
+            // Set AWS_COGNITO_API_PREFIX
+            $this->setEnv('AWS_COGNITO_API_PREFIX', $prefixApi);
+            $bar->advance();
             $bar->finish();
 
             // Display the set environment variables
             $this->newLine();
-            $this->info("Environment set successfully. To make changes, edit the .env file and run 'php artisan config:clear'.");
+            $this->info('✓ Environment configured');
+            $this->comment("To make changes, edit the .env file and run 'php artisan config:clear'.");
+            $this->newLine();
 
             return Command::SUCCESS;
         } catch (Exception $exception) {
@@ -184,6 +218,10 @@ class InstallCommand extends Command
                     'name' => 'existing',
                     'status' => 'existing'
                 ];
+
+                // Display success message
+                $this->newLine();
+                $this->info('✓ Cognito user pool configured.');
             } else {
                 // Get the user pool ID from the user
                 $userPool = $this->promptUserForUserPoolId();
@@ -201,7 +239,8 @@ class InstallCommand extends Command
             $this->call('cognito:sync-config', [
                 'pool_id' => $userPool['id'],
                 'client_id' => $clientId,
-                '--down' => true
+                '--down' => true,
+                '--quiet' => true
             ]);
 
             return Command::SUCCESS;
@@ -296,6 +335,10 @@ class InstallCommand extends Command
                     'status' => 'existing',
                     'secret' => env('AWS_COGNITO_CLIENT_SECRET')
                 ];
+
+                // Display success message
+                $this->newLine();
+                $this->info('✓ Cognito user pool client configured.');
             } else {
                 // Get the user pool client ID from the user
                 $client = $this->promptUserForUserPoolClientId($userPoolId, $isNew);
@@ -363,9 +406,7 @@ class InstallCommand extends Command
 
             // Set the selected client ID in the .env file
             $this->setEnv('AWS_COGNITO_CLIENT_ID', $dataMap[$choice]['id']);
-
-            
-            $this->setEnv('AWS_COGNITO_CLIENT_SECRET', $dataMap[$choice]['name']);
+            $this->setEnv('AWS_COGNITO_CLIENT_SECRET', "");
 
             // Return the selected client's ID
             return $dataMap[$choice];
@@ -373,6 +414,20 @@ class InstallCommand extends Command
             Log::error('InstallCommand:getUserPoolClientId:Exception');
             throw $exception;
         } // Try-catch ends
+    } //Function ends
+
+    /**
+     * Display the header for the installation process.
+     */
+    private function displayHeader(): void
+    {
+        $this->newLine();
+
+        $this->line(' ┌───────────────────────────────────────────┐');
+        $this->line(' │ AWS Cognito Package Installation          │');
+        $this->line(' └───────────────────────────────────────────┘');
+
+        $this->newLine();
     } //Function ends
 
 } // Class ends
