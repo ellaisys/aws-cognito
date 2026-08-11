@@ -19,6 +19,7 @@ use Ellaisys\Cognito\Enums;
 use Ellaisys\Cognito\Console\Traits\AwsCognitoTrait;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\ConsoleException;
 
 class ListCommand extends Command
 {
@@ -40,7 +41,7 @@ class ListCommand extends Command
      *
      * @var string
      */
-    protected $description = 'List user pools or user pool clients';
+    protected $description = 'List of resources in AWS Cognito (user pools, user pool clients, terms, or groups)';
 
     /**
      * Execute the console command.
@@ -52,14 +53,14 @@ class ListCommand extends Command
             $needles = ['pool', 'client', 'terms', 'groups'];
             $haystack = array_filter($this->options());
             if (empty(array_intersect($needles, array_keys($haystack)))) {
-                $this->error('Please provide at least one option: --pool, --client, --terms, or --groups');
-                return Command::FAILURE;
+                throw new ConsoleException('Provide at least one option: --pool, --client, --terms, or --groups');
             } //End if
 
-            $returnValue = [];
-
+            // Display a message indicating that data is being fetched
+            $this->newLine();
             $this->info('Fetching data...');
 
+            $returnValue = [];
             if ($this->option('pool')) {
                 $returnValue['option'] = 'pool';
                 $returnValue['message'] = 'User pools list.';
@@ -86,6 +87,7 @@ class ListCommand extends Command
 
             $this->info($returnValue['message'] ?? 'List of data retrieved successfully.');
 
+            // Display the data in the specified format (table or json)
             if ($this->option('format') === 'json') {
                 $this->info(json_encode($returnValue['data'] ?? [], JSON_PRETTY_PRINT));
             } else {
@@ -94,10 +96,13 @@ class ListCommand extends Command
                     $this->getTabularData($returnValue)
                 );
             } //End if
+            return Command::SUCCESS;
         } catch (Exception $exception) {
             Log::error('ListCommand:handle:Exception');
-            $this->error('Error retrieving configuration data.' . $exception->getMessage());
+            $this->components->error($exception->getMessage());
+            return Command::FAILURE;
         } // Try-catch ends
+        return Command::SUCCESS;
     } //Function ends
 
     /**

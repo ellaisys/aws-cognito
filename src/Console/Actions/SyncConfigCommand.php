@@ -20,6 +20,7 @@ use Ellaisys\Cognito\Console\Traits\UtilsTrait;
 use Ellaisys\Cognito\Console\Traits\AwsCognitoTrait;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\ConsoleException;
 
 class SyncConfigCommand extends Command
 {
@@ -33,15 +34,22 @@ class SyncConfigCommand extends Command
      */
     protected $signature = 'cognito:sync-config {pool_id? : The user pool ID}
                                 {client_id? : The user pool client ID}
-                                {--up : Sync user pool configuration}
-                                {--down : Sync user pool client configuration}';
+                                {--local-to-aws : Sync configuration from local .env file to AWS}
+                                {--aws-to-local : Sync configuration from AWS to local .env file}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Sync user pool configuration';
+    protected $description = 'Synchronize AWS Cognito configurations';
+
+    /**
+     * The done message.
+     *
+     * @var string
+     */
+    const DONE = '✓ DONE';
 
     /**
      * The user pool ID.
@@ -64,11 +72,10 @@ class SyncConfigCommand extends Command
     {
         try {
             //Check if at least one option is provided
-            $needles = ['up', 'down'];
+            $needles = ['local-to-aws', 'aws-to-local'];
             $haystack = array_filter($this->options());
             if (empty(array_intersect($needles, array_keys($haystack)))) {
-                $this->error('Please provide at least one option: --up or --down');
-                return Command::FAILURE;
+                throw new ConsoleException('Provide at least one option: --local-to-aws or --aws-to-local');
             } //End if
 
             $this->newLine();
@@ -81,18 +88,22 @@ class SyncConfigCommand extends Command
             // Get the user pool client ID from the argument or from the .env file
             $this->clientId = $this->argument('client_id') ?: null;
 
-            if ($this->option('down')) {
+            if ($this->option('aws-to-local')) {
                 $this->newLine();
                 $this->info('Fetching user pool configuration...');
                 $this->getUserPoolConfigUpdEnv();
+                $this->info(self::DONE);
 
                 $this->newLine();
                 $this->info('Fetching user pool client configuration...');
                 $this->getUserPoolClientConfigUpdEnv();
+                $this->info(self::DONE);
 
                 $this->newLine();
                 $this->info('Fetching user pool MFA configuration...');
                 $this->getUserPoolMfaConfigUpdEnv();
+                $this->info(self::DONE);
+                $this->newLine();
             } // End if
 
             return Command::SUCCESS;
@@ -101,6 +112,7 @@ class SyncConfigCommand extends Command
             $this->components->error($exception->getMessage());
             return Command::FAILURE;
         } // Try-catch ends
+        return Command::SUCCESS;
     } //Function ends
 
     /**

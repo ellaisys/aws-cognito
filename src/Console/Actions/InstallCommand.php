@@ -21,7 +21,7 @@ use Ellaisys\Cognito\Console\Traits\AwsCognitoTrait;
 use Ellaisys\Cognito\Console\Traits\UtilsTrait;
 
 use Exception;
-use RuntimeException;
+use Ellaisys\Cognito\Exceptions\ConsoleException;
 
 class InstallCommand extends Command
 {
@@ -72,6 +72,11 @@ class InstallCommand extends Command
                 return Command::FAILURE;
             } // End if
 
+            // Prompt for database migration
+            if ($this->promptUserForDatabaseMigration() === Command::FAILURE) {
+                return Command::FAILURE;
+            } // End if            
+
             // Set environment variables
             if ($this->setEnvironment() === Command::FAILURE) {
                 return Command::FAILURE;
@@ -81,6 +86,11 @@ class InstallCommand extends Command
             if ($this->getUserPoolId() === Command::FAILURE) {
                 return Command::FAILURE;
             } // End if
+
+            // Display success message
+            $this->newLine();
+            $this->info('✓ Laravel package using AWS Cognito installed successfully.');
+            $this->newLine();
 
             return self::SUCCESS;
         } catch (Exception $exception) {
@@ -104,17 +114,17 @@ class InstallCommand extends Command
             $bar->start();
 
             if (empty(env('AWS_ACCESS_KEY_ID'))) {
-                throw new RuntimeException('AWS_ACCESS_KEY_ID is not set in .env file.');
+                throw new ConsoleException('AWS_ACCESS_KEY_ID is not set in .env file.');
             }
             $bar->advance();
 
             if (empty(env('AWS_SECRET_ACCESS_KEY'))) {
-                throw new RuntimeException('AWS_SECRET_ACCESS_KEY is not set in .env file.');
+                throw new ConsoleException('AWS_SECRET_ACCESS_KEY is not set in .env file.');
             }
             $bar->advance();
 
             if (empty(env('AWS_DEFAULT_REGION'))) {
-                throw new RuntimeException('AWS_DEFAULT_REGION is not set in .env file.');
+                throw new ConsoleException('AWS_DEFAULT_REGION is not set in .env file.');
             }
             $bar->advance();
 
@@ -229,7 +239,7 @@ class InstallCommand extends Command
 
             // Validate the user pool ID
             if (empty($userPool['id'])) {
-                throw new Exception('User pool ID is not set. Please check your AWS configuration and retry.');
+                throw new ConsoleException('User pool ID is not set. Please check your AWS configuration and retry.');
             } // End if
 
             // Check the client ID and secret in the .env file
@@ -239,7 +249,7 @@ class InstallCommand extends Command
             $this->call('cognito:sync-config', [
                 'pool_id' => $userPool['id'],
                 'client_id' => $clientId,
-                '--down' => true,
+                '--aws-to-local' => true,
                 '--quiet' => true
             ]);
 
@@ -297,8 +307,7 @@ class InstallCommand extends Command
 
             // Validate the selected choice
             if (!isset($poolMap[$choice])) {
-                $this->error('Invalid selection. Please try again.');
-                throw new Exception('Invalid selection.');
+                throw new ConsoleException('Invalid selection.');
             } // End if
 
             // Set the selected pool ID in the .env file
@@ -400,8 +409,7 @@ class InstallCommand extends Command
 
             // Validate the selected choice
             if (!isset($dataMap[$choice])) {
-                $this->error('Invalid selection. Please try again.');
-                throw new Exception('Invalid selection.');
+                throw new ConsoleException('Invalid selection.');
             } // End if
 
             // Set the selected client ID in the .env file
@@ -414,6 +422,29 @@ class InstallCommand extends Command
             Log::error('InstallCommand:getUserPoolClientId:Exception');
             throw $exception;
         } // Try-catch ends
+    } //Function ends
+
+    private function promptUserForDatabaseMigration(): int
+    {
+        $choices = [
+            'Yes' => 'yes',
+            'No' => 'no',
+        ];
+
+        $choice = $this->choice(
+            'Do you want to run the database migration now?',
+            array_keys($choices),
+            1 // Default to 'No'
+        );
+
+        if ($choices[$choice] === 'yes') {
+            $this->call('migrate');
+            $this->info('✓ Database migration completed.');
+        } else {
+            $this->info('Database migration skipped. You can run it later using "php artisan migrate".');
+        }
+
+        return Command::SUCCESS;
     } //Function ends
 
     /**
