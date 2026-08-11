@@ -43,6 +43,20 @@ class InstallCommand extends Command
     protected $description = 'Install AWS Cognito Auth solution.';
 
     /**
+     * The user pool ID.
+     *
+     * @var string|null
+     */
+    private ?string $userPoolId = null;
+
+    /**
+     * The user pool client ID.
+     *
+     * @var string|null
+     */
+    private ?string $clientId = null;
+
+    /**
      * Execute the console command.
      */
     public function handle()
@@ -85,6 +99,13 @@ class InstallCommand extends Command
             // Get the user pool
             if ($this->getUserPoolId() === Command::FAILURE) {
                 return Command::FAILURE;
+            } // End if
+
+            // Prompt for user groups
+            if ($this->confirm('Would you like to assign new users to a default group?', false)) {
+                if ($this->promptUserForUserGroups() === Command::FAILURE) {
+                    return Command::FAILURE;
+                } // End if
             } // End if
 
             // Display success message
@@ -241,14 +262,15 @@ class InstallCommand extends Command
             if (empty($userPool['id'])) {
                 throw new ConsoleException('User pool ID is not set. Please check your AWS configuration and retry.');
             } // End if
+            $this->userPoolId = $userPool['id'];
 
             // Check the client ID and secret in the .env file
-            $clientId = $this->getUserPoolClientId($userPool['id'], $userPool['status'] === 'new');
+            $this->clientId = $this->getUserPoolClientId($this->userPoolId, $userPool['status'] === 'new');
 
             // Sync the user pool configuration to the .env file
             $this->call('cognito:sync-config', [
-                'pool_id' => $userPool['id'],
-                'client_id' => $clientId,
+                'pool_id' => $this->userPoolId,
+                'client_id' => $this->clientId,
                 '--aws-to-local' => true,
                 '--quiet' => true
             ]);
@@ -420,6 +442,98 @@ class InstallCommand extends Command
             return $dataMap[$choice];
         } catch (Exception $exception) {
             Log::error('InstallCommand:getUserPoolClientId:Exception');
+            throw $exception;
+        } // Try-catch ends
+    } //Function ends
+
+    /**
+     * Prompt the user to select a user pool group or create a new one.
+     *
+     * @return int
+     */
+    private function promptUserForUserGroups(): int
+    {
+        try {
+            //Initialize the data map for user groups
+            $dataMap = [];
+            $choice = $createNew = 'Create New Resource';
+
+            // Get the list of user groups in the selected user pool
+            $results = $this->getUserPoolGroups($this->userPoolId);            
+
+            // Existing user groups are available
+            if (!empty($results)) {
+                foreach ($results as $group) {
+                    $label = "{$group['GroupName']} [{$group['Description']}]";
+                    $dataMap[$label] = [
+                        'id' => $group['GroupName'],
+                        'name' => $group['Description'],
+                    ];
+                } // End foreach
+
+                // Prompt the user to select a resource or create a new one
+                $choice = $this->choice(
+                    'Select the user pool group:',
+                    [...array_keys($dataMap), $createNew]
+                );
+            } // End if
+
+            // Create a new resource
+            if ($choice === $createNew) {
+                $dataMap[$choice] = $this->promptUserForNewUserGroup();
+            } // End if
+
+            // Validate the selected choice
+            if (!isset($dataMap[$choice])) {
+                throw new ConsoleException('Invalid selection.');
+            } // End if
+
+            // Set the selected client ID in the .env file
+            $this->setEnv('AWS_COGNITO_DEFAULT_USER_GROUP', $dataMap[$choice]['id']);
+
+            return Command::SUCCESS;
+        } catch (Exception $exception) {
+            Log::error('InstallCommand:promptUserForUserGroups:Exception');
+            throw $exception;
+        } // Try-catch ends
+    } //Function ends
+
+    /**
+     * Prompt the user to create a new user group.
+     *
+     * @return array{id: string, name: string}
+     */
+    private function promptUserForNewUserGroup(): array
+    {
+        try {
+            // Prompt the user to create a new group
+            if ($this->confirm('Do you want to create a new user group?', true)) {
+                $groupName = $this->ask('Enter the name of the new group:', 'default');
+                $groupDescription = $this->ask('Enter the description of the new group:', 'Default Group');
+
+                // Create the new group
+                $data = $this->callSilently('cognito:make', [
+                    'name' => $groupName,
+                    'description' => $groupDescription,
+                    '--groups' => true
+                ]);
+
+                // Display success message
+                $this->newLine();
+                $this->info("✓ User group '{$groupName}' created successfully.");
+
+                return [
+                    'id' => $data['GroupName'] ?? $groupName,
+                    'name' => $data['Description'] ?? $groupDescription,
+                ];
+            } // End if
+
+            return [
+                'id' => null,
+                'name' => null,
+            ];
+        } catch (Exception $exception) {
+            Log::error('InstallCommand:promptUserForNewUserGroup:Exception');
             throw $exception;
         } // Try-catch ends
     } //Function ends
