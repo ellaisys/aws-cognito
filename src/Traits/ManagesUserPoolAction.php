@@ -87,13 +87,14 @@ trait ManagesUserPoolAction
             $payload = [
                 'PoolName' => $poolName,
                 'Policies' => [
-                    'PasswordPolicy' => [
+                    'PasswordPolicy' => config('cognito.password_policy', [
                         'MinimumLength' => 8,
                         'RequireUppercase' => true,
                         'RequireLowercase' => true,
                         'RequireNumbers' => true,
-                        'RequireSymbols' => true
-                    ],
+                        'RequireSymbols' => true,
+                        'TemporaryPasswordValidityDays' => 7
+                    ]),
                     'SignInPolicy' => [
                         'AllowedFirstAuthFactors' => config('cognito.signin_policy', ['PASSWORD']),
                     ]
@@ -110,8 +111,21 @@ trait ManagesUserPoolAction
                     'AllowAdminCreateUserOnly' => !config('cognito.registration_enabled', true),
                 ],
                 'MfaConfiguration' => config('cognito.mfa_setup', 'OFF'),
-                'UsernameAttributes' => ['email']
+                'UsernameConfiguration' => [
+                    'CaseSensitive' => false
+                ],
+                'UsernameAttributes' => config('cognito.sign_in_username_attributes', ['email']),
+                'UserPoolTags' => [
+                    'Project' => config('app.name', 'AWS Cognito'),
+                    'Environment' => config('app.env', 'Development'),
+                    'CreatedBy' => 'AWS Cognito Laravel Package'
+                ],
             ];
+
+            // If MFA is enabled, then add the SMS configuration to the payload
+            if (config('cognito.mfa_setup', 'OFF') !== 'OFF') {
+                $payload['SmsConfiguration'] = config('cognito.sms_mfa_configuration.SmsConfiguration');
+            } //End if
 
             return $this->client->createUserPool($payload);
         } catch (CognitoIdentityProviderException $exception) {

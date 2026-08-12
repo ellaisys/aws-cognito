@@ -190,7 +190,7 @@ trait AwsCognitoTrait
     } //Function ends
 
     /**
-     * Create default group in a user pool.
+     * Create group in a user pool.
      *
      * @param string|null $userPoolId
      *
@@ -235,6 +235,30 @@ trait AwsCognitoTrait
             return $response->get('Terms');
         } catch (Exception $exception) {
             Log::error('AwsCognitoTrait:getUserPoolTerms:Exception');
+            throw $exception;
+        } // Try-catch ends
+    } //Function ends
+
+    /**
+     * Create terms in a user pool.
+     *
+     * @param string|null $userPoolId
+     *
+     * @return array
+     */
+    final protected function createUserPoolTerms(string $termsName, array $links,
+        ?string $userPoolId = null, ?string $clientId = null): array
+    {
+        try {
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Get user pool term configuration
+            $response = $client->createTerms($termsName, $links, $userPoolId, $clientId);
+
+            return $response->get('Terms');
+        } catch (Exception $exception) {
+            Log::error('AwsCognitoTrait:createUserPoolTerms:Exception');
             throw $exception;
         } // Try-catch ends
     } //Function ends

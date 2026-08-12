@@ -86,27 +86,26 @@ trait ManageTermsAction
      * Create a new term in a user pool.
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateTerms.html
      *
-     * @param string $termName
-     * @param string $termDescription
+     * @param string $termsName
+     * @param array<string, string> $links (string : string) array of links
      * @param string|null $userPoolId
+     * @param string|null $clientId
      *
      * @return \AwsResult
      */
-    final public function createTerms(string $termsName, ?array $links = null): AwsResult
+    final public function createTerms(string $termsName, array $links,
+        ?string $userPoolId = null, ?string $clientId = null): AwsResult
     {
         try {
             //Build payload
             $payload = [
-                'ClientId' => $this->clientId,
-                'UserPoolId' => $this->poolId,
+                'ClientId' => $clientId ?? $this->clientId,
+                'UserPoolId' => $userPoolId ?? $this->poolId,
                 'TermsName' => $termsName,
+                'Links' => $links,
                 'Enforcement' => 'NONE',
-                'TermsSource' => 'LINK',
+                'TermsSource' => 'LINK'
             ];
-
-            if (!empty($links)) {
-                $payload['Links'] = $links;
-            } //End if
 
             return $this->client->createTerms($payload);
         } catch (CognitoIdentityProviderException $exception) {

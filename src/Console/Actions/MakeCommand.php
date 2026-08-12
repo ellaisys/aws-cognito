@@ -35,8 +35,8 @@ class MakeCommand extends Command
                                 {--client : Create a new user pool client}
                                 {--terms : Create a new user pool terms}
                                 {--groups : Create a new user pool groups}
-                                {name : Provide a name for the resource to be created}
-                                {description? : Provide a description for the resource to be created}
+                                {name : Provide a name for the resource to be created. Provide "terms-of-use" or "privacy-policy" for terms.}
+                                {description? : Provide a description for the resource to be created and for terms, must provide a link to the terms document}
                                 {pool_id? : The user pool ID}
                                 {client_id? : The user pool client ID}';
 
@@ -81,13 +81,13 @@ class MakeCommand extends Command
             $this->clientId = $this->argument('client_id') ?: null;
 
             // Name argument is provided
-            if (empty($this->argument('name'))) {
-                throw new ConsoleException('Provide a name for the resource to be created.');
+            if (!$this->argument('name')) {
+                throw new ConsoleException('Provide a name for the resource to be created');
             } //End if
             $resourceName = $this->argument('name');
 
             // Description argument is optional
-            $resourceDescription = $this->argument('description') ?: 'Default Description';
+            $resourceDescription = $this->argument('description') ?: null;
 
             $this->newLine();
             $this->info('Starting resource creation...');
@@ -97,38 +97,49 @@ class MakeCommand extends Command
             // Create user pool
             if ($this->option('pool')) {
                 $returnValue['option'] = 'pool';
-                $returnValue['message'] = 'Created new user pool.';
                 $returnValue['data'] = $this->createUserPool(Str::studly($resourceName));
             } //End if
 
             // Create user pool client
             if ($this->option('client')) {
                 $returnValue['option'] = 'client';
-                $returnValue['message'] = 'Created new user pool client.';
                 $returnValue['data'] = $this->createUserPoolClient($resourceName);
             } //End if
 
             // Create user pool terms
             if ($this->option('terms')) {
+                if (empty($resourceDescription) ||
+                    (!Str::isUrl($resourceDescription, ['http', 'https']))) {
+                    throw new ConsoleException(
+                        'Provide a description for the terms resource to be ' .
+                        'created. It must be a http or https link to the ' .
+                        'document with the terms of use or privacy policy.');
+                } //End if
+
                 $returnValue['option'] = 'terms';
-                $returnValue['message'] = 'Created new user pool terms.';
-                $returnValue['data'] = $this->createUserPoolTerms($resourceName);
+                $returnValue['data'] = $this->promptUserToCreateTerms(
+                    $resourceName,
+                    [ 
+                        'cognito:default' => $resourceDescription, 
+                    ]);
             } //End if
 
             // Create user group
             if ($this->option('groups')) {
                 $returnValue['option'] = 'groups';
-                $returnValue['message'] = 'Created new user pool group.';
                 $returnValue['data'] = $this->createUserPoolGroup(
-                    Str::camel($resourceName), $resourceDescription,
+                    Str::camel($resourceName),
+                    $resourceDescription ?? 'Default Group',
                     $this->userPoolId
                 );
             } //End if
 
             $this->newLine();
-            $this->info('Created resource successfully.');
+            $this->info('✓ Successfully created the resource.');
 
-            $this->info(json_encode($returnValue['data'] ?? [], JSON_PRETTY_PRINT));
+            if ($this->output->isVerbose()) {
+                $this->info(json_encode($returnValue['data'] ?? [], JSON_PRETTY_PRINT));
+            } //End if
 
             return Command::SUCCESS;
         } catch (Exception $exception) {
@@ -137,6 +148,39 @@ class MakeCommand extends Command
             return Command::FAILURE;
         } // Try-catch ends
         return Command::SUCCESS;
+    } //Function ends
+
+    /**
+     * Prompt the user to create terms if they don't exist.
+     *
+     * @param string $resourceName
+     * @param array<string, string> $links array of links
+     *
+     * @return array
+     */
+    private function promptUserToCreateTerms(string $resourceName, array $links = []): array
+    {
+        if ($resourceName !== 'terms-of-use' && $resourceName !== 'privacy-policy') {
+            $dataMap = [
+                'terms-of-use' => 'Terms of Use',
+                'privacy-policy' => 'Privacy Policy'
+            ];
+
+            // Prompt the user to select a resource or create a new one
+            $choice = $this->choice(
+                'Select term type:',
+                [...array_keys(array_flip($dataMap))],
+                0
+            );
+
+            // Selected choice is not in the data map
+            $resourceName = array_flip($dataMap)[$choice] ?? 'terms-of-use';            
+        } //End if
+
+        return $this->createUserPoolTerms(
+            $resourceName, $links,
+            $this->userPoolId, $this->clientId
+        );
     } //Function ends
 
 } // Class ends
