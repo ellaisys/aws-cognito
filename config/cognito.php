@@ -102,6 +102,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cognito Sign In Username Attributes
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito sign in username attributes. You
+    | can set the sign in username attributes in your AWS Cognito User Pool
+    | configuration, and the value should be set to an array of allowed values.
+    | The options available are "email" and "phone_number". You can set multiple
+    | options in the array.
+    | 
+    | The default value is set to ['email'], which means only email is allowed.
+    |
+    */
+    'sign_in_username_attributes' => (array) env('AWS_COGNITO_USER_SIGN_IN_ATTRIBUTE', ['email']),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cognito Fields & DB Mapping
     |--------------------------------------------------------------------------
     |
@@ -145,14 +160,23 @@ return [
     |--------------------------------------------------------------------------
     | Cognito Password Policy - Pool Configuration
     |--------------------------------------------------------------------------
-    | This option controls the default cognito password policy. You can set the
-    | password policy in your AWS Cognito User Pool configuration, and the value
-    | should be set to the base64 encoded value of the password policy JSON.
+    | This option defines the default Amazon Cognito User Pool password policy.
+    | You can configure the password policy in your AWS Cognito User Pool and
+    | provide the policy here as a Base64-encoded JSON string.
     |
-    | The default value is set to an empty string, which means default policy is used.
+    | The default policy is:
+    |
+    | {
+    |     "MinimumLength": 8,
+    |     "RequireUppercase": true,
+    |     "RequireLowercase": true,
+    |     "RequireNumbers": true,
+    |     "RequireSymbols": true,
+    |     "TemporaryPasswordValidityDays": 7
+    | }
     |
     */
-    'password_policy' => (array) json_decode(base64_decode(env('AWS_COGNITO_PASSWORD_POLICY', ''))),
+    'password_policy' => (array) json_decode(base64_decode(env('AWS_COGNITO_PASSWORD_POLICY', 'eyJNaW5pbXVtTGVuZ3RoIjo4LCJSZXF1aXJlVXBwZXJjYXNlIjp0cnVlLCJSZXF1aXJlTG93ZXJjYXNlIjp0cnVlLCJSZXF1aXJlTnVtYmVycyI6dHJ1ZSwiUmVxdWlyZVN5bWJvbHMiOnRydWUsIlRlbXBvcmFyeVBhc3N3b3JkVmFsaWRpdHlEYXlzIjo3fQ=='))),
 
     /*
     |--------------------------------------------------------------------------
