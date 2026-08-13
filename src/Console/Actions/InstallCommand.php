@@ -268,11 +268,10 @@ class InstallCommand extends Command
             $this->clientId = $this->getUserPoolClientId($this->userPoolId, $userPool['status'] === 'new');
 
             // Sync the user pool configuration to the .env file
-            $this->call('cognito:sync-config', [
+            $this->callSilently('cognito:sync-config', [
                 'pool_id' => $this->userPoolId,
                 'client_id' => $this->clientId,
-                '--aws-to-local' => true,
-                '--quiet' => true
+                '--aws-to-local' => true
             ]);
 
             return Command::SUCCESS;
