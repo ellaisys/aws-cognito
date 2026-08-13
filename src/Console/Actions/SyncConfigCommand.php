@@ -35,7 +35,10 @@ class SyncConfigCommand extends Command
     protected $signature = 'cognito:sync-config {pool_id? : The user pool ID}
                                 {client_id? : The user pool client ID}
                                 {--local-to-aws : Sync configuration from local .env file to AWS}
-                                {--aws-to-local : Sync configuration from AWS to local .env file}';
+                                {--aws-to-local : Sync configuration from AWS to local .env file}
+                                {--pool : Sync user pool configuration}
+                                {--client : Sync user pool client configuration}
+                                {--mfa : Sync user pool MFA configuration}';
 
     /**
      * The console command description.
@@ -89,21 +92,7 @@ class SyncConfigCommand extends Command
             $this->clientId = $this->argument('client_id') ?: null;
 
             if ($this->option('aws-to-local')) {
-                $this->newLine();
-                $this->info('Fetching user pool configuration...');
-                $this->getUserPoolConfigUpdEnv();
-                $this->info(self::DONE);
-
-                $this->newLine();
-                $this->info('Fetching user pool client configuration...');
-                $this->getUserPoolClientConfigUpdEnv();
-                $this->info(self::DONE);
-
-                $this->newLine();
-                $this->info('Fetching user pool MFA configuration...');
-                $this->getUserPoolMfaConfigUpdEnv();
-                $this->info(self::DONE);
-                $this->newLine();
+                return $this->syncAwsToLocal();
             } // End if
 
             return Command::SUCCESS;
@@ -112,6 +101,33 @@ class SyncConfigCommand extends Command
             $this->components->error($exception->getMessage());
             return Command::FAILURE;
         } // Try-catch ends
+        return Command::SUCCESS;
+    } //Function ends
+
+    private function syncAwsToLocal(): int
+    {
+        $this->newLine();
+        $this->info('Fetching user pool configuration...');
+        $this->getUserPoolConfigUpdEnv();
+        $this->info(self::DONE);
+        if ($this->option('pool')) {
+            return Command::SUCCESS;
+        } // End if
+
+        $this->newLine();
+        $this->info('Fetching user pool client configuration...');
+        $this->getUserPoolClientConfigUpdEnv();
+        $this->info(self::DONE);
+        if ($this->option('client')) {
+            return Command::SUCCESS;
+        } // End if
+
+        $this->newLine();
+        $this->info('Fetching user pool MFA configuration...');
+        $this->getUserPoolMfaConfigUpdEnv();
+        $this->info(self::DONE);
+        $this->newLine();
+    
         return Command::SUCCESS;
     } //Function ends
 
