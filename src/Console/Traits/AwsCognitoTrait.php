@@ -143,6 +143,31 @@ trait AwsCognitoTrait
     } //Function ends
 
     /**
+     * Create user pool client.
+     *
+     * @param string $clientName
+     * @param string|null $userPoolId
+     *
+     * @return array
+     */
+    final protected function createUserPoolClient(string $clientName,
+        ?string $userPoolId = null): array
+    {
+        try {
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Create user pool client
+            $response = $client->createUserPoolClient($clientName, $userPoolId);
+
+            return $response->get('UserPoolClient');
+        } catch (Exception $exception) {
+            Log::error('AwsCognitoTrait:createUserPoolClient:Exception');
+            throw $exception;
+        } // Try-catch ends
+    } //Function ends
+
+    /**
      * Get user pool MFA configuration.
      *
      * @return array

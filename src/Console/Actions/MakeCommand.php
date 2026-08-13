@@ -97,13 +97,15 @@ class MakeCommand extends Command
             // Create user pool
             if ($this->option('pool')) {
                 $returnValue['option'] = 'pool';
-                $returnValue['data'] = $this->createUserPool(Str::studly($resourceName));
+                $returnValue['data'] = $this->promptUserToCreateUserPool(
+                    $resourceName
+                );
             } //End if
 
             // Create user pool client
             if ($this->option('client')) {
                 $returnValue['option'] = 'client';
-                $returnValue['data'] = $this->createUserPoolClient($resourceName);
+                $returnValue['data'] = $this->promptUserToCreateUserPoolClient($resourceName);
             } //End if
 
             // Create user pool terms
@@ -148,6 +150,39 @@ class MakeCommand extends Command
             return Command::FAILURE;
         } // Try-catch ends
         return Command::SUCCESS;
+    } //Function ends
+
+    private function promptUserToCreateUserPool(string $poolName): array
+    {
+        $response = $this->createUserPool(Str::studly($poolName));
+
+        $this->newLine();
+        $this->info('User pool created successfully with ID: ' . $response['Id']);
+
+        $this->newLine();
+        $syncChoice = $this->ask('Do you want to sync the configuration to your local .env file? (yes/no)', 'yes');
+        if (Str::lower($syncChoice) === 'yes') {
+            $this->callSilently('cognito:sync-config', [
+                'pool_id' => $response['Id'],
+                '--aws-to-local' => true,
+                '--pool' => true,
+            ]);
+        } //End if
+
+        $this->newLine();
+        $choice = $this->ask('Do you want to create a user pool client for this user pool? (yes/no)', 'yes');
+        if (Str::lower($choice) === 'yes') {
+            $clientName = $this->ask('Enter a name for the user pool client:', Str::studly($poolName) . 'Client');
+            $this->userPoolId = $response['Id'];
+            $response['client'] = $this->createUserPoolClient($clientName);
+        } //End if
+
+        return $response;
+    } //Function ends
+
+    private function promptUserToCreateUserPoolClient(string $clientName): array
+    {
+        return $this->createUserPoolClient($clientName, $this->userPoolId);
     } //Function ends
 
     /**
