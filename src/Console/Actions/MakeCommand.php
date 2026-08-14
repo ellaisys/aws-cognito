@@ -105,7 +105,9 @@ class MakeCommand extends Command
             // Create user pool client
             if ($this->option('client')) {
                 $returnValue['option'] = 'client';
-                $returnValue['data'] = $this->promptUserToCreateUserPoolClient($resourceName);
+                $returnValue['data'] = $this->promptUserToCreateUserPoolClient(
+                    $resourceName
+                );
             } //End if
 
             // Create user pool terms
@@ -121,8 +123,8 @@ class MakeCommand extends Command
                 $returnValue['option'] = 'terms';
                 $returnValue['data'] = $this->promptUserToCreateTerms(
                     $resourceName,
-                    [ 
-                        'cognito:default' => $resourceDescription, 
+                    [
+                        'cognito:default' => $resourceDescription,
                     ]);
             } //End if
 
@@ -152,37 +154,80 @@ class MakeCommand extends Command
         return Command::SUCCESS;
     } //Function ends
 
+    /**
+     * Prompt the user to create a user pool if it doesn't exist.
+     *
+     * @param string $poolName
+     *
+     * @return array
+     */
     private function promptUserToCreateUserPool(string $poolName): array
     {
         $response = $this->createUserPool(Str::studly($poolName));
 
+        // Success message
         $this->newLine();
-        $this->info('User pool created successfully with ID: ' . $response['Id']);
+        $this->info('✓ Successfully created user pool [' . $response['Id'] . ']');
 
-        $this->newLine();
-        $syncChoice = $this->ask('Do you want to sync the configuration to your local .env file? (yes/no)', 'yes');
-        if (Str::lower($syncChoice) === 'yes') {
-            $this->callSilently('cognito:sync-config', [
-                'pool_id' => $response['Id'],
-                '--aws-to-local' => true,
-                '--pool' => true,
-            ]);
-        } //End if
+        // Check if the output is not quiet before prompting for further actions
+        if (!$this->output->isQuiet())
+        {
+            // Prompt to Sync configuration to local .env file
+            $this->newLine();
+            $syncChoice = $this->ask('Do you want to sync the configuration to your local .env file? (yes/no)', 'yes');
+            if (Str::lower($syncChoice) === 'yes') {
+                $this->callSilently('cognito:sync-config', [
+                    'pool_id' => $response['Id'],
+                    '--aws-to-local' => true,
+                    '--pool' => true,
+                ]);
+            } //End if
 
-        $this->newLine();
-        $choice = $this->ask('Do you want to create a user pool client for this user pool? (yes/no)', 'yes');
-        if (Str::lower($choice) === 'yes') {
-            $clientName = $this->ask('Enter a name for the user pool client:', Str::studly($poolName) . 'Client');
-            $this->userPoolId = $response['Id'];
-            $response['client'] = $this->createUserPoolClient($clientName);
+            // Prompt to create user pool client
+            $this->newLine();
+            $choice = $this->ask('Do you want to create a user pool client for this user pool? (yes/no)', 'yes');
+            if (Str::lower($choice) === 'yes') {
+                $clientName = $this->ask('Enter a name for the user pool client:', Str::studly($poolName) . 'Client');
+                $this->userPoolId = $response['Id'];
+                $response['client'] = $this->promptUserToCreateUserPoolClient($clientName);
+            } //End if
         } //End if
 
         return $response;
     } //Function ends
 
+    /**
+     * Prompt the user to create a user pool client if it doesn't exist.
+     *
+     * @param string $clientName
+     *
+     * @return array
+     */
     private function promptUserToCreateUserPoolClient(string $clientName): array
     {
-        return $this->createUserPoolClient($clientName, $this->userPoolId);
+        $response = $this->createUserPoolClient($clientName, $this->userPoolId);
+
+        // Success message
+        $this->newLine();
+        $this->info('✓ Successfully created user pool client [' . $response['ClientId'] . ']');
+
+        // Check if the output is not quiet before prompting for further actions
+        if (!$this->output->isQuiet())
+        {
+            // Prompt to Sync configuration to local .env file
+            $this->newLine();
+            $syncChoice = $this->ask('Do you want to sync the configuration to your local .env file? (yes/no)', 'yes');
+            if (Str::lower($syncChoice) === 'yes') {
+                $this->callSilently('cognito:sync-config', [
+                    'pool_id' => $this->userPoolId,
+                    'client_id' => $response['ClientId'],
+                    '--aws-to-local' => true,
+                    '--client' => true,
+                ]);
+            } //End if
+        } //End if
+
+        return $response;
     } //Function ends
 
     /**
@@ -209,13 +254,19 @@ class MakeCommand extends Command
             );
 
             // Selected choice is not in the data map
-            $resourceName = array_flip($dataMap)[$choice] ?? 'terms-of-use';            
+            $resourceName = array_flip($dataMap)[$choice] ?? 'terms-of-use';
         } //End if
 
-        return $this->createUserPoolTerms(
+        $response = $this->createUserPoolTerms(
             $resourceName, $links,
             $this->userPoolId, $this->clientId
         );
+
+        // Success message
+        $this->newLine();
+        $this->info('✓ Successfully created terms [' . $resourceName . ']');
+
+        return $response;
     } //Function ends
 
 } // Class ends

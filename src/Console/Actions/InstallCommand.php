@@ -49,6 +49,14 @@ class InstallCommand extends Command
      */
     private ?string $userPoolId = null;
 
+
+    /**
+     * The user pool Name.
+     *
+     * @var string|null
+     */
+    private ?string $userPoolName = null;
+
     /**
      * The user pool client ID.
      *
@@ -263,6 +271,7 @@ class InstallCommand extends Command
                 throw new ConsoleException('User pool ID is not set. Please check your AWS configuration and retry.');
             } // End if
             $this->userPoolId = $userPool['id'];
+            $this->userPoolName = $userPool['name'];
 
             // Check the client ID and secret in the .env file
             $this->clientId = $this->getUserPoolClientId($this->userPoolId, $userPool['status'] === 'new');
@@ -307,7 +316,8 @@ class InstallCommand extends Command
             // Prompt the user to select a pool or create a new one
             $choice = $this->choice(
                 'Select the pool:',
-                [...array_keys($poolMap), $createNew]
+                [...array_keys($poolMap), $createNew],
+                0 // Default choice index
             );
 
             /**
@@ -316,7 +326,9 @@ class InstallCommand extends Command
              * Otherwise, return the selected pool's ID and name.
              */
             if ($choice === $createNew) {
-                $name = $this->ask('Enter the name of the new pool:');
+                $name = $this->ask('Enter the name of the new pool');
+
+                // Create the new pool
                 $newPool = $this->createUserPool($name);
 
                 $poolMap[$choice] = [
@@ -410,7 +422,8 @@ class InstallCommand extends Command
             // Prompt the user to select a client or create a new one
             $choice = $this->choice(
                 'Select the user pool client:',
-                [...array_keys($dataMap), $createNew]
+                [...array_keys($dataMap), $createNew],
+                0, // Default choice index
             );
 
             /**
@@ -419,11 +432,14 @@ class InstallCommand extends Command
              * Otherwise, return the selected client's ID and secret.
              */
             if ($choice === $createNew) {
-                $name = $this->ask('Enter the name of the new user pool client:');
-                $newPool = $this->createUserPoolClient($name);
+                $suggestedName = $this->userPoolName ? $this->userPoolName . 'Client' : 'NewClient';
+                $name = $this->ask('Enter the name of the new user pool client', $suggestedName);
+
+                // Create the new client
+                $newClient = $this->createUserPoolClient($name, $userPoolId);
 
                 $dataMap[$choice] = [
-                    'id' => $newPool['Id'],
+                    'id' => $newClient['ClientId'],
                     'name' => $name
                 ];
             } // End if

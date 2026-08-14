@@ -270,6 +270,10 @@ trait ManagesUserPoolAction
                 'AllowedOAuthScopes' => [
                     'email', 'openid'
                 ],
+                'CallbackURLs' => [
+                    config('app.url', 'http://localhost')
+                ],
+                'SupportedIdentityProviders' => ['COGNITO'],
             ];
 
             return $this->client->createUserPoolClient($payload);
