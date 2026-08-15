@@ -563,7 +563,7 @@ class InstallCommand extends Command
         $choice = $this->choice(
             'Do you want to run the database migration now?',
             array_keys($choices),
-            1 // Default to 'No'
+            0 // Default to 'Yes'
         );
 
         if ($choices[$choice] === 'yes') {
