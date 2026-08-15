@@ -69,65 +69,62 @@ class InstallCommand extends Command
      */
     public function handle()
     {
+        // Initialize return value
+        $returnValue = Command::SUCCESS;
         try {
             // Display the header
             $this->displayHeader();
 
             // Confirm installation
-            if (! $this->confirm('Configure AWS Cognito now?', true))
+            if (! $this->confirm('Would you like to configure AWS Cognito now?', true))
             {
-                $this->components->warn('Installation cancelled.');
-                return self::SUCCESS;
+                $this->components->warn('AWS Cognito installation cancelled.');
+                $this->components->info('You can run the installer later using "php artisan cognito:install".');
+                return $returnValue;
             } // End if
 
             // Confirm AWS credentials
             if (! $this->confirm('Are your AWS credentials configured and ready to use?', true))
             {
-                $this->components->warn(
-                    'Please configure your AWS credentials before running the installer.'
-                );
-                return self::SUCCESS;
+                throw new ConsoleException('AWS credentials are not configured. Please configure your AWS credentials before running the installer.');
             } // End if
 
             // Check for AWS connectivity
             if ($this->checkHygieneData() === Command::FAILURE) {
-                return Command::FAILURE;
+                throw new ConsoleException('Unable to verify the AWS configuration. Please check your AWS credentials and configuration, then try again.');
             } // End if
 
             // Prompt for database migration
             if ($this->promptUserForDatabaseMigration() === Command::FAILURE) {
-                return Command::FAILURE;
-            } // End if            
+                throw new ConsoleException('Database migration failed. Please check your database configuration and retry.');
+            } // End if
 
             // Set environment variables
             if ($this->setEnvironment() === Command::FAILURE) {
-                return Command::FAILURE;
+                throw new ConsoleException('Unable to set environment variables. Please check your .env file and retry.');
             } // End if
 
             // Get the user pool
             if ($this->getUserPoolId() === Command::FAILURE) {
-                return Command::FAILURE;
+                throw new ConsoleException('Could not set up the User Pool. Please check your AWS Cognito configuration and retry.');
             } // End if
 
             // Prompt for user groups
-            if ($this->confirm('Would you like to assign new users to a default group?', false)) {
-                if ($this->promptUserForUserGroups() === Command::FAILURE) {
-                    return Command::FAILURE;
-                } // End if
+            if ($this->confirm('Would you like to assign new users to a default group?', false) &&
+                ($this->promptUserForUserGroups() === Command::FAILURE)) {
+                throw new ConsoleException('Default user group configuration could not be completed.');
             } // End if
 
             // Display success message
             $this->newLine();
-            $this->info('✓ Laravel package using AWS Cognito installed successfully.');
+            $this->info('✓ AWS Cognito has been configured successfully.');
             $this->newLine();
-
-            return self::SUCCESS;
         } catch (Exception $exception) {
             Log::error('InstallCommand:handle:Exception');
             $this->components->error($exception->getMessage());
             return Command::FAILURE;
         } // Try-catch ends
-        return Command::SUCCESS;
+        return $returnValue;
     } //Function ends
 
     /**
@@ -164,7 +161,7 @@ class InstallCommand extends Command
             } // End if
 
             // Check AWS connectivity
-            $response = $this->getUserPools();
+            $this->getUserPools();
             $bar->advance();
             $bar->finish();
 
@@ -246,8 +243,6 @@ class InstallCommand extends Command
      */
     private function getUserPoolId(): int
     {
-        // Initialize variables
-        $returnValue = null;
         try {
             // If the user pool ID is already set in the .env file, return it
             $userPool = [];
@@ -298,27 +293,30 @@ class InstallCommand extends Command
     private function promptUserForUserPoolId(): array
     {
         try {
+            // Initialize the data map for user pools
+            $poolMap = [];
+            $choice = $createNew = 'Create New User Pool';
+
             // Get the list of user pools
             $userPools = $this->getUserPools();
 
-            $poolMap = [];
-            foreach ($userPools as $pool) {
-                $label = "{$pool['Name']} [{$pool['Id']}]";
-                $poolMap[$label] = [
-                    'id' => $pool['Id'],
-                    'name' => $pool['Name'],
-                    'status' => 'existing'
-                ];
-            } // End foreach
+            if (!empty($userPools)) {
+                foreach ($userPools as $pool) {
+                    $label = "{$pool['Name']} [{$pool['Id']}]";
+                    $poolMap[$label] = [
+                        'id' => $pool['Id'],
+                        'name' => $pool['Name'],
+                        'status' => 'existing'
+                    ];
+                } // End foreach
 
-            $createNew = 'Create New Resource';
-
-            // Prompt the user to select a pool or create a new one
-            $choice = $this->choice(
-                'Select the pool:',
-                [...array_keys($poolMap), $createNew],
-                0 // Default choice index
-            );
+                // Prompt the user to select a pool or create a new one
+                $choice = $this->choice(
+                    'Select the pool:',
+                    [...array_keys($poolMap), $createNew],
+                    0 // Default choice index
+                );
+            } // End if
 
             /**
              * If the user chooses to create a new resource, prompt for the name.
@@ -326,7 +324,8 @@ class InstallCommand extends Command
              * Otherwise, return the selected pool's ID and name.
              */
             if ($choice === $createNew) {
-                $name = $this->ask('Enter the name of the new pool');
+                $suggestedName = 'NewPool-' . Str::random(5);
+                $name = $this->ask('Enter the name of the new pool', $suggestedName);
 
                 // Create the new pool
                 $newPool = $this->createUserPool($name);
@@ -340,7 +339,7 @@ class InstallCommand extends Command
 
             // Validate the selected choice
             if (!isset($poolMap[$choice])) {
-                throw new ConsoleException('Invalid selection.');
+                throw new ConsoleException('Invalid selection of user pool.');
             } // End if
 
             // Set the selected pool ID in the .env file
@@ -362,9 +361,6 @@ class InstallCommand extends Command
      */
     private function getUserPoolClientId(?string $userPoolId, bool $isNew = false): ?string
     {
-        // Initialize variables
-        $returnValue = null;
-
         try {
             // If the client ID is already set in the .env file, return it
             $client = [];
@@ -399,32 +395,36 @@ class InstallCommand extends Command
      *
      * @return array{id: string, name: string}
      */
-    private function promptUserForUserPoolClientId(?string $userPoolId, bool $isNew = false): array
+    private function promptUserForUserPoolClientId(?string $userPoolId,
+        bool $isNew = false): array
     {
-        // Initialize variables
-        $returnValue = null;
-
         try {
-            // Get the list of user pools
-            $clients = $this->getUserPoolClients($userPoolId);
-
+            // Initialize the data map for user pool clients
             $dataMap = [];
-            foreach ($clients as $client) {
-                $label = "{$client['ClientName']} [{$client['ClientId']}]";
-                $dataMap[$label] = [
-                    'id' => $client['ClientId'],
-                    'name' => $client['ClientName'],
-                ];
-            } // End foreach
+            $choice = $createNew = 'Create New User Pool Client';
 
-            $createNew = 'Create New Resource';
+            // If it's not a new user pool, get the list of existing clients
+            if (!$isNew) {
+                // Get the list of user pools
+                $clients = $this->getUserPoolClients($userPoolId);
 
-            // Prompt the user to select a client or create a new one
-            $choice = $this->choice(
-                'Select the user pool client:',
-                [...array_keys($dataMap), $createNew],
-                0, // Default choice index
-            );
+                foreach ($clients as $client) {
+                    $label = "{$client['ClientName']} [{$client['ClientId']}]";
+                    $dataMap[$label] = [
+                        'id' => $client['ClientId'],
+                        'name' => $client['ClientName'],
+                    ];
+                } // End foreach
+
+                $createNew = 'Create New User Pool Client';
+
+                // Prompt the user to select a client or create a new one
+                $choice = $this->choice(
+                    'Select the user pool client:',
+                    [...array_keys($dataMap), $createNew],
+                    0, // Default choice index
+                );
+            } // End if
 
             /**
              * If the user chooses to create a new resource, prompt for the name.
@@ -474,7 +474,7 @@ class InstallCommand extends Command
             $choice = $createNew = 'Create New Resource';
 
             // Get the list of user groups in the selected user pool
-            $results = $this->getUserPoolGroups($this->userPoolId);            
+            $results = $this->getUserPoolGroups($this->userPoolId);
 
             // Existing user groups are available
             if (!empty($results)) {
