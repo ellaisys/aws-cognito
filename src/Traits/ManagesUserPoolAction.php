@@ -88,6 +88,18 @@ trait ManagesUserPoolAction
         try {
             $payload = [
                 'PoolName' => $poolName,
+                'AccountRecoverySetting' => [
+                    'RecoveryMechanisms' => [
+                        [
+                            'Name' => 'verified_email',
+                            'Priority' => 1
+                        ],
+                        [
+                            'Name' => 'verified_phone_number',
+                            'Priority' => 2
+                        ]
+                    ]
+                ],
                 'Policies' => [
                     'PasswordPolicy' => config('cognito.password_policy', [
                         'MinimumLength' => 8,
@@ -125,7 +137,8 @@ trait ManagesUserPoolAction
             ];
 
             // If MFA is enabled, then add the SMS configuration to the payload
-            if (config('cognito.mfa_setup', 'OFF') !== 'OFF') {
+            if ((config('cognito.mfa_setup', 'OFF') !== 'OFF') ||
+                (in_array('SMS_OTP', config('cognito.signin_policy', ['PASSWORD'])))) {
                 $payload['SmsConfiguration'] = config('cognito.sms_mfa_configuration.SmsConfiguration');
             } //End if
 
@@ -274,6 +287,7 @@ trait ManagesUserPoolAction
                     config('app.url', 'http://localhost')
                 ],
                 'SupportedIdentityProviders' => ['COGNITO'],
+                'ReadAttributes' => ['name', 'given_name', 'email', 'email_verified'],
             ];
 
             return $this->client->createUserPoolClient($payload);
