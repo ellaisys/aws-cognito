@@ -3,7 +3,17 @@
 > [!NOTE]
 > Last Updated: <!-- AUTO:last_updated -->2026-07-31<!-- /AUTO:last_updated -->
 
-The package provides a set of console commands to manage AWS Cognito installation, configuration and monitoring some activities. These commands can be used to perform various operations such as managing user pools, clients, groups, updating user attributes, and more.
+The package provides a set of Laravel Artisan commands for installing, configuring, managing, and synchronizing your AWS Cognito integration.
+
+You can use these commands to manage Cognito resources such as:
+
+- User Pools
+- App Clients
+- Groups
+- MFA configuration
+- Local environment configuration
+
+All commands are available through Laravel's Artisan CLI.
 
 
 ## Contents
@@ -18,13 +28,15 @@ The package provides a set of console commands to manage AWS Cognito installatio
 
 ## AWS IAM Configuration
 
-When using the `install` or `make` commands with **SMS-based authentication**, additional AWS IAM permissions are required to configure Amazon Cognito SMS messaging.
+Additional AWS IAM permissions are required when using the `install` or `make` commands to configure **SMS-based authentication**.
 
-### Create an IAM Role for Amazon SNS
+Amazon Cognito uses an IAM role to publish SMS messages through Amazon SNS. The IAM role must be configured so that Amazon Cognito can assume it, and the IAM identity executing the Artisan command must have permission to pass the role to Cognito.
 
-For SMS messaging, create an IAM role that Amazon Cognito can assume to publish SMS messages through **Amazon SNS**.
+### Create an IAM Role for Amazon Cognito
 
-The role's **trust policy** must allow the Amazon Cognito service to assume the role. For example:
+Create an IAM role for Amazon Cognito SMS messaging and configure its trust policy to allow the Amazon Cognito service to assume the role.
+
+The following is an example trust policy:
 
 ```json
 {
@@ -41,16 +53,17 @@ The role's **trust policy** must allow the Amazon Cognito service to assume the 
 }
 ```
 
+Attach the required Amazon SNS permissions to this role based on your SMS configuration.
 
-### Grant iam:PassRole Permission
+### Grant `iam:PassRole` Permission
 
-The AWS IAM user or role executing the install or make command must have the `iam:PassRole` permission for the IAM role created for Amazon Cognito SMS messaging.
+The AWS IAM user or role used to execute the `install` or `make` command must have the `iam:PassRole` permission for the IAM role configured for Cognito SMS messaging.
 
-This permission allows the command to associate the IAM role with the Cognito User Pool during configuration.
+This permission allows the Artisan command to associate the IAM role with the Cognito User Pool during configuration.
 
-For security, restrict `iam:PassRole` to the specific IAM role required by your Cognito configuration. Do not grant iam:PassRole on all IAM roles (*) unless explicitly required.
+For security, restrict `iam:PassRole` to the specific IAM role required by your Cognito configuration. Avoid granting `iam:PassRole` access to all IAM roles (`*`) unless it is explicitly required.
 
-The following is an example iam:PassRole policy:
+The following example grants permission to pass a specific Cognito IAM role:
 
 ```json
 {
@@ -64,64 +77,176 @@ The following is an example iam:PassRole policy:
     ]
 }
 ```
-Replace <AWS_ACCOUNT_ID> and <COGNITO_ROLE_NAME> with your AWS account ID and the name of the IAM role created for Cognito SMS messaging.
+
+Replace the following placeholders with your AWS account details:
+
+- `<AWS_ACCOUNT_ID>` — Your AWS account ID.
+- `<COGNITO_ROLE_NAME>` — The name of the IAM role created for Cognito SMS messaging.
+
+> [!IMPORTANT]
+> The `iam:PassRole` permission must be granted to the IAM user or role executing the Artisan command. It is not granted to the Cognito service role itself.
 
 
 ## Console Commands
 
 ### Installation
 
-The installation command is used to set up the necessary configuration files and environment variables for AWS Cognito integration in your Laravel application. It will guide you through the process of configuring your AWS Cognito User Pool and App Client settings.
+The `cognito:install` command initializes the AWS Cognito integration for your Laravel application.
+
+It guides you through the initial configuration and can configure the required AWS Cognito User Pool and App Client settings.
+
+Run the following command:
 
 ```sh
 php artisan cognito:install
 ```
 
-The installation command will prompt you to enter the following information as part of the setup process.
+During installation, the command prompts you for the required Cognito configuration:
+
 ![Cognito Installation Prompt](../assets/images/cognito_installation_prompt.png)
 
-The process will synchronize down the configuration values to the `.env` file from the AWS Cognito User Pool and App Client. It will also create a default group in the Cognito User Pool if it does not already exist.
+The installation process can:
+
+- Configure the AWS Cognito User Pool.
+- Configure the Cognito App Client.
+- Synchronize Cognito configuration values with your application's `.env` file.
+- Create the default Cognito group if it does not already exist.
+- Update the local Cognito configuration based on the selected AWS resources.
+
+After installation, review the generated `.env` values and ensure that they match your application's requirements.
+
+> [!TIP]
+> Run `php artisan cognito:install --help` to view all available installation options.
 
 
 ### Make Command
 
-The make command is used to generate various components related to AWS Cognito integration in your Laravel application. It can be used to create user pools, clients, groups, and other necessary components required for AWS Cognito integration.
+The `cognito:make` command creates AWS Cognito resources from the Laravel command line.
 
-The command below demonstrates how to create a new user pool using the make command. You can specify the name of the user pool and any additional options as needed.
+It can be used to create resources such as:
+
+- User Pools
+- App Clients
+- Groups
+- Other supported Cognito resources
+
+#### Create a User Pool
+
+To create a new Cognito User Pool, run:
 
 ```sh
 php artisan cognito:make newpool --pool
 ```
 
-Similarly, you can use the make command to create clients, groups, and other components by specifying the appropriate options. Use the `--help` option to see the available options and their usage.
+The command uses the supplied name and the configured Cognito options to create the resource in AWS.
+
+Additional options can be provided to customize the resource during creation.
+
+#### View Available Options
+
+Use the `--help` option to view the available resource types and options:
+
+```sh
+php artisan cognito:make --help
+```
+
+> [!NOTE]
+> When creating resources that require IAM roles, such as SMS-based Cognito configuration, ensure that the IAM identity executing the command has the required `iam:PassRole` permission.
+
 
 ### List Command
 
-The list command is used to retrieve and display information about various resources in AWS Cognito, such as user pools, clients, terms, and groups. It allows you to view the details of these resources in a structured format.
+The `cognito:list` command retrieves and displays information about supported AWS Cognito resources.
 
-The command below demonstrates how to list the user pools in your AWS Cognito account. You can specify the `--pool` option to retrieve the list of user pools.
+For example, to list the available Cognito User Pools:
 
 ```sh
 php artisan cognito:list --pool
 ```
 
-Similarly, you can use the list command to retrieve information about clients, terms, and groups by specifying the appropriate options. Use the `--help` option to see the available options and their usage.
+The command can also be used to retrieve information about other supported resources, including:
 
-The default output format is a table, but you can also specify the `--format=json` option to retrieve the data in JSON format.
+- User Pools
+- App Clients
+- Terms
+- Groups
 
+Use the appropriate option to select the resource you want to list.
+
+#### Output Formats
+
+By default, the command displays the results in a table format.
+
+To return the results as JSON, use the `--format=json` option:
+
+```sh
+php artisan cognito:list --pool --format=json
+```
+
+This format is useful when consuming command output from scripts, CI/CD pipelines, or other automation tools.
+
+Use the `--help` option to view all available resource types and command options:
+
+```sh
+php artisan cognito:list --help
+```
+
+---
 
 ### Sync Command
 
-The sync command is used to synchronize the local configuration with the AWS Cognito settings. It ensures that the local configuration files and environment variables are up to date with the latest changes made in the AWS Cognito User Pool and App Client settings. It synchronizes the configuration values from AWS Cognito to the local environment and vice versa, ensuring that both are in sync.
+The `cognito:sync` command synchronizes configuration between your Laravel application and AWS Cognito.
+
+The command supports synchronization in both directions:
+
+- **AWS → Local** — Retrieves configuration from AWS Cognito and updates the local environment.
+- **Local → AWS** — Applies local configuration to the AWS Cognito User Pool and App Client.
+
+#### Synchronize AWS Configuration to Local
+
+To retrieve the current Cognito configuration from AWS and update your local environment, run:
 
 ```sh
 php artisan cognito:sync --aws-to-local
 ```
-This command will synchronize the configuration values from AWS Cognito to the local environment, updating the `.env` file with the latest settings.
+
+This operation retrieves the supported configuration values from the Cognito User Pool and App Client and updates the corresponding values in the `.env` file.
+
+#### Synchronize Local Configuration to AWS
+
+To apply the local configuration to AWS Cognito, run:
 
 ```sh
 php artisan cognito:sync --local-to-aws
 ```
-This command will synchronize the configuration values from the local environment to AWS Cognito, updating the user pool and app client settings with the latest local configuration.
 
-For more information on the available options and their usage, use the `--help` option with the sync command.
+This operation reads the supported Cognito configuration values from the local environment and updates the corresponding User Pool and App Client settings in AWS.
+
+> [!WARNING]
+> The `--local-to-aws` option can modify your AWS Cognito configuration. Review your local configuration before running this command, particularly when using it against a production User Pool.
+
+#### View Available Options
+
+To view all supported synchronization options:
+
+```sh
+php artisan cognito:sync --help
+```
+
+
+## Command Reference
+
+The following commands provide the primary CLI interface for managing the Cognito integration:
+
+| Command | Description |
+|---|---|
+| `cognito:install` | Initialize and configure the Cognito integration. |
+| `cognito:make` | Create supported Cognito resources. |
+| `cognito:list` | List and inspect supported Cognito resources. |
+| `cognito:sync` | Synchronize configuration between AWS Cognito and the local environment. |
+
+For detailed information about any command, use the Laravel Artisan `--help` option:
+
+```sh
+php artisan cognito:<command> --help
+```
