@@ -306,7 +306,7 @@ return [
     | used as the preferred MFA method.
     |
     */
-    'mfa_type' => env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA'),
+    'mfa_type' => (array) explode(',', env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA')),
 
     /*
     |--------------------------------------------------------------------------

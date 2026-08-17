@@ -34,7 +34,7 @@ class LoginTest extends TestCase
          * MFA type to SOFTWARE_TOKEN_MFA
          */
         Config::set('cognito.mfa_setup', 'OFF');
-        Config::set('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA');
+        Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
     } //Function ends
 
     /**

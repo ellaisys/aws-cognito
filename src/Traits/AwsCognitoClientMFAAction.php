@@ -182,7 +182,7 @@ trait AwsCognitoClientMFAAction
         try {
             //Get the MFA type configuration
             $isMfaEnabled = (config('cognito.mfa_setup') != 'OFF')?true:false;
-            $listMfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
+            $listMfaTypes = config('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
 
             if (empty($listMfaTypes) || !is_array($listMfaTypes)) {
                 throw new BadRequestHttpException('No MFA type is configured in the system. Please configure at least one MFA type in the config/cognito.php file.');
@@ -259,7 +259,7 @@ trait AwsCognitoClientMFAAction
         try {
             // Check if MFA is enabled and get the list of MFA types
             $isMfaEnabled = (config('cognito.mfa_setup') != 'OFF')?true:false;
-            $listMfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
+            $listMfaTypes = config('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
 
             //Build payload
             $payload = [
@@ -271,7 +271,7 @@ trait AwsCognitoClientMFAAction
             if ($isMfaEnabled) {
                 $payload = array_merge($payload, [
                     'SoftwareTokenMfaConfiguration' => [
-                        'Enabled' => (in_array('SOFTWARE_TOKEN_MFA', $listMfaTypes))?true:false,
+                        'Enabled' => (in_array('SOFTWARE_TOKEN_MFA', $listMfaTypes)) ? true : false,
                     ]
                 ]);
             } //End if

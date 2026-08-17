@@ -228,7 +228,7 @@ class SyncConfigCommand extends Command
                 // Check Software Token MFA configuration
                 static $softwareTokenText = 'SOFTWARE_TOKEN_MFA';
                 $softwareTokenEnabled = $userPoolMfaConfig['SoftwareTokenMfaConfiguration']['Enabled'] ?? false;
-                $mfatypes = explode(',', config('cognito.mfa_type'));
+                $mfatypes = config('cognito.mfa_type');
 
                 // Remove SOFTWARE_TOKEN_MFA from mfa_type if it's not enabled
                 if (in_array($softwareTokenText, $mfatypes) && !$softwareTokenEnabled) {
@@ -241,6 +241,25 @@ class SyncConfigCommand extends Command
                     $mfatypes[] = $softwareTokenText;
                     $this->setEnv('AWS_COGNITO_MFA_TYPE', implode(',', $mfatypes));
                 } // End if
+
+                // Check WebAuthn MFA configuration
+                $webauthnConfig = $userPoolMfaConfig['WebAuthnConfiguration'] ?? null;
+                if ($webauthnConfig) {
+                    // Set RelyingPartyId if it differs from the current config value
+                    if ($webauthnConfig['RelyingPartyId'] !== config('cognito.web_authn_mfa_configuration.RelyingPartyId')) {
+                        $this->setEnv('AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID', $webauthnConfig['RelyingPartyId']);
+                    } // End if
+
+                    // Set UserVerification if it differs from the current config value
+                    if ($webauthnConfig['UserVerification'] !== config('cognito.web_authn_mfa_configuration.UserVerificationMethod')) {
+                        $this->setEnv('AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD', $webauthnConfig['UserVerification']);
+                    } // End if
+
+                    // Set FactorConfiguration if it differs from the current config value
+                    if ($webauthnConfig['FactorConfiguration'] !== config('cognito.web_authn_mfa_configuration.FactorConfiguration')) {
+                        $this->setEnv('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', $webauthnConfig['FactorConfiguration']);
+                    } // End if
+                } // End if WebAuthn config
 
             } // End if
         } catch (Exception $exception) {
