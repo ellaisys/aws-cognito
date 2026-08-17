@@ -65,7 +65,14 @@ class LoginTest extends TestCase
     #[Depends('test_valid_settings_for_password_auth')]
     public function test_user_can_login_with_correct_credentials(): void
     {
-        $this->post(route('cognito.action.login.submit'), $this->getValidCredentials())
+        // Get valid credentials for the user
+        $credentials = $this->getValidCredentials();
+        $payload = [
+            'username' => $credentials['email'] ?? '',
+            'password' => $credentials['password'] ?? '',
+        ];
+
+        $this->post(route('cognito.action.login.submit'), $payload)
             ->assertStatus(302)
             ->assertRedirect(route('cognito.home'))
             ->assertSessionHas('status', 'success')
@@ -125,10 +132,14 @@ class LoginTest extends TestCase
     #[Depends('test_valid_settings_for_password_auth')]
     public function test_user_cannot_login_with_incorrect_credentials(): void
     {
+        // Get valid credentials for the user
         $credentials = $this->getValidCredentials();
-        $credentials['password'] = 'Invalidpassword@123';
+        $payload = [
+            'username' => $credentials['email'] ?? '',
+            'password' => 'Invalidpassword@123',
+        ];
 
-        $this->post(route('cognito.action.login.submit'), $credentials)
+        $this->post(route('cognito.action.login.submit'), $payload)
             ->assertStatus(302)
             ->assertSessionHas('status', 'error');
     } //Function ends

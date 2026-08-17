@@ -60,7 +60,7 @@ class PasskeyTest extends TestCase
     {
         $credentials = $this->getValidCredentials();
         $payload = [
-            'username' => $credentials['username'] ?? ''
+            'username' => $credentials['email'] ?? ''
         ];
 
         $this->post(route('cognito.action.auth.passkey.challenge'), $payload)

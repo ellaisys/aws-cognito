@@ -58,7 +58,7 @@ class RefreshTokenTest extends TestCase
         $this->assertNotNull($claim, 'Claim is null.');
 
         $payload = [
-            'email' => $claim['username'] ?? '',
+            'username' => $claim['username'] ?? '',
             'refresh_token' => $claim['data']['RefreshToken'] ?? '',
         ];
 
@@ -122,9 +122,10 @@ class RefreshTokenTest extends TestCase
     #[Depends('test_valid_settings_for_refresh_auth')]
     public function test_user_cannot_authenticate_with_incorrect_refresh_token(): void
     {
+        // Get valid credentials for the user
         $credentials = $this->getValidCredentials();
         $payload = [
-            'email' => $credentials['username'] ?? '',
+            'username' => $credentials['username'] ?? '',
             'refresh_token' => 'InvalidRefreshToken@123',
         ];
 

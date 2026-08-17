@@ -13,12 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // UserFactory::new()->times(10)->create();
-
         UserFactory::new()->create([
             'name' => 'Testbench Cognito Registered User',
             'email' => 'ellaisys+tb_register_0408V01@gmail.com',
-            'sub' => '21b30d0a-1091-702f-05ee-407c9d467eea',
+            'sub' => '1183ed8a-70e1-709e-4151-eaaafa85b05f',
             'register_type' => 'register',
             'registered_at' => now(),
         ]);
@@ -26,7 +24,7 @@ class DatabaseSeeder extends Seeder
         UserFactory::new()->create([
             'name' => 'Testbench Cognito Invited User',
             'email' => 'ellaisys+tb_invite_0408V02@gmail.com',
-            'sub' => 'ffe9c457-a220-49b2-9b2a-b7e10e8dde46',
+            'sub' => 'a1032d6a-80c1-70dd-876b-9265424509d0',
             'register_type' => 'invite',
             'registered_at' => now(),
         ]);

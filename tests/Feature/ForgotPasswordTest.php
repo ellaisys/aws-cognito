@@ -41,7 +41,7 @@ class ForgotPasswordTest extends TestCase
     {
         $credentials = $this->getValidCredentials();
         $payload = [
-            'email' => $credentials['username'] ?? ''
+            'email' => $credentials['email'] ?? ''
         ];
 
         $this->post(route('cognito.action.password.forgot'), $payload)
@@ -161,7 +161,7 @@ class ForgotPasswordTest extends TestCase
     {
         $credentials = $this->getValidCredentials();
         $payload = [
-            'email' => $credentials['username'] ?? '',
+            'email' => $credentials['email'] ?? '',
             'code' => '123456', // Assuming this is an invalid code for testing
             'password' => 'NewValidPassword@123',
             'password_confirmation' => 'NewValidPassword@123',
