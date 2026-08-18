@@ -92,6 +92,29 @@ trait AwsCognitoTrait
     } //Function ends
 
     /**
+     * Delete user pool.
+     *
+     * @param string $userPoolId
+     *
+     * @return bool
+     */
+    final protected function deleteUserPool(string $userPoolId): bool
+    {
+        try {
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Delete user pool
+            $client->deleteUserPool($userPoolId);
+
+            return true;
+        } catch (Exception $exception) {
+            Log::error('AwsCognitoTrait:deleteUserPool:Exception');
+            throw $exception;
+        } // Try-catch ends
+    } //Function ends
+
+    /**
      * Get list of user pool clients.
      *
      * @param string|null $userPoolId
@@ -163,6 +186,31 @@ trait AwsCognitoTrait
             return $response->get('UserPoolClient');
         } catch (Exception $exception) {
             Log::error('AwsCognitoTrait:createUserPoolClient:Exception');
+            throw $exception;
+        } // Try-catch ends
+    } //Function ends
+
+    /**
+     * Delete user pool client.
+     *
+     * @param string $clientId
+     * @param string|null $userPoolId
+     *
+     * @return bool
+     */
+    final protected function deleteUserPoolClient(string $clientId,
+        ?string $userPoolId = null): bool
+    {
+        try {
+            //Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            //Delete user pool client
+            $response = $client->deleteUserPoolClient($userPoolId, $clientId);
+
+            return $response ? true : false;
+        } catch (Exception $exception) {
+            Log::error('AwsCognitoTrait:deleteUserPoolClient:Exception');
             throw $exception;
         } // Try-catch ends
     } //Function ends
