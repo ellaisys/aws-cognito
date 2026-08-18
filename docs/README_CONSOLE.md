@@ -19,8 +19,8 @@ All commands are available through Laravel's Artisan CLI.
 ## Contents
 
 - [AWS IAM Configuration](#aws-iam-configuration)
-- Console Commands
-    + [Installation](#installation)
+- [Console Commands](#console-commands)
+    + [Installation Command](#installation-command)
     + [Make Command](#make-command)
     + [List Command](#list-command)
     + [Sync Command](#sync-command)
@@ -32,7 +32,7 @@ Additional AWS IAM permissions are required when using the `install` or `make` c
 
 Amazon Cognito uses an IAM role to publish SMS messages through Amazon SNS. The IAM role must be configured so that Amazon Cognito can assume it, and the IAM identity executing the Artisan command must have permission to pass the role to Cognito.
 
-### Create an IAM Role for Amazon Cognito
+### *Create an IAM Role for Amazon Cognito*
 
 Create an IAM role for Amazon Cognito SMS messaging and configure its trust policy to allow the Amazon Cognito service to assume the role.
 
@@ -55,7 +55,7 @@ The following is an example trust policy:
 
 Attach the required Amazon SNS permissions to this role based on your SMS configuration.
 
-### Grant `iam:PassRole` Permission
+### *Grant `iam:PassRole` Permission*
 
 The AWS IAM user or role used to execute the `install` or `make` command must have the `iam:PassRole` permission for the IAM role configured for Cognito SMS messaging.
 
@@ -89,7 +89,25 @@ Replace the following placeholders with your AWS account details:
 
 ## Console Commands
 
-### Installation
+The following commands provide the primary CLI interface for managing the Cognito integration:
+
+| Command | Description |
+|---|---|
+| `cognito:install` | Initialize and configure the Cognito integration. |
+| `cognito:make` | Create supported Cognito resources. |
+| `cognito:list` | List and inspect supported Cognito resources. |
+| `cognito:sync` | Synchronize configuration between AWS Cognito and the local environment. |
+
+For detailed information about any command, use the Laravel Artisan `--help` option:
+
+```sh
+php artisan cognito:<command> --help
+```
+
+Artisan standard options `--help`, `--quiet`, `--verbose`, and `--version` are supported for all commands.
+
+
+### *Installation Command*
 
 The `cognito:install` command initializes the AWS Cognito integration for your Laravel application.
 
@@ -119,7 +137,7 @@ After installation, review the generated `.env` values and ensure that they matc
 > Run `php artisan cognito:install --help` to view all available installation options.
 
 
-### Make Command
+### *Make Command*
 
 The `cognito:make` command creates AWS Cognito resources from the Laravel command line.
 
@@ -130,9 +148,8 @@ It can be used to create resources such as:
 - Groups
 - Other supported Cognito resources
 
-#### Create a User Pool
 
-To create a new Cognito User Pool, run:
+Example, to create a new Cognito User Pool, run:
 
 ```sh
 php artisan cognito:make newpool --pool
@@ -142,19 +159,11 @@ The command uses the supplied name and the configured Cognito options to create 
 
 Additional options can be provided to customize the resource during creation.
 
-#### View Available Options
-
-Use the `--help` option to view the available resource types and options:
-
-```sh
-php artisan cognito:make --help
-```
-
 > [!NOTE]
 > When creating resources that require IAM roles, such as SMS-based Cognito configuration, ensure that the IAM identity executing the command has the required `iam:PassRole` permission.
 
 
-### List Command
+### *List Command*
 
 The `cognito:list` command retrieves and displays information about supported AWS Cognito resources.
 
@@ -173,9 +182,7 @@ The command can also be used to retrieve information about other supported resou
 
 Use the appropriate option to select the resource you want to list.
 
-#### Output Formats
-
-By default, the command displays the results in a table format.
+The output is formatted in a table by default, but you can also choose to output the results in JSON format for easier consumption by scripts or automation tools. By default, the command displays the results in a table format.
 
 To return the results as JSON, use the `--format=json` option:
 
@@ -185,15 +192,8 @@ php artisan cognito:list --pool --format=json
 
 This format is useful when consuming command output from scripts, CI/CD pipelines, or other automation tools.
 
-Use the `--help` option to view all available resource types and command options:
 
-```sh
-php artisan cognito:list --help
-```
-
----
-
-### Sync Command
+### *Sync Command*
 
 The `cognito:sync` command synchronizes configuration between your Laravel application and AWS Cognito.
 
@@ -224,29 +224,3 @@ This operation reads the supported Cognito configuration values from the local e
 
 > [!WARNING]
 > The `--local-to-aws` option can modify your AWS Cognito configuration. Review your local configuration before running this command, particularly when using it against a production User Pool.
-
-#### View Available Options
-
-To view all supported synchronization options:
-
-```sh
-php artisan cognito:sync --help
-```
-
-
-## Command Reference
-
-The following commands provide the primary CLI interface for managing the Cognito integration:
-
-| Command | Description |
-|---|---|
-| `cognito:install` | Initialize and configure the Cognito integration. |
-| `cognito:make` | Create supported Cognito resources. |
-| `cognito:list` | List and inspect supported Cognito resources. |
-| `cognito:sync` | Synchronize configuration between AWS Cognito and the local environment. |
-
-For detailed information about any command, use the Laravel Artisan `--help` option:
-
-```sh
-php artisan cognito:<command> --help
-```
