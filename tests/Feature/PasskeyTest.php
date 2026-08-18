@@ -14,12 +14,14 @@ namespace Ellaisys\Cognito\Tests\Feature;
 use Illuminate\Support\Facades\Config;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Depends;
 
 use Ellaisys\Cognito\Enums;
 use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
 
+#[Group('passkey')]
 class PasskeyTest extends TestCase
 {
     use AwsCognitoTrait;

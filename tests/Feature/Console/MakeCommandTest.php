@@ -16,13 +16,14 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Foundation\Bootstrap\HandleExceptions;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Depends;
 
 use Ellaisys\Cognito\Tests\TestCase;
 
+#[Group('console'), Group('make-command')]
 class MakeCommandTest extends TestCase
 {
-
     /**
      * Test the make command.
      */
