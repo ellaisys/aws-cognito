@@ -12,6 +12,9 @@
 namespace Ellaisys\Cognito\Traits;
 
 use Config;
+use Carbon\Carbon;
+
+use Aws\Result as AwsResult;
 
 use Illuminate\Support\Facades\Log;
 
@@ -28,17 +31,17 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 /**
  * AWS Cognito Client for Passkey Actions
  */
-trait AwsCognitoClientPasskeyAction
+trait ManagePasskeyWebAuthnAction
 {
     /**
      * Starts registration of a passkey authenticator for the currently signed-in user.
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#startwebauthnregistration
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_StartWebAuthnRegistration.html
      *
      * @param string $accessToken
      *
-     * @return mixed
+     * @return AwsResult
      */
-    public function startWebAuthnRegistration(string $accessToken)
+    final public function startWebAuthnRegistration(string $accessToken): AwsResult
     {
         try {
             //Build payload
@@ -48,7 +51,7 @@ trait AwsCognitoClientPasskeyAction
 
             $response = $this->client->startWebAuthnRegistration($payload);
         } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClientPasskeyAction:startWebAuthnRegistration:CognitoIdentityProviderException');
+            Log::error('ManagePasskeyWebAuthnAction:startWebAuthnRegistration:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
@@ -57,14 +60,15 @@ trait AwsCognitoClientPasskeyAction
 
     /**
      * Completes registration of a passkey authenticator for the currently signed-in user.
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#completewebauthnregistration
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CompleteWebAuthnRegistration.html
      *
      * @param string $accessToken
-     * @param mixed $credential A public-key credential response from the user's passkey provider
+     * @param array $credential A public-key credential response from the user's passkey provider
      *
-     * @return mixed
+     * @return AwsResult
      */
-    public function completeWebAuthnRegistration(string $accessToken, array $credential)
+    final public function completeWebAuthnRegistration(string $accessToken,
+        array $credential): AwsResult
     {
         try {
             //Build payload
@@ -75,7 +79,7 @@ trait AwsCognitoClientPasskeyAction
 
             $response = $this->client->completeWebAuthnRegistration($payload);
         } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClientPasskeyAction:completeWebAuthnRegistration:CognitoIdentityProviderException');
+            Log::error('ManagePasskeyWebAuthnAction:completeWebAuthnRegistration:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
@@ -84,16 +88,16 @@ trait AwsCognitoClientPasskeyAction
 
     /**
      * Lists the passkey authenticators that are registered to the currently signed-in user.
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#listwebauthncredentials
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ListWebAuthnCredentials.html
      *
      * @param string $accessToken
      * @param int|null $maxResults The maximum number of results to return. Default is 20.
      * @param string|null $nextToken A pagination token to retrieve the next set of results.
      *
-     * @return mixed
+     * @return AwsResult
      */
-    public function listWebAuthnCredentials(string $accessToken,
-        ?int $maxResults = 20, ?string $nextToken = null)
+    final public function listWebAuthnCredentials(string $accessToken,
+        int $maxResults = 20, ?string $nextToken = null): AwsResult
     {
         try {
             //Build payload
@@ -105,7 +109,7 @@ trait AwsCognitoClientPasskeyAction
 
             $response = $this->client->listWebAuthnCredentials($payload);
         } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClientPasskeyAction:listWebAuthnCredentials:CognitoIdentityProviderException');
+            Log::error('ManagePasskeyWebAuthnAction:listWebAuthnCredentials:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
@@ -114,14 +118,15 @@ trait AwsCognitoClientPasskeyAction
 
     /**
      * Deletes a passkey authenticator that is registered to the currently signed-in user.
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#deletewebauthncredential
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DeleteWebAuthnCredential.html
      *
      * @param string $accessToken
      * @param string $credentialId The unique identifier of the passkey credential to delete.
      *
-     * @return mixed
+     * @return AwsResult
      */
-    public function deleteWebAuthnCredential(string $accessToken, string $credentialId)
+    final public function deleteWebAuthnCredential(string $accessToken,
+        string $credentialId): AwsResult
     {
         try {
             //Build payload
@@ -132,7 +137,7 @@ trait AwsCognitoClientPasskeyAction
 
             $response = $this->client->deleteWebAuthnCredential($payload);
         } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClientPasskeyAction:deleteWebAuthnCredential:CognitoIdentityProviderException');
+            Log::error('ManagePasskeyWebAuthnAction:deleteWebAuthnCredential:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
@@ -148,15 +153,16 @@ trait AwsCognitoClientPasskeyAction
      * @param CognitoAuthFlowTypes $authFlow Must be either USER_AUTH or CUSTOM_AUTH.
      * @param string $username
      * @param string $challenge
-     * @return \Aws\Result
+     *
+     * @return AwsResult
      */
-    public function authWebAuthnCredential(CognitoAuthFlowTypes $authFlow,
-        string $username, ?string $challenge)
+    final public function authWebAuthnCredential(CognitoAuthFlowTypes $authFlow,
+        string $username, ?string $challenge): AwsResult
     {
         try {
             return $this->authenticate($authFlow, $username, null, null, $challenge);
         } catch (Exception $exception) {
-            Log::error('AwsCognitoClientPasskeyAction:authWebAuthnCredential:Exception');
+            Log::error('ManagePasskeyWebAuthnAction:authWebAuthnCredential:Exception');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
     } //Function ends

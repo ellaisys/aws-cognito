@@ -20,4 +20,7 @@ trait AwsCognitoClientAction
     use ManagesUserPoolAction;
     use ManageTermsAction;
     use ManageGroupAction;
+    use ManageUserGroupAction;
+    use ManageDeviceAction;
+    use ManagePasskeyWebAuthnAction;
 } //Trait ends

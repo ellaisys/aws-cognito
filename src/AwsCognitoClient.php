@@ -27,8 +27,6 @@ use Ellaisys\Cognito\Traits\AwsCognitoClientHelper;
 use Ellaisys\Cognito\Traits\AwsCognitoClientAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientMFAAction;
 use Ellaisys\Cognito\Traits\AwsCognitoClientAdminAction;
-use Ellaisys\Cognito\Traits\AwsCognitoClientPasskeyAction;
-use Ellaisys\Cognito\Traits\AwsCognitoClientDeviceAction;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\NoTokenException;
@@ -46,8 +44,6 @@ class AwsCognitoClient
     use AwsCognitoClientAction;
     use AwsCognitoClientMFAAction;
     use AwsCognitoClientAdminAction;
-    use AwsCognitoClientPasskeyAction;
-    use AwsCognitoClientDeviceAction;
 
     /**
      * Constant representing the password reset required exception.

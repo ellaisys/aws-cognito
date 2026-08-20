@@ -114,4 +114,68 @@ trait ManageTermsAction
         } //Try-catch ends
     } //Function ends
 
+    /**
+     * Update a term in a user pool.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_UpdateTerms.html
+     *
+     * @param string $termId
+     * @param string|null $termsName
+     * @param array<string, string>|null $links (string : string) array of links
+     * @param string|null $userPoolId
+     *
+     * @return \AwsResult
+     */
+    final public function updateTerms(string $termId, ?string $termsName,
+        ?array $links=null, ?string $userPoolId = null): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'UserPoolId' => $userPoolId ?? $this->poolId,
+                'TermId' => $termId,
+                'Enforcement' => 'NONE',
+                'TermsSource' => 'LINK',
+            ];
+
+            if (!is_null($termsName)) {
+                $payload['TermsName'] = $termsName;
+            } //End if
+
+            if (!is_null($links)) {
+                $payload['Links'] = $links;
+            } //End if
+
+            return $this->client->updateTerms($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('ManageTermsAction:updateTerms:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
+    } //Function ends
+
+    /**
+     * Delete a term in a user pool.
+     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DeleteTerms.html
+     *
+     * @param string $termId
+     * @param string|null $userPoolId
+     *
+     * @return \AwsResult
+     */
+    final public function deleteTerms(string $termId,
+        ?string $userPoolId = null): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'UserPoolId' => $userPoolId ?? $this->poolId,
+                'TermId' => $termId
+            ];
+
+            return $this->client->deleteTerms($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('ManageTermsAction:deleteTerms:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
+    } //Function ends
+
 } // Trait ends
