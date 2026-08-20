@@ -117,4 +117,30 @@ class PasskeyTest extends TestCase
         $this->assertContains('WEB_AUTHN', $availableChallenges);
     } //Function ends
 
+    /**
+     * Test that the user can initiate a WebAuthn registration
+     */
+    #[Test]
+    #[Depends('test_valid_settings_for_choice_based_signin')]
+    #[DependsExternal(LoginTest::class, 'test_user_can_login_with_correct_credentials')]
+    public function test_user_webauthn_registration(): void
+    {
+        $claim = self::$claim ?? null;
+        $this->assertNotNull($claim, 'Claim is null.');
+
+        $this->withSession(self::$sessionAuthenticated)
+            ->post(route('cognito.action.user.passkey.start'))
+            ->assertStatus(302);
+
+        // Get the data from the session
+        $data = session()->has('data') ? session('data') : null;
+
+        // Assert that the session has the expected keys
+        $this->assertArrayHasKey('CredentialCreationOptions', $data);
+        $this->assertArrayHasKey('rp', $data['CredentialCreationOptions']);
+        $this->assertArrayHasKey('user', $data['CredentialCreationOptions']);
+        $this->assertArrayHasKey('challenge', $data['CredentialCreationOptions']);
+        $this->assertArrayHasKey('pubKeyCredParams', $data['CredentialCreationOptions']);
+    } //Function ends
+
 } //Class end

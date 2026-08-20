@@ -36,6 +36,8 @@ abstract class TestCase extends OrchestraTestCase
     // Define a static properties
     protected static ?array $claim = null;
 
+    protected static $sessionAuthenticated = null;
+
     /**
      * Define environment setup.
      */

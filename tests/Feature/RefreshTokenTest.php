@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Config;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\DependsExternal;
 
 use Ellaisys\Cognito\Enums;
 use Ellaisys\Cognito\Tests\TestCase;
@@ -52,6 +53,7 @@ class RefreshTokenTest extends TestCase
      */
     #[Test]
     #[Depends('test_valid_settings_for_refresh_auth')]
+    #[DependsExternal(LoginTest::class, 'test_user_can_login_with_correct_credentials')]
     public function test_user_can_login_with_correct_refresh_token(): void
     {
         $claim = self::$claim ?? null;
@@ -62,7 +64,8 @@ class RefreshTokenTest extends TestCase
             'refresh_token' => $claim['data']['RefreshToken'] ?? '',
         ];
 
-        $this->post(route('cognito.action.session.revalidate'), $payload)
+        $this->withSession(self::$sessionAuthenticated)
+            ->post(route('cognito.action.session.revalidate'), $payload)
             ->assertStatus(302)
             ->assertRedirect(route('cognito.home'))
             ->assertSessionHas('status', 'success')

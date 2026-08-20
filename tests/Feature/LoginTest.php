@@ -84,6 +84,7 @@ class LoginTest extends TestCase
         $this->assertAuthenticated();
 
         if (session()->has('claim')) {
+            self::$sessionAuthenticated = session()->all();
             self::$claim = session('claim');
         }
 
