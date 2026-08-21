@@ -240,7 +240,7 @@ class AwsCognitoClient
      * @return \Aws\Result
      */
     public function register(string $username, string $password, array $attributes = [],
-        ?array $clientMetadata = null, ?string $groupname = null)
+        ?array $clientMetadata = null, ?string $groupname = null): AwsResult
     {
         try {
             //Build payload

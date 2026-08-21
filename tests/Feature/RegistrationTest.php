@@ -5,6 +5,7 @@ namespace Ellaisys\Cognito\Tests\Feature;
 use Illuminate\Support\Facades\Config;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\Depends;
 
 use Ellaisys\Cognito\Tests\TestCase;
 
@@ -32,21 +33,30 @@ class RegistrationTest extends TestCase
             'name' => $name,
             'email' => $email
         ];
-    }
+    } //Function ends
 
+    /**
+     * Test that the registration page is accessible.
+     */
     #[Test]
     public function test_web_registration_page(): void
     {
         $this->get(route('cognito.form.register'))
             ->assertStatus(200)
             ->assertSeeText('Register');
-    }
+    } //Function ends
 
+    /**
+     * Test that the registration action works correctly without providing a
+     * phone number and password.
+     */
     #[Test]
+    #[Depends('test_web_registration_page')]
     public function test_web_registration_action_without_phone_and_password(): void
     {
         $this->post(route('cognito.action.register.submit'), $this->user)
             ->assertStatus(302)
             ->assertRedirect(route('cognito.form.register.verify'));
-    }
-}
+    } //Function ends
+
+} //Class ends

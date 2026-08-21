@@ -155,23 +155,6 @@ trait RegistersUsers
     } //Function ends
 
     /**
-     * Adds the newly created user to the default group (if one exists) in the config file.
-     *
-     * @param $username
-     * @return array
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
-     */
-    public function setDefaultGroup($username)
-    {
-        if (!empty(config('cognito.default_user_group', null))) {
-            return app()->make(AwsCognitoClient::class)->adminAddUserToGroup(
-                $username, config('cognito.default_user_group', null)
-            );
-        } //End if
-        return [];
-    } //Function ends
-
-    /**
      * Handle a registration request for the application.
      *
      * @param  \Illuminate\Support\Collection  $request
