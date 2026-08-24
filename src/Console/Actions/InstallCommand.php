@@ -553,6 +553,11 @@ class InstallCommand extends Command
         } // Try-catch ends
     } //Function ends
 
+    /**
+     * Prompt the user to run database migration.
+     *
+     * @return int
+     */
     private function promptUserForDatabaseMigration(): int
     {
         $choices = [

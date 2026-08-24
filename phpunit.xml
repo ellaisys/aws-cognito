@@ -23,7 +23,7 @@
     </testsuites>
 
     <php>
-        <env name="AUTH_VALID_CREDENTIALS" value="eyJ1c2VybmFtZSI6IjExODNlZDhhLTcwZTEtNzA5ZS00MTUxLWVhYWFmYTg1YjA1ZiIsImVtYWlsIjoiZWxsYWlzeXMrdGJfcmVnaXN0ZXJfMDQwOFYwMUBnbWFpbC5jb20iLCJwYXNzd29yZCI6IlZhbGlkUGFzc3dvcmQxMjMhIn0=" force="true"/>
+        <env name="AUTH_VALID_CREDENTIALS" value="provide_valid_credentials_here" force="true"/>
         <env name="AUTH_TOKEN_TYPE" value="bearer" force="true"/>
         <env name="APP_NAME" value="Testbench" force="true"/>
         <env name="APP_ENV" value="testing" force="true"/>

@@ -113,7 +113,7 @@ return [
     | The default value is set to ['email'], which means only email is allowed.
     |
     */
-    'sign_in_username_attributes' => (array) env('AWS_COGNITO_USER_SIGN_IN_ATTRIBUTE', ['email']),
+    'sign_in_username_attributes' => (array) explode(',', env('AWS_COGNITO_USER_SIGN_IN_ATTRIBUTE', 'email')),
 
     /*
     |--------------------------------------------------------------------------

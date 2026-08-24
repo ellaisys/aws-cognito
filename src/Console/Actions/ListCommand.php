@@ -116,22 +116,30 @@ class ListCommand extends Command
     private function getTabularData(array $responseData, ?array $columns=[]): array
     {
         return array_map(function($item) use ($responseData, $columns) {
+            // Initialize variables
+            $returnData = null;
+
             switch ($responseData['option']) {
                 case 'pool':
-                    return array_intersect_key($item,
+                    $returnData = array_intersect_key($item,
                         array_flip(!empty($columns) ? $columns : ['Id', 'Name', 'LastModifiedDate']));
+                        break;
                 case 'client':
-                    return array_intersect_key($item,
+                    $returnData = array_intersect_key($item,
                         array_flip(!empty($columns) ? $columns : ['ClientId', 'ClientName']));
+                        break;
                 case 'terms':
-                    return array_intersect_key($item,
+                    $returnData = array_intersect_key($item,
                         array_flip(!empty($columns) ? $columns : ['TermsId', 'TermsName', 'LastModifiedDate']));
+                        break;
                 case 'groups':
-                    return array_intersect_key($item,
+                    $returnData = array_intersect_key($item,
                         array_flip(!empty($columns) ? $columns : ['GroupName', 'Description', 'LastModifiedDate']));
+                        break;
                 default:
-                    return [];
+                    $returnData = [];
             } // End switch
+            return $returnData;
         }, $responseData['data']);
     } //Function ends
 
