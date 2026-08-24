@@ -109,7 +109,7 @@ return [
     | configuration, and the value should be set to an array of allowed values.
     | The options available are "email" and "phone_number". You can set multiple
     | options in the array.
-    | 
+    |
     | The default value is set to ['email'], which means only email is allowed.
     |
     */
