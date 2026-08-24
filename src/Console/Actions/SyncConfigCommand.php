@@ -239,7 +239,6 @@ class SyncConfigCommand extends Command
         try {
             // Get user pool MFA configuration from AWS Cognito
             if ($userPoolMfaConfig = $this->getUserPoolMfaConfig($this->userPoolId)) {
-                Log::info(json_encode($userPoolMfaConfig, JSON_PRETTY_PRINT));
 
                 // Check Software Token MFA configuration
                 static $softwareTokenText = 'SOFTWARE_TOKEN_MFA';
@@ -259,29 +258,40 @@ class SyncConfigCommand extends Command
                 } // End if
 
                 // Check WebAuthn MFA configuration
-                $webauthnConfig = $userPoolMfaConfig['WebAuthnConfiguration'] ?? null;
-                if ($webauthnConfig) {
-                    // Set RelyingPartyId if it differs from the current config value
-                    if ($webauthnConfig['RelyingPartyId'] !== config('cognito.web_authn_mfa_configuration.RelyingPartyId')) {
-                        $this->setEnv('AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID', $webauthnConfig['RelyingPartyId']);
-                    } // End if
-
-                    // Set UserVerification if it differs from the current config value
-                    if ($webauthnConfig['UserVerification'] !== config('cognito.web_authn_mfa_configuration.UserVerificationMethod')) {
-                        $this->setEnv('AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD', $webauthnConfig['UserVerification']);
-                    } // End if
-
-                    // Set FactorConfiguration if it differs from the current config value
-                    if ($webauthnConfig['FactorConfiguration'] !== config('cognito.web_authn_mfa_configuration.FactorConfiguration')) {
-                        $this->setEnv('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', $webauthnConfig['FactorConfiguration']);
-                    } // End if
-                } // End if WebAuthn config
+                $this->processUserPoolMfaWebAuthnConfig($userPoolMfaConfig);
 
             } // End if
         } catch (Exception $exception) {
             Log::error('SyncConfigCommand:getUserPoolMfaConfigUpdEnv:Exception');
             throw $exception;
         } // Try-catch ends
+    } //Function ends
+
+    /**
+     * Process User Pool MFA WebAuthn configuration and update .env file.
+     *
+     * @param array $userPoolMfaConfig
+     */
+    private function processUserPoolMfaWebAuthnConfig($userPoolMfaConfig): void
+    {
+        // Check WebAuthn MFA configuration
+        $webauthnConfig = $userPoolMfaConfig['WebAuthnConfiguration'] ?? null;
+        if ($webauthnConfig) {
+            // Set RelyingPartyId if it differs from the current config value
+            if ($webauthnConfig['RelyingPartyId'] !== config('cognito.web_authn_mfa_configuration.RelyingPartyId')) {
+                $this->setEnv('AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID', $webauthnConfig['RelyingPartyId']);
+            } // End if
+
+            // Set UserVerification if it differs from the current config value
+            if ($webauthnConfig['UserVerification'] !== config('cognito.web_authn_mfa_configuration.UserVerificationMethod')) {
+                $this->setEnv('AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD', $webauthnConfig['UserVerification']);
+            } // End if
+
+            // Set FactorConfiguration if it differs from the current config value
+            if ($webauthnConfig['FactorConfiguration'] !== config('cognito.web_authn_mfa_configuration.FactorConfiguration')) {
+                $this->setEnv('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', $webauthnConfig['FactorConfiguration']);
+            } // End if
+        } // End if
     } //Function ends
 
     /**
