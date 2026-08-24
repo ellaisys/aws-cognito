@@ -33,12 +33,12 @@ class SyncConfigCommandTest extends TestCase
     {
         try {
             // Run the command with the --aws-to-local --pool option
-            $this->artisan('cognito:sync-config --aws-to-local --pool')
+            $this->artisan('cognito:sync --aws-to-local --pool')
                 ->assertExitCode(Command::SUCCESS);
 
         } catch (\Throwable $e) {
             // Handle any exceptions that occur during bootstrapping
-            $this->fail('Exception during bootstrapping: ' . $e->getMessage());
+            $this->fail($e->getMessage());
         }
     } //Function ends
 
@@ -47,12 +47,12 @@ class SyncConfigCommandTest extends TestCase
     {
         try {
             // Run the command with the --local-to-aws --client option
-            $this->artisan('cognito:sync-config --local-to-aws --client')
+            $this->artisan('cognito:sync --local-to-aws --client')
                 ->assertExitCode(Command::SUCCESS);
 
         } catch (\Throwable $e) {
             // Handle any exceptions that occur during bootstrapping
-            $this->fail('Exception during bootstrapping: ' . $e->getMessage());
+            $this->fail($e->getMessage());
         }
     } //Function ends
 
@@ -61,12 +61,12 @@ class SyncConfigCommandTest extends TestCase
     {
         try {
             // Run the command with the --local-to-aws --mfa option
-            $this->artisan('cognito:sync-config --local-to-aws --mfa')
+            $this->artisan('cognito:sync --local-to-aws --mfa')
                 ->assertExitCode(Command::SUCCESS);
 
         } catch (\Throwable $e) {
             // Handle any exceptions that occur during bootstrapping
-            $this->fail('Exception during bootstrapping: ' . $e->getMessage());
+            $this->fail($e->getMessage());
         }
     } //Function ends
 } //Class ends

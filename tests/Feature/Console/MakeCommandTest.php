@@ -37,7 +37,7 @@ class MakeCommandTest extends TestCase
 
         } catch (\Throwable $e) {
             // Handle any exceptions that occur during bootstrapping
-            $this->fail('Exception during bootstrapping: ' . $e->getMessage());
+            $this->fail($e->getMessage());
         }
     } //Function ends
 } //Class ends

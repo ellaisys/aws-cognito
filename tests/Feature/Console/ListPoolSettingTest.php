@@ -37,7 +37,7 @@ class ListPoolSettingTest extends TestCase
                 ->assertExitCode(0);
         } catch (\Throwable $e) {
             // Handle any exceptions that occur during bootstrapping
-            $this->fail('Exception during bootstrapping: ' . $e->getMessage());
+            $this->fail($e->getMessage());
         }
     } //Function ends
 
@@ -54,7 +54,7 @@ class ListPoolSettingTest extends TestCase
                 ->assertExitCode(0);
         } catch (\Throwable $e) {
             // Handle any exceptions that occur during bootstrapping
-            $this->fail('Exception during bootstrapping: ' . $e->getMessage());
+            $this->fail($e->getMessage());
         }
     } //Function ends
 
@@ -71,7 +71,7 @@ class ListPoolSettingTest extends TestCase
                 ->assertExitCode(0);
         } catch (\Throwable $e) {
             // Handle any exceptions that occur during bootstrapping
-            $this->fail('Exception during bootstrapping: ' . $e->getMessage());
+            $this->fail($e->getMessage());
         }
     } //Function ends
 
