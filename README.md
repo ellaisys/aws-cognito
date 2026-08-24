@@ -113,7 +113,7 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 
 - Laravel
     - [Preconfigured Routes and Controllers](./docs/README_ROUTES.md)
-    - [Console Commands](./docs/README_COMMANDS.md) ***New Feature***
+    - [Console Commands](./docs/README_CONSOLE.md) ***New Feature***
 
 
 ## Architecture and Design

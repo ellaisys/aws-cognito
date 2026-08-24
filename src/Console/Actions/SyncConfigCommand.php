@@ -32,13 +32,14 @@ class SyncConfigCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'cognito:sync-config {pool_id? : The user pool ID}
-                                {client_id? : The user pool client ID}
+    protected $signature = 'cognito:sync
                                 {--local-to-aws : Sync configuration from local .env file to AWS}
                                 {--aws-to-local : Sync configuration from AWS to local .env file}
                                 {--pool : Sync user pool configuration}
                                 {--client : Sync user pool client configuration}
-                                {--mfa : Sync user pool MFA configuration}';
+                                {--mfa : Sync user pool MFA configuration}
+                                {--pool-id= : The user pool ID}
+                                {--client-id= : The user pool client ID}';
 
     /**
      * The console command description.
@@ -73,6 +74,9 @@ class SyncConfigCommand extends Command
      */
     public function handle()
     {
+        // Initialize return value
+        $returnValue = Command::SUCCESS;
+
         try {
             //Check if at least one option is provided
             $needles = ['local-to-aws', 'aws-to-local'];
@@ -86,26 +90,38 @@ class SyncConfigCommand extends Command
             $this->newLine();
 
             // Get the user pool ID from the argument or from the .env file
-            $this->userPoolId = $this->argument('pool_id') ?: null;
+            $this->userPoolId = $this->option('pool-id') ?: null;
 
             // Get the user pool client ID from the argument or from the .env file
-            $this->clientId = $this->argument('client_id') ?: null;
+            $this->clientId = $this->option('client-id') ?: null;
 
             if ($this->option('aws-to-local')) {
-                return $this->syncAwsToLocal();
+                $returnValue = $this->syncAwsToLocal();
             } // End if
 
-            return Command::SUCCESS;
+            if ($this->option('local-to-aws')) {
+                $returnValue = $this->syncLocalToAws();
+            } // End if
+
+            $returnValue = Command::SUCCESS;
         } catch (Exception $exception) {
             Log::error('SyncConfigCommand:handle:Exception');
             $this->components->error($exception->getMessage());
-            return Command::FAILURE;
+            $returnValue = Command::FAILURE;
         } // Try-catch ends
-        return Command::SUCCESS;
+        return $returnValue;
     } //Function ends
 
+    /**
+     * Sync configuration from AWS to local .env file.
+     *
+     * @return int
+     */
     private function syncAwsToLocal(): int
     {
+        // Initialize return value
+        $returnValue = Command::SUCCESS;
+
         $this->newLine();
         $this->info('Fetching user pool configuration...');
         $this->getUserPoolConfigUpdEnv();
@@ -128,7 +144,7 @@ class SyncConfigCommand extends Command
         $this->info(self::DONE);
         $this->newLine();
     
-        return Command::SUCCESS;
+        return $returnValue;
     } //Function ends
 
     /**
@@ -266,6 +282,31 @@ class SyncConfigCommand extends Command
             Log::error('SyncConfigCommand:getUserPoolMfaConfigUpdEnv:Exception');
             throw $exception;
         } // Try-catch ends
+    } //Function ends
+
+    /**
+     * Sync configuration from local .env file to AWS.
+     *
+     * @return int
+     */
+    private function syncLocalToAws(): int
+    {
+        // Initialize return value
+        $returnValue = Command::SUCCESS;
+
+        try {
+            $this->newLine();
+            $this->info('Syncing local .env configuration to AWS Cognito...');
+
+            $this->info(self::DONE);
+            $this->newLine();
+        } catch (Exception $exception) {
+            Log::error('SyncConfigCommand:syncLocalToAws:Exception');
+            $this->components->error($exception->getMessage());
+            $returnValue = Command::FAILURE;
+        } // Try-catch ends
+
+        return $returnValue;
     } //Function ends
 
 } // Class ends

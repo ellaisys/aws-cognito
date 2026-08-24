@@ -148,7 +148,7 @@ class PurgeCommand extends Command
 
             // Initialize the data map for user pools
             $poolMap = [];
-            $choice = null;            
+            $choice = null;
 
             foreach ($userPools as $pool) {
                 $label = "{$pool['Name']} [{$pool['Id']}]";
