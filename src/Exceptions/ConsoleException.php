@@ -22,7 +22,7 @@ class ConsoleException extends RuntimeException
 {
 
     public function __construct(string $message = 'Console command failed',
-        Throwable $previous = null, int $code = 0)
+        ?Throwable $previous = null, int $code = 0)
     {
         parent::__construct($message, $code, $previous);
     }
