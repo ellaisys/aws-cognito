@@ -2,8 +2,7 @@
 
 namespace Workbench\App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Workbench\Workbench\Workbench\Workbench\Workbench\Workbench\Database\Factories\UserFactory;
+use Workbench\Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
