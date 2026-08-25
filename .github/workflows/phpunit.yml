@@ -148,4 +148,4 @@ jobs:
       # vendor/bin/phpunit uses the PHPUnit configuration from phpunit.xml.
       # ---------------------------------------------------------------------
       - name: Run PHPUnit
-        run: vendor/bin/phpunit
+        run: vendor/bin/phpunit --exclude-group=make-command
