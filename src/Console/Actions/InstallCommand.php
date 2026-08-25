@@ -528,9 +528,9 @@ class InstallCommand extends Command
 
                 // Create the new group
                 $this->callSilently('cognito:make', [
-                    'name' => $groupName,
-                    'description' => $groupDescription,
-                    '--groups' => true
+                    '--name' => $groupName,
+                    '--detail' => $groupDescription,
+                    '--group' => true
                 ]);
 
                 // Display success message
