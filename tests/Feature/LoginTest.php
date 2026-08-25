@@ -19,10 +19,12 @@ use PHPUnit\Framework\Attributes\Depends;
 use Ellaisys\Cognito\Enums;
 use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
+use Ellaisys\Cognito\Tests\Traits\AuthenticationTrait;
 
 class LoginTest extends TestCase
 {
     use AwsCognitoTrait;
+    use AuthenticationTrait;
 
     // Runs before each test method
     protected function setUp(): void
@@ -89,8 +91,7 @@ class LoginTest extends TestCase
         }
 
         // Assert that the claim is not null
-        $this->assertNotNull(self::$claim, 'Claim is null.');
-        $this->assertArrayHasKey('data', self::$claim, 'Claim does not contain the expected "data" key.');
+        $this->assertClaimIsValid();
     } //Function ends
 
     /**
@@ -100,8 +101,7 @@ class LoginTest extends TestCase
     #[Depends('test_user_can_login_with_correct_credentials')]
     public function test_claim_has_access_token(): void
     {
-        $this->assertArrayHasKey('AccessToken', self::$claim['data'], 'Access token is missing in the claim.');
-        $this->assertNotEmpty(self::$claim['data']['AccessToken'], 'Access token is empty in the claim.');
+        $this->assertClaimHasAccessToken();
     } //Function ends
 
     /**
@@ -111,8 +111,7 @@ class LoginTest extends TestCase
     #[Depends('test_user_can_login_with_correct_credentials')]
     public function test_claim_has_refresh_token(): void
     {
-        $this->assertArrayHasKey('RefreshToken', self::$claim['data'], 'Refresh token is missing in the claim.');
-        $this->assertNotEmpty(self::$claim['data']['RefreshToken'], 'Refresh token is empty in the claim.');
+        $this->assertClaimHasRefreshToken();
     } //Function ends
 
     /**
@@ -122,8 +121,7 @@ class LoginTest extends TestCase
     #[Depends('test_user_can_login_with_correct_credentials')]
     public function test_claim_has_id_token(): void
     {
-        $this->assertArrayHasKey('IdToken', self::$claim['data'], 'ID token is missing in the claim.');
-        $this->assertNotEmpty(self::$claim['data']['IdToken'], 'ID token is empty in the claim.');
+        $this->assertClaimHasIdToken();
     } //Function ends
 
     /**
