@@ -155,7 +155,6 @@ class SyncCommand extends Command
         try {
             // Get user pool configuration from AWS Cognito
             if ($userPool = $this->getUserPoolConfig($this->userPoolId)) {
-                Log::info(json_encode($userPool, JSON_PRETTY_PRINT));
 
                 $passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?? [];
                 if (!empty($passwordPolicy)) {
