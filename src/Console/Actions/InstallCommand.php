@@ -530,6 +530,7 @@ class InstallCommand extends Command
                 $this->callSilently('cognito:make', [
                     '--name' => $groupName,
                     '--detail' => $groupDescription,
+                    '--pool-id' => $this->userPoolId,
                     '--group' => true
                 ]);
 
