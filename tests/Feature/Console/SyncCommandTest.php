@@ -22,15 +22,15 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 use Ellaisys\Cognito\Tests\TestCase;
 
-#[Group('console'), Group('make-command')]
-class MakeCommandTest extends TestCase
+#[Group('console'), Group('sync-command')]
+class SyncCommandTest extends TestCase
 {
     /**
-     * Test the make command.
+     * Test the sync command.
      */
     #[Test]
-    #[DataProvider('MakeCommandsProvider')]
-    public function test_make_commands(string $command): void
+    #[DataProvider('SyncCommandsProvider')]
+    public function test_sync_command(string $command): void
     {
         try {
             // Run the command
@@ -44,18 +44,17 @@ class MakeCommandTest extends TestCase
     } //Function ends
 
     /**
-     * Data provider for test_make_commands.
+     * Data provider for test_sync_commands.
      *
      * @return array
      */
-    public static function MakeCommandsProvider(): array
+    public static function SyncCommandsProvider(): array
     {
         return [
-            'pool' => ['cognito:make --pool --name=TempUserPool --quiet'],
-            'client' => ['cognito:make --client --name=TempUserClient --quiet'],
-            'term of use' => ['cognito:make --term --name="terms-of-use" --detail="https://example.com/terms-of-use" --quiet'],
-            'privacy policy' => ['cognito:make --term --name="privacy-policy" --detail="https://example.com/privacy-policy" --quiet'],
-            'group' => ['cognito:make --group --name=TempUserGroup --detail="Temp User Group" --quiet'],
+            'pool' => ['cognito:sync --aws-to-local --pool'],
+            'client' => ['cognito:sync --aws-to-local --client'],
+            'mfa' => ['cognito:sync --aws-to-local --mfa'],
         ];
     } //Function ends
+
 } //Class ends

@@ -43,7 +43,7 @@ class ConsoleServiceProvider extends ServiceProvider
             Console\Actions\MakeCommand::class,
             Console\Actions\ListCommand::class,
             Console\Actions\ListConfigCommand::class,
-            Console\Actions\SyncConfigCommand::class,
+            Console\Actions\SyncCommand::class,
             Console\Actions\PurgeCommand::class,
         ]);
     } //Function ends

@@ -33,19 +33,19 @@ class MakeCommand extends Command
      */
     protected $signature = 'cognito:make {--pool : Create a new user pool}
                                 {--client : Create a new user pool client}
-                                {--terms : Create a new user pool terms}
-                                {--groups : Create a new user pool groups}
-                                {name : Provide a name for the resource to be created. Provide "terms-of-use" or "privacy-policy" for terms.}
-                                {description? : Provide a description for the resource to be created and for terms, must provide a link to the terms document}
-                                {pool_id? : The user pool ID}
-                                {client_id? : The user pool client ID}';
+                                {--term : Create a new user pool terms}
+                                {--group : Create a new user pool group}
+                                {--name= : Provide a name for the resource to be created. Enter "terms-of-use" or "privacy-policy" for creating terms.}
+                                {--detail= : Provide a description for the resource to be created and for terms, must provide a link to the terms document}
+                                {--pool-id= : The user pool ID}
+                                {--client-id= : The user pool client ID}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create a new resource in AWS Cognito (user pool, user pool client, terms, or groups)';
+    protected $description = 'Create a new resource in AWS Cognito (user pool, user pool client, pool term, or user group)';
 
     /**
      * The user pool ID.
@@ -68,26 +68,26 @@ class MakeCommand extends Command
     {
         try {
             //Check if at least one option is provided
-            $needles = ['pool', 'client', 'terms', 'groups'];
+            $needles = ['pool', 'client', 'term', 'group'];
             $haystack = array_filter($this->options());
             if (empty(array_intersect($needles, array_keys($haystack)))) {
-                throw new ConsoleException('Provide at least one option: --pool, --client, --terms, or --groups');
+                throw new ConsoleException('Provide at least one option: --pool, --client, --term, or --group');
             } //End if
 
-            // Get the user pool ID from the argument or from the .env file
-            $this->userPoolId = $this->argument('pool_id') ?: null;
+            // Get the user pool ID from the option or from the .env file
+            $this->userPoolId = $this->option('pool-id') ?: null;
 
-            // Get the user pool client ID from the argument or from the .env file
-            $this->clientId = $this->argument('client_id') ?: null;
+            // Get the user pool client ID from the option or from the .env file
+            $this->clientId = $this->option('client-id') ?: null;
 
-            // Name argument is provided
-            if (!$this->argument('name')) {
+            // Name option is provided
+            if (!$this->option('name')) {
                 throw new ConsoleException('Provide a name for the resource to be created');
             } //End if
-            $resourceName = $this->argument('name');
+            $resourceName = $this->option('name');
 
-            // Description argument is optional
-            $resourceDescription = $this->argument('description') ?: null;
+            // Detail option is optional
+            $resourceDescription = $this->option('detail') ?: null;
 
             $this->newLine();
             $this->info('Starting resource creation...');
@@ -111,7 +111,7 @@ class MakeCommand extends Command
             } //End if
 
             // Create user pool terms
-            if ($this->option('terms')) {
+            if ($this->option('term')) {
                 if (empty($resourceDescription) ||
                     (!Str::isUrl($resourceDescription, ['http', 'https']))) {
                     throw new ConsoleException(
@@ -120,7 +120,7 @@ class MakeCommand extends Command
                         'document with the terms of use or privacy policy.');
                 } //End if
 
-                $returnValue['option'] = 'terms';
+                $returnValue['option'] = 'term';
                 $returnValue['data'] = $this->promptUserToCreateTerms(
                     $resourceName,
                     [
@@ -129,8 +129,8 @@ class MakeCommand extends Command
             } //End if
 
             // Create user group
-            if ($this->option('groups')) {
-                $returnValue['option'] = 'groups';
+            if ($this->option('group')) {
+                $returnValue['option'] = 'group';
                 $returnValue['data'] = $this->createUserPoolGroup(
                     Str::camel($resourceName),
                     $resourceDescription ?? 'Default Group',
@@ -176,10 +176,10 @@ class MakeCommand extends Command
             $this->newLine();
             $syncChoice = $this->ask('Do you want to sync the configuration to your local .env file? (yes/no)', 'yes');
             if (Str::lower($syncChoice) === 'yes') {
-                $this->callSilently('cognito:sync-config', [
-                    'pool_id' => $response['Id'],
+                $this->callSilently('cognito:sync', [
                     '--aws-to-local' => true,
                     '--pool' => true,
+                    '--pool-id' => $response['Id'],
                 ]);
             } //End if
 
@@ -218,11 +218,11 @@ class MakeCommand extends Command
             $this->newLine();
             $syncChoice = $this->ask('Do you want to sync the configuration to your local .env file? (yes/no)', 'yes');
             if (Str::lower($syncChoice) === 'yes') {
-                $this->callSilently('cognito:sync-config', [
-                    'pool_id' => $this->userPoolId,
-                    'client_id' => $response['ClientId'],
+                $this->callSilently('cognito:sync', [
                     '--aws-to-local' => true,
                     '--client' => true,
+                    '--pool-id' => $this->userPoolId,
+                    '--client-id' => $response['ClientId'],
                 ]);
             } //End if
         } //End if

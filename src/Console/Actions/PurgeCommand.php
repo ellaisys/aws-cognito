@@ -82,10 +82,10 @@ class PurgeCommand extends Command
                 throw new ConsoleException('Provide at least one option: --pool, --client, or --terms');
             } //End if
 
-            // Get the user pool ID from the argument or from the .env file
+            // Get the user pool ID from the option or from the .env file
             $this->userPoolId = $this->option('pool-id') ?: null;
 
-            // Get the user pool client ID from the argument or from the .env file
+            // Get the user pool client ID from the option or from the .env file
             $this->clientId = $this->option('client-id') ?: null;
 
             $this->newLine();

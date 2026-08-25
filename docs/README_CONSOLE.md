@@ -96,6 +96,7 @@ The following commands provide the primary CLI interface for managing the Cognit
 | `cognito:install` | Initialize and configure the Cognito integration. |
 | `cognito:make` | Create supported Cognito resources. |
 | `cognito:list` | List and inspect supported Cognito resources. |
+| `cognito:list-config` | List and inspect the Cognito configuration. |
 | `cognito:sync` | Synchronize configuration between AWS Cognito and the local environment. |
 
 For detailed information about any command, use the Laravel Artisan `--help` option:
@@ -152,7 +153,7 @@ It can be used to create resources such as:
 Example, to create a new Cognito User Pool, run:
 
 ```sh
-php artisan cognito:make newpool --pool
+php artisan cognito:make --pool --name=MyUserPool
 ```
 
 The command uses the supplied name and the configured Cognito options to create the resource in AWS.
@@ -165,7 +166,7 @@ Additional options can be provided to customize the resource during creation.
 
 ### *List Command*
 
-The `cognito:list` command retrieves and displays information about supported AWS Cognito resources.
+The list command has two variations: `cognito:list` and `cognito:list-config`. The `cognito:list` command retrieves and displays information about supported AWS Cognito resources (i.e. List of User Pools, App Clients, Terms Documents, and User Pool Groups). The `cognito:list-config` command retrieves and displays the current Cognito configuration values (in JSON format) for the User Pool, App Client, and MFA Settings.
 
 For example, to list the available Cognito User Pools:
 
@@ -177,8 +178,8 @@ The command can also be used to retrieve information about other supported resou
 
 - User Pools
 - App Clients
-- Terms
-- Groups
+- Terms Documents (Terms of Use and Privacy Policy)
+- User Pool Groups
 
 Use the appropriate option to select the resource you want to list.
 
@@ -190,12 +191,18 @@ To return the results as JSON, use the `--format=json` option:
 php artisan cognito:list --pool --format=json
 ```
 
+To list the current Cognito configuration values for a User Pool, run:
+
+```sh
+php artisan cognito:list-config --pool
+```
+
 This format is useful when consuming command output from scripts, CI/CD pipelines, or other automation tools.
 
 
 ### *Sync Command*
 
-The `cognito:sync` command synchronizes configuration between your Laravel application and AWS Cognito.
+The `cognito:sync` command synchronizes configuration between your Laravel application and AWS Cognito. The command uses the configured Cognito User Pool and App Client to retrieve or apply configuration values. In case you want to synchronize a specific User Pool or App Client, you can provide the `--pool-id` and `--client-id` options.
 
 The command supports synchronization in both directions:
 

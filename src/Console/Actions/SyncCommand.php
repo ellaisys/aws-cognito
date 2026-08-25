@@ -22,7 +22,7 @@ use Ellaisys\Cognito\Console\Traits\AwsCognitoTrait;
 use Exception;
 use Ellaisys\Cognito\Exceptions\ConsoleException;
 
-class SyncConfigCommand extends Command
+class SyncCommand extends Command
 {
     use AwsCognitoTrait;
     use UtilsTrait;
@@ -89,10 +89,10 @@ class SyncConfigCommand extends Command
             $this->info('Sync the configurations.');
             $this->newLine();
 
-            // Get the user pool ID from the argument or from the .env file
+            // Get the user pool ID from the option or from the .env file
             $this->userPoolId = $this->option('pool-id') ?: null;
 
-            // Get the user pool client ID from the argument or from the .env file
+            // Get the user pool client ID from the option or from the .env file
             $this->clientId = $this->option('client-id') ?: null;
 
             if ($this->option('aws-to-local')) {
@@ -105,7 +105,7 @@ class SyncConfigCommand extends Command
 
             $returnValue = Command::SUCCESS;
         } catch (Exception $exception) {
-            Log::error('SyncConfigCommand:handle:Exception');
+            Log::error('SyncCommand:handle:Exception');
             $this->components->error($exception->getMessage());
             $returnValue = Command::FAILURE;
         } // Try-catch ends
@@ -175,7 +175,7 @@ class SyncConfigCommand extends Command
                 $this->setEnv('AWS_COGNITO_MFA_SETUP', $userPool['MfaConfiguration'] ?? 'OFF');
             } // End if
         } catch (Exception $exception) {
-            Log::error('SyncConfigCommand:getUserPoolConfigUpdEnv:Exception');
+            Log::error('SyncCommand:getUserPoolConfigUpdEnv:Exception');
             throw $exception;
         } // Try-catch ends
     } //Function ends
@@ -226,7 +226,7 @@ class SyncConfigCommand extends Command
                 $this->setEnv('AWS_COGNITO_AUTH_SESSION_VALIDITY', ($authSessionValidity * 60)); // Convert minutes to seconds
             } // End if
         } catch (Exception $exception) {
-            Log::error('SyncConfigCommand:getUserPoolClientConfigUpdEnv:Exception');
+            Log::error('SyncCommand:getUserPoolClientConfigUpdEnv:Exception');
             throw $exception;
         } // Try-catch ends
     } //Function ends
@@ -262,7 +262,7 @@ class SyncConfigCommand extends Command
 
             } // End if
         } catch (Exception $exception) {
-            Log::error('SyncConfigCommand:getUserPoolMfaConfigUpdEnv:Exception');
+            Log::error('SyncCommand:getUserPoolMfaConfigUpdEnv:Exception');
             throw $exception;
         } // Try-catch ends
     } //Function ends
@@ -311,7 +311,7 @@ class SyncConfigCommand extends Command
             $this->info(self::DONE);
             $this->newLine();
         } catch (Exception $exception) {
-            Log::error('SyncConfigCommand:syncLocalToAws:Exception');
+            Log::error('SyncCommand:syncLocalToAws:Exception');
             $this->components->error($exception->getMessage());
             $returnValue = Command::FAILURE;
         } // Try-catch ends

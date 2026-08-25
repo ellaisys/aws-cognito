@@ -272,10 +272,10 @@ class InstallCommand extends Command
             $this->clientId = $this->getUserPoolClientId($this->userPoolId, $userPool['status'] === 'new');
 
             // Sync the user pool configuration to the .env file
-            $this->callSilently('cognito:sync-config', [
-                'pool_id' => $this->userPoolId,
-                'client_id' => $this->clientId,
-                '--aws-to-local' => true
+            $this->callSilently('cognito:sync', [
+                '--aws-to-local' => true,
+                '--pool-id' => $this->userPoolId,
+                '--client-id' => $this->clientId,
             ]);
 
             return Command::SUCCESS;
@@ -527,7 +527,7 @@ class InstallCommand extends Command
                 $groupDescription = $this->ask('Enter the description of the new group:', 'Default Group');
 
                 // Create the new group
-                $data = $this->callSilently('cognito:make', [
+                $this->callSilently('cognito:make', [
                     'name' => $groupName,
                     'description' => $groupDescription,
                     '--groups' => true
@@ -538,8 +538,8 @@ class InstallCommand extends Command
                 $this->info("✓ User group '{$groupName}' created successfully.");
 
                 return [
-                    'id' => $data['GroupName'] ?? $groupName,
-                    'name' => $data['Description'] ?? $groupDescription,
+                    'id' => $groupName,
+                    'name' => $groupDescription,
                 ];
             } // End if
 

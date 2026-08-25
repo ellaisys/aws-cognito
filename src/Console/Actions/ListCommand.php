@@ -32,8 +32,8 @@ class ListCommand extends Command
      */
     protected $signature = 'cognito:list {--pool : Get list of user pools}
                                 {--client : Get list of user pool clients}
-                                {--terms : Get list of user pool terms}
-                                {--groups : Get list of user pool groups}
+                                {--term : Get list of user pool terms}
+                                {--group : Get list of user pool groups}
                                 {--format=table : Output format (table, json)}';
 
     /**
@@ -48,12 +48,15 @@ class ListCommand extends Command
      */
     public function handle()
     {
+        // Initialize return value
+        $returnValue = Command::SUCCESS;
+
         try {
             //Check if at least one option is provided
-            $needles = ['pool', 'client', 'terms', 'groups'];
+            $needles = ['pool', 'client', 'term', 'group'];
             $haystack = array_filter($this->options());
             if (empty(array_intersect($needles, array_keys($haystack)))) {
-                throw new ConsoleException('Provide at least one option: --pool, --client, --terms, or --groups');
+                throw new ConsoleException('Provide at least one option: --pool, --client, --term, or --group');
             } //End if
 
             // Display a message indicating that data is being fetched
@@ -73,14 +76,14 @@ class ListCommand extends Command
                 $returnValue['data'] = $this->getUserPoolClients();
             }
 
-            if ($this->option('terms')) {
-                $returnValue['option'] = 'terms';
+            if ($this->option('term')) {
+                $returnValue['option'] = 'term';
                 $returnValue['message'] = 'User pool terms list.';
                 $returnValue['data'] = $this->getUserPoolTerms();
             }
 
-            if ($this->option('groups')) {
-                $returnValue['option'] = 'groups';
+            if ($this->option('group')) {
+                $returnValue['option'] = 'group';
                 $returnValue['message'] = 'User pool groups list.';
                 $returnValue['data'] = $this->getUserPoolGroups();
             }
@@ -96,13 +99,13 @@ class ListCommand extends Command
                     $this->getTabularData($returnValue)
                 );
             } //End if
-            return Command::SUCCESS;
+            $returnValue = Command::SUCCESS;
         } catch (Exception $exception) {
             Log::error('ListCommand:handle:Exception');
             $this->components->error($exception->getMessage());
-            return Command::FAILURE;
+            $returnValue = Command::FAILURE;
         } // Try-catch ends
-        return Command::SUCCESS;
+        return $returnValue;
     } //Function ends
 
     /**
@@ -128,11 +131,11 @@ class ListCommand extends Command
                     $returnData = array_intersect_key($item,
                         array_flip(!empty($columns) ? $columns : ['ClientId', 'ClientName']));
                         break;
-                case 'terms':
+                case 'term':
                     $returnData = array_intersect_key($item,
                         array_flip(!empty($columns) ? $columns : ['TermsId', 'TermsName', 'LastModifiedDate']));
                         break;
-                case 'groups':
+                case 'group':
                     $returnData = array_intersect_key($item,
                         array_flip(!empty($columns) ? $columns : ['GroupName', 'Description', 'LastModifiedDate']));
                         break;
