@@ -101,25 +101,25 @@ class CognitoBaseComponent extends Component
      */
     private function getRequestUsername(): ?string
     {
+        // Initialize variable
+        $returnValue = null;
         try {
-            // Initialize username variable
-            $username = null;
-
             // Return query to request data for the user
             $query = $this->getRequestUserCredentials();
             if (isset($query[config('cognito.user_subject_uuid')])) {
-                return $query[config('cognito.user_subject_uuid')];
+                $returnValue = $query[config('cognito.user_subject_uuid')];
             } elseif (isset($query['email'])) {
-                return $query['email'];
+                $returnValue = $query['email'];
             } else {
                 $provider = Auth::createUserProvider('users');
                 $user = $provider->retrieveByCredentials($query);
-                return ($user && isset($user['sub'])) ? $user['sub'] : null;
+                $returnValue = ($user && isset($user['sub'])) ? $user['sub'] : null;
             } // End if
         } catch (Exception $exception) {
             Log::error('CognitoBaseComponent:getRequestUsername:Exception');
             throw $exception;
         } //End try-catch
+        return $returnValue;
     } //Function end
 
     /**
