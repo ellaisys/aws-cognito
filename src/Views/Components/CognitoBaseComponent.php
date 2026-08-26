@@ -106,6 +106,10 @@ class CognitoBaseComponent extends Component
         try {
             // Return query to request data for the user
             $query = $this->getRequestUserCredentials();
+            if (!$query) {
+                return null;
+            } // End if
+
             if (isset($query[config('cognito.user_subject_uuid')])) {
                 $returnValue = $query[config('cognito.user_subject_uuid')];
             } elseif (isset($query['email'])) {
@@ -113,7 +117,7 @@ class CognitoBaseComponent extends Component
             } else {
                 $provider = Auth::createUserProvider('users');
                 $user = $provider->retrieveByCredentials($query);
-                $returnValue = ($user && isset($user['sub'])) ? $user['sub'] : null;
+                $returnValue = ($user && isset($user[config('cognito.user_subject_uuid')])) ? $user[config('cognito.user_subject_uuid')] : null;
             } // End if
         } catch (Exception $exception) {
             Log::error('CognitoBaseComponent:getRequestUsername:Exception');
@@ -129,29 +133,38 @@ class CognitoBaseComponent extends Component
      */
     private function getRequestUserCredentials(): array
     {
+        // Initialize variable
+        $returnValue = null;
         try {
-            // Initialize username variable
-            $returnValue = null;
+            // User parameters from the request data
+            $userData = null;
 
             // Check request data for username or email
             if (request()->has('username')) {
-                $returnValue = request()->get('username');
+                $userData = request()->get('username');
             } elseif (request()->has('email')) {
-                $returnValue = request()->get('email');
+                $userData = request()->get('email');
             } else {
-                $returnValue = null;
+                $userData = null;
             } // End if
 
-            // Return the appropriate array
-            if (filter_var($returnValue, FILTER_VALIDATE_EMAIL)) {
-                return ['email' => $returnValue];
-            } else {
-                return [config('cognito.user_subject_uuid') => $returnValue];
+            // Check for valid email address
+            if ($userData && filter_var($userData, FILTER_VALIDATE_EMAIL)) {
+                $returnValue = ['email' => $userData];
+            } // End if
+
+            // Check for a valid UUID
+            if ($userData && filter_var($userData, FILTER_VALIDATE_REGEXP, ["options" => [
+                "regexp" => "/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i"
+                ]])) {
+                $returnValue = [config('cognito.user_subject_uuid') => $userData];
             } // End if
         } catch (Exception $exception) {
             Log::error('CognitoBaseComponent:getRequestUserCredentials:Exception');
             throw $exception;
         } //End try-catch
+
+        return $returnValue ?? [];
     } //Function end
 
     /**
