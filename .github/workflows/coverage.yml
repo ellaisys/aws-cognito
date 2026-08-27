@@ -53,6 +53,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ vars.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+      AWS_COGNITO_REGION: ${{ vars.AWS_COGNITO_REGION }}
       AWS_COGNITO_USER_POOL_ID: ${{ vars.AWS_COGNITO_USER_POOL_ID }}
       AWS_COGNITO_CLIENT_ID: ${{ vars.AWS_COGNITO_CLIENT_ID }}
       AWS_COGNITO_CLIENT_SECRET: ${{ secrets.AWS_COGNITO_CLIENT_SECRET }}
@@ -79,13 +80,13 @@ jobs:
           php-version: ${{ vars.PHP_VERSION }}
 
           # PHP extensions required by the package/tests.
-          extensions: mbstring, bcmath, gmp
-
-          # Code coverage is enabled.
-          coverage: xdebug
+          extensions: mbstring, bcmath, gmp, curl
 
           # Use Composer v2.
           tools: composer:v2
+
+          # Code coverage is enabled.
+          coverage: xdebug
 
       # ----------------------------------------------------------
       # Cache Composer downloads
@@ -115,10 +116,22 @@ jobs:
         run: |
           mkdir -p build/coverage build/reports
 
+          cp workbench/.env.example workbench/.env
+
           vendor/bin/phpunit \
             --exclude-group=make-command \
             --coverage-clover build/coverage/coverage.xml \
             --log-junit build/reports/junit.xml
+
+      # ----------------------------------------------------------
+      # Preserve PHPUnit Report
+      # ----------------------------------------------------------
+      - name: Preserve PHPUnit Report
+        uses: actions/upload-artifact@v7
+        with:
+          name: phpunit-report
+          path: build/**
+          retention-days: 7
 
       # ----------------------------------------------------------
       # Upload results to SonarCloud
