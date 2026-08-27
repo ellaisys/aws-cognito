@@ -92,7 +92,7 @@ jobs:
       # Cache Composer downloads
       # ----------------------------------------------------------
       - name: Cache Composer packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.composer/cache/files
           key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
@@ -132,6 +132,13 @@ jobs:
           name: phpunit-report
           path: build/**
           retention-days: 7
+
+      # ----------------------------------------------------------
+      # Fix PHPUnit coverage paths
+      # ----------------------------------------------------------
+      - name: Fix PHPUnit coverage paths
+        run: |
+          sed -i 's|/home/runner/work/aws-cognito/aws-cognito/|/github/workspace/|g' build/coverage/coverage.xml
 
       # ----------------------------------------------------------
       # Upload results to SonarCloud
