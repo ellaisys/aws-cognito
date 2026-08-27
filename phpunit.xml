@@ -23,13 +23,19 @@
     </testsuites>
 
     <php>
-        <env name="AUTH_VALID_CREDENTIALS" value="eyJ1c2VybmFtZSI6IjExODNlZDhhLTcwZTEtNzA5ZS00MTUxLWVhYWFmYTg1YjA1ZiIsImVtYWlsIjoiZWxsYWlzeXMrdGJfcmVnaXN0ZXJfMDQwOFYwMUBnbWFpbC5jb20iLCJwYXNzd29yZCI6IlZhbGlkUGFzc3dvcmQxMjMhIn0=" force="true"/>
-        <env name="AUTH_TOKEN_TYPE" value="bearer" force="true"/>
-        <env name="APP_NAME" value="Testbench" force="true"/>
-        <env name="APP_ENV" value="testing" force="true"/>
-        <env name="APP_KEY" value="base64:dY2RGwL3lXtuyRgSV5UQNAdVmJpe8b4dOremiVpHn7w=" force="true"/>
+        <env name="AUTH_TOKEN_TYPE" value="bearer"/>
+        <env name="APP_NAME" value="Testbench"/>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_KEY" value="base64:dY2RGwL3lXtuyRgSV5UQNAdVmJpe8b4dOremiVpHn7w="/>
+        <env name="APP_DEBUG" value="false"/>
+        <env name="APP_URL" value="http://localhost"/>
         <env name="DB_CONNECTION" value="sqlite" force="true"/>
         <env name="DB_DATABASE" value=":memory:" force="true"/>
+        <env name="AWS_COGNITO_VERSION" value="latest"/>
+        <env name="AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS" value="EMAIL"/>
+        <env name="AWS_COGNITO_TOKEN_STORAGE" value="file"/>
+        <env name="AWS_COGNITO_FORCE_NEW_USER_PASSWORD" value="false"/>
+        <env name="AWS_COGNITO_ALLOW_PHONE_NUMBER" value="false"/>
     </php>
 
     <source>

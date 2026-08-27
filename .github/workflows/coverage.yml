@@ -106,12 +106,6 @@ jobs:
         run: composer install --no-ansi --no-interaction --no-progress
 
       # ----------------------------------------------------------
-      # Prepare Workbench environment
-      # ----------------------------------------------------------
-      - name: Prepare Workbench environment
-        run: cp workbench/.env.example workbench/.env
-
-      # ----------------------------------------------------------
       # Execute PHPUnit
       #
       # Generates:
