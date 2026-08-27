@@ -26,6 +26,7 @@ class Challenge extends Component
     private string $sessionValue = '';
     private string $challengeParamsValue = '';
     private string $usernameValue = '';
+    private string $userEmailValue = '';
     private string $challengeValuePlaceholder = '';
 
     /**
@@ -62,10 +63,11 @@ class Challenge extends Component
 
         // Process the data
         if ($data && isset($data['status']) && $data['status'] == 'challenge') {
-            $this->usernameValue = $data['username'] ?? '';
             $this->sessionValue = $data['session_token'] ?? '';
             $this->challengeNameValue = isset($data['challenge_name']) ? strtoupper($data['challenge_name']) : 'NONE';
             $this->challengeParamsValue = isset($data['challenge_params']) ? json_encode($data['challenge_params'], JSON_UNESCAPED_SLASHES) : '';
+            $this->usernameValue = $data['challenge_params']['USER_ID_FOR_SRP'] ?? $data['username'] ?? '';
+            $this->userEmailValue = $data['username'] ?? '';
 
             if (in_array($this->challengeNameValue, ['EMAIL_OTP', 'SMS_OTP'])) {
                 $this->challengeValuePlaceholder = $data['challenge_params']['CODE_DELIVERY_DELIVERY_MEDIUM'] ?? '';
@@ -90,6 +92,7 @@ class Challenge extends Component
             'sessionValue' => $this->sessionValue,
             'challengeParamsValue' => $this->challengeParamsValue,
             'usernameValue' => $this->usernameValue,
+            'userEmailValue' => $this->userEmailValue,
             'challengeValuePlaceholder' => $this->challengeValuePlaceholder
         ]);
     } //Function end

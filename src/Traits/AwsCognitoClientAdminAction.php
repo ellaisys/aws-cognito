@@ -20,7 +20,6 @@ use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
-use Ellaisys\Cognito\Enums\CognitoDeviceRememberedStatus;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -189,54 +188,6 @@ trait AwsCognitoClientAdminAction
     } //Function ends
 
     /**
-     * Gets the user's groups from Cognito
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminListGroupsForUser.html
-     *
-     * @param string $username
-     * @return \Aws\Result
-     */
-    public function adminListGroupsForUser(string $username)
-    {
-        try {
-            return $this->client->AdminListGroupsForUser([
-                    'UserPoolId' => $this->poolId, // REQUIRED
-                    'Username' => $username // REQUIRED
-                ]
-            );
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('AwsCognitoClientAdminAction:adminListGroupsForUser:CognitoIdentityProviderException');
-            throw $e;
-        } //Try-catch ends
-
-        return false;
-    } //Function ends
-
-    /**
-     * Add a user to a given group
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminAddUserToGroup.html
-     *
-     * @param string $username
-     * @param string $groupname
-     *
-     * @return bool
-     */
-    public function adminAddUserToGroup(string $username, string $groupname)
-    {
-        try {
-            $this->client->adminAddUserToGroup([
-                'GroupName' => $groupname,
-                'UserPoolId' => $this->poolId,
-                'Username' => $username
-            ]);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('AwsCognitoClientAdminAction:adminAddUserToGroup:CognitoIdentityProviderException');
-            throw $e;
-        } //Try-catch ends
-
-        return true;
-    } //Function ends
-
-    /**
      * Deletes a user from a given user pool.
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminDeleteUser.html
      *
@@ -334,95 +285,6 @@ trait AwsCognitoClientAdminAction
             $response = $this->client->adminRespondToAuthChallenge($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAdminAction:adminRespondToAuthChallenge:CognitoIdentityProviderException');
-            throw AwsCognitoException::create($exception);
-        } //Try-catch ends
-
-        return $response;
-    } //Function ends
-
-    /**
-     * Updates the device status as an administrator.
-     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminUpdateDeviceStatus.html
-     *
-     * @param string $username
-     * @param string $deviceKey
-     * @param CognitoDeviceRememberedStatus $rememberStatus (default: REMEMBERED)
-     *
-     * @return AwsResult
-     */
-    public function adminUpdateDeviceStatus(string $username, string $deviceKey,
-        CognitoDeviceRememberedStatus $rememberStatus=CognitoDeviceRememberedStatus::REMEMBERED): AwsResult
-    {
-        try {
-            //Build payload
-            $payload = [
-                'Username' => $username,
-                'DeviceKey' => $deviceKey,
-                'UserPoolId' => $this->poolId,
-                'DeviceRememberedStatus' => $rememberStatus->value,
-            ];
-
-            $response = $this->client->adminUpdateDeviceStatus($payload);
-        } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClientAdminAction:adminUpdateDeviceStatus:CognitoIdentityProviderException');
-            throw AwsCognitoException::create($exception);
-        } //Try-catch ends
-
-        return $response;
-    } //Function ends
-
-    /**
-     * Get the device details as an administrator.
-     * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminGetDevice.html
-     *
-     * @param string $username
-     * @param string $deviceKey
-     *
-     * @return AwsResult
-     */
-    public function adminGetDevice(string $username, string $deviceKey): AwsResult
-    {
-        try {
-            //Build payload
-            $payload = [
-                'Username' => $username,
-                'DeviceKey' => $deviceKey,
-                'UserPoolId' => $this->poolId,
-            ];
-
-            //Execute the payload
-            $response = $this->client->adminGetDevice($payload);
-        } catch (CognitoIdentityProviderException $e) {
-            Log::error('AwsCognitoClientAdminAction:adminGetDevice:CognitoIdentityProviderException');
-            throw AwsCognitoException::create($e);
-        } //Try-catch ends
-
-        return $response;
-    } //Function ends
-
-    /**
-     * Forget/Delete the device as an administrator.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminForgetDevice.html
-     *
-     * @param string $username
-     * @param string $deviceKey
-     *
-     * @return AwsResult
-     */
-    public function adminForgetDevice(string $username, string $deviceKey): AwsResult
-    {
-        try {
-            //Build payload
-            $payload = [
-                'Username' => $username,
-                'DeviceKey' => $deviceKey,
-                'UserPoolId' => $this->poolId,
-            ];
-
-            //Execute the payload
-            $response = $this->client->adminForgetDevice($payload);
-        } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClientAdminAction:adminForgetDevice:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 

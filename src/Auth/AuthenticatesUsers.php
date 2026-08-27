@@ -95,9 +95,14 @@ trait AuthenticatesUsers
         string $paramPassword='password',
         string $deviceKeyParam = 'device_key')
     {
+        // Initialize variables
+        $returnValue = null;
+
         try {
-            // Initialize variables
-            $returnValue = null;
+            // Validate Cognito auth flow
+            $this->validateCognitoFlow($authFlow);
+
+            // Get the authentication guard
             $guard = $this->getGuard($request);
 
             //Raise Pre Auth Event
@@ -168,6 +173,9 @@ trait AuthenticatesUsers
         $returnValue = null;
 
         try {
+            // Validate Cognito auth flow
+            $this->validateCognitoFlow($authFlow);
+
             // Get the authentication guard
             $guard = $this->getGuard($request);
 

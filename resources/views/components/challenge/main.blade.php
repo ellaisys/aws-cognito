@@ -34,7 +34,7 @@
         <div class="col-md-6">
             <input type="email" class="form-control"
                 id="temp_username" name="temp_username"
-                value="{{ $usernameValue }}" disabled />
+                value="{{ $userEmailValue }}" disabled />
         </div>
     </div>
 @endif

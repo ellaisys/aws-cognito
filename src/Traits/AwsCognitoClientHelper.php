@@ -221,7 +221,7 @@ trait AwsCognitoClientHelper
     {
         try {
             //Validate phone for MFA
-            $listMfaTypes = explode(',', config('cognito.mfa_type', 'SOFTWARE_TOKEN_MFA'));
+            $listMfaTypes = config('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
             if ((config('cognito.mfa_setup')!="OFF") && (in_array('SMS_MFA', $listMfaTypes)) && empty($attributes['phone_number'])) {
                 throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING');
             } //End if

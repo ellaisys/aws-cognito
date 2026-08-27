@@ -15,6 +15,8 @@ use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 use Exception;
@@ -59,14 +61,17 @@ class CognitoBaseComponent extends Component
     private function getSessionUsername(): ?string
     {
         try {
+            // Initialize username variable
+            $username = null;
+
             // Check authenticated claim data
             $claim = session() ? session()->get('claim') : null;
 
             // Check challenge data
             $challengeData = session('data') ?? null;
 
-            if ($claim && isset($claim['email'])) {
-                $username = $claim['email'];
+            if ($claim && isset($claim['username'])) {
+                $username = $claim['username'];
             } elseif ($challengeData && isset($challengeData['status'])
                 && $challengeData['status'] == 'challenge') {
                 
@@ -96,19 +101,70 @@ class CognitoBaseComponent extends Component
      */
     private function getRequestUsername(): ?string
     {
+        // Initialize variable
+        $returnValue = null;
         try {
-            if (request()->has('username')) {
-                $username = request()->get('username');
-            } elseif (request()->has('email')) {
-                $username = request()->get('email');
+            // Return query to request data for the user
+            $query = $this->getRequestUserCredentials();
+            if (!$query) {
+                return null;
+            } // End if
+
+            if (isset($query[config('cognito.user_subject_uuid')])) {
+                $returnValue = $query[config('cognito.user_subject_uuid')];
+            } elseif (isset($query['email'])) {
+                $returnValue = $query['email'];
             } else {
-                $username = null;
-            }
-            return $username;
+                $provider = Auth::createUserProvider('users');
+                $user = $provider->retrieveByCredentials($query);
+                $returnValue = ($user && isset($user[config('cognito.user_subject_uuid')])) ? $user[config('cognito.user_subject_uuid')] : null;
+            } // End if
         } catch (Exception $exception) {
             Log::error('CognitoBaseComponent:getRequestUsername:Exception');
             throw $exception;
         } //End try-catch
+        return $returnValue;
+    } //Function end
+
+    /**
+     * Get the user credentials from the request data
+     *
+     * @return array
+     */
+    private function getRequestUserCredentials(): array
+    {
+        // Initialize variable
+        $returnValue = null;
+        try {
+            // User parameters from the request data
+            $userData = null;
+
+            // Check request data for username or email
+            if (request()->has('username')) {
+                $userData = request()->get('username');
+            } elseif (request()->has('email')) {
+                $userData = request()->get('email');
+            } else {
+                $userData = null;
+            } // End if
+
+            // Check for valid email address
+            if ($userData && filter_var($userData, FILTER_VALIDATE_EMAIL)) {
+                $returnValue = ['email' => $userData];
+            } // End if
+
+            // Check for a valid UUID
+            if ($userData && filter_var($userData, FILTER_VALIDATE_REGEXP, ["options" => [
+                "regexp" => "/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i"
+                ]])) {
+                $returnValue = [config('cognito.user_subject_uuid') => $userData];
+            } // End if
+        } catch (Exception $exception) {
+            Log::error('CognitoBaseComponent:getRequestUserCredentials:Exception');
+            throw $exception;
+        } //End try-catch
+
+        return $returnValue ?? [];
     } //Function end
 
     /**

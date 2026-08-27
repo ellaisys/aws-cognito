@@ -12,12 +12,6 @@
                     <form method="POST" action="{{ route('cognito.action.change.password') }}">
                         @csrf
 
-                        @if(request()->has('challenge_name'))
-                            <input type="hidden" name="challenge_name" value="{{ request()->get('challenge_name') }}" />
-                            <input type="hidden" name="session_token" value="{{ request()->get('session_token') }}" />
-                            <input id="email" type="hidden" name="email" value="{{ request()->get('email') }}" />
-                        @endif
-
                         <div class="row mb-3">
                             <label for="password" class="col-md-4 col-form-label text-md-end">{{ __('Existing Password') }}</label>
 

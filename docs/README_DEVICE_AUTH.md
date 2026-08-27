@@ -45,7 +45,11 @@ Configure your user pool to remember devices in the Sign-in menu of your user po
 You can choose to always remember devices, or only remember them when the user opts in during sign-in. This setting allows you to control how devices are registered and remembered for future authentication attempts.
 <img src="../assets/images/aws_cognito_device_flow2.png" width="100%" alt="cognito device flow"/>
 
-For more information on configuring device authentication in AWS Cognito, refer to the [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-device-tracking.html).
+- In case you choose to always remember devices, the user will not be prompted to confirm the device after registration.
+
+- If you choose to remember devices only when the user opts in, they will be required to confirm the device. The confirmation process typically involves sending an additional confirmation by the user by calling the [Update Device Status](#update-device-status-optional---only-if-user-confirmation-is-required).
+
+For more information on configuring device authentication in AWS Cognito, checkout the [References](#references) section at the end of this document.
 
 
 ### *Laravel Configurations*
@@ -451,6 +455,8 @@ The package provides a set of API routes that you can use to implement the devic
 ## References
 
 - [AWS Cognito - Working with user devices in your user pool](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-device-tracking.html)
+- [AWS Cognito - Signing in with a remembered device](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-device-tracking.html#user-pools-remembered-devices-signing-in-with-a-device)
+
 
 ## Key Points
 - **Phase 1 (calculateSrpA)**: Uses only `N` and `g`. Generates a random `a`. NO password, username, or salt needed.

@@ -18,9 +18,9 @@ class DBConnectionException extends PDOException
 {
 
     public function __construct(string $message = 'Database Connection Error',
-        Throwable $previous = null, int $code = 400)
+        ?Throwable $previous = null, int $code = 400)
     {
-        parent::__construct(401, $message, (int) $code, $previous);
+        parent::__construct($message, (int) $code, $previous);
     }
     
 } //Class ends

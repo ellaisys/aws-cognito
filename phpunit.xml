@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+    colors="true"
+    backupGlobals="false"
+    stopOnFailure="false"
+    cacheDirectory=".phpunit.cache"
+    backupStaticProperties="false"
+>
+    <coverage ignoreDeprecatedCodeUnits="true" />
+
+    <testsuites>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">./tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory suffix="Test.php">./tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Exception">
+            <directory suffix="Test.php">./tests/Exception</directory>
+        </testsuite>
+    </testsuites>
+
+    <php>
+        <env name="AUTH_VALID_CREDENTIALS" value="provide_valid_credentials_here" force="true"/>
+        <env name="AUTH_TOKEN_TYPE" value="bearer" force="true"/>
+        <env name="APP_NAME" value="Testbench" force="true"/>
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_KEY" value="base64:dY2RGwL3lXtuyRgSV5UQNAdVmJpe8b4dOremiVpHn7w=" force="true"/>
+        <env name="DB_CONNECTION" value="sqlite" force="true"/>
+        <env name="DB_DATABASE" value=":memory:" force="true"/>
+    </php>
+
+    <source>
+        <include>
+            <directory suffix=".php">src/</directory>
+        </include>
+    </source>
+
+    <logging>
+        <junit outputFile="build/reports/junit.xml"/>
+        <teamcity outputFile="build/reports/teamcity.txt"/>
+        <testdoxHtml outputFile="build/reports/testdox.html"/>
+        <testdoxText outputFile="build/reports/testdox.txt"/>
+    </logging>
+</phpunit>

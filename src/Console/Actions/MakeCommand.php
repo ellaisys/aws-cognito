@@ -1,0 +1,272 @@
+<?php
+
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Ellaisys\Cognito\Console\Actions;
+
+use Illuminate\Support\Str;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
+
+use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\Enums;
+use Ellaisys\Cognito\Console\Traits\AwsCognitoTrait;
+
+use Exception;
+use Ellaisys\Cognito\Exceptions\ConsoleException;
+
+class MakeCommand extends Command
+{
+    use AwsCognitoTrait;
+
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'cognito:make {--pool : Create a new user pool}
+                                {--client : Create a new user pool client}
+                                {--term : Create a new user pool terms}
+                                {--group : Create a new user pool group}
+                                {--name= : Provide a name for the resource to be created. Enter "terms-of-use" or "privacy-policy" for creating terms.}
+                                {--detail= : Provide a description for the resource to be created and for terms, must provide a link to the terms document}
+                                {--pool-id= : The user pool ID}
+                                {--client-id= : The user pool client ID}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Create a new resource in AWS Cognito (user pool, user pool client, pool term, or user group)';
+
+    /**
+     * The user pool ID.
+     *
+     * @var string|null
+     */
+    private ?string $userPoolId = null;
+
+    /**
+     * The user pool client ID.
+     *
+     * @var string|null
+     */
+    private ?string $clientId = null;
+
+    /**
+     * Execute the console command.
+     */
+    public function handle()
+    {
+        try {
+            //Check if at least one option is provided
+            $needles = ['pool', 'client', 'term', 'group'];
+            $haystack = array_filter($this->options());
+            if (empty(array_intersect($needles, array_keys($haystack)))) {
+                throw new ConsoleException('Provide at least one option: --pool, --client, --term, or --group');
+            } //End if
+
+            // Get the user pool ID from the option or from the .env file
+            $this->userPoolId = $this->option('pool-id') ?: null;
+
+            // Get the user pool client ID from the option or from the .env file
+            $this->clientId = $this->option('client-id') ?: null;
+
+            // Name option is provided
+            if (!$this->option('name')) {
+                throw new ConsoleException('Provide a name for the resource to be created');
+            } //End if
+            $resourceName = $this->option('name');
+
+            // Detail option is optional
+            $resourceDescription = $this->option('detail') ?: null;
+
+            $this->newLine();
+            $this->info('Starting resource creation...');
+
+            $returnValue = [];
+
+            // Create user pool
+            if ($this->option('pool')) {
+                $returnValue['option'] = 'pool';
+                $returnValue['data'] = $this->promptUserToCreateUserPool(
+                    $resourceName
+                );
+            } //End if
+
+            // Create user pool client
+            if ($this->option('client')) {
+                $returnValue['option'] = 'client';
+                $returnValue['data'] = $this->promptUserToCreateUserPoolClient(
+                    $resourceName
+                );
+            } //End if
+
+            // Create user pool terms
+            if ($this->option('term')) {
+                if (empty($resourceDescription) ||
+                    (!Str::isUrl($resourceDescription, ['http', 'https']))) {
+                    throw new ConsoleException(
+                        'Provide a description for the terms resource to be ' .
+                        'created. It must be a http or https link to the ' .
+                        'document with the terms of use or privacy policy.');
+                } //End if
+
+                $returnValue['option'] = 'term';
+                $returnValue['data'] = $this->promptUserToCreateTerms(
+                    $resourceName,
+                    [
+                        'cognito:default' => $resourceDescription,
+                    ]);
+            } //End if
+
+            // Create user group
+            if ($this->option('group')) {
+                $returnValue['option'] = 'group';
+                $returnValue['data'] = $this->createUserPoolGroup(
+                    Str::camel($resourceName),
+                    $resourceDescription ?? 'Default Group',
+                    $this->userPoolId
+                );
+            } //End if
+
+            $this->newLine();
+            $this->info('✓ Successfully created the resource.');
+
+            if ($this->output->isVerbose()) {
+                $this->info(json_encode($returnValue['data'] ?? [], JSON_PRETTY_PRINT));
+            } //End if
+
+            return Command::SUCCESS;
+        } catch (Exception $exception) {
+            Log::error('MakeCommand:handle:Exception');
+            $this->components->error($exception->getMessage());
+            return Command::FAILURE;
+        } // Try-catch ends
+        return Command::SUCCESS;
+    } //Function ends
+
+    /**
+     * Prompt the user to create a user pool if it doesn't exist.
+     *
+     * @param string $poolName
+     *
+     * @return array
+     */
+    private function promptUserToCreateUserPool(string $poolName): array
+    {
+        $response = $this->createUserPool(Str::studly($poolName));
+
+        // Success message
+        $this->newLine();
+        $this->info('✓ Successfully created user pool [' . $response['Id'] . ']');
+
+        // Check if the output is not quiet before prompting for further actions
+        if (!$this->output->isQuiet())
+        {
+            // Prompt to Sync configuration to local .env file
+            $this->newLine();
+            $syncChoice = $this->ask('Do you want to sync the configuration to your local .env file? (yes/no)', 'yes');
+            if (Str::lower($syncChoice) === 'yes') {
+                $this->callSilently('cognito:sync', [
+                    '--aws-to-local' => true,
+                    '--pool' => true,
+                    '--pool-id' => $response['Id'],
+                ]);
+            } //End if
+
+            // Prompt to create user pool client
+            $this->newLine();
+            $choice = $this->ask('Do you want to create a user pool client for this user pool? (yes/no)', 'yes');
+            if (Str::lower($choice) === 'yes') {
+                $clientName = $this->ask('Enter a name for the user pool client:', Str::studly($poolName) . 'Client');
+                $this->userPoolId = $response['Id'];
+                $response['client'] = $this->promptUserToCreateUserPoolClient($clientName);
+            } //End if
+        } //End if
+
+        return $response;
+    } //Function ends
+
+    /**
+     * Prompt the user to create a user pool client if it doesn't exist.
+     *
+     * @param string $clientName
+     *
+     * @return array
+     */
+    private function promptUserToCreateUserPoolClient(string $clientName): array
+    {
+        $response = $this->createUserPoolClient($clientName, $this->userPoolId);
+
+        // Success message
+        $this->newLine();
+        $this->info('✓ Successfully created user pool client [' . $response['ClientId'] . ']');
+
+        // Check if the output is not quiet before prompting for further actions
+        if (!$this->output->isQuiet())
+        {
+            // Prompt to Sync configuration to local .env file
+            $this->newLine();
+            $syncChoice = $this->ask('Do you want to sync the configuration to your local .env file? (yes/no)', 'yes');
+            if (Str::lower($syncChoice) === 'yes') {
+                $this->callSilently('cognito:sync', [
+                    '--aws-to-local' => true,
+                    '--client' => true,
+                    '--pool-id' => $this->userPoolId,
+                    '--client-id' => $response['ClientId'],
+                ]);
+            } //End if
+        } //End if
+
+        return $response;
+    } //Function ends
+
+    /**
+     * Prompt the user to create terms if they don't exist.
+     *
+     * @param string $resourceName
+     * @param array<string, string> $links array of links
+     *
+     * @return array
+     */
+    private function promptUserToCreateTerms(string $resourceName, array $links = []): array
+    {
+        if ($resourceName !== 'terms-of-use' && $resourceName !== 'privacy-policy') {
+            $dataMap = [
+                'terms-of-use' => 'Terms of Use',
+                'privacy-policy' => 'Privacy Policy'
+            ];
+
+            // Prompt the user to select a resource or create a new one
+            $choice = $this->choice(
+                'Select term type:',
+                [...array_keys(array_flip($dataMap))],
+                0
+            );
+
+            // Selected choice is not in the data map
+            $resourceName = array_flip($dataMap)[$choice] ?? 'terms-of-use';
+        } //End if
+
+        $response = $this->createUserPoolTerms(
+            $resourceName, $links,
+            $this->userPoolId, $this->clientId
+        );
+
+        // Success message
+        $this->newLine();
+        $this->info('✓ Successfully created terms [' . $resourceName . ']');
+
+        return $response;
+    } //Function ends
+
+} // Class ends

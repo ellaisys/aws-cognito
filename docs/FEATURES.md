@@ -40,6 +40,7 @@ This document provides a list of features provided by this package. It is not a 
 - [Mapping Cognito User using Subject UUID](#mapping-cognito-user-using-subject-uuid)
 - [Preconfigured routes and controllers for Web and API ](README_ROUTES.md)
 - [Preconfigured views for Web ](README_ROUTES.md#web-views-and-components)
+- [Console commands](README_CONSOLE.md)
 
 
 ## What this package provides

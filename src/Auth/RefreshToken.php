@@ -32,7 +32,7 @@ trait RefreshToken
      * Passed params
      */
     private $paramRefreshToken = 'refresh_token';
-    private $paramUsername = 'email';
+    private $paramUsername = 'username';
     private $deviceKey = 'device_key';
 
     /**
@@ -93,7 +93,7 @@ trait RefreshToken
      * @return mixed
      */
     public function revalidate(Request $request,
-        string $paramUsername='email',
+        string $paramUsername='username',
         string $paramRefreshToken='refresh_token',
         ?array $clientMetadata = null)
     {
@@ -212,7 +212,7 @@ trait RefreshToken
     {
         return [
             $this->paramRefreshToken => 'required|string',
-            $this->paramUsername => 'required|email',
+            $this->paramUsername => 'required|string',
             $this->deviceKey => 'sometimes|string',
         ];
     } //Function ends

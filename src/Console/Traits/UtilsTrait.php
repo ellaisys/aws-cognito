@@ -9,21 +9,21 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Console;
+namespace Ellaisys\Cognito\Console\Traits;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
-trait CommandTrait
+trait UtilsTrait
 {
     /**
      * Set the value of a key in the .env file.
      *
      * @param string $key
-     * @param string|bool|int|array $value
+     * @param string|bool|int|array|null $value
      * @return bool
      */
-    protected function setEnvValue(string $key, string|bool|int|array $value): bool
+    protected function setEnv(string $key, string|bool|int|array|null $value): bool
     {
         $path = app()->environmentFilePath();
 
@@ -63,8 +63,9 @@ trait CommandTrait
         Artisan::call('config:clear');
 
         // Update on the screen
-        $this->info("Updated .env {$key}: {$value}");
-
+        $this->newLine();
+        $this->line("✓ Updated {$key}: {$value}");
+        
         return true;
     } //Function ends
 

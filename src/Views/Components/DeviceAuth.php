@@ -75,6 +75,7 @@ class DeviceAuth extends CognitoBaseComponent
         $claimData = $claim ? $claim['data'] : null;
         $newDeviceData = ($claimData && isset($claimData['NewDeviceMetadata'])) ? $claimData['NewDeviceMetadata'] : null;
 
+        // Prepare new device data for encoding
         if ($newDeviceData) {
             $newDeviceData = [
                 'd-key' => $newDeviceData['DeviceKey'] ?? null,
@@ -82,7 +83,7 @@ class DeviceAuth extends CognitoBaseComponent
             ];
         } else {
             return '';
-        }
+        } //End if
 
         return base64_encode(json_encode($newDeviceData));
     } //Function end

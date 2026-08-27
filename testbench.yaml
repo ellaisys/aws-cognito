@@ -1,0 +1,48 @@
+laravel: '@testbench'
+
+providers:
+  - Ellaisys\Cognito\Providers\AwsCognitoServiceProvider
+  - Workbench\App\Providers\WorkbenchServiceProvider
+
+migrations:
+  - workbench/database/migrations
+
+seeders:
+  - Workbench\Database\Seeders\DatabaseSeeder
+
+env:
+  APP_NAME: "Testbench"  
+
+workbench:
+  start: '/'
+  install: true
+  health: true
+  discovers:
+    config: true
+    web: true
+    api: true
+    commands: true
+    components: false
+    factories: true
+    views: true
+  build:
+    - purge-skeleton
+    - asset-publish
+    - create-sqlite-db
+    - db-wipe
+    - migrate:fresh:
+      --seed: true
+  assets:
+    - laravel-assets
+  sync:
+    - from: config
+      to: workbench/config
+      reverse: true
+    - from: storage
+      to: workbench/storage
+      reverse: true
+
+purge:
+  directories:
+    - public/build
+    - public/vendor/*

@@ -44,7 +44,7 @@ return [
     'app_client_id'     => env('AWS_COGNITO_CLIENT_ID'),
     'app_client_secret' => env('AWS_COGNITO_CLIENT_SECRET'),
     'user_pool_id'      => env('AWS_COGNITO_USER_POOL_ID'),
-    'region'            => env('AWS_COGNITO_REGION', 'us-east-1'),
+    'region'            => env('AWS_COGNITO_REGION', env('AWS_DEFAULT_REGION', 'us-east-1')),
     'version'           => env('AWS_COGNITO_VERSION', 'latest'),
 
     /*
@@ -102,6 +102,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cognito Sign In Username Attributes
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito sign in username attributes. You
+    | can set the sign in username attributes in your AWS Cognito User Pool
+    | configuration, and the value should be set to an array of allowed values.
+    | The options available are "email" and "phone_number". You can set multiple
+    | options in the array.
+    |
+    | The default value is set to ['email'], which means only email is allowed.
+    |
+    */
+    'sign_in_username_attributes' => (array) explode(',', env('AWS_COGNITO_USER_SIGN_IN_ATTRIBUTE', 'email')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cognito Fields & DB Mapping
     |--------------------------------------------------------------------------
     |
@@ -143,6 +158,82 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cognito Password Policy - Pool Configuration
+    |--------------------------------------------------------------------------
+    | This option defines the default Amazon Cognito User Pool password policy.
+    | You can configure the password policy in your AWS Cognito User Pool and
+    | provide the policy here as a Base64-encoded JSON string.
+    |
+    | The default policy is:
+    |
+    | {
+    |     "MinimumLength": 8,
+    |     "RequireUppercase": true,
+    |     "RequireLowercase": true,
+    |     "RequireNumbers": true,
+    |     "RequireSymbols": true,
+    |     "TemporaryPasswordValidityDays": 7
+    | }
+    |
+    */
+    'password_policy' => (array) json_decode(base64_decode(env('AWS_COGNITO_PASSWORD_POLICY', 'eyJNaW5pbXVtTGVuZ3RoIjo4LCJSZXF1aXJlVXBwZXJjYXNlIjp0cnVlLCJSZXF1aXJlTG93ZXJjYXNlIjp0cnVlLCJSZXF1aXJlTnVtYmVycyI6dHJ1ZSwiUmVxdWlyZVN5bWJvbHMiOnRydWUsIlRlbXBvcmFyeVBhc3N3b3JkVmFsaWRpdHlEYXlzIjo3fQ=='))),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Sign In Policy - Pool Configuration
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito sign in policy. You can set the
+    | sign in policy in your AWS Cognito User Pool configuration, and the value
+    | should be set to a comma-separated list of allowed sign in policies.
+    | The options available are "PASSWORD", "WEB_AUTHN", "EMAIL_OTP", and
+    | "SMS_OTP". You can set multiple options separated by commas.
+    |
+    | The default value is set to 'PASSWORD', which means only password sign in
+    | is allowed.
+    */
+    'signin_policy' => (array) explode(',', env('AWS_COGNITO_SIGNIN_POLICY', 'PASSWORD')),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Allowed Auth Flows - Client Configuration
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito allowed auth flows. You can set
+    | the allowed auth flows in your AWS Cognito User Pool Client configuration,
+    | and the value should be set to a comma-separated list of allowed values.
+    | The options available are "ALLOW_USER_AUTH", "ALLOW_USER_PASSWORD_AUTH",
+    | "ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_CUSTOM_AUTH", "ALLOW_USER_SRP_AUTH",
+    | "ALLOW_ADMIN_USER_PASSWORD_AUTH".
+    | The default value is set as below to allow password based authentication
+    | and refresh token authentication.
+    */
+    'allowed_auth_flows' => (array) explode(',', env('AWS_COGNITO_ALLOWED_AUTH_FLOWS', 'ALLOW_USER_PASSWORD_AUTH,ALLOW_REFRESH_TOKEN_AUTH')),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Enable Token Revocation - Client Configuration
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito enable token revocation. You can
+    | set the enable token revocation in your AWS Cognito User Pool Client
+    | configuration, and the value should be set to true or false.
+    | Setting to false will disable the token revocation feature, which means
+    | that the token revocation or forced logout will not occur.
+    | The default value is set to true.
+    */
+    'enable_token_revocation' => (bool) env('AWS_COGNITO_ENABLE_TOKEN_REVOCATION', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Auth Session Validity - Client Configuration
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito auth session validity. You can
+    | set the auth session validity in your AWS Cognito User Pool Client
+    | configuration, and the value should be set to an integer value in seconds.
+    | The default value is set to 180 seconds (3 minutes).
+    */
+    'auth_session_validity' => (int) env('AWS_COGNITO_AUTH_SESSION_VALIDITY', 180),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cognito New User
     |--------------------------------------------------------------------------
     |
@@ -175,7 +266,7 @@ return [
     | Set to true to allow self registration, or false to disable it.
     |
     */
-    'registration_enabled' => env('AWS_COGNITO_REGISTRATION_ENABLED', true),
+    'registration_enabled' => (bool) env('AWS_COGNITO_REGISTRATION_ENABLED', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -215,7 +306,7 @@ return [
     | used as the preferred MFA method.
     |
     */
-    'mfa_type' => env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA'),
+    'mfa_type' => (array) explode(',', env('AWS_COGNITO_MFA_TYPE', 'SOFTWARE_TOKEN_MFA')),
 
     /*
     |--------------------------------------------------------------------------
@@ -466,4 +557,17 @@ return [
         // Large prime number (as hex) - 3072-bit group from AWS Cognito
         'N_HEX' => env('AWS_COGNITO_SRP_N_HEX', 'FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E208E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF'),
     ],
+
+    /**
+     * ------------------------------------------------------------------------
+     * Middleware Aliases
+     * ------------------------------------------------------------------------
+     * This option controls the middleware aliases for the package. You can set
+     * the middleware aliases for the package here.
+     *
+     * The default value is set to 'aws-cognito'.
+     */
+    'middleware_aliases' => [
+        'aws-cognito' => \Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate::class
+    ]
 ];

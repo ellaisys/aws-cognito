@@ -43,6 +43,8 @@ The AWS configurations are required to be set up in order to use the AWS Cognito
 
 Laravel configurations are required to be set up in order to use the AWS Cognito service with your Laravel application. The following sections provide detailed instructions on how to set up the Laravel configurations.
 
+Make use of the cognito console commands to automatically set up the configurations in your Laravel application. Refer to the [Cognito Console Commands](README_CONSOLE.md) document for detailed instructions on how to use the console commands.
+
 ### *ServiceProvider Registration*
 
 *<u>Laravel 5.4 and before</u>*
@@ -117,6 +119,7 @@ In order to use AWS Cognito, you will need to add the following minimum configur
 # AWS configurations for cloud storage
 AWS_ACCESS_KEY_ID="Axxxxxxxxxxxxxxxxxxxxxxxx6"
 AWS_SECRET_ACCESS_KEY="mxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+"
+AWS_DEFAULT_REGION="xxxxxxxxxxx" //optional - default value is 'us-east-1'
 
 # AWS Cognito configurations
 AWS_COGNITO_CLIENT_ID="6xxxxxxxxxxxxxxxxxxxxxxxxr"
@@ -127,6 +130,8 @@ AWS_COGNITO_VERSION="latest" //optional - default value is 'latest'
 ```
 
 For more details on how to find `AWS_COGNITO_CLIENT_ID`, `AWS_COGNITO_CLIENT_SECRET` and `AWS_COGNITO_USER_POOL_ID` for your application, please refer to the [AWS Configurations](#aws-configurations).
+
+The console command `php artisan cognito:install` can be used to automatically add the above configurations to your `.env` file. You can run this command after installing the package.
 
 
 ### *Additional Environment Variables* (Optional)

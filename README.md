@@ -104,15 +104,16 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
         | Laravel Guards :heavy_check_mark: |
         [More](./docs/FEATURES.md#features)
 
-    - [SRP](./docs/README_SRP.md) ***New Feature***
-    - [Remembered Devices](./docs/README_DEVICE_AUTH.md) ***New Feature***
+    - [SRP](./docs/README_SRP.md)
+    - [Remembered Devices](./docs/README_DEVICE_AUTH.md)
 
 - Security
-    - [Multi-Factor Authentication (MFA)](./docs/README_MFA.md) ***Updated***
-    - [FIDO2 Security Keys (Passkeys)](./docs/README_FIDO2.md) ***Updated***
+    - [Multi-Factor Authentication (MFA)](./docs/README_MFA.md)
+    - [FIDO2 Security Keys (Passkeys)](./docs/README_FIDO2.md)
 
 - Laravel
-    - [Preconfigured Routes and Controllers](./docs/README_ROUTES.md) ***Updated***
+    - [Preconfigured Routes and Controllers](./docs/README_ROUTES.md)
+    - [Console Commands](./docs/README_CONSOLE.md) ***New Feature***
 
 
 ## Architecture and Design
@@ -128,13 +129,16 @@ This package is available via [Packagist](https://packagist.org/packages/ellaisy
 
 ```sh
 composer require ellaisys/aws-cognito
+php artisan cognito:install
 ```
 
 ## Code Quality
 
-This project follows secure coding and quality assurance practices throughout its development lifecycle. Automated static analysis is performed using SonarCloud to identify potential bugs, vulnerabilities, maintainability issues, and code smells before changes are merged.
+This project follows secure coding and quality assurance practices throughout its development lifecycle. Automated PHPUnit tests are used to validate functionality, detect regressions, and ensure the reliability of the codebase. Test coverage is also measured to help identify areas that require additional testing.
 
-In addition to automated analysis, all contributions are reviewed before being merged to help maintain the quality, reliability, and security of the project.
+Static analysis and code quality checks are performed using SonarCloud to identify potential bugs, vulnerabilities, security issues, maintainability concerns, and code smells.
+
+Together, automated testing, code coverage analysis, static analysis, and code review help maintain the quality, reliability, maintainability, and security of the project.
 
 
 ## Changelog

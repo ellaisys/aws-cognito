@@ -24,6 +24,7 @@ use Ellaisys\Cognito\Services\JsonResponseService;
 use Ellaisys\Cognito\Http\Parser\Parser;
 use Ellaisys\Cognito\Http\Parser\AuthHeaders;
 use Ellaisys\Cognito\Http\Parser\ClaimSession;
+use Ellaisys\Cognito\Http\Middleware\AwsCognitoAuthenticate;
 
 use Ellaisys\Cognito\Views\Components\Challenge;
 use Ellaisys\Cognito\Views\Components\DeviceAuth;
@@ -33,6 +34,7 @@ use Ellaisys\Cognito\Console\PoolCommand;
 
 use Ellaisys\Cognito\Providers\StorageProvider;
 
+use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -69,6 +71,9 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
         //Register Alias
         $this->registerAliases();
+
+        //Register Middleware Alias
+        $this->registerMiddlewareAlias();
 
         //Register Cognito Exception Handler
         $this->registerCognitoExceptionHandler();
@@ -269,7 +274,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
         $this->app->singleton(AwsCognitoJwksService::class, function () {
             return new AwsCognitoJwksService(
                 config('cognito.region'),
-                config('cognito.user_pool_id')
+                config('cognito.user_pool_id', null)
             );
         });
 
@@ -278,8 +283,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
             return new AwsCognitoSrpService(
                 $app['ellaisys.aws.cognito.provider.storage'],
                 config('cognito.cache_prefix.srp'),
-                config('cognito.app_client_id'),
-                config('cognito.user_pool_id')
+                config('cognito.app_client_id', null),
+                config('cognito.user_pool_id', null)
             );
         });
     } //Function ends
@@ -306,9 +311,9 @@ class AwsCognitoServiceProvider extends ServiceProvider
             //Instancite the AWS Cognito Client
             return new AwsCognitoClient(
                 new CognitoIdentityProviderClient($aws_config),
-                config('cognito.app_client_id'),
-                config('cognito.app_client_secret'),
-                config('cognito.user_pool_id'),
+                config('cognito.app_client_id', null),
+                config('cognito.app_client_secret', null),
+                config('cognito.user_pool_id', null),
                 config('cognito.app_client_secret_allow', true)
             );
         });
@@ -431,6 +436,28 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function registerProviders(): void
     {
         $this->app->register(ConsoleServiceProvider::class);
+    } //Function ends
+
+    /**
+     * Register the middleware alias for the package.
+     *
+     * @return void
+     */
+    protected function registerMiddlewareAlias(): void
+    {
+        $aliases = $this->app['config']->get('cognito.middleware_aliases', []);
+
+        if (!empty($aliases) && is_array($aliases)) {
+            $this->app->afterResolving(Router::class, function (Router $router) use ($aliases) {
+                foreach ($aliases as $name => $class) {
+                    if (method_exists($router, 'aliasMiddleware')) {
+                        $router->aliasMiddleware($name, $class);
+                    } else {
+                        $router->middleware($name, $class);
+                    }
+                } //Loop ends
+            });
+        } //End if
     } //Function ends
 
 } //Class ends

@@ -1,0 +1,151 @@
+# ---------------------------------------------------------------------------
+# PHPUnit Test Workflow
+# ---------------------------------------------------------------------------
+# Runs PHPUnit tests:
+#   1. Automatically when code is pushed to the master branch
+#   2. Manually using the "Run workflow" button in GitHub Actions
+#
+# AWS Cognito credentials/configuration are read from GitHub Repository Secrets.
+# ---------------------------------------------------------------------------
+
+name: PHPUnit Tests
+
+# ---------------------------------------------------------------------------
+# Workflow Triggers
+# ---------------------------------------------------------------------------
+on:
+
+  # Run automatically whenever code is pushed to master
+  push:
+    branches:
+      - master
+
+  # Allow the workflow to be triggered manually from GitHub Actions
+  workflow_dispatch:
+
+
+# ---------------------------------------------------------------------------
+# Jobs
+# ---------------------------------------------------------------------------
+jobs:
+
+  # PHPUnit test job
+  phpunit:
+
+    # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest
+
+    # -----------------------------------------------------------------------
+    # Environment Variables
+    # -----------------------------------------------------------------------
+    # These values are retrieved from GitHub Repository Secrets.
+    #
+    # Configure them in:
+    # GitHub Repository
+    #   → Settings
+    #   → Secrets and variables
+    #   → Actions
+    #
+    # Do NOT put the actual secret values directly in this file.
+    # -----------------------------------------------------------------------
+    env:
+      AWS_ACCESS_KEY_ID: ${{ vars.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+      AWS_COGNITO_USER_POOL_ID: ${{ vars.AWS_COGNITO_USER_POOL_ID }}
+      AWS_COGNITO_CLIENT_ID: ${{ vars.AWS_COGNITO_CLIENT_ID }}
+      AWS_COGNITO_CLIENT_SECRET: ${{ secrets.AWS_COGNITO_CLIENT_SECRET }}
+
+    steps:
+
+      # ---------------------------------------------------------------------
+      # Checkout Repository
+      # ---------------------------------------------------------------------
+      # Checks out the source code so that the GitHub Actions runner can
+      # execute Composer and PHPUnit.
+      # ---------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+
+
+      # ---------------------------------------------------------------------
+      # Setup PHP
+      # ---------------------------------------------------------------------
+      # Installs the required PHP version and extensions.
+      #
+      # Orchestra Testbench runs Laravel inside the package test environment,
+      # so the PHP version should match the versions supported by your package.
+      # ---------------------------------------------------------------------
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ vars.PHP_VERSION }}
+
+          # PHP extensions required by the package/tests.
+          extensions: mbstring, bcmath, gmp
+
+          # Code coverage is disabled here.
+          # Remove "coverage: none" if you want to collect coverage.
+          coverage: none
+
+          # Use Composer v2.
+          tools: composer:v2
+
+
+      # ---------------------------------------------------------------------
+      # Display PHP Version
+      # ---------------------------------------------------------------------
+      # Useful for troubleshooting the CI environment.
+      # ---------------------------------------------------------------------
+      - name: Check PHP version
+        run: php -v
+
+
+      # ---------------------------------------------------------------------
+      # Install Composer Dependencies
+      # ---------------------------------------------------------------------
+      # Installs the dependencies defined in composer.json/composer.lock.
+      #
+      # --prefer-dist:
+      #   Prefer distribution packages instead of cloning repositories.
+      #
+      # --no-interaction:
+      #   Prevent Composer from waiting for user input.
+      #
+      # --no-progress:
+      #   Keeps GitHub Actions output cleaner.
+      # ---------------------------------------------------------------------
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+
+      # ---------------------------------------------------------------------
+      # Verify AWS Configuration
+      # ---------------------------------------------------------------------
+      # Ensures that all required AWS/Cognito secrets were provided.
+      #
+      # IMPORTANT:
+      # The actual secret values are NOT printed to the GitHub Actions log.
+      # ---------------------------------------------------------------------
+      - name: Verify AWS configuration
+        run: |
+          test -n "$AWS_ACCESS_KEY_ID" || exit 1
+          test -n "$AWS_SECRET_ACCESS_KEY" || exit 1
+          test -n "$AWS_DEFAULT_REGION" || exit 1
+          test -n "$AWS_COGNITO_USER_POOL_ID" || exit 1
+          test -n "$AWS_COGNITO_CLIENT_ID" || exit 1
+          test -n "$AWS_COGNITO_CLIENT_SECRET" || exit 1
+
+          echo "AWS configuration is available."
+
+
+      # ---------------------------------------------------------------------
+      # Run PHPUnit
+      # ---------------------------------------------------------------------
+      # Orchestra Testbench boots the Laravel application required by the
+      # package tests.
+      #
+      # vendor/bin/phpunit uses the PHPUnit configuration from phpunit.xml.
+      # ---------------------------------------------------------------------
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --exclude-group=make-command
