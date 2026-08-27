@@ -24,11 +24,40 @@ use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
 class ChangePasswordTest extends TestCase
 {
     /**
-     * A basic test example.
+     * Test loading the change password page.
      */
     #[Test]
-    public function test_the_application_returns_a_successful_response(): void
+    #[DependsExternal(LoginTest::class, 'test_user_can_login_with_correct_credentials')]
+    public function test_load_change_password_web_page(): void
     {
-        $this->assertTrue(true);
-    }
+        $this->withSession(self::$sessionAuthenticated)
+            ->get(route('cognito.form.change.password'))
+            ->assertStatus(200)
+            ->assertSeeText('Change Password')
+            ->assertSee('Existing Password')
+            ->assertSee('New Password')
+            ->assertSee('Confirm Password');
+    } // Function ends
+
+    /**
+     * Test changing the password with valid data.
+     */
+    #[Test]
+    #[Depends('test_load_change_password_web_page')]
+    public function test_change_password_action_with_valid_data(): void
+    {
+        // Get valid credentials for the user
+        $credentials = $this->getValidCredentials();
+        $payload = [
+            'password' => $credentials['password'] ?? '',
+            'new_password' => $credentials['password'],
+            'new_password_confirmation' => $credentials['password'],
+        ];
+
+        $this->withSession(self::$sessionAuthenticated)
+            ->post(route('cognito.action.change.password'), $payload)
+            ->assertStatus(302)
+            ->assertSessionHasNoErrors();
+    } // Function ends
+
 } //Class ends
