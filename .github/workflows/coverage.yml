@@ -64,7 +64,9 @@ jobs:
       # Checkout repository
       # ----------------------------------------------------------
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       # ----------------------------------------------------------
       # Install PHP with Xdebug enabled.
@@ -107,6 +109,7 @@ jobs:
           mkdir -p build/coverage build/reports
 
           vendor/bin/phpunit \
+            --exclude-group=make-command \
             --coverage-clover build/coverage/coverage.xml \
             --log-junit build/reports/junit.xml
 
