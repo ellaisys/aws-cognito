@@ -46,6 +46,9 @@ class PasskeyTest extends TestCase
     #[Test]
     public function test_valid_settings_for_choice_based_signin(): void
     {
+        // Set configuration to allow choice based signin
+        Config::set('cognito.allowed_auth_flows', ['ALLOW_REFRESH_TOKEN_AUTH', 'ALLOW_USER_PASSWORD_AUTH', 'ALLOW_USER_AUTH']);
+
         $this->assertTrue($this->validateUserPoolClientConfig(
             Enums\CognitoAuthFlowTypes::USER_AUTH));
 
@@ -134,6 +137,7 @@ class PasskeyTest extends TestCase
 
         // Get the data from the session
         $data = session()->has('data') ? session('data') : null;
+        $this->assertNotNull($data, 'Session data is null.');
 
         // Assert that the session has the expected keys
         $this->assertArrayHasKey('CredentialCreationOptions', $data);

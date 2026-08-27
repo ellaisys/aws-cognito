@@ -44,6 +44,7 @@ class ChangePasswordTest extends TestCase
      */
     #[Test]
     #[Depends('test_load_change_password_web_page')]
+    #[DependsExternal(LoginTest::class, 'test_user_can_login_with_correct_credentials')]
     public function test_change_password_action_with_valid_data(): void
     {
         // Get valid credentials for the user
