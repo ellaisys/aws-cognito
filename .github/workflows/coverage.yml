@@ -106,6 +106,12 @@ jobs:
         run: composer install --no-ansi --no-interaction --no-progress
 
       # ----------------------------------------------------------
+      # Prepare Workbench environment
+      # ----------------------------------------------------------
+      - name: Prepare Workbench environment
+        run: cp workbench/.env.example workbench/.env
+
+      # ----------------------------------------------------------
       # Execute PHPUnit
       #
       # Generates:
@@ -115,8 +121,6 @@ jobs:
       - name: Run PHPUnit with coverage
         run: |
           mkdir -p build/coverage build/reports
-
-          cp workbench/.env.example workbench/.env
 
           vendor/bin/phpunit \
             --exclude-group=make-command \
