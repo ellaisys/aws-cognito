@@ -65,8 +65,9 @@ jobs:
       # execute Composer and PHPUnit.
       # ---------------------------------------------------------------------
       - name: Checkout
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       # ---------------------------------------------------------------------
       # Setup PHP
@@ -100,7 +101,6 @@ jobs:
       - name: Check PHP version
         run: php -v
 
-
       # ---------------------------------------------------------------------
       # Install Composer Dependencies
       # ---------------------------------------------------------------------
@@ -117,7 +117,6 @@ jobs:
       # ---------------------------------------------------------------------
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
-
 
       # ---------------------------------------------------------------------
       # Verify AWS Configuration
@@ -138,7 +137,6 @@ jobs:
 
           echo "AWS configuration is available."
 
-
       # ---------------------------------------------------------------------
       # Run PHPUnit
       # ---------------------------------------------------------------------
@@ -148,4 +146,9 @@ jobs:
       # vendor/bin/phpunit uses the PHPUnit configuration from phpunit.xml.
       # ---------------------------------------------------------------------
       - name: Run PHPUnit
-        run: vendor/bin/phpunit --exclude-group=make-command
+        run: |
+          mkdir -p build/reports
+
+          vendor/bin/phpunit \
+            --exclude-group=make-command \
+            --log-junit build/reports/junit.xml

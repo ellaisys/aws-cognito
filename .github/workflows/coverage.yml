@@ -76,8 +76,15 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: ${{ vars.PHP_VERSION }}
+
+          # PHP extensions required by the package/tests.
+          extensions: mbstring, bcmath, gmp
+
+          # Code coverage is enabled.
           coverage: xdebug
+
+          # Use Composer v2.
           tools: composer:v2
 
       # ----------------------------------------------------------
