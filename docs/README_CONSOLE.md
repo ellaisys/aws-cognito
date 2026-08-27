@@ -1,7 +1,7 @@
 # Console Commands
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-07-31<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-08-27<!-- /AUTO:last_updated -->
 
 The package provides a set of Laravel Artisan commands for installing, configuring, managing, and synchronizing your AWS Cognito integration.
 

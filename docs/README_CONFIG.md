@@ -1,7 +1,7 @@
 # Configurations
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-07-31<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-08-27<!-- /AUTO:last_updated -->
 
 This document provides guidance on configuring the AWS Cognito service and the Laravel application to work with AWS Cognito. It is intended for developers who are familiar with Laravel and AWS services.
 
