@@ -16,9 +16,9 @@ name: PHPUnit Tests
 on:
 
   # Run automatically whenever code is pushed to master
-  push:
-    branches:
-      - master
+  # push:
+  #   branches:
+  #     - master
 
   # Allow the workflow to be triggered manually from GitHub Actions
   workflow_dispatch:
