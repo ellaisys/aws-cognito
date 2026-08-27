@@ -84,7 +84,7 @@ jobs:
           php-version: ${{ vars.PHP_VERSION }}
 
           # PHP extensions required by the package/tests.
-          extensions: mbstring, bcmath, gmp, curl
+          extensions: mbstring, bcmath, gmp, curl, xml, libxml, dom
 
           # Use Composer v2.
           tools: composer:v2
