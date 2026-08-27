@@ -11,6 +11,9 @@
 
 name: Code Coverage
 
+# ---------------------------------------------------------------------------
+# Workflow Triggers
+# ---------------------------------------------------------------------------
 on:
   # Run after changes are merged into the protected master branch.
   push:
@@ -23,11 +26,37 @@ on:
 permissions:
   contents: read
 
+# ---------------------------------------------------------------------------
+# Jobs
+# ---------------------------------------------------------------------------
 jobs:
   coverage:
     name: PHPUnit Coverage
 
+    # Use the latest Ubuntu runner
     runs-on: ubuntu-latest
+
+    # -----------------------------------------------------------------------
+    # Environment Variables
+    # -----------------------------------------------------------------------
+    # These values are retrieved from GitHub Repository Secrets.
+    #
+    # Configure them in:
+    # GitHub Repository
+    #   → Settings
+    #   → Secrets and variables
+    #   → Actions
+    #
+    # Do NOT put the actual secret values directly in this file.
+    # -----------------------------------------------------------------------
+    env:
+      AWS_ACCESS_KEY_ID: ${{ vars.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+      AWS_COGNITO_USER_POOL_ID: ${{ vars.AWS_COGNITO_USER_POOL_ID }}
+      AWS_COGNITO_CLIENT_ID: ${{ vars.AWS_COGNITO_CLIENT_ID }}
+      AWS_COGNITO_CLIENT_SECRET: ${{ secrets.AWS_COGNITO_CLIENT_SECRET }}
+      AUTH_VALID_CREDENTIALS: ${{ vars.AUTH_VALID_CREDENTIALS }}
 
     steps:
 

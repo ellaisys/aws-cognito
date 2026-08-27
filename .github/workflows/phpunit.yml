@@ -23,7 +23,6 @@ on:
   # Allow the workflow to be triggered manually from GitHub Actions
   workflow_dispatch:
 
-
 # ---------------------------------------------------------------------------
 # Jobs
 # ---------------------------------------------------------------------------
@@ -55,6 +54,7 @@ jobs:
       AWS_COGNITO_USER_POOL_ID: ${{ vars.AWS_COGNITO_USER_POOL_ID }}
       AWS_COGNITO_CLIENT_ID: ${{ vars.AWS_COGNITO_CLIENT_ID }}
       AWS_COGNITO_CLIENT_SECRET: ${{ secrets.AWS_COGNITO_CLIENT_SECRET }}
+      AUTH_VALID_CREDENTIALS: ${{ vars.AUTH_VALID_CREDENTIALS }}
 
     steps:
 
