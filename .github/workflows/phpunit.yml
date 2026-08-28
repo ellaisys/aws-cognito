@@ -149,11 +149,8 @@ jobs:
         run: |
           mkdir -p build/reports
 
-          cp workbench/.env.example workbench/.env
-
           vendor/bin/phpunit \
-            --exclude-group=make-command \
-            --log-junit build/reports/junit.xml
+            --exclude-group=make-command
 
       # ----------------------------------------------------------
       # Preserve PHPUnit Report
