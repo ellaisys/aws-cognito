@@ -25,6 +25,7 @@ on:
 
 permissions:
   contents: read
+  code-quality: write
 
 # ---------------------------------------------------------------------------
 # Jobs
@@ -119,6 +120,9 @@ jobs:
           vendor/bin/phpunit \
             --exclude-group=make-command \
             --coverage-clover build/coverage/coverage.xml \
+            --coverage-cobertura build/coverage/cobertura.xml \
+            --coverage-html build/coverage/html \
+            --coverage-text build/coverage/coverage.txt \
             --log-junit build/reports/junit.xml
 
       # ----------------------------------------------------------
@@ -146,3 +150,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # ----------------------------------------------------------
+      # Upload results to GitHub Code Quality - Code Coverage
+      # ----------------------------------------------------------
+      - name: Upload coverage report
+        uses: actions/upload-code-coverage@v1
+        with:
+          file: build/coverage/coverage.xml
+          language: PHP
+          label: code-coverage/phpunit
