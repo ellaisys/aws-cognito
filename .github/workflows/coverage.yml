@@ -145,6 +145,8 @@ jobs:
       # Upload results to SonarCloud
       # ----------------------------------------------------------
       - name: SonarCloud Scan
+        id: sonar-cloud-scan
+        background: true
         uses: SonarSource/sonarqube-scan-action@v7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
@@ -154,6 +156,7 @@ jobs:
       # Upload results to GitHub Code Quality - Code Coverage
       # ----------------------------------------------------------
       - name: Upload coverage report
+        id: github-code-quality
         uses: actions/upload-code-coverage@v1
         with:
           file: build/coverage/cobertura.xml
