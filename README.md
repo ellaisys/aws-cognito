@@ -18,6 +18,9 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)&#160;
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
 
+[![PHPUnit Tests](https://github.com/ellaisys/aws-cognito/actions/workflows/phpunit.yml/badge.svg)](https://github.com/ellaisys/aws-cognito/actions/workflows/phpunit.yml)
+[![Code Coverage](https://github.com/ellaisys/aws-cognito/actions/workflows/coverage.yml/badge.svg)](https://github.com/ellaisys/aws-cognito/actions/workflows/coverage.yml)
+
 
 ## Contents
 
