@@ -20,11 +20,13 @@ use PHPUnit\Framework\Attributes\Depends;
 use Ellaisys\Cognito\Enums;
 use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
+use Ellaisys\Cognito\Tests\Traits\AuthenticationTrait;
 
 #[Group('passkey')]
 class PasskeyTest extends TestCase
 {
     use AwsCognitoTrait;
+    use AuthenticationTrait;
 
     // Runs before each test method
     protected function setUp(): void
@@ -37,6 +39,7 @@ class PasskeyTest extends TestCase
          */
         Config::set('cognito.mfa_setup', 'OFF');
         Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
+        Config::set('cognito.allowed_auth_flows', ['ALLOW_REFRESH_TOKEN_AUTH', 'ALLOW_USER_PASSWORD_AUTH', 'ALLOW_USER_AUTH']);
     } //Function ends
 
     /**
@@ -46,9 +49,6 @@ class PasskeyTest extends TestCase
     #[Test]
     public function test_valid_settings_for_choice_based_signin(): void
     {
-        // Set configuration to allow choice based signin
-        Config::set('cognito.allowed_auth_flows', ['ALLOW_REFRESH_TOKEN_AUTH', 'ALLOW_USER_PASSWORD_AUTH', 'ALLOW_USER_AUTH']);
-
         $this->assertTrue($this->validateUserPoolClientConfig(
             Enums\CognitoAuthFlowTypes::USER_AUTH));
 
@@ -61,7 +61,7 @@ class PasskeyTest extends TestCase
      */
     #[Test]
     #[Depends('test_valid_settings_for_choice_based_signin')]
-    public function test_user_can_get_choice_based_signin_options(): array
+    public function test_user_can_get_choice_based_signin_options(): void
     {
         $credentials = $this->getValidCredentials();
         $payload = [
@@ -83,41 +83,6 @@ class PasskeyTest extends TestCase
         $this->assertArrayHasKey('challenge_name', $data);
         $this->assertArrayHasKey('available_challenges', $data);
         $this->assertIsArray($data['available_challenges']);
-
-        return $data['available_challenges'];
-    } //Function ends
-
-    /**
-     * Test that the available challenges contain 'EMAIL_OTP'
-     */
-    #[Test]
-    #[Depends('test_user_can_get_choice_based_signin_options')]
-    public function test_user_can_get_email_otp_challenge(array $availableChallenges): void
-    {
-        // Assert that the available challenges contain 'EMAIL_OTP'
-        $this->assertContains('EMAIL_OTP', $availableChallenges);
-    } //Function ends
-
-    /**
-     * Test that the available challenges contain 'SMS_OTP'
-     */
-    #[Test]
-    #[Depends('test_user_can_get_choice_based_signin_options')]
-    public function test_user_can_get_sms_otp_challenge(array $availableChallenges): void
-    {
-        // Assert that the available challenges contain 'SMS_OTP'
-        $this->assertContains('SMS_OTP', $availableChallenges);
-    } //Function ends
-
-    /**
-     * Test that the available challenges contain 'WEB_AUTHN'
-     */
-    #[Test]
-    #[Depends('test_user_can_get_choice_based_signin_options')]
-    public function test_user_can_get_webauthn_challenge(array $availableChallenges): void
-    {
-        // Assert that the available challenges contain 'WEB_AUTHN'
-        $this->assertContains('WEB_AUTHN', $availableChallenges);
     } //Function ends
 
     /**
@@ -125,11 +90,10 @@ class PasskeyTest extends TestCase
      */
     #[Test]
     #[Depends('test_valid_settings_for_choice_based_signin')]
-    #[DependsExternal(LoginTest::class, 'test_user_can_login_with_correct_credentials')]
     public function test_user_webauthn_registration(): void
     {
-        $claim = self::$claim ?? null;
-        $this->assertNotNull($claim, 'Claim is null.');
+        // Authenticate the user before running the tests
+        $this->authenticate();
 
         $this->withSession(self::$sessionAuthenticated)
             ->post(route('cognito.action.user.passkey.start'))

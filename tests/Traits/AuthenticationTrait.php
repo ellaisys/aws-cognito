@@ -15,10 +15,39 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\DependsExternal;
 
+use Ellaisys\Cognito\Enums;
+
 use Exception;
 
 trait AuthenticationTrait
 {
+    /**
+     * Authenticate the user using valid credentials.
+     */
+    public function authenticate(): void
+    {
+        $this->validateUserPoolClientConfig(
+            Enums\CognitoAuthFlowTypes::USER_PASSWORD_AUTH);
+
+        // Get valid credentials for the user
+        $credentials = $this->getValidCredentials();
+        $payload = [
+            'username' => $credentials['email'] ?? '',
+            'password' => $credentials['password'] ?? '',
+        ];
+        $this->post(route('cognito.action.login.submit'), $payload);
+
+        // Assert that the user is authenticated
+        $this->assertAuthenticated();
+
+        if (session()->has('claim')) {
+            self::$sessionAuthenticated = session()->all();
+            self::$claim = session('claim');
+        } //End if
+
+        $this->assertClaimIsValid();
+    } //Function ends
+
     /**
      * Test that the claim is valid after a successful login.
      */
