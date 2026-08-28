@@ -122,7 +122,6 @@ jobs:
             --coverage-clover build/coverage/coverage.xml \
             --coverage-cobertura build/coverage/cobertura.xml \
             --coverage-html build/coverage/html \
-            --coverage-text build/coverage/coverage.txt \
             --log-junit build/reports/junit.xml
 
       # ----------------------------------------------------------
@@ -157,6 +156,6 @@ jobs:
       - name: Upload coverage report
         uses: actions/upload-code-coverage@v1
         with:
-          file: build/coverage/coverage.xml
+          file: build/coverage/cobertura.xml
           language: PHP
           label: code-coverage/phpunit
