@@ -14,13 +14,6 @@
 [![GitHub Contributors](https://img.shields.io/github/contributors-anon/ellaisys/aws-cognito?style=flat&logo=github&logoColor=whitesmoke&label=Contributors)](https://github.com/ellaisys/aws-cognito/graphs/contributors?all=1)&#160;
 [![APM](https://img.shields.io/packagist/l/ellaisys/aws-cognito?style=flat-square&logo=github&logoColor=whitesmoke&label=License)](LICENSE.md)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)&#160;
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)&#160;
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
-
-[![PHPUnit Tests](https://github.com/ellaisys/aws-cognito/actions/workflows/phpunit.yml/badge.svg)](https://github.com/ellaisys/aws-cognito/actions/workflows/phpunit.yml)
-[![Code Coverage](https://github.com/ellaisys/aws-cognito/actions/workflows/coverage.yml/badge.svg)](https://github.com/ellaisys/aws-cognito/actions/workflows/coverage.yml)
-
 
 ## Contents
 
@@ -31,8 +24,6 @@
 - [Architecture and Design](#architecture-and-design)
 - [Installation](#installation)
 - [Quick Start & Configurations](./docs/README_CONFIG.md#contents)
-- [References](#references)
-- [Usage](#usage)
 - [Code Quality](#code-quality)
 - [Changelog](#changelog)
 - [Security](#security)
@@ -138,8 +129,26 @@ php artisan cognito:install
 ## Code Quality
 
 This project follows secure coding and quality assurance practices throughout its development lifecycle. Automated PHPUnit tests are used to validate functionality, detect regressions, and ensure the reliability of the codebase. Test coverage is also measured to help identify areas that require additional testing.
+<div align="center" markdown="1">
+
+[![PHPUnit Tests](https://github.com/ellaisys/aws-cognito/actions/workflows/phpunit.yml/badge.svg)](https://github.com/ellaisys/aws-cognito/actions/workflows/phpunit.yml)
+[![Code Coverage](https://github.com/ellaisys/aws-cognito/actions/workflows/coverage.yml/badge.svg)](https://github.com/ellaisys/aws-cognito/actions/workflows/coverage.yml)
+
+</div>
 
 Static analysis and code quality checks are performed using SonarCloud to identify potential bugs, vulnerabilities, security issues, maintainability concerns, and code smells.
+
+<div align="center" markdown="1">
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)&#160;
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)&#160;
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
+
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=ellaisys_aws-cognito&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=ellaisys_aws-cognito)
+
+</div>
 
 Together, automated testing, code coverage analysis, static analysis, and code review help maintain the quality, reliability, maintainability, and security of the project.
 
