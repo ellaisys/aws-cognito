@@ -9,9 +9,14 @@ use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\DependsExternal;
 
 use Ellaisys\Cognito\Tests\TestCase;
+use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
+use Ellaisys\Cognito\Tests\Traits\AuthenticationTrait;
 
 class InviteUserTest extends TestCase
 {
+    use AwsCognitoTrait;
+    use AuthenticationTrait;
+
     private array $user;
 
     // Runs BEFORE every individual test method
@@ -34,13 +39,15 @@ class InviteUserTest extends TestCase
             'name' => $name,
             'email' => $email
         ];
+
+        // Authenticate the user before running the tests
+        $this->authenticate();
     } //Function ends
 
     /**
      * Test that the invitation page is accessible.
      */
     #[Test]
-    #[DependsExternal(LoginTest::class, 'test_user_can_login_with_correct_credentials')]
     public function test_web_invitation_page(): void
     {
         $this->withSession(self::$sessionAuthenticated)
@@ -55,7 +62,6 @@ class InviteUserTest extends TestCase
      */
     #[Test]
     #[Depends('test_web_invitation_page')]
-    #[DependsExternal(LoginTest::class, 'test_user_can_login_with_correct_credentials')]
     public function test_web_invitation_action_without_phone_and_password(): void
     {
         $this->withSession(self::$sessionAuthenticated)
