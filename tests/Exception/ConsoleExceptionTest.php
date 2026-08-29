@@ -16,33 +16,33 @@ use PHPUnit\Framework\Attributes\Test;
 use Ellaisys\Cognito\Tests\TestCase;
 
 use Exception;
-use Ellaisys\Cognito\Exceptions\DBConnectionException;
+use Ellaisys\Cognito\Exceptions\ConsoleException;
 
-class DBConnectionExceptionTest extends TestCase
+class ConsoleExceptionTest extends TestCase
 {
     /**
-     * Test that the DBConnectionException initializes with default values.
+     * Test that the ConsoleException initializes with default values.
      */
     #[Test]
     public function test_it_initializes_with_defaults(): void
     {
-        $exception = new DBConnectionException();
+        $exception = new ConsoleException();
 
-        $this->assertSame('Database Connection Error', $exception->getMessage());
-        $this->assertSame(400, $exception->getCode());
+        $this->assertSame('Console command failed', $exception->getMessage());
+        $this->assertSame(0, $exception->getCode());
     } //Function ends
 
     /**
-     * Test that the DBConnectionException initializes with custom values and previous exception.
+     * Test that the ConsoleException initializes with custom values and previous exception.
      */
     #[Test]
     public function test_it_initializes_with_custom_values_and_previous_exception(): void
     {
         $previous = new Exception('Root cause');
-        $exception = new DBConnectionException('Unable to connect', $previous, 503);
+        $exception = new ConsoleException('Unable to connect', $previous, 503);
 
         $this->assertSame('Unable to connect', $exception->getMessage());
         $this->assertSame(503, $exception->getCode());
         $this->assertSame($previous, $exception->getPrevious());
     } //Function ends
-}
+} // Class ends

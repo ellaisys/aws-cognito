@@ -1,7 +1,17 @@
 <?php
 
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Ellaisys\Cognito\Tests\Exception;
 
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use Ellaisys\Cognito\Tests\TestCase;
@@ -12,6 +22,10 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class AwsCognitoExceptionTest extends TestCase
 {
+    /**
+     * Test that the AwsCognitoException maps AWS error codes correctly.
+     */
+    #[Test]
     #[DataProvider('AwsErrorCodeProvider')]
     public function test_it_maps_aws_error_codes(string $awsErrorCode, string $expectedCode): void
     {
@@ -22,8 +36,12 @@ class AwsCognitoExceptionTest extends TestCase
 
         $this->assertSame($expectedCode, $exception->getMessage());
         $this->assertSame(400, $exception->getStatusCode());
-    }
+    } //Function ends
 
+    /**
+     * Test that the AwsCognitoException can be created using the factory constructor.
+     */
+    #[Test]
     public function test_it_uses_factory_constructor(): void
     {
         $previous = $this->createMock(CognitoIdentityProviderException::class);
@@ -34,8 +52,11 @@ class AwsCognitoExceptionTest extends TestCase
         $this->assertSame(AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED, $exception->getMessage());
         $this->assertSame(400, $exception->getStatusCode());
         $this->assertSame($previous, $exception->getPrevious());
-    }
+    } //Function ends
 
+    /**
+     * Data provider for test_it_maps_aws_error_codes_correctly
+     */
     public static function AwsErrorCodeProvider(): array
     {
         return [
@@ -56,5 +77,5 @@ class AwsCognitoExceptionTest extends TestCase
             'resource not found' => ['ResourceNotFoundException', 'ResourceNotFoundException'],
             'internal error' => ['InternalErrorException', 'InternalErrorException']
         ];
-    }
-}
+    } //Function ends
+} // Class ends
