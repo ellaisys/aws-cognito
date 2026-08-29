@@ -42,6 +42,11 @@
         <include>
             <directory suffix=".php">src/</directory>
         </include>
+        <exclude>
+            <directory suffix=".php">src/Concerns</directory>
+            <directory suffix=".php">src/contracts</directory>
+            <directory suffix=".php">src/Providers</directory>
+        </exclude>
     </source>
 
     <logging>
