@@ -32,7 +32,6 @@ use Ellaisys\Cognito\Guards\Traits\CognitoMFA;
 use Exception;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
-use Ellaisys\Cognito\Exceptions\InvalidUserModelException;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;

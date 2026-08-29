@@ -26,7 +26,6 @@ use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
-use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**

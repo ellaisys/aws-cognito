@@ -418,7 +418,7 @@ App\Models\User::class
 
 The `cognito_user_fields` option defines which user attributes are synchronized with AWS Cognito during registration.
 
-Any attribute listed in this configuration must also be included in the registration request. If a configured attribute is missing, the package will throw an `InvalidUserFieldException` and the registration will fail.
+Any attribute listed in this configuration must also be included in the registration request. If a configured attribute is missing, the package will throw an `HttpException` and the registration will fail.
 
 If your application stores additional profile information, such as `firstname` or `lastname`, include those attributes in `cognito_user_fields`. Otherwise, they will only exist in the local application database and will not be available to other applications participating in SSO.
 

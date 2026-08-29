@@ -29,7 +29,6 @@ use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\NoTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
-use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 

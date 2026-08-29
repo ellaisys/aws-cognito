@@ -26,7 +26,6 @@ use Ellaisys\Cognito\Events\Auth\PostRegistrationEvent;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
-use Ellaisys\Cognito\Exceptions\InvalidUserFieldException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -159,7 +158,7 @@ trait RegistersUsers
      *
      * @param  \Illuminate\Support\Collection  $request
      * @return \Illuminate\Http\Response
-     * @throws InvalidUserFieldException
+     * @throws HttpException
      */
     public function createCognitoUser(Collection $request,
         ?array $clientMetadata = null, ?string $groupname = null)

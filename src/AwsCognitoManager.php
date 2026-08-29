@@ -17,7 +17,6 @@ use Ellaisys\Cognito\Providers\StorageProvider;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
-use Ellaisys\Cognito\Exceptions\TokenBlacklistedException;
 
 class AwsCognitoManager
 {
