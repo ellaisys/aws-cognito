@@ -54,6 +54,12 @@ class ApiRoutesTest extends TestCase
     private function getApiPath(string $path): string
     {
         $prefix = trim((string) config('cognito.api_prefix', 'cognito'), '/');
-        return '/api/' . $prefix . '/' . ltrim($path, '/');
+        $endpointPath = ltrim($path, '/');
+
+        if ($prefix === '') {
+            return '/api/' . $endpointPath;
+        } //End if
+
+        return '/api/' . $prefix . '/' . $endpointPath;
     } //Function ends
 } //Class ends
