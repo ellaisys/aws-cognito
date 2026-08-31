@@ -20,35 +20,74 @@ use Ellaisys\Cognito\Tests\TestCase;
 class ApiRoutesTest extends TestCase
 {
     #[Test]
-    public function test_forgot_password_endpoint_validates_email_payload(): void
+    public function test_public_api_routes_validate_missing_payloads(): void
     {
-        $this->postJson($this->getApiPath('/password/forgot'), [])
-            ->assertStatus(422)
-            ->assertJsonFragment(['status' => 'error']);
+        $routes = [
+            '/register',
+            '/register/verify',
+            '/register/resend-code',
+            '/login',
+            '/login/srp',
+            '/login/challenge',
+            '/login/passkey/challenge',
+            '/token/revalidate',
+            '/password/forgot',
+            '/password/reset',
+        ];
+
+        foreach ($routes as $route) {
+            $this->postJson($this->getApiPath($route), [])
+                ->assertStatus(422)
+                ->assertJsonFragment(['status' => 'error']);
+        } //Loop ends
     } //Function ends
 
     #[Test]
-    public function test_revalidate_token_endpoint_validates_required_payload(): void
+    public function test_public_api_get_passkey_routes_validate_missing_payloads(): void
     {
-        $this->postJson($this->getApiPath('/token/revalidate'), [])
-            ->assertStatus(422)
-            ->assertJsonFragment(['status' => 'error']);
+        $routes = [
+            '/login/passkey/challenge',
+            '/login/passkey/challenge/PASSWORD_SRP',
+        ];
+
+        foreach ($routes as $route) {
+            $this->getJson($this->getApiPath($route))
+                ->assertStatus(422)
+                ->assertJsonFragment(['status' => 'error']);
+        } //Loop ends
     } //Function ends
 
     #[Test]
-    public function test_user_profile_endpoint_requires_authentication(): void
+    public function test_protected_api_routes_require_authentication(): void
     {
-        $this->getJson($this->getApiPath('/user/profile'))
-            ->assertStatus(401)
-            ->assertJsonFragment(['status' => 'error']);
-    } //Function ends
+        $routes = [
+            ['method' => 'get', 'path' => '/user/profile'],
+            ['method' => 'post', 'path' => '/user/invite'],
+            ['method' => 'post', 'path' => '/user/changepassword'],
+            ['method' => 'get', 'path' => '/user/mfa/activate'],
+            ['method' => 'post', 'path' => '/user/mfa/activate/000000'],
+            ['method' => 'post', 'path' => '/user/mfa/deactivate'],
+            ['method' => 'post', 'path' => '/user/mfa/enable'],
+            ['method' => 'post', 'path' => '/user/mfa/disable'],
+            ['method' => 'get', 'path' => '/user/passkey/start'],
+            ['method' => 'post', 'path' => '/user/passkey/complete'],
+            ['method' => 'delete', 'path' => '/user/passkey'],
+            ['method' => 'put', 'path' => '/logout'],
+            ['method' => 'put', 'path' => '/logout/forced'],
+            ['method' => 'post', 'path' => '/mfa/enable'],
+            ['method' => 'post', 'path' => '/mfa/disable'],
+            ['method' => 'post', 'path' => '/token/refresh'],
+            ['method' => 'get', 'path' => '/device'],
+            ['method' => 'post', 'path' => '/device'],
+            ['method' => 'put', 'path' => '/device/device-key'],
+            ['method' => 'delete', 'path' => '/device/device-key'],
+        ];
 
-    #[Test]
-    public function test_device_list_endpoint_requires_authentication(): void
-    {
-        $this->getJson($this->getApiPath('/device'))
-            ->assertStatus(401)
-            ->assertJsonFragment(['status' => 'error']);
+        foreach ($routes as $route) {
+            $this->json($route['method'], $this->getApiPath($route['path']))
+                ->assertStatus(401)
+                ->assertJsonFragment(['status' => 'error']);
+        } //Loop ends
     } //Function ends
 
     private function getApiPath(string $path): string
