@@ -1,7 +1,7 @@
 # AWS Cognito Laravel Package Changelog
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-07-31<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-08-31<!-- /AUTO:last_updated -->
 
 ## [Release 52 (tag v2.0.8)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.8) - 2026-08-31
 - Feat: Issue [#133](https://github.com/ellaisys/aws-cognito/issues/133) Resolved minor bugs and improved code stability.
