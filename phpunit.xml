@@ -17,6 +17,9 @@
         <testsuite name="Feature">
             <directory suffix="Test.php">./tests/Feature</directory>
         </testsuite>
+        <testsuite name="API">
+            <directory suffix="Test.php">./tests/Feature/API</directory>
+        </testsuite>
         <testsuite name="Exception">
             <directory suffix="Test.php">./tests/Exception</directory>
         </testsuite>
