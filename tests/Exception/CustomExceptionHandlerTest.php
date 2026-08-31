@@ -11,6 +11,7 @@
 
 namespace Ellaisys\Cognito\Tests\Exception;
 
+use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
 use Ellaisys\Cognito\Exceptions\NoTokenException;
@@ -149,6 +150,51 @@ class CustomExceptionHandlerTest extends TestCase
         $response->assertJson([
             'message' => 'Data validation error',
         ]);
+    } // Function ends
+
+    /**
+     * Test AWS Cognito exceptions.
+     */
+    #[Test]
+    #[DataProvider('awsCognitoExceptionProvider')]
+    public function test_aws_cognito_exception_returns_expected_response(
+        string $message, int $expectedStatusCode, string $expectedMessage): void
+    {
+        $exception = new AwsCognitoException($message, null, [], $expectedStatusCode);
+
+        Route::get('/test-exception', function () use ($exception) {
+            throw $exception;
+        });
+
+        $response = $this->getJson('/test-exception');
+
+        $response->assertStatus($expectedStatusCode);
+    } // Function ends
+
+    /**
+     * Data provider for AWS Cognito exceptions.
+     */
+    public static function awsCognitoExceptionProvider(): array
+    {
+        return [
+            'default cognito exception' => [
+                'Some Cognito error',
+                Response::HTTP_BAD_REQUEST,
+                'Some Cognito error',
+            ],
+
+            'web auth invalid' => [
+                AwsCognitoException::COGNITO_WEB_AUTH_INVALID,
+                Response::HTTP_UNAUTHORIZED,
+                AwsCognitoException::COGNITO_WEB_AUTH_INVALID,
+            ],
+
+            'user unauthorized' => [
+                AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED,
+                Response::HTTP_UNAUTHORIZED,
+                AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED,
+            ],
+        ];
     } // Function ends
 
     /**
