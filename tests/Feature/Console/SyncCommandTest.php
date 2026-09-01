@@ -54,6 +54,41 @@ class SyncCommandTest extends TestCase
             'pool' => ['cognito:sync --aws-to-local --pool'],
             'client' => ['cognito:sync --aws-to-local --client'],
             'mfa' => ['cognito:sync --aws-to-local --mfa'],
+            'pool-local' => ['cognito:sync --local-to-aws --pool']
+        ];
+    } //Function ends
+
+    /**
+     * Test the sync command without options expecting failure.
+     */
+    #[Test]
+    #[DataProvider('listFailureCommandsProvider')]
+    public function test_sync_commands_without_options(string $command): void
+    {
+        try {
+            // Run the command without any options
+            $this->artisan($command)
+                ->assertExitCode(Command::FAILURE);
+
+        } catch (\Throwable $e) {
+            // Handle any exceptions that occur during bootstrapping
+            $this->fail($e->getMessage());
+        }
+    } //Function ends
+
+    /**
+     * Data provider for test_sync_commands_without_options.
+     *
+     * @return array
+     */
+    public static function listFailureCommandsProvider(): array
+    {
+        return [
+            'no options' => ['cognito:sync'],
+            'wrong pool' => ['cognito:sync --aws-to-local --pool --pool-id=wrong'],
+            'wrong client' => ['cognito:sync --aws-to-local --client --client-id=wrong'],
+            'wrong mfa' => ['cognito:sync --aws-to-local --mfa --pool-id=wrong'],
+            'wrong local to aws pool' => ['cognito:sync --local-to-aws --pool --pool-id=wrong'],
         ];
     } //Function ends
 
