@@ -11,6 +11,9 @@
 
 namespace Ellaisys\Cognito\Tests\Exception;
 
+use Mockery;
+use App\Models\User;
+use Throwable;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Ellaisys\Cognito\Exceptions\InvalidTokenException;
 use Ellaisys\Cognito\Exceptions\InvalidUserException;
@@ -34,6 +37,9 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
+use Aws\Command;
+use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
+
 class CustomExceptionHandlerTest extends TestCase
 {
     /**
@@ -42,10 +48,9 @@ class CustomExceptionHandlerTest extends TestCase
     #[Test]
     #[DataProvider('jsonExceptionProvider')]
     public function test_exception_returns_expected_json_response(
-        \Throwable $exception,
-        int $expectedStatusCode,
-        string $expectedMessage
-    ): void {
+        Throwable $exception, int $expectedStatusCode,
+        string $expectedMessage): void
+    {
         Route::get('/test-exception', function () use ($exception) {
             throw $exception;
         });
@@ -64,6 +69,8 @@ class CustomExceptionHandlerTest extends TestCase
      */
     public static function jsonExceptionProvider(): array
     {
+        $modelNotFound = new ModelNotFoundException();
+
         return [
             'not found' => [
                 new NotFoundHttpException('Not Found'),
@@ -120,7 +127,7 @@ class CustomExceptionHandlerTest extends TestCase
             ],
 
             'model not found' => [
-                new ModelNotFoundException(),
+                $modelNotFound,
                 Response::HTTP_BAD_REQUEST,
                 '',
             ],
@@ -158,9 +165,10 @@ class CustomExceptionHandlerTest extends TestCase
     #[Test]
     #[DataProvider('awsCognitoExceptionProvider')]
     public function test_aws_cognito_exception_returns_expected_response(
-        string $message, int $expectedStatusCode, string $expectedMessage): void
+        string $message, int $expectedStatusCode, string $expectedMessage,
+        ?Throwable $previous = null): void
     {
-        $exception = new AwsCognitoException($message, null, [], $expectedStatusCode);
+        $exception = new AwsCognitoException($message, $previous, [], $expectedStatusCode);
 
         Route::get('/test-exception', function () use ($exception) {
             throw $exception;
@@ -176,24 +184,37 @@ class CustomExceptionHandlerTest extends TestCase
      */
     public static function awsCognitoExceptionProvider(): array
     {
+        $previous = new CognitoIdentityProviderException(
+            'Incorrect username or password.',
+            new Command('InitiateAuth'),
+            [
+                'code' => 'NotAuthorizedException',
+                'message' => 'Incorrect username or password.',
+            ]
+        );
+
         return [
             'default cognito exception' => [
                 'Some Cognito error',
                 Response::HTTP_BAD_REQUEST,
                 'Some Cognito error',
+                null,
             ],
 
             'web auth invalid' => [
                 AwsCognitoException::COGNITO_WEB_AUTH_INVALID,
                 Response::HTTP_UNAUTHORIZED,
                 AwsCognitoException::COGNITO_WEB_AUTH_INVALID,
+                null,
             ],
 
             'user unauthorized' => [
                 AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED,
                 Response::HTTP_UNAUTHORIZED,
                 AwsCognitoException::COGNITO_AUTH_USER_UNAUTHORIZED,
+                $previous,
             ],
+
         ];
     } // Function ends
 
@@ -335,4 +356,5 @@ class CustomExceptionHandlerTest extends TestCase
                     && array_key_exists('ip', $context);
             });
     } // Function ends
+
 } // Class ends
