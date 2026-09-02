@@ -85,6 +85,15 @@ class SyncCommand extends Command
                 throw new ConsoleException('Provide at least one option: --local-to-aws or --aws-to-local');
             } //End if
 
+            // Check if options are provided
+            $needles = ['pool', 'client', 'mfa'];
+            $haystack = array_filter($this->options());
+            if (empty(array_intersect($needles, array_keys($haystack)))) {
+                $this->input->setOption('pool', true);
+                $this->input->setOption('client', true);
+                $this->input->setOption('mfa', true);
+            } //End if
+
             $this->newLine();
             $this->info('Sync the configurations.');
             $this->newLine();
@@ -123,7 +132,7 @@ class SyncCommand extends Command
         $returnValue = Command::SUCCESS;
 
         try {
-            if ($this->option('pool')) {
+            if ( $this->option('pool')) {
                 $this->newLine();
                 $this->info('Fetching user pool configuration...');
                 $returnValue = $this->getUserPoolConfigUpdEnv();
