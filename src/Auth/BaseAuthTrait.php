@@ -440,4 +440,33 @@ trait BaseAuthTrait
         } //Try-catch ends
     } //Function ends
 
+    /**
+     * Check if phone number is allowed based on the configuration and MFA settings
+     *
+     * @return bool
+     */
+    protected function isPhoneNumberAllowed(): bool
+    {
+        try {
+            //Initialize variables
+            $returnValue = false;
+
+            // Get the initial value from the configuration
+            $returnValue = config('cognito.allow_phone_number', false);
+
+            // Update the return value based on MFA
+            $listMfaTypes = config('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
+            $returnValue = $returnValue ?? (config('cognito.mfa_setup') !== 'OFF' && in_array('SMS_MFA', $listMfaTypes));
+
+            // Update the return value based delivery mediums
+            $deliveryMediums = config('cognito.add_user_delivery_mediums', 'BOTH');
+            $returnValue = $returnValue ?? in_array($deliveryMediums, ['SMS', 'BOTH']);
+
+            return $returnValue;
+        } catch (Exception $exception) {
+            Log::error('BaseAuthTrait:isPhoneNumberAllowed:Exception');
+            throw $exception;
+        } //Try-catch ends
+    } //Function ends
+
 } //End trait

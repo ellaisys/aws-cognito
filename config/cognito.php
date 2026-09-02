@@ -138,7 +138,7 @@ return [
         'nickname' => null,
         'preferred_username' => null,
         'email' => 'email', //Do Not set this parameter to null
-        'phone_number' => $allowPhoneNumber ? 'phone' : null,
+        'phone_number' => 'phone',
         'gender' => null,
         'birthdate' => null,
         'locale' => null
@@ -155,6 +155,17 @@ return [
     |
     */
     'user_subject_uuid' => env('AWS_COGNITO_USER_SUBJECT_UUID', 'sub'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allow Phone Number
+    |--------------------------------------------------------------------------
+    |
+    | This option controls whether phone numbers are allowed for Cognito users.
+    | Set this to true to allow phone numbers, or false to disallow them.
+    |
+    */
+    'allow_phone_number' => (bool) env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false),
 
     /*
     |--------------------------------------------------------------------------

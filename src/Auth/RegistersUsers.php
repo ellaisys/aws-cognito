@@ -376,7 +376,6 @@ trait RegistersUsers
                             break;
 
                         case 'phone_number':
-                            $rules = array_merge($rules, [ $value => 'required|regex:/^\+[1-9]\d{1,14}$/']);
                             break;
                         
                         default:
@@ -389,13 +388,13 @@ trait RegistersUsers
             //Check the new user password config
             if (config('cognito.force_new_user_password', true)) {
                 $rules = array_merge($rules, [ $this->paramPassword => [
-                    'required', 'confirmed', 'regex:'.$this->passwordPolicy['regex']]]);
+                    'required', 'confirmed', 'regex:' . $this->passwordPolicy['regex']]]);
             } //End if
 
-            //Check the MFA setup config
-            $listMfaTypes = config('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
-            if ((config('cognito.mfa_setup')!="OFF") && (in_array('SMS_MFA', $listMfaTypes)) && empty($userFields['phone_number'])) {
-                throw new HttpException(400, 'ERROR_MFA_ENABLED_PHONE_MISSING');
+            //Check for mandatory phone number requirement
+            if ($this->isPhoneNumberAllowed()) {
+                $rules = array_merge($rules, [ $userFields['phone_number'] => [
+                    'required', 'regex:/^\+[1-9]\d{1,14}$/']]);
             } //End if
 
             return $rules;
