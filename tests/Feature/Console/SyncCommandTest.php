@@ -13,7 +13,6 @@ namespace Ellaisys\Cognito\Tests\Feature\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Foundation\Bootstrap\HandleExceptions;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Group;
