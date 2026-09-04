@@ -21,8 +21,7 @@ class RegistrationTest extends TestCase
         parent::setUp(); // Always good practice to call parent setup
 
         /**
-         * Override the configuration at runtime to disable MFA and set the
-         * MFA type to SOFTWARE_TOKEN_MFA
+         * Override the configuration at runtime
          */
         Config::set('cognito.registration_enabled', true);
         Config::set('cognito.allow_phone_number', false);

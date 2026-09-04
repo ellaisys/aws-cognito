@@ -29,6 +29,12 @@ use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
+enum RegistrationTypes: string
+{
+    case REGISTER = 'register';
+    case INVITE = 'invite';
+} // Enum ends
+
 trait RegistersUsers
 {
     use BaseAuthTrait;
@@ -36,7 +42,7 @@ trait RegistersUsers
     /**
      * Private variable for Registration Type
      */
-    private string $registrationType = 'register';
+    private RegistrationTypes $registrationType = RegistrationTypes::REGISTER;
 
     /**
      * private variable for password policy
@@ -64,7 +70,7 @@ trait RegistersUsers
      */
     public function invite(Request $request, ?array $clientMetadata = null): mixed
     {
-        $this->registrationType = 'invite';
+        $this->registrationType = RegistrationTypes::INVITE; 
         $this->redirectTo = config('cognito.routes.web.home_page');
         $this->messageKey = 'cognito::messages.auth.invitation_success';
 
@@ -89,7 +95,7 @@ trait RegistersUsers
             $user = null;
 
             //Redirect to verification page if registration type is register
-            if ($this->registrationType=='register') {
+            if ($this->registrationType==RegistrationTypes::REGISTER) {
                 if (!config('cognito.registration_enabled', true)) {
                     throw new HttpException(400, 'Registration is disabled.');
                 } //End if
@@ -125,7 +131,7 @@ trait RegistersUsers
             );
 
             if (!empty($cognitoRegistered)) {
-                $user = $this->createUserInDatastore($payload, $cognitoRegistered->toArray());
+                $user = $this->createUserInDatastore($payload, $cognitoRegistered);
             } else {
                 throw new AwsCognitoException('User registration failed in Cognito.');
             } //End if
@@ -157,12 +163,15 @@ trait RegistersUsers
      * Handle a registration request for the application.
      *
      * @param  \Illuminate\Support\Collection  $request
-     * @return \Illuminate\Http\Response
+     * @return array
      * @throws HttpException
      */
     public function createCognitoUser(Collection $request,
-        ?array $clientMetadata = null, ?string $groupname = null)
+        ?array $clientMetadata = null, ?string $groupname = null): array
     {
+        // Response object
+        $response = null;
+
         //Get the configuration for new user invitation message action.
         $messageAction = config('cognito.new_user_message_action', null);
 
@@ -178,27 +187,30 @@ trait RegistersUsers
             $password = $request->has($this->paramPassword)?$request[$this->paramPassword]:null;
         } // End if
 
-        if ($this->registrationType == 'invite') {
+        //Create AWS Cognito Client
+        $client = app()->make(AwsCognitoClient::class);
+
+        if ($this->registrationType == RegistrationTypes::INVITE) {
             //Invite User
-            return app()->make(AwsCognitoClient::class)->inviteUser(
+            $response = $client->inviteUser(
                 $request[$userKey], $password, $attributes,
                 $clientMetadata, $messageAction,
                 $groupname
             );
-        } elseif ($this->registrationType == 'register') {
+        } elseif ($this->registrationType == RegistrationTypes::REGISTER) {
             //Password is required for register
             if (empty($password)) {
                 $password = $this->generateRandomPassword();
             } //End if
 
             //Register User
-            return app()->make(AwsCognitoClient::class)->register(
+            $response = $client->register(
                 $request[$userKey], $password, $attributes,
                 $clientMetadata, $groupname
             );
-        } else {
-            throw new HttpException(400, 'Invalid registration type.');
         } //End if
+
+        return $response ? $response->toArray() : [];
     } //Function ends
 
     /**
@@ -232,7 +244,8 @@ trait RegistersUsers
      * @param  array  $cognitoRegistered
      * @return array
      */
-    protected function createUserInDatastore(array $payload, array $cognitoRegistered): array
+    final public function createUserInDatastore(array $payload,
+        array $cognitoRegistered): array
     {
         try {
             //Get the user model
@@ -241,13 +254,16 @@ trait RegistersUsers
             //Set the register type and registered at fields
             if (method_exists($model, 'hasRegistrationTrait')) {
                 $payload = array_merge($payload, [
-                    'register_type' => $this->registrationType,
+                    'register_type' => $this->registrationType->value,
                     'registered_at' => now(),
                 ]);
             } //End if
 
             //Build the local user data by adding the cognito registered data to it
-            $payload = array_merge($payload, $this->buildUserPayloadForDatastore($payload, $cognitoRegistered));
+            $payload = array_merge(
+                $payload, $this->buildUserPayloadForDatastore(
+                    $payload, $cognitoRegistered)
+                );
 
             //Create the user in local database
             $user = $model::create($payload);
@@ -265,32 +281,28 @@ trait RegistersUsers
      * @param array $cognitoRegistered
      * @return array
      */
-    private function buildUserPayloadForDatastore(array $payload, array $cognitoRegistered): array
+    private function buildUserPayloadForDatastore(array $payload,
+        array $cognitoRegistered): array
     {
-        try {
-            //Remove the password
-            if(!empty($payload[$this->paramPassword])) {
-                unset($payload[$this->paramPassword]);
-            } //End if
+        //Remove the password
+        if(!empty($payload[$this->paramPassword])) {
+            unset($payload[$this->paramPassword]);
+        } //End if
 
-            //Add cognito data to user data
-            if ($this->registrationType=='invite') {
-                $payload = array_merge(
-                        $payload,
-                        $this->buildInvitePayloadForDatastore($payload, $cognitoRegistered)
-                    );
-            } else {
-                $payload = array_merge(
-                        $payload,
-                        $this->buildRegisterPayloadForDatastore($payload, $cognitoRegistered)
-                    );
-            } //End if
+        //Add cognito data to user data
+        if ($this->registrationType==RegistrationTypes::INVITE) {
+            $payload = array_merge(
+                    $payload,
+                    $this->buildInvitePayloadForDatastore($payload, $cognitoRegistered)
+                );
+        } elseif ($this->registrationType==RegistrationTypes::REGISTER) {
+            $payload = array_merge(
+                    $payload,
+                    $this->buildRegisterPayloadForDatastore($payload, $cognitoRegistered)
+                );
+        } //End if
 
-            return $payload;
-        } catch (Exception $e) {
-            Log::error('RegistersUsers:buildUserPayloadForDatastore:Exception');
-            throw $e;
-        } //End try
+        return $payload;
     } //Function ends
 
     /**
@@ -300,7 +312,8 @@ trait RegistersUsers
      * @param array $cognitoRegistered
      * @return array
      */
-    private function buildInvitePayloadForDatastore(array $payload, array $cognitoRegistered): array
+    private function buildInvitePayloadForDatastore(array $payload,
+        array $cognitoRegistered): array
     {
         if (!isset($cognitoRegistered['User'])) {
             return [];
@@ -342,7 +355,8 @@ trait RegistersUsers
      * @param array $cognitoRegistered
      * @return array
      */
-    private function buildRegisterPayloadForDatastore(array $payload, array $cognitoRegistered): array
+    private function buildRegisterPayloadForDatastore(array $payload,
+        array $cognitoRegistered): array
     {
         //Get the user model
         $model = Auth::getProvider()->getModel();
@@ -361,47 +375,42 @@ trait RegistersUsers
      *
      * @return array
      */
-    public function rulesRegisterUser()
+    public function rulesRegisterUser(): array
     {
         $rules=[];
 
-        try {
-            //Get the registeration fields
-            $userFields = config('cognito.cognito_user_fields');
-            foreach ($userFields as $key => $value) {
-                if ($value!=null) {
-                    switch ($key) {
-                        case 'email':
-                            $rules = array_merge($rules, [ $value => 'required|email']);
-                            break;
+        //Get the registeration fields
+        $userFields = config('cognito.cognito_user_fields');
+        foreach ($userFields as $key => $value) {
+            if ($value!=null) {
+                switch ($key) {
+                    case 'email':
+                        $rules = array_merge($rules, [ $value => 'required|email']);
+                        break;
 
-                        case 'phone_number':
-                            break;
-                        
-                        default:
-                            $rules = array_merge($rules, [ $value => 'required']);
-                            break;
-                    } //End switch
-                } //End if
-            } //Loop ends
-
-            //Check the new user password config
-            if (config('cognito.force_new_user_password', true)) {
-                $rules = array_merge($rules, [ $this->paramPassword => [
-                    'required', 'confirmed', 'regex:' . $this->passwordPolicy['regex']]]);
+                    case 'phone_number':
+                        break;
+                    
+                    default:
+                        $rules = array_merge($rules, [ $value => 'required']);
+                        break;
+                } //End switch
             } //End if
+        } //Loop ends
 
-            //Check for mandatory phone number requirement
-            if ($this->isPhoneNumberAllowed()) {
-                $rules = array_merge($rules, [ $userFields['phone_number'] => [
-                    'required', 'regex:/^\+[1-9]\d{1,14}$/']]);
-            } //End if
+        //Check the new user password config
+        if (config('cognito.force_new_user_password', true)) {
+            $rules = array_merge($rules, [ $this->paramPassword => [
+                'required', 'confirmed', 'regex:' . $this->passwordPolicy['regex']]]);
+        } //End if
 
-            return $rules;
-        } catch (Exception $e) {
-            Log::error('RegistersUsers:rulesRegisterUser:Exception');
-            throw $e;
-        } //End try
+        //Check for mandatory phone number requirement
+        if ($this->isPhoneNumberAllowed()) {
+            $rules = array_merge($rules, [ $userFields['phone_number'] => [
+                'required', 'regex:/^\+[1-9]\d{1,14}$/']]);
+        } //End if
+
+        return $rules;
     } //Function ends
 
     /**
@@ -414,7 +423,7 @@ trait RegistersUsers
     {
         //Raise pre registration event
         event(new PreRegistrationEvent(
-            $this->registrationType,
+            $this->registrationType->value,
             $request->except('password'),
             $request->ip()
         ));
@@ -431,7 +440,7 @@ trait RegistersUsers
     {
         //Raise post registration event
         event(new PostRegistrationEvent(
-            $this->registrationType,
+            $this->registrationType->value,
             $user,
             $request->except('password'),
             $request->ip()
