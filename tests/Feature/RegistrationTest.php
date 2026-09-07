@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Ellaisys\Cognito\Tests\Feature;
 
 use Illuminate\Support\Facades\Config;
@@ -10,7 +19,7 @@ use PHPUnit\Framework\Attributes\Depends;
 
 use Ellaisys\Cognito\Tests\TestCase;
 
-#[Group('web'), Group('register')]
+#[Group('web'), Group('register'), Group('feature')]
 class RegistrationTest extends TestCase
 {
     private array $user;
