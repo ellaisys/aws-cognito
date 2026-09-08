@@ -16,6 +16,7 @@ use Illuminate\Http\Response;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -26,6 +27,7 @@ use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
+#[Group('unit'), Group('service')]
 class JsonResponseServiceTest extends TestCase
 {
     private static array $payload = [
@@ -33,6 +35,9 @@ class JsonResponseServiceTest extends TestCase
         'email' => 'ellaisys+tb_register_tmp@gmail.com'
     ];
 
+    /**
+     * @var JsonResponseService
+     */
     private JsonResponseService $service;
 
     // Runs BEFORE every individual test method
