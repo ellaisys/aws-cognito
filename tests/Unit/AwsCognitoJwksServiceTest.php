@@ -85,4 +85,4 @@ class AwsCognitoJwksServiceTest extends TestCase
         $this->assertIsString($response, 'The downloadJwks method should return a string');
     } // Function ends
 
-} //Class end
+} // Class ends
