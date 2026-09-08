@@ -26,7 +26,7 @@ use Ellaisys\Cognito\Tests\Support\TestableInstallCommand;
 use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-#[Group('console'), Group('install-command')]
+#[Group('console'), Group('install-command'), Group('unit')]
 class InstallCommandUnitTest extends TestCase
 {
     /**
