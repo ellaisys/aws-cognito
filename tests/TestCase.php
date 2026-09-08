@@ -47,6 +47,10 @@ abstract class TestCase extends OrchestraTestCase
 
         // Automatically mock Vite for all feature tests
         $this->withoutVite();
+
+        if (! defined('LARAVEL_START')) {
+            define('LARAVEL_START', microtime(true));
+        }
     }
 
     /**
