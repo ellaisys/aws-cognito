@@ -92,6 +92,20 @@ abstract class TestCase extends OrchestraTestCase
         return $validCredentials ?? [];
     } //Function ends
 
+    /**
+     * Get invalid credentials.
+     *
+     * @return array
+     */
+    protected function getInvalidCredentials(): array
+    {
+        return [
+            'username' => 'invalid_user',
+            'password' => 'invalid_pass',
+            'email' => 'invalid_email@example.com',
+        ];
+    } //Function ends
+
     protected function getPackageProviders($app)
     {
         return [

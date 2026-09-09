@@ -49,7 +49,6 @@ class RefreshTokenUnitTest extends TestCase
     #[Test]
     public function test_refresh_token_with_invalid_payload_datatype(): void
     {
-        $credentials = $this->getValidCredentials();
         $payload = [
             'username' => true,
             'refresh_token' => 'invalid_refresh_token',
@@ -70,9 +69,9 @@ class RefreshTokenUnitTest extends TestCase
     {
         Config::set('cognito.sign_in_username_attributes', []);
 
-        $credentials = $this->getValidCredentials();
+        $credentials = $this->getInvalidCredentials();
         $payload = [
-            'username' => 'someone@domain.com',
+            'username' => $credentials['username'],
             'refresh_token' => 'invalid_refresh_token',
         ];
 
