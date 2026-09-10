@@ -197,8 +197,8 @@ class InstallCommand extends Command
             $this->setEnv('AWS_COGNITO_VERSION', 'latest');
             $bar->advance();
 
-            // Set AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS to EMAIL
-            $this->setEnv('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'EMAIL');
+            // Set AWS_COGNITO_DESIRED_DELIVERY_MEDIUMS to EMAIL
+            $this->setEnv('AWS_COGNITO_DESIRED_DELIVERY_MEDIUMS', 'EMAIL');
             $bar->advance();
 
             // Set AWS_COGNITO_TOKEN_STORAGE to file
