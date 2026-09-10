@@ -75,7 +75,7 @@ trait BaseAuthTrait
      *
      * @param bool $isControllerAction
      */
-    protected function setIsControllerAction(bool $isControllerAction): void
+    final public function setIsControllerAction(bool $isControllerAction): void
     {
         $this->isControllerAction = $isControllerAction;
     }
@@ -85,7 +85,7 @@ trait BaseAuthTrait
      *
      * @param bool $isJsonResponse
      */
-    protected function setIsJsonResponse(bool $isJsonResponse): void
+    final public function setIsJsonResponse(bool $isJsonResponse): void
     {
         $this->isJsonResponse = $isJsonResponse;
     }
@@ -96,7 +96,7 @@ trait BaseAuthTrait
      *
      * @param bool $isRaiseException
      */
-    protected function setIsRaiseException(bool $isRaiseException): void
+    final public function setIsRaiseException(bool $isRaiseException): void
     {
         $this->isRaiseException = $isRaiseException;
     }
@@ -108,7 +108,7 @@ trait BaseAuthTrait
      *
      * @return bool
      */
-    protected function getIsJsonResponse(Request $request): bool
+    final public function getIsJsonResponse(Request $request): bool
     {
         if ($this->isJsonResponse) {
             return true;
@@ -126,7 +126,7 @@ trait BaseAuthTrait
      *
      * @return string
      */
-    protected function redirectPath(?string $redirect=null): string
+    final public function redirectPath(?string $redirect=null): string
     {
         try {
             $returnValue = null;
@@ -155,7 +155,7 @@ trait BaseAuthTrait
      *
      * @param string $redirectTo
      */
-    protected function setRedirectPath(string $redirectTo): void
+    final public function setRedirectPath(string $redirectTo): void
     {
         $this->redirectTo = $redirectTo;
     } //Function ends
@@ -167,7 +167,7 @@ trait BaseAuthTrait
      *
      * @return string
      */
-    protected function getGuard(Request $request): string
+    final public function getGuard(Request $request): string
     {
         $guard = 'web';
 
@@ -186,7 +186,7 @@ trait BaseAuthTrait
      * @return mixed
      * @throws \InvalidUserException
      */
-    protected function getAuthenticatedUser(Request $request)
+    final public function getAuthenticatedUser(Request $request)
     {
         try {
             // Determine the guard based on the request type
@@ -207,7 +207,7 @@ trait BaseAuthTrait
      *
      * @return string
      */
-    protected function getLocalProviderModel()
+    final public function getLocalProviderModel()
     {
         return Auth::getProvider()->getModel();
     } //Function ends
@@ -220,7 +220,7 @@ trait BaseAuthTrait
      * @return string
      * @throws \HttpException
      */
-    protected function getAccessToken(Request $request): string
+    final public function getAccessToken(Request $request): string
     {
         try {
             // Determine the guard based on the request type
@@ -244,7 +244,7 @@ trait BaseAuthTrait
      * @return array
      * @throws \HttpException
      */
-    protected function getClaim(Request $request): array
+    final public function getClaim(Request $request): array
     {
         try {
             // Determine the guard based on the request type
@@ -271,55 +271,52 @@ trait BaseAuthTrait
      * @return string|null
      * @throws \Exception
      */
-    protected function getDataFromQueryParam(Request $request,
+    final public function getDataFromQueryParam(Request $request,
         string $paramName='email',
         EncryptionTypes $encryptionType=EncryptionTypes::DEFAULT,
         bool $filterEmail=false): string|null
     {
-        try {
-            $returnValue = null;
+        $returnValue = null;
 
-            // If email is present in query parameters, encode it before validation and processing
-            if ($request->query($paramName)) {
-                $data = $request[$paramName];
+        // If email is present in query parameters, encode it before validation and processing
+        if ($request->query($paramName)) {
+            $data = $request[$paramName];
 
-                switch ($encryptionType) {
-                    case EncryptionTypes::BASE64_ENCODE:
-                        $returnValue = base64_decode($data);
-                        break;
+            switch ($encryptionType) {
+                case EncryptionTypes::BASE64_ENCODE:
+                    $returnValue = base64_decode($data);
+                    break;
 
-                    case EncryptionTypes::RAW_URL_ENCODE:
-                        $returnValue = rawurldecode($data);
-                        break;
+                case EncryptionTypes::RAW_URL_ENCODE:
+                    $returnValue = rawurldecode($data);
+                    break;
 
-                    case EncryptionTypes::DEFAULT:
-                    case EncryptionTypes::URL_ENCODE:
-                        $data = urlencode($data);
-                        // Find %40 and replace with @ to avoid validation error
-                        $returnValue = str_replace('%40', '@', $data);
-                        break;
+                case EncryptionTypes::DEFAULT:
+                case EncryptionTypes::URL_ENCODE:
+                    $data = urlencode($data);
+                    // Find %40 and replace with @ to avoid validation error
+                    $returnValue = str_replace('%40', '@', $data);
 
-                    case EncryptionTypes::NONE:
-                    default:
-                        $returnValue = $data;
-                } //End switch
+                    // Find %2B and replace with + to avoid validation error
+                    $returnValue = str_replace('%2B', '+', $returnValue);
+                    break;
 
-                // If filter email flag is true, validate the email and
-                // return value only if valid email, else return null
-                if(!($filterEmail && !empty($returnValue)
-                    && (filter_var($returnValue, FILTER_VALIDATE_EMAIL))))
-                {
-                    $returnValue = null;
-                } //End if
-            } else {
+                case EncryptionTypes::NONE:
+                default:
+                    $returnValue = $data;
+            } //End switch
+
+            // If filter email flag is true, validate the email and
+            // return value only if valid email, else return null
+            if ($filterEmail && !empty($returnValue)
+                && (filter_var($returnValue, FILTER_VALIDATE_EMAIL) === false)) {
                 $returnValue = null;
             } //End if
+        } else {
+            $returnValue = null;
+        } //End if
 
-            return $returnValue;
-        } catch (Exception $e) {
-            Log::error('BaseAuthTrait:getDataFromQueryParam:Exception');
-            return null;
-        } //Try-catch ends
+        return $returnValue;
     } //Function ends
 
     /**
@@ -336,7 +333,7 @@ trait BaseAuthTrait
      *
      * @return string
      */
-    protected function generateRandomPassword(int $length = 12): string
+    final public function generateRandomPassword(int $length = 12): string
     {
         $length = max($length, 8);
 
@@ -372,7 +369,7 @@ trait BaseAuthTrait
      * @return \AwsResult
      * @throws \InvalidUserException
      */
-    protected function getCognitoUser(Request $request): AwsResult
+    final public function getCognitoUser(Request $request): AwsResult
     {
         try {
             //Create AWS Cognito Client
@@ -402,18 +399,14 @@ trait BaseAuthTrait
      * @return \AwsResult
      * @throws \InvalidUserException
      */
-    protected function getCognitoUserByAdmin(Request $request, string $username='username'): AwsResult
+    final public function getCognitoUserByAdmin(Request $request, string $username='username'): AwsResult
     {
         try {
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
             // Get the user details from AWS Cognito using the access token
-            $response = $client->adminGetUser($request[$username]);
-            if (empty($response)) {
-                throw new InvalidUserException('No authenticated user found.');
-            }
-            return $response;
+            return $client->adminGetUser($request[$username]);
         } catch (Exception $e) {
             Log::error('BaseAuthTrait:getCognitoUserByAdmin:Exception');
             throw $e;
@@ -427,7 +420,7 @@ trait BaseAuthTrait
      *
      * @throws \AwsCognitoException
      */
-    protected function validateCognitoFlow(CognitoAuthFlowTypes $authFlow): void
+    final public function validateCognitoFlow(CognitoAuthFlowTypes $authFlow): void
     {
         try {
             $allowedFlows = config('cognito.allowed_auth_flows');
@@ -445,28 +438,28 @@ trait BaseAuthTrait
      *
      * @return bool
      */
-    protected function isPhoneNumberAllowed(): bool
+    final public function isPhoneNumberAllowed(): bool
     {
-        try {
-            //Initialize variables
-            $returnValue = false;
+        //Initialize variables
+        $returnValue = false;
 
-            // Get the initial value from the configuration
-            $returnValue = config('cognito.allow_phone_number', false);
+        // Get the initial value from the configuration
+        $returnValue = (bool) config('cognito.allow_phone_number', false);
 
-            // Update the return value based on MFA
-            $listMfaTypes = config('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
-            $returnValue = $returnValue ?? (config('cognito.mfa_setup') !== 'OFF' && in_array('SMS_MFA', $listMfaTypes));
+        // Update the return value based on MFA
+        $returnValue = $returnValue ?: (
+            config('cognito.mfa_setup') !== 'OFF'
+            && in_array(
+                'SMS_MFA',
+                config('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA'])
+            ));
 
-            // Update the return value based delivery mediums
-            $deliveryMediums = config('cognito.add_user_delivery_mediums', 'BOTH');
-            $returnValue = $returnValue ?? in_array($deliveryMediums, ['SMS', 'BOTH']);
+        // Update the return value based delivery mediums
+        $returnValue = $returnValue ?: in_array(
+            'SMS',
+            config('cognito.desired_delivery_mediums', ['EMAIL']));
 
-            return $returnValue;
-        } catch (Exception $exception) {
-            Log::error('BaseAuthTrait:isPhoneNumberAllowed:Exception');
-            throw $exception;
-        } //Try-catch ends
+        return $returnValue;
     } //Function ends
 
 } //End trait
