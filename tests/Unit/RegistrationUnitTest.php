@@ -40,7 +40,7 @@ class RegistrationUnitTest extends TestCase
         Config::set('cognito.force_new_user_password', false);
         Config::set('cognito.mfa_setup', 'OFF');
         Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
-        Config::set('cognito.add_user_delivery_mediums', 'EMAIL');
+        Config::set('cognito.desired_delivery_mediums', ['EMAIL']);
 
         // Create a unique name and email for the test
         $name = 'Testbench Register Temp User';

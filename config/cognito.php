@@ -8,12 +8,6 @@
  * file that was distributed with this source code.
  */
 
-use Illuminate\Support\Str;
-
-$allowPhoneNumber = (env('AWS_COGNITO_MFA_SETUP') !== 'OFF' && Str::contains(env('AWS_COGNITO_MFA_TYPE'), 'SMS_MFA')) ||
-    in_array(env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'), ['SMS', 'BOTH']) ||
-    env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false);
-
 return [
     /*
     |--------------------------------------------------------------------------
@@ -245,16 +239,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito New User
+    | Cognito New User - Desired Delivery Mediums
     |--------------------------------------------------------------------------
+    | This option controls the delivery medium for the welcome message when a
+    | new user is added to the User Pool.
+    | Set EMAIL if email will be used to send the welcome message, else SMS if
+    | the phone number will be used.
     |
-    | This option controls the default cognito when a new user is add to the
-    | User Pool.
-    |
-    | The options available are "NONE", "BOTH", "EMAIL", "SMS"
+    | The options available are "EMAIL", "SMS"
     |
     */
-    'add_user_delivery_mediums' => env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'),
+    'desired_delivery_mediums' => (array) explode(',', env('AWS_COGNITO_DESIRED_DELIVERY_MEDIUMS', 'SMS,EMAIL')),
 
     /*
     |--------------------------------------------------------------------------
