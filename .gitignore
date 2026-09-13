@@ -9,6 +9,7 @@ composer.lock
 /vendor
 /tests/reports
 /build
+/skills
 
 # Ignore workbench files and directories
 /workbench/.env
