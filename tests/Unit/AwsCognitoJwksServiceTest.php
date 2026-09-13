@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Config;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Services\AwsCognitoJwksService;
@@ -26,6 +27,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 #[Group('unit'), Group('service')]
+#[CoversClass(AwsCognitoJwksService::class)]
 class AwsCognitoJwksServiceTest extends TestCase
 {
     /**
