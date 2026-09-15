@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\Config;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\Group;
 
+#[Group('api')]
 class LoginControllerApiTest extends ApiTestCase
 {
     private static ?array $loginResponse = null;
@@ -80,5 +82,25 @@ class LoginControllerApiTest extends ApiTestCase
             ->assertStatus(200)
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.message', 'Successfully logged out');
+    }
+
+    #[Test]
+    public function test_user_cannot_authenticate_with_invalid_credentials(): void
+    {
+        $credentials = $this->getInvalidCredentials();
+        $payload = [
+            'username' => $credentials['email'] ?? '',
+            'password' => $credentials['password'] ?? '',
+        ];
+
+        $this->postJson($this->apiPath('/login'), $payload)
+            ->assertStatus(401)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonStructure([
+                'error' => [
+                    'code',
+                    'message',
+                ],
+            ]);
     }
 }

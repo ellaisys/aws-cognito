@@ -12,7 +12,9 @@
 namespace Ellaisys\Cognito\Tests\Feature\API;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\Group;
 
+#[Group('api')]
 class RegisterControllerApiTest extends ApiTestCase
 {
     #[Test]

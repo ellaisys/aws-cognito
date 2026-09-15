@@ -88,6 +88,30 @@ abstract class TestCase extends OrchestraTestCase
         return $validCredentials ?? [];
     } //Function ends
 
+    /**
+     * Get invalid credentials from the defined constant.
+     *
+     * @return array
+     */
+    protected function getInvalidCredentials(): array
+    {
+        $invalidCredentialsEncodedJson = getenv('AUTH_INVALID_CREDENTIALS') ?? null;
+        if ($invalidCredentialsEncodedJson) {
+            $invalidCredentialsJson = base64_decode($invalidCredentialsEncodedJson, true);
+            $invalidCredentials = $invalidCredentialsJson ? json_decode($invalidCredentialsJson, true) : null;
+            if (is_array($invalidCredentials) && !empty($invalidCredentials)) {
+                return $invalidCredentials;
+            } //End if
+        } //End if
+
+        $validCredentials = $this->getValidCredentials();
+
+        return [
+            'email' => $validCredentials['email'] ?? 'invalid@example.com',
+            'password' => 'InvalidPassword@123',
+        ];
+    } //Function ends
+
     protected function getPackageProviders($app)
     {
         return [
