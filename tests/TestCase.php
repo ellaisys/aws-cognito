@@ -101,7 +101,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         return [
             'username' => 'invalid_user',
-            'password' => 'invalid_pass',
+            'password' => 'InvalidPassword123!',
             'email' => 'invalid_email@example.com',
         ];
     } //Function ends
