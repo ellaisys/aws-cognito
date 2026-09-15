@@ -21,22 +21,31 @@ use Ellaisys\Cognito\Tests\TestCase;
 #[Group('api')]
 abstract class ApiTestCase extends TestCase
 {
+    /**
+     * Assert that the response indicates a validation error.
+     */
     protected function assertValidationError(string $method,
         string $path, array $payload = []): void
     {
         $this->json($method, $this->apiPath($path), $payload)
             ->assertStatus(422)
             ->assertJsonPath('status', 'error');
-    }
+    } //Function ends
 
+    /**
+     * Assert that the response indicates an unauthenticated request.
+     */
     protected function assertUnauthenticated(string $method,
         string $path, array $payload = []): void
     {
         $this->json($method, $this->apiPath($path), $payload)
             ->assertStatus(401)
             ->assertJsonPath('status', 'error');
-    }
+    } //Function ends
 
+    /**
+     * Get the full API path including the prefix.
+     */
     protected function apiPath(string $path): string
     {
         $prefix = trim((string) config('cognito.api_prefix', 'cognito'), '/');
@@ -47,8 +56,11 @@ abstract class ApiTestCase extends TestCase
         }
 
         return '/api/' . $prefix . '/' . $endpointPath;
-    }
+    } //Function ends
 
+    /**
+     * Include the access token in the request headers.
+     */
     protected function withAccessTokenHeaders(): self
     {
         $accessToken = self::$claim['data']['AccessToken'] ?? null;
@@ -57,7 +69,7 @@ abstract class ApiTestCase extends TestCase
         return $this->withHeaders([
             'Authorization' => 'Bearer ' . $accessToken,
         ]);
-    }
+    } //Function ends
 
     /**
      * Assert that the response indicates a successful operation.
@@ -100,6 +112,30 @@ abstract class ApiTestCase extends TestCase
             ->assertJson([
                 'status' => 'error',
                 'data' => [],
+            ]);
+    } //Function ends
+
+    /**
+     * Assert that the response indicates a challenge.
+     */
+    protected function assertChallenge(TestResponse $response, string $challengeName): void
+    {
+        $response
+            ->assertJsonStructure([
+                'data' => [
+                    'status',
+                    'challenge_name',
+                    'session_token',
+                    'challenge_params',
+                    'username'
+                ],
+            ])
+            ->assertJson([
+                'data' => [
+                    'status' => 'challenge',
+                    'challenge_name' => $challengeName,
+                    'challenge_params' => [],
+                ],
             ]);
     } //Function ends
 } //Class ends

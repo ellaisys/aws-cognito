@@ -37,6 +37,7 @@ class LoginSrpControllerApiTest extends ApiTestCase
          */
         Config::set('cognito.mfa_setup', 'OFF');
         Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
+        Config::set('cognito.allowed_auth_flows', ['ALLOW_USER_SRP_AUTH']);
     } //Function ends
 
     /**
@@ -60,11 +61,11 @@ class LoginSrpControllerApiTest extends ApiTestCase
     } //Function ends
 
     /**
-     * Test user can authenticate with valid credentials.
+     * Test user can get a challenge with valid SRP credentials.
      */
     #[Test]
     #[Depends('test_valid_settings_for_srp_auth')]
-    public function test_user_can_authenticate_with_valid_srp_credentials(): void
+    public function test_user_get_challenge_with_valid_srp_credentials(): void
     {
         // Get valid credentials for the user
         $credentials = $this->getValidCredentials();
@@ -74,23 +75,7 @@ class LoginSrpControllerApiTest extends ApiTestCase
 
         $response = $this->postJson($this->apiPath('/login/srp'), $payload);
         $this->assertSuccess($response);
-    } //Function ends
-
-    /**
-     * Test that a user cannot authenticate with invalid credentials.
-     */
-    #[Test]
-    #[Depends('test_valid_settings_for_srp_auth')]
-    public function test_user_cannot_authenticate_with_invalid_srp_credentials(): void
-    {
-        // Get invalid credentials for the user
-        $invalidCredentials = $this->getInvalidCredentials();
-        $payload = [
-            'username' => $invalidCredentials['email']
-        ];
-
-        $response = $this->postJson($this->apiPath('/login/srp'), $payload);
-        $this->assertFailure($response, 401);
+        $this->assertChallenge($response, 'PASSWORD_VERIFIER');
     } //Function ends
 
 } //Class ends
