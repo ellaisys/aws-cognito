@@ -93,7 +93,7 @@ class PasskeyTest extends TestCase
     public function test_user_webauthn_registration(): void
     {
         // Authenticate the user before running the tests
-        $this->authenticate();
+        $this->authenticateWeb();
 
         $this->withSession(self::$sessionAuthenticated)
             ->post(route('cognito.action.user.passkey.start'))

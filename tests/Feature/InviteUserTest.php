@@ -46,7 +46,7 @@ class InviteUserTest extends TestCase
         ];
 
         // Authenticate the user before running the tests
-        $this->authenticate();
+        $this->authenticateWeb();
     } //Function ends
 
     /**

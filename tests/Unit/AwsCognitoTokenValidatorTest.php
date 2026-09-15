@@ -46,7 +46,7 @@ class AwsCognitoTokenValidatorTest extends TestCase
         parent::setUp(); // Always good practice to call parent setup
 
         // Authenticate the user before running the tests
-        $this->authenticate();
+        $this->authenticateWeb();
 
         $this->validator = new AwsCognitoTokenValidator();
     } //Function ends
