@@ -128,13 +128,17 @@ trait ManagesUserPoolAction
                 'UsernameConfiguration' => [
                     'CaseSensitive' => false
                 ],
-                'UsernameAttributes' => config('cognito.sign_in_username_attributes', ['email']),
                 'UserPoolTags' => [
                     'Project' => config('app.name', 'AWS Cognito'),
                     'Environment' => config('app.env', 'Development'),
                     'CreatedBy' => 'AWS Cognito Laravel Package'
                 ],
             ];
+
+            // Add username attributes if configured
+            if (!empty(config('cognito.sign_in_username_attributes', []))) {
+                $payload['UsernameAttributes'] = config('cognito.sign_in_username_attributes');
+            } //End if
 
             // If MFA is enabled, then add the SMS configuration to the payload
             if ((config('cognito.mfa_setup', 'OFF') !== 'OFF') ||
