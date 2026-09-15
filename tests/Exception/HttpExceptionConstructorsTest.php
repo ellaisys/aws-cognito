@@ -27,7 +27,9 @@ class HttpExceptionConstructorsTest extends TestCase
      */
     #[Test]
     #[DataProvider('exceptionProvider')]
-    public function test_it_sets_default_http_status_and_message(string $exceptionClass, int $expectedStatusCode, string $expectedMessage): void
+    public function test_it_sets_default_http_status_and_message(
+        string $exceptionClass, int $expectedStatusCode,
+        string $expectedMessage): void
     {
         $exception = new $exceptionClass();
 

@@ -47,6 +47,10 @@ abstract class TestCase extends OrchestraTestCase
 
         // Automatically mock Vite for all feature tests
         $this->withoutVite();
+
+        if (! defined('LARAVEL_START')) {
+            define('LARAVEL_START', microtime(true));
+        }
     }
 
     /**
@@ -89,26 +93,16 @@ abstract class TestCase extends OrchestraTestCase
     } //Function ends
 
     /**
-     * Get invalid credentials from the defined constant.
+     * Get invalid credentials.
      *
      * @return array
      */
     protected function getInvalidCredentials(): array
     {
-        $invalidCredentialsEncodedJson = getenv('AUTH_INVALID_CREDENTIALS') ?? null;
-        if ($invalidCredentialsEncodedJson) {
-            $invalidCredentialsJson = base64_decode($invalidCredentialsEncodedJson, true);
-            $invalidCredentials = $invalidCredentialsJson ? json_decode($invalidCredentialsJson, true) : null;
-            if (is_array($invalidCredentials) && !empty($invalidCredentials)) {
-                return $invalidCredentials;
-            } //End if
-        } //End if
-
-        $validCredentials = $this->getValidCredentials();
-
         return [
-            'email' => $validCredentials['email'] ?? 'invalid@example.com',
-            'password' => 'InvalidPassword@123',
+            'username' => 'invalid_user',
+            'password' => 'invalid_pass',
+            'email' => 'invalid_email@example.com',
         ];
     } //Function ends
 

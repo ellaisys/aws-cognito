@@ -25,36 +25,37 @@ class AwsCognitoTokenValidator
 {
     /**
      * Check the structure of the token.
+     * @param string $value
+     * @return string|null
      *
-     * @param  string  $value
-     *
-     * @return string
+     * @throws \Ellaisys\Cognito\Exceptions\InvalidTokenException
      */
-    public function check($value): string|null
+    public function check($value): ?string
     {
         return $this->validateToken($value);
-    }
+    } //Function ends
 
     /**
      * Decode the JWT token.
-     *
-     * @param  string  $value
-     *
-     * @return string
-     */
-    public function decode(string $token): mixed
-    {
-        return $this->validateToken($token, true);
-    }
-
-    /**
-     * @param  string  $token
+     * @param string $value
+     * @return string|object|null
      *
      * @throws \Ellaisys\Cognito\Exceptions\InvalidTokenException
-     *
-     * @return string
      */
-    protected function validateToken(string $token, bool $isDecodedToken=false): mixed
+    public function decode(string $token): string|object|null
+    {
+        return $this->validateToken($token, true);
+    } //Function ends
+
+    /**
+     * Validate and decode the JWT token.
+     * @param string $token
+     * @param bool $isDecodedToken (return the decoded token or the original token).
+     * @return string|object|null
+     *
+     * @throws \Ellaisys\Cognito\Exceptions\InvalidTokenException
+     */
+    protected function validateToken(string $token, bool $isDecodedToken=false): string|object|null
     {
         try {
             if ($this->validateStructure($token)) {
@@ -67,7 +68,7 @@ class AwsCognitoTokenValidator
                 //Decode the token
                 $decodedToken = JWT::decode($token, $jwksKeys);
             } else {
-                throw new InvalidTokenException('Invalid Token');
+                throw new InvalidTokenException();
             } //End if
         } catch ( SignatureInvalidException
             | BeforeValidException
@@ -76,15 +77,15 @@ class AwsCognitoTokenValidator
             throw new InvalidTokenException($e->getMessage());
         } //End try-catch
         
-        return ($isDecodedToken)?$decodedToken:$token;
+        return ($isDecodedToken) ? $decodedToken : $token;
     } //Function ends
 
     /**
-     * @param  string  $token
+     * Validate the structure of the JWT token.
+     * @param string $token
+     * @return bool
      *
      * @throws \Ellaisys\Cognito\Exceptions\InvalidTokenException
-     *
-     * @return bool
      */
     protected function validateStructure($token): bool
     {
@@ -100,10 +101,8 @@ class AwsCognitoTokenValidator
             if (count($parts) !== 3 || implode('.', $parts) !== $token) {
                 throw new InvalidTokenException('Malformed token');
             }
-        } catch(InvalidTokenException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            throw new InvalidTokenException($e->getMessage());
+        } catch(Exception $exception) {
+            throw $exception;
         } //End try-catch
         
         return true;

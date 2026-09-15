@@ -19,6 +19,7 @@ use Ellaisys\Cognito\Enums;
 use Ellaisys\Cognito\Console\Traits\AwsCognitoTrait;
 
 use Exception;
+use Ellaisys\Cognito\Exceptions\ConsoleException;
 
 class ListConfigCommand extends Command
 {
@@ -45,11 +46,13 @@ class ListConfigCommand extends Command
      */
     public function handle()
     {
+        // Initialize return value
+        $returnValue = Command::SUCCESS;
+
         try {
 
             if (!array_filter($this->options())) {
-                $this->error('Please provide at least one option: --pool, --client, or --mfa');
-                return;
+                throw new ConsoleException('Provide at least one option: --pool, --client, or --mfa');
             }
 
             $returnValue = [];
@@ -73,10 +76,14 @@ class ListConfigCommand extends Command
 
             $this->info($returnValue['message'] ?? 'Configuration:');
             $this->info(json_encode($returnValue['data'] ?? [], JSON_PRETTY_PRINT));
+
+            $returnValue = Command::SUCCESS;
         } catch (Exception $exception) {
             Log::error('ListConfigCommand:handle:Exception');
-            $this->error('Error retrieving configuration data.' . $exception->getMessage());
+           $this->components->error($exception->getMessage());
+            $returnValue = Command::FAILURE;
         } // Try-catch ends
+        return $returnValue;
     } //Function ends
 
 } // Class ends

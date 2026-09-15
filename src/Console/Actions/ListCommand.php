@@ -123,10 +123,6 @@ class ListCommand extends Command
             $returnData = null;
 
             switch ($responseData['option']) {
-                case 'pool':
-                    $returnData = array_intersect_key($item,
-                        array_flip(!empty($columns) ? $columns : ['Id', 'Name', 'LastModifiedDate']));
-                        break;
                 case 'client':
                     $returnData = array_intersect_key($item,
                         array_flip(!empty($columns) ? $columns : ['ClientId', 'ClientName']));
@@ -139,8 +135,11 @@ class ListCommand extends Command
                     $returnData = array_intersect_key($item,
                         array_flip(!empty($columns) ? $columns : ['GroupName', 'Description', 'LastModifiedDate']));
                         break;
+                case 'pool':
                 default:
-                    $returnData = [];
+                    $returnData = array_intersect_key($item,
+                        array_flip(!empty($columns) ? $columns : ['Id', 'Name', 'LastModifiedDate']));
+                        break;
             } // End switch
             return $returnData;
         }, $responseData['data']);
