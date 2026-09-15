@@ -32,7 +32,7 @@ abstract class ApiTestCase extends TestCase
             ->assertJsonPath('status', 'error');
     }
 
-    private function apiPath(string $path): string
+    protected function apiPath(string $path): string
     {
         $prefix = trim((string) config('cognito.api_prefix', 'cognito'), '/');
         $endpointPath = ltrim($path, '/');
