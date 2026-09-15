@@ -291,6 +291,7 @@ trait ManagesUserPoolAction
                     config('app.url', 'http://localhost')
                 ],
                 'SupportedIdentityProviders' => ['COGNITO'],
+                'PreventUserExistenceErrors' => 'ENABLED',
                 'ReadAttributes' => ['name', 'given_name', 'email', 'email_verified'],
             ];
 
