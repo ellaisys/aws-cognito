@@ -169,7 +169,7 @@ class AuthenticatesUsersTraitUnitTest extends TestCase
                 ['challenge_name' => 'PASSWORD_SRP',
                 'challenge_value' => 'dummy_value',
                 'session' => ['dummy_session']],
-                ValidationException::class
+                \TypeError::class
             ],
             'password_verifier_wrong_format_data' => [
                 ['challenge_name' => 'PASSWORD_VERIFIER',

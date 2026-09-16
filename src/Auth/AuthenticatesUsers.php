@@ -406,6 +406,8 @@ trait AuthenticatesUsers
                     $request->has('challenge_value') &&
                     $request['challenge_value'] == 'PASSWORD_SRP') {
                     $request = $this->buildChallengeRequestDataForSRP($request);
+                } elseif ($challangeName == CognitoChallengeTypes::PASSWORD_SRP) {
+                    $request = $this->buildChallengeRequestDataForSRP($request);
                 } elseif ($challangeName == CognitoChallengeTypes::PASSWORD_VERIFIER) {
                     $request = $this->buildChallengeRequestDataForPasswordVerifier($request, false);
                 } elseif ($challangeName == CognitoChallengeTypes::DEVICE_PASSWORD_VERIFIER) {
