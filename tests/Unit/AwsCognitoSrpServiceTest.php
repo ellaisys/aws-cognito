@@ -27,7 +27,7 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
-#[Group('unit'), Group('service')]
+#[Group('unit'), Group('service'), Group('srp')]
 #[CoversClass(AwsCognitoSrpService::class)]
 class AwsCognitoSrpServiceTest extends TestCase
 {
