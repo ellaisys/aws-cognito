@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Tests\Unit;
+namespace Ellaisys\Cognito\Tests\Unit\Auth;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Http\Request;
@@ -22,12 +22,14 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Auth\EncryptionTypes;
+use Ellaisys\Cognito\Auth\BaseAuthTrait;
 use Ellaisys\Cognito\Tests\Support\BaseAuthTraitFixture;
 
 use Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-#[Group('web'), Group('unit')]
+#[Group('web'), Group('unit'), Group('auth-trait')]
+#[CoversTrait(BaseAuthTrait::class)]
 class BaseAuthTraitUnitTest extends TestCase
 {
     private BaseAuthTraitFixture $fixture;
