@@ -33,7 +33,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[Group('web'), Group('unit'), Group('auth-trait'), Group('login'), Group('srp')]
 #[CoversTrait(AuthenticatesUsers::class)]
-class AuthenticatesUsersTraitUnitTest extends TestCase
+class AuthenticatesUsersUnitTest extends TestCase
 {
     private $class;
     private Request $requestJson;
