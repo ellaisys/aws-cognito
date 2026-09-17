@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Enums;
+use Ellaisys\Cognito\Console\Traits\UtilsTrait;
 use Ellaisys\Cognito\Console\Traits\AwsCognitoTrait;
 
 use Exception;
@@ -25,6 +26,7 @@ use Ellaisys\Cognito\Exceptions\ConsoleException;
 class MakeCommand extends Command
 {
     use AwsCognitoTrait;
+    use UtilsTrait;
 
     /**
      * The name and signature of the console command.
@@ -174,8 +176,11 @@ class MakeCommand extends Command
         {
             // Prompt to Sync configuration to local .env file
             $this->newLine();
-            $syncChoice = $this->ask('Do you want to sync the configuration to your local .env file? (yes/no)', 'yes');
+            $syncChoice = $this->ask('Do you want to sync the user pool configuration to your local .env file? (yes/no)', 'yes');
             if (Str::lower($syncChoice) === 'yes') {
+                // Set the selected pool ID in the .env file
+                $this->setEnv('AWS_COGNITO_USER_POOL_ID', $response['Id']);
+
                 $this->callSilently('cognito:sync', [
                     '--aws-to-local' => true,
                     '--pool' => true,
@@ -216,8 +221,11 @@ class MakeCommand extends Command
         {
             // Prompt to Sync configuration to local .env file
             $this->newLine();
-            $syncChoice = $this->ask('Do you want to sync the configuration to your local .env file? (yes/no)', 'yes');
+            $syncChoice = $this->ask('Do you want to sync the user pool client configuration to your local .env file? (yes/no)', 'yes');
             if (Str::lower($syncChoice) === 'yes') {
+                // Set the selected client ID in the .env file
+                $this->setEnv('AWS_COGNITO_CLIENT_ID', $response['ClientId']);
+
                 $this->callSilently('cognito:sync', [
                     '--aws-to-local' => true,
                     '--client' => true,

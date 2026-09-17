@@ -114,6 +114,7 @@ trait ManagesUserPoolAction
                     ]
                 ],
                 'AutoVerifiedAttributes' => ['email'],
+                'DeletionProtection' => config('cognito.user_pool_deletion_protection', 'ACTIVE'),
                 'Schema' => [
                     [
                         'Name' => 'email',
@@ -144,6 +145,11 @@ trait ManagesUserPoolAction
             if ((config('cognito.mfa_setup', 'OFF') !== 'OFF') ||
                 (in_array('SMS_OTP', config('cognito.signin_policy', ['PASSWORD'])))) {
                 $payload['SmsConfiguration'] = config('cognito.sms_mfa_configuration.SmsConfiguration');
+            } //End if
+
+            // Add user pool device configuration if set
+            if (config('cognito.user_pool_device_enabled', false)) {
+                $payload['DeviceConfiguration'] = config('cognito.user_pool_device_configuration');
             } //End if
 
             return $this->client->createUserPool($payload);

@@ -200,6 +200,37 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cognito User Pool Deletion Protection - Pool Configuration
+    |--------------------------------------------------------------------------
+    | This option controls the default cognito user pool deletion protection.
+    | You can set the deletion protection in your AWS Cognito User Pool
+    | configuration, and the value should be set to 'ACTIVE' or 'INACTIVE'.
+    | The default value is set to 'ACTIVE'.
+    */
+    'user_pool_deletion_protection' => env('AWS_COGNITO_USER_POOL_DELETION_PROTECTION', 'ACTIVE'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito User Pool Device Enabled - Pool Configuration
+    |--------------------------------------------------------------------------
+    | This option controls whether the user pool device feature is enabled.
+    | You can set this in your AWS Cognito User Pool configuration, and the
+    | value should be set to true while creating the user pool.
+    | The default value is set to false.
+    |
+    | Note that enabling this feature requires additional configuration in
+    | your AWS Cognito User Pool shown below by user_pool_device_configuration.
+    | Refer to the AWS Cognito documentation for more details.
+    | https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DeviceConfigurationType.html#API_DeviceConfigurationType_Contents
+    */
+    'user_pool_device_enabled' => (bool) env('AWS_COGNITO_DEVICE_ENABLED', false),
+    'user_pool_device_configuration' => [
+        'ChallengeRequiredOnNewDevice' => env('AWS_COGNITO_DEVICE_CHALLENGE_REQUIRED_ON_NEW_DEVICE', false),
+        'DeviceOnlyRememberedOnUserPrompt' => env('AWS_COGNITO_DEVICE_ONLY_REMEMBERED_ON_USER_PROMPT', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cognito Allowed Auth Flows - Client Configuration
     |--------------------------------------------------------------------------
     | This option controls the default cognito allowed auth flows. You can set
