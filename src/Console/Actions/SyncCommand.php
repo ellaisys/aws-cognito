@@ -173,15 +173,15 @@ class SyncCommand extends Command
             $passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?: [];
             if (!empty($passwordPolicy)) {
                 // Set the value in .env file (Password Policy - Base 64 encoded data)
-                $this->setEnv('AWS_COGNITO_PASSWORD_POLICY',
-                    base64_encode(json_encode($passwordPolicy)));
+                $this->setEnvConditionally('AWS_COGNITO_PASSWORD_POLICY',
+                    base64_encode(json_encode($passwordPolicy)), 'cognito.password_policy');
             } // End if
 
             $signinPolicy = $userPool['Policies']['SignInPolicy'] ?: [];
             if (!empty($signinPolicy)) {
                 // Set the value in .env file (Sign In Policy)
-                $this->setEnv('AWS_COGNITO_SIGNIN_POLICY',
-                    implode(',', $signinPolicy['AllowedFirstAuthFactors'] ?: []));
+                $this->setEnvConditionally('AWS_COGNITO_SIGNIN_POLICY',
+                    implode(',', $signinPolicy['AllowedFirstAuthFactors'] ?: []), 'cognito.signin_policy');
             } // End if
 
             // Check for Device Configuration
@@ -222,13 +222,14 @@ class SyncCommand extends Command
             $userPoolClient = $this->getUserPoolClientConfig($this->userPoolId, $this->clientId);
 
             // Set the value in .env file
-            $this->setEnv('AWS_COGNITO_CLIENT_SECRET', $userPoolClient['ClientSecret'] ?? '');
+            $this->setEnv('AWS_COGNITO_CLIENT_SECRET', $userPoolClient['ClientSecret'] ?: '');
 
             // Check for ExplicitAuthFlows
-            $explicitAuthFlows = $userPoolClient['ExplicitAuthFlows'] ?? [];
+            $explicitAuthFlows = $userPoolClient['ExplicitAuthFlows'] ?: [];
             if (!empty($explicitAuthFlows)) {
                 //Set the value in .env file
-                $this->setEnv('AWS_COGNITO_ALLOWED_AUTH_FLOWS', implode(',', $explicitAuthFlows));
+                $this->setEnvConditionally('AWS_COGNITO_ALLOWED_AUTH_FLOWS',
+                    implode(',', $explicitAuthFlows), 'cognito.allowed_auth_flows');
             } // End if
 
             // Check for AuthFlowTypes
@@ -238,8 +239,8 @@ class SyncCommand extends Command
             $this->setEnvConditionally('AWS_COGNITO_ALLOW_PASSKEYS',
                 $allowPasskeys ? true : false, 'cognito.allow_passkeys');
 
-            $accessTokenValidity = $userPoolClient['AccessTokenValidity'] ?: 60; // Default to 60 minutes if not set
-            $multiplyFactor = $userPoolClient['TokenValidityUnits']['AccessToken'] ?: 'minutes'; // Default to minutes if not set
+            $accessTokenValidity = isset($userPoolClient['AccessTokenValidity']) ? $userPoolClient['AccessTokenValidity'] : 60; // Default to 60 minutes if not set
+            $multiplyFactor = isset($userPoolClient['TokenValidityUnits']['AccessToken']) ? $userPoolClient['TokenValidityUnits']['AccessToken'] : 'minutes'; // Default to minutes if not set
             $accessTokenValidity *= ($multiplyFactor === 'hours' ? 60 : 1); // Convert hours to minutes
             $accessTokenValidity *= ($multiplyFactor === 'days' ? 1440 : 1); // Convert days to minutes
 
@@ -248,12 +249,14 @@ class SyncCommand extends Command
             $this->setEnv('AUTH_PASSWORD_TIMEOUT', $accessTokenValidity*60); // Convert minutes to seconds
 
             // Set the value in .env file for token revocation
-            $enableTokenRevocation = $userPoolClient['EnableTokenRevocation'] ?: true; // Default to true if not set
-            $this->setEnv('AWS_COGNITO_ENABLE_TOKEN_REVOCATION', $enableTokenRevocation ? true : false);
+            $enableTokenRevocation = isset($userPoolClient['EnableTokenRevocation']) ? $userPoolClient['EnableTokenRevocation'] : true; // Default to true if not set
+            $this->setEnvConditionally('AWS_COGNITO_ENABLE_TOKEN_REVOCATION',
+                $enableTokenRevocation ? true : false, 'cognito.enable_token_revocation');
 
             // Set the value in .env file for Auth Session Validity
-            $authSessionValidity = $userPoolClient['AuthSessionValidity'] ?: 3;
-            $this->setEnv('AWS_COGNITO_AUTH_SESSION_VALIDITY', ($authSessionValidity * 60)); // Convert minutes to seconds
+            $authSessionValidity = isset($userPoolClient['AuthSessionValidity']) ? $userPoolClient['AuthSessionValidity'] : 3;
+            $this->setEnvConditionally('AWS_COGNITO_AUTH_SESSION_VALIDITY',
+                ($authSessionValidity * 60), 'cognito.auth_session_validity'); // Convert minutes to seconds
 
             return Command::SUCCESS;
         } catch (Exception $exception) {

@@ -130,6 +130,15 @@ trait UtilsTrait
         // Get the existing value from the configuration for the given key.
         $existingValue = config($configKey);
 
+        // Convert the value to a string representation
+        if (is_array($existingValue)) {
+            if ($configKey === 'cognito.password_policy') {
+                $existingValue = base64_encode(json_encode($existingValue));
+            } else {
+                $existingValue = implode(',', $existingValue);
+            } // End if
+        } // End if
+
         // Compare the existing value with the new value and update only if they differ.
         if ($existingValue !== $value) {
             return $this->setEnv($key, $value);

@@ -242,7 +242,7 @@ return [
     | The default value is set as below to allow password based authentication
     | and refresh token authentication.
     */
-    'allowed_auth_flows' => (array) explode(',', env('AWS_COGNITO_ALLOWED_AUTH_FLOWS', 'ALLOW_USER_PASSWORD_AUTH,ALLOW_REFRESH_TOKEN_AUTH')),
+    'allowed_auth_flows' => (array) explode(',', env('AWS_COGNITO_ALLOWED_AUTH_FLOWS', 'ALLOW_REFRESH_TOKEN_AUTH,ALLOW_USER_PASSWORD_AUTH')),
 
     /*
     |--------------------------------------------------------------------------
