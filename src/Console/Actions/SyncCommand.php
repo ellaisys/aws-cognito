@@ -170,22 +170,40 @@ class SyncCommand extends Command
             // Get user pool configuration from AWS Cognito
             $userPool = $this->getUserPoolConfig($this->userPoolId);
 
-            $passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?? [];
+            $passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?: [];
             if (!empty($passwordPolicy)) {
                 // Set the value in .env file (Password Policy - Base 64 encoded data)
                 $this->setEnv('AWS_COGNITO_PASSWORD_POLICY',
                     base64_encode(json_encode($passwordPolicy)));
             } // End if
 
-            $signinPolicy = $userPool['Policies']['SignInPolicy'] ?? [];
+            $signinPolicy = $userPool['Policies']['SignInPolicy'] ?: [];
             if (!empty($signinPolicy)) {
                 // Set the value in .env file (Sign In Policy)
                 $this->setEnv('AWS_COGNITO_SIGNIN_POLICY',
-                    implode(',', $signinPolicy['AllowedFirstAuthFactors'] ?? []));
+                    implode(',', $signinPolicy['AllowedFirstAuthFactors'] ?: []));
             } // End if
 
-            // Set the value in .env file
-            $this->setEnv('AWS_COGNITO_MFA_SETUP', $userPool['MfaConfiguration'] ?? 'OFF');
+            // Check for Device Configuration
+            $deviceConfiguration= isset($userPool['DeviceConfiguration']) ? $userPool['DeviceConfiguration'] : [];
+            if (!empty($deviceConfiguration)) {
+                // Set the value in .env file (User Pool Device Configuration)
+                $this->setEnv('AWS_COGNITO_DEVICE_ENABLED', true);
+                $this->setEnv('AWS_COGNITO_DEVICE_CHALLENGE_REQUIRED_ON_NEW_DEVICE', $deviceConfiguration['ChallengeRequiredOnNewDevice']);
+                $this->setEnv('AWS_COGNITO_DEVICE_ONLY_REMEMBERED_ON_USER_PROMPT', $deviceConfiguration['DeviceOnlyRememberedOnUserPrompt']);
+            } else {
+                $this->delEnv('AWS_COGNITO_DEVICE_ENABLED');
+                $this->delEnv('AWS_COGNITO_DEVICE_CHALLENGE_REQUIRED_ON_NEW_DEVICE');
+                $this->delEnv('AWS_COGNITO_DEVICE_ONLY_REMEMBERED_ON_USER_PROMPT');
+            } // End if
+
+            // Set the value in .env file (Deletion Protection)
+            $this->setEnvConditionally('AWS_COGNITO_USER_POOL_DELETION_PROTECTION',
+                $userPool['DeletionProtection'] ?: 'ACTIVE', 'cognito.user_pool_deletion_protection');
+
+            // Set the value in .env file (MFA Setup)
+            $this->setEnvConditionally('AWS_COGNITO_MFA_SETUP',
+                $userPool['MfaConfiguration'] ?: 'OFF', 'cognito.mfa_setup');
 
             return Command::SUCCESS;
         } catch (Exception $exception) {
@@ -217,10 +235,11 @@ class SyncCommand extends Command
             $allowPasskeys = (in_array('ALLOW_' . Enums\CognitoAuthFlowTypes::USER_AUTH->value, $explicitAuthFlows));
 
             //Set the value in .env file
-            $this->setEnv('AWS_COGNITO_ALLOW_PASSKEYS', $allowPasskeys ? true : false);
+            $this->setEnvConditionally('AWS_COGNITO_ALLOW_PASSKEYS',
+                $allowPasskeys ? true : false, 'cognito.allow_passkeys');
 
-            $accessTokenValidity = $userPoolClient['AccessTokenValidity'] ?? 60; // Default to 60 minutes if not set
-            $multiplyFactor = $userPoolClient['TokenValidityUnits']['AccessToken'] ?? 'minutes'; // Default to minutes if not set
+            $accessTokenValidity = $userPoolClient['AccessTokenValidity'] ?: 60; // Default to 60 minutes if not set
+            $multiplyFactor = $userPoolClient['TokenValidityUnits']['AccessToken'] ?: 'minutes'; // Default to minutes if not set
             $accessTokenValidity *= ($multiplyFactor === 'hours' ? 60 : 1); // Convert hours to minutes
             $accessTokenValidity *= ($multiplyFactor === 'days' ? 1440 : 1); // Convert days to minutes
 
@@ -229,11 +248,11 @@ class SyncCommand extends Command
             $this->setEnv('AUTH_PASSWORD_TIMEOUT', $accessTokenValidity*60); // Convert minutes to seconds
 
             // Set the value in .env file for token revocation
-            $enableTokenRevocation = $userPoolClient['EnableTokenRevocation'] ?? true; // Default to true if not set
+            $enableTokenRevocation = $userPoolClient['EnableTokenRevocation'] ?: true; // Default to true if not set
             $this->setEnv('AWS_COGNITO_ENABLE_TOKEN_REVOCATION', $enableTokenRevocation ? true : false);
 
             // Set the value in .env file for Auth Session Validity
-            $authSessionValidity = $userPoolClient['AuthSessionValidity'] ?? 3;
+            $authSessionValidity = $userPoolClient['AuthSessionValidity'] ?: 3;
             $this->setEnv('AWS_COGNITO_AUTH_SESSION_VALIDITY', ($authSessionValidity * 60)); // Convert minutes to seconds
 
             return Command::SUCCESS;
@@ -252,21 +271,27 @@ class SyncCommand extends Command
             // Get user pool MFA configuration from AWS Cognito
             $userPoolMfaConfig = $this->getUserPoolMfaConfig($this->userPoolId);
 
-            // Check Software Token MFA configuration
-            static $softwareTokenText = 'SOFTWARE_TOKEN_MFA';
-            $softwareTokenEnabled = $userPoolMfaConfig['SoftwareTokenMfaConfiguration']['Enabled'] ?? false;
-            $mfatypes = config('cognito.mfa_type');
+            // Check if MFA is enabled for the user pool
+            if(isset($userPoolMfaConfig['MfaConfiguration']) && $userPoolMfaConfig['MfaConfiguration'] !== 'OFF') {
+                // Check Software Token MFA configuration
+                static $softwareTokenText = 'SOFTWARE_TOKEN_MFA';
+                $softwareTokenEnabled = false;
+                if(isset($userPoolMfaConfig['SoftwareTokenMfaConfiguration'])) {
+                    $softwareTokenEnabled = $userPoolMfaConfig['SoftwareTokenMfaConfiguration']['Enabled'] ?: false;
+                } // End if
+                $mfatypes = config('cognito.mfa_type');
 
-            // Remove SOFTWARE_TOKEN_MFA from mfa_type if it's not enabled
-            if (in_array($softwareTokenText, $mfatypes) && !$softwareTokenEnabled) {
-                unset($mfatypes[array_search($softwareTokenText, $mfatypes)]);
-                $this->setEnv('AWS_COGNITO_MFA_TYPE', implode(',', $mfatypes));
-            } // End if
+                // Remove SOFTWARE_TOKEN_MFA from mfa_type if it's not enabled
+                if (in_array($softwareTokenText, $mfatypes) && !$softwareTokenEnabled) {
+                    unset($mfatypes[array_search($softwareTokenText, $mfatypes)]);
+                    $this->setEnv('AWS_COGNITO_MFA_TYPE', implode(',', $mfatypes));
+                } // End if
 
-            // Add SOFTWARE_TOKEN_MFA to mfa_type if it's enabled and not already present
-            if (!in_array($softwareTokenText, $mfatypes) && $softwareTokenEnabled) {
-                $mfatypes[] = $softwareTokenText;
-                $this->setEnv('AWS_COGNITO_MFA_TYPE', implode(',', $mfatypes));
+                // Add SOFTWARE_TOKEN_MFA to mfa_type if it's enabled and not already present
+                if (!in_array($softwareTokenText, $mfatypes) && $softwareTokenEnabled) {
+                    $mfatypes[] = $softwareTokenText;
+                    $this->setEnv('AWS_COGNITO_MFA_TYPE', implode(',', $mfatypes));
+                } // End if
             } // End if
 
             // Check WebAuthn MFA configuration
@@ -287,7 +312,7 @@ class SyncCommand extends Command
     private function processUserPoolMfaWebAuthnConfig($userPoolMfaConfig): void
     {
         // Check WebAuthn MFA configuration
-        $webauthnConfig = $userPoolMfaConfig['WebAuthnConfiguration'] ?? null;
+        $webauthnConfig = isset($userPoolMfaConfig['WebAuthnConfiguration']) ? $userPoolMfaConfig['WebAuthnConfiguration'] : null;
         if ($webauthnConfig) {
             // Set RelyingPartyId if it differs from the current config value
             if ($webauthnConfig['RelyingPartyId'] !== config('cognito.web_authn_mfa_configuration.RelyingPartyId')) {
