@@ -156,7 +156,7 @@ Example, to create a new Cognito User Pool, run:
 php artisan cognito:make --pool --name=MyUserPool
 ```
 
-The command uses the supplied name and the configured Cognito options to create the resource in AWS.
+The command uses the supplied name and the configured Cognito options to create the resource in AWS. It will automatically apply the necessary settings based on your configuration values. The command will prompt you for any additional required information during the creation process and also synchronize the configuration with your `.env` file, based on your inputs.
 
 Additional options can be provided to customize the resource during creation.
 
@@ -217,7 +217,7 @@ To retrieve the current Cognito configuration from AWS and update your local env
 php artisan cognito:sync --aws-to-local
 ```
 
-This operation retrieves the supported configuration values from the Cognito User Pool and App Client and updates the corresponding values in the `.env` file.
+This operation retrieves the configuration values from the Cognito User Pool and App Client and updates the corresponding values in the `.env` file. If you don't provide any pool ID or client ID, the command will use the default configured User Pool and App Client values from your `.env` file.
 
 #### Synchronize Local Configuration to AWS
 
