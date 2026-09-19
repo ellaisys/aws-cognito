@@ -40,7 +40,8 @@ class MakeCommand extends Command
                                 {--name= : Provide a name for the resource to be created. Enter "terms-of-use" or "privacy-policy" for creating terms.}
                                 {--detail= : Provide a description for the resource to be created and for terms, must provide a link to the terms document}
                                 {--pool-id= : The user pool ID}
-                                {--client-id= : The user pool client ID}';
+                                {--client-id= : The user pool client ID}
+                                {--deletion-protection : Enable deletion protection for the user pool}';
 
     /**
      * The console command description.
@@ -165,7 +166,14 @@ class MakeCommand extends Command
      */
     private function promptUserToCreateUserPool(string $poolName): array
     {
-        $response = $this->createUserPool(Str::studly($poolName));
+        $deletionProtection = $this->option('deletion-protection') ?? false;
+
+        // Check the pool name for validity as per cognito standards
+        if (!preg_match('/^[\w\s+=,.@-]+$/', $poolName)) {
+            throw new Exception('Invalid pool name. Kindly use only alphanumeric characters and some special characters.');
+        } //End if
+
+        $response = $this->createUserPool($poolName, $deletionProtection);
 
         // Success message
         $this->newLine();

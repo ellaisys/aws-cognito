@@ -200,17 +200,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito User Pool Deletion Protection - Pool Configuration
-    |--------------------------------------------------------------------------
-    | This option controls the default cognito user pool deletion protection.
-    | You can set the deletion protection in your AWS Cognito User Pool
-    | configuration, and the value should be set to 'ACTIVE' or 'INACTIVE'.
-    | The default value is set to 'ACTIVE'.
-    */
-    'user_pool_deletion_protection' => env('AWS_COGNITO_USER_POOL_DELETION_PROTECTION', 'ACTIVE'),
-
-    /*
-    |--------------------------------------------------------------------------
     | Cognito User Pool Device Enabled - Pool Configuration
     |--------------------------------------------------------------------------
     | This option controls whether the user pool device feature is enabled.

@@ -197,10 +197,6 @@ class SyncCommand extends Command
                 $this->delEnv('AWS_COGNITO_DEVICE_ONLY_REMEMBERED_ON_USER_PROMPT');
             } // End if
 
-            // Set the value in .env file (Deletion Protection)
-            $this->setEnvConditionally('AWS_COGNITO_USER_POOL_DELETION_PROTECTION',
-                $userPool['DeletionProtection'] ?: 'ACTIVE', 'cognito.user_pool_deletion_protection');
-
             // Set the value in .env file (MFA Setup)
             $this->setEnvConditionally('AWS_COGNITO_MFA_SETUP',
                 $userPool['MfaConfiguration'] ?: 'OFF', 'cognito.mfa_setup');

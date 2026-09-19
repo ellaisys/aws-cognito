@@ -80,10 +80,12 @@ trait ManagesUserPoolAction
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPool.html
      *
      * @param string $poolName
+     * @param bool $deletionProtection (default: false)
      *
      * @return \AwsResult
      */
-    final public function createUserPool(string $poolName): AwsResult
+    final public function createUserPool(string $poolName,
+        bool $deletionProtection = false): AwsResult
     {
         try {
             $payload = [
@@ -114,7 +116,7 @@ trait ManagesUserPoolAction
                     ]
                 ],
                 'AutoVerifiedAttributes' => ['email'],
-                'DeletionProtection' => config('cognito.user_pool_deletion_protection', 'ACTIVE'),
+                'DeletionProtection' => $deletionProtection ? 'ACTIVE' : 'INACTIVE',
                 'Schema' => [
                     [
                         'Name' => 'email',

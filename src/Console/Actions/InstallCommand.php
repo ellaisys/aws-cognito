@@ -327,8 +327,13 @@ class InstallCommand extends Command
                 $suggestedName = 'NewPool-' . Str::random(5);
                 $name = $this->ask('Enter the name of the new pool', $suggestedName);
 
+                // Check the pool name for validity as per cognito standards
+                if (!preg_match('/^[\w\s+=,.@-]+$/', $name)) {
+                    throw new Exception('Invalid pool name. Kindly use only alphanumeric characters and some special characters.');
+                } //End if
+
                 // Create the new pool
-                $newPool = $this->createUserPool($name);
+                $newPool = $this->createUserPool($name, true);
 
                 $poolMap[$choice] = [
                     'id' => $newPool['Id'],
