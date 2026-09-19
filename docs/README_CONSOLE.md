@@ -24,6 +24,7 @@ All commands are available through Laravel's Artisan CLI.
     + [Make Command](#make-command)
     + [List Command](#list-command)
     + [Sync Command](#sync-command)
+    + [Purge Command](#purge-command)
 
 
 ## AWS IAM Configuration
@@ -98,6 +99,8 @@ The following commands provide the primary CLI interface for managing the Cognit
 | `cognito:list` | List and inspect supported Cognito resources. |
 | `cognito:list-config` | List and inspect the Cognito configuration. |
 | `cognito:sync` | Synchronize configuration between AWS Cognito and the local environment. |
+| `cognito:purge` | Remove identified Cognito resources. |
+
 
 For detailed information about any command, use the Laravel Artisan `--help` option:
 
@@ -158,7 +161,7 @@ php artisan cognito:make --pool --name=MyUserPool
 
 The command uses the supplied name and the configured Cognito options to create the resource in AWS. It will automatically apply the necessary settings based on your configuration values. The command will prompt you for any additional required information during the creation process and also synchronize the configuration with your `.env` file, based on your inputs.
 
-Additional options can be provided to customize the resource during creation.
+Additional options are available to customize the resource during creation. For example, you can specify deletion protection for the user pool by additionally using the `--deletion-protection` flag or provide a description for terms documents.
 
 > [!NOTE]
 > When creating resources that require IAM roles, such as SMS-based Cognito configuration, ensure that the IAM identity executing the command has the required `iam:PassRole` permission.
@@ -231,3 +234,32 @@ This operation reads the supported Cognito configuration values from the local e
 
 > [!WARNING]
 > The `--local-to-aws` option can modify your AWS Cognito configuration. Review your local configuration before running this command, particularly when using it against a production User Pool.
+
+
+### *Purge Command*
+
+> [!WARNING]
+> The `cognito:purge` command permanently deletes AWS Cognito resources. Use this command with caution, especially when targeting production resources.
+
+The `cognito:purge` command removes AWS Cognito resources by providing their identifiers for deletion.
+
+It can be used to clean up resources such as:
+
+- User Pools
+- App Clients
+
+Example, to purge a specific Cognito User Pool, run:
+
+```sh
+php artisan cognito:purge --pool
+```
+The console will prompt for confirmation before permanently deleting the specified Cognito User Pool. If the identifier is not provided, the command will list the available User Pools for selection.
+
+The user pool with deletion protection enabled cannot be deleted with the `cognito:purge` command unless the deletion protection is disabled first. This ensures that critical user pools are not accidentally removed. Attempting to delete a protected user pool will result in an error message prompting you to disable deletion protection before proceeding.
+
+Similarly, to purge a specific App Client, you can run:
+
+```sh
+php artisan cognito:purge --client
+```
+The console will prompt for confirmation before permanently deleting the specified Cognito App Client. If the identifier is not provided, the command will list the available App Clients for selection.
