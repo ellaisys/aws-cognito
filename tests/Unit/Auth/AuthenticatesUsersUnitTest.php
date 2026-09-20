@@ -121,6 +121,28 @@ class AuthenticatesUsersUnitTest extends TestCase
     } // Function ends
 
     /**
+     * Test that the attemptLoginSRP method throws a ValidationException
+     * for invalid data.
+     */
+    #[Test]
+    #[Depends('test_method_attemptLoginSRP_exists_in_class')]
+    public function test_method_attemptLoginSRP_with_invalid_data(): void
+    {
+        Config::set('cognito.allowed_auth_flows', [
+            'ALLOW_USER_SRP_AUTH',
+        ]);
+
+        $this->expectException(ValidationException::class);
+
+        $request = request()->merge([
+            'username' => 'valid_user',
+            'password' => 'valid_password',
+        ]);
+
+        $this->class->attemptLoginSRP($request);
+    } // Function ends
+
+    /**
      * Test that the challenge method exists in the class.
      */
     #[Test]
