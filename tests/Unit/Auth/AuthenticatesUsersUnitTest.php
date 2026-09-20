@@ -106,6 +106,10 @@ class AuthenticatesUsersUnitTest extends TestCase
     #[Depends('test_method_attemptLoginSRP_exists_in_class')]
     public function test_method_attemptLoginSRP_with_invalid_config(): void
     {
+        Config::set('cognito.allowed_auth_flows', [
+            'ALLOW_USER_PASSWORD_AUTH',
+        ]);
+
         $this->expectException(AwsCognitoException::class);
 
         $request = request()->merge([

@@ -616,11 +616,12 @@ trait AuthenticatesUsers
      * @param \Illuminate\Http\Request $request
      * @return void
      */
-    private function callPreAuthEvent(Request $request): void
+    private function callPreAuthEvent(Request $request,
+        string $paramPassword='password'): void
     {
         //Raise pre registration event
         event(new PreAuthEvent(
-            $request->except($this->passwordField),
+            $request->except($paramPassword),
             $request->ip()
         ));
     } //Function ends
