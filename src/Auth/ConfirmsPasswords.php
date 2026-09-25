@@ -115,9 +115,6 @@ trait ConfirmsPasswords
 
             //Get User Data
             $this->authData = $client->adminGetUser($payload[$paramUsername]);
-            if (empty($this->authData)) {
-                throw new InvalidUserException(AwsCognitoException::COGNITO_USER_INVALID);
-            } //End if
 
             //Action based on User Status
             switch (CognitoUserStatusTypes::from($this->authData['UserStatus'])) {
@@ -142,10 +139,7 @@ trait ConfirmsPasswords
 
             return $returnValue;
         } catch(Exception $e) {
-            Log::error('ConfirmsPasswords:confirm:Exception', ['$e' => $e]);
-            if ($e instanceof CognitoIdentityProviderException) {
-                throw AwsCognitoException::create($e);
-            } //End if
+            Log::error('ConfirmsPasswords:confirm:Exception');
             throw $e;
         } //Try-catch ends
     } //Function ends
