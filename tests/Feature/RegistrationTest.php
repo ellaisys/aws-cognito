@@ -29,23 +29,10 @@ class RegistrationTest extends TestCase
     {
         parent::setUp(); // Always good practice to call parent setup
 
-        /**
-         * Override the configuration at runtime
-         */
-        Config::set('cognito.registration_enabled', true);
-        Config::set('cognito.allow_phone_number', false);
-        Config::set('cognito.force_new_user_password', false);
-        Config::set('cognito.mfa_setup', 'OFF');
-        Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
-        Config::set('cognito.desired_delivery_mediums', ['EMAIL']);
-
         // Create a unique name and email for the test
-        $name = 'Testbench Register Temp User';
-        $email = 'ellaisys+tb_tmp_register_' . random_int(1000, 9999) . '@gmail.com';
-
         $this->user = [
-            'name' => $name,
-            'email' => $email
+            'name' => 'Testbench Register Temp User',
+            'email' => 'ellaisys+tb_tmp_register_' . random_int(1000, 9999) . '@gmail.com'
         ];
     } //Function ends
 
