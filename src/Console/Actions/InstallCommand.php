@@ -329,7 +329,7 @@ class InstallCommand extends Command
 
                 // Check the pool name for validity as per cognito standards
                 if (!preg_match('/^[\w\s+=,.@-]+$/', $name)) {
-                    throw new Exception('Invalid pool name. Kindly use only alphanumeric characters and some special characters.');
+                    throw new ConsoleException('Invalid pool name. Kindly use only alphanumeric characters and some special characters.');
                 } //End if
 
                 // Create the new pool

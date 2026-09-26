@@ -344,8 +344,8 @@ $passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?? [];
             $this->newLine();
             $this->info('Syncing local .env configuration to AWS Cognito...');
 
-            if ($this->userPoolId == 'wrong') {
-                throw new Exception('User Pool ID is not set.');
+            if (!$this->userPoolId) {
+                throw new ConsoleException('User Pool ID is not set.');
             } // End if
 
             $this->info(self::DONE);
