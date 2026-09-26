@@ -44,7 +44,7 @@ class RegistrationUnitTest extends TestCase
 
         // Create a unique name and email for the test
         $name = 'Testbench Register Temp User';
-        $email = 'ellaisys+tb_register_tmp_' . rand(1000, 9999) . '@gmail.com';
+        $email = 'ellaisys+tb_tmp_register_' . random_int(1000, 9999) . '@gmail.com';
 
         $this->user = [
             'name' => $name,

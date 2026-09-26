@@ -38,7 +38,7 @@ class InviteUserTest extends TestCase
 
         // Create a unique name and email for the test
         $name = 'Testbench Invite Temp User';
-        $email = 'ellaisys+tb_invite_' . rand(1000, 9999) . '@gmail.com';
+        $email = 'ellaisys+tb_tmp_invite_' . random_int(1000, 9999) . '@gmail.com';
 
         $this->user = [
             'name' => $name,
