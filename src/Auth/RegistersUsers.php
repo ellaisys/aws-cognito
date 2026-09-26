@@ -70,7 +70,7 @@ trait RegistersUsers
      */
     public function invite(Request $request, ?array $clientMetadata = null): mixed
     {
-        $this->registrationType = RegistrationTypes::INVITE; 
+        $this->registrationType = RegistrationTypes::INVITE;
         $this->redirectTo = config('cognito.routes.web.home_page');
         $this->messageKey = 'cognito::messages.auth.invitation_success';
 

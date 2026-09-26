@@ -110,7 +110,7 @@ trait UtilsTrait
 
             // Update on the screen
             $this->newLine();
-            $this->line("✓ Deleted {$key}");            
+            $this->line("✓ Deleted {$key}");
         } // End if
 
         return true;

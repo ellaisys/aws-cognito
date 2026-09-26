@@ -72,7 +72,7 @@ trait RefreshToken
                 $request->merge([
                     $this->paramUsername => $username,
                     $this->paramRefreshToken => $refreshToken,
-                ]);              
+                ]);
             } //End if
 
             //Process token refresh

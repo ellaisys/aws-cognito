@@ -187,7 +187,7 @@ class BaseAuthTraitUnitTest extends TestCase
                 'HTTP_ACCEPT' => 'application/json',
                 'CONTENT_TYPE' => 'application/json',
             ]
-        );        
+        );
 
         $data = $this->fixture->getDataFromQueryParam($request, $key, $encType, $isEmail);
         $this->assertSame($value, $data);
@@ -234,7 +234,7 @@ class BaseAuthTraitUnitTest extends TestCase
                 'HTTP_ACCEPT' => 'application/json',
                 'CONTENT_TYPE' => 'application/json',
             ]
-        );        
+        );
 
         $data = $this->fixture->getDataFromQueryParam($request, $key, $encType, $isEmail);
         $this->assertSame(null, $data);

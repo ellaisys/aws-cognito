@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Routing\Router;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithViews; 
+use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 
 use Workbench\Database\Seeders\DatabaseSeeder;
 use Orchestra\Testbench\Concerns\WithWorkbench;
