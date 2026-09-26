@@ -108,6 +108,8 @@ class VerifiesEmailsUnitTest extends TestCase
      */
     public static function verifyMethodExceptionDataProvider(): array
     {
+        $someEmail = 'someone@example.com';
+
         return [
             'no data' => [
                 [],
@@ -126,11 +128,11 @@ class VerifiesEmailsUnitTest extends TestCase
                 ValidationException::class,
             ],
             'valid email but missing code' => [
-                ['email' => 'someone@example.com', 'code' => null],
+                ['email' => $someEmail, 'code' => null],
                 ValidationException::class,
             ],
             'valid email but empty code' => [
-                ['email' => 'someone@example.com', 'code' => ''],
+                ['email' => $someEmail, 'code' => ''],
                 ValidationException::class,
             ],
             'missing both code and email' => [
@@ -138,7 +140,7 @@ class VerifiesEmailsUnitTest extends TestCase
                 ValidationException::class,
             ],
             'code non numeric' => [
-                ['email' => 'someone@example.com', 'code' => 'abc'],
+                ['email' => $someEmail, 'code' => 'abc'],
                 ValidationException::class,
             ],
             'valid payload format' => [
