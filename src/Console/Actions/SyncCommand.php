@@ -170,7 +170,7 @@ class SyncCommand extends Command
             // Get user pool configuration from AWS Cognito
             $userPool = $this->getUserPoolConfig($this->userPoolId);
 
-            $passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?: [];
+$passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?? [];
             if (!empty($passwordPolicy)) {
                 // Set the value in .env file (Password Policy - Base 64 encoded data)
                 $this->setEnvConditionally('AWS_COGNITO_PASSWORD_POLICY',
