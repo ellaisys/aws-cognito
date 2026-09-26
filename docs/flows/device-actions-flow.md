@@ -14,16 +14,16 @@ sequenceDiagram
     participant AWS as AWS Cognito<br/>Identity Provider
     participant Store as Storage<br/>(Cache/Session/DB)
 
-    rect rgb(235,245,255)
+    rect rgb(235, 255, 235)
     note over Client,Store: Confirm New Device (after login)
-    Client->>Route: POST /device/confirm {access_token, device_key, device_group_key, device_password}
-    Route->>Controller: confirmDevice(Request)
-    Controller->>Validator: validate(device_key, device_group_key required)
+    Client->>Route: POST /device {access_token, device_key, device_name, device_config}
+    Route->>Controller: create(Request)
+    Controller->>Validator: validate(device_key required, device_config required)
     alt validation fails
         Validator-->>Controller: ValidationException
         Controller-->>Client: 422 Unprocessable Entity
     else validation passes
-        Controller->>CognitoClient: confirmDevice(accessToken, deviceKey, deviceSecretVerifier)
+        Controller->>CognitoClient: confirmDevice(access_token, device_key, device_name, device_config)
         CognitoClient->>AWS: ConfirmDevice
         alt device already exists / error
             AWS-->>CognitoClient: InvalidParameterException
@@ -38,16 +38,16 @@ sequenceDiagram
     end
     end
 
-    rect rgb(235,255,240)
-    note over Client,Store: Remember Device (Skip MFA)
-    Client->>Route: POST /device/remember {access_token, device_key, remember_status}
-    Route->>Controller: updateDeviceStatus(Request)
-    Controller->>Validator: validate(device_key, remember_status: boolean)
+    rect rgb(255,255,255)
+    note over Client,Store: Remember Device (Skip MFA) If User Confirmation is Required
+    Client->>Route: PUT /device/{device_key} {access_token, remembered_status}
+    Route->>Controller: update(Request, device_key)
+    Controller->>Validator: validate(device_key: string required, remembered_status: boolean)
     alt validation fails
         Validator-->>Controller: ValidationException
         Controller-->>Client: 422 Unprocessable Entity
     else validation passes
-        Controller->>CognitoClient: updateDeviceStatus(accessToken, deviceKey, rememberStatus)
+        Controller->>CognitoClient: updateDeviceStatus(access_token, device_key, rememberedStatus: string)
         CognitoClient->>AWS: UpdateDeviceStatus (remembered/not_remembered)
         alt device not found
             AWS-->>CognitoClient: ResourceNotFoundException
@@ -62,11 +62,11 @@ sequenceDiagram
     end
     end
 
-    rect rgb(255,250,235)
-    note over Client,Store: List Devices
-    Client->>Route: GET /device/list {access_token}
-    Route->>Controller: listDevices(Request)
-    Controller->>CognitoClient: listDevices(accessToken)
+    rect rgb(255,255,255)
+    note over Client,Store: List Devices for the authenticated user
+    Client->>Route: GET /device {access_token}
+    Route->>Controller: list(Request)
+    Controller->>CognitoClient: listDevices(access_token, limit: 10, pagination_token: null)
     CognitoClient->>AWS: ListDevices
     alt token invalid
         AWS-->>CognitoClient: NotAuthorizedException
@@ -80,12 +80,12 @@ sequenceDiagram
     end
     end
 
-    rect rgb(245,235,255)
+    rect rgb(255,255,255)
     note over Client,Store: Get Device Details
     Client->>Route: GET /device/{device_key} {access_token}
     Route->>Controller: getDevice(Request, device_key)
-    Controller->>Validator: validate(device_key format)
-    Controller->>CognitoClient: getDevice(accessToken, deviceKey)
+    Controller->>Validator: validate(device_key: string required)
+    Controller->>CognitoClient: getDevice(access_token, device_key)
     CognitoClient->>AWS: GetDevice
     alt device not found
         AWS-->>CognitoClient: ResourceNotFoundException
@@ -101,13 +101,13 @@ sequenceDiagram
     rect rgb(255,235,235)
     note over Client,Store: Forget / Delete Device
     Client->>Route: DELETE /device/{device_key} {access_token}
-    Route->>Controller: forgetDevice(Request, device_key)
-    Controller->>Validator: validate(device_key required)
+    Route->>Controller: delete(Request, device_key)
+    Controller->>Validator: validate(device_key: string required)
     alt validation fails
         Validator-->>Controller: ValidationException
         Controller-->>Client: 422 Unprocessable Entity
     else validation passes
-        Controller->>CognitoClient: forgetDevice(accessToken, deviceKey)
+        Controller->>CognitoClient: forgetDevice(access_token, device_key)
         CognitoClient->>AWS: ForgetDevice
         alt device not found
             AWS-->>CognitoClient: ResourceNotFoundException
