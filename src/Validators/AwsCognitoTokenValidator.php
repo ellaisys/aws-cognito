@@ -102,6 +102,7 @@ class AwsCognitoTokenValidator
                 throw new InvalidTokenException('Malformed token');
             }
         } catch(Exception $exception) {
+            Log::error('AwsCognitoTokenValidator:validateStructure:Exception');
             throw $exception;
         } //End try-catch
         
