@@ -198,18 +198,21 @@ class BaseAuthTraitUnitTest extends TestCase
      */
     public static function successQueryParamDataProvider(): array
     {
+        $validSimpleEmail = 'test@example.com';
+        $validComplexEmail = 'test+alias@example.com';
+
         return [
-            'default' => [['email' => 'test@example.com']],
-            'default_with_null' => [['email' => 'test@example.com'], null, false],
-            'default_with_default_type' => [['email' => 'test@example.com'], 'DEFAULT', false],
-            'default_with_email_and_validation' => [['email' => 'test@example.com'], 'DEFAULT', true],
-            'default_with_complex_email_and_validation' => [['email' => 'test+alias@example.com'], 'DEFAULT', true],
-            'url_encode_with_complex_email_and_validation' => [['email' => 'test+alias@example.com'], 'URL_ENCODE', true],
-            'no_encode_with_complex_email' => [['email' => 'test+alias@example.com'], 'NONE', false],
-            'base64_encode_with_complex_email_and_validation' => [['email' => base64_encode('test+alias@example.com')], 'BASE64_ENCODE', true],
-            'rawurl_encode_with_complex_email_and_validation' => [['email' => rawurlencode('test+alias@example.com')], 'RAW_URL_ENCODE', true],
+            'default' => [['email' => $validSimpleEmail]],
+            'default_with_null' => [['email' => $validSimpleEmail], null, false],
+            'default_with_default_type' => [['email' => $validSimpleEmail], 'DEFAULT', false],
+            'default_with_email_and_validation' => [['email' => $validSimpleEmail], 'DEFAULT', true],
+            'default_with_complex_email_and_validation' => [['email' => $validComplexEmail], 'DEFAULT', true],
+            'url_encode_with_complex_email_and_validation' => [['email' => $validComplexEmail], 'URL_ENCODE', true],
+            'no_encode_with_complex_email' => [['email' => $validComplexEmail], 'NONE', false],
+            'base64_encode_with_complex_email_and_validation' => [['email' => base64_encode($validComplexEmail)], 'BASE64_ENCODE', true],
+            'rawurl_encode_with_complex_email_and_validation' => [['email' => rawurlencode($validComplexEmail)], 'RAW_URL_ENCODE', true],
             'base64_encode_with_url_and_no_validation' => [['email' => base64_encode('http://www.example.com')], 'BASE64_ENCODE', false],
-            'rawurl_encode_with_url_and_no_validation' => [['email' => rawurlencode('http://www.example.com')], 'RAW_URL_ENCODE', false],
+            'rawurl_encode_with_url_and_no_validation' => [['email' => rawurlencode('http://www.example.net')], 'RAW_URL_ENCODE', false],
         ];
     } // Function ends
 
@@ -245,15 +248,18 @@ class BaseAuthTraitUnitTest extends TestCase
      */
     public static function wrongQueryParamDataProvider(): array
     {
+        $malformedEmail = 'test@exam';
+        $malformedComplexEmail = 'test+alias@exam';
+
         return [
-            'malformed_key' => [['malformed_key' => 'test@exam'], null, false],
-            'malformed_email_with_validation' => [['email' => 'test@exam'], null, true],
-            'malformed_email_with_default_type' => [['email' => 'test@exam'], 'DEFAULT', true],
-            'default_with_complex_malformed_email_and_validation' => [['email' => 'test+alias@exam'], 'DEFAULT', true],
-            'url_encode_with_complex_malformed_email_and_validation' => [['email' => 'test+alias@exam'], 'URL_ENCODE', true],
-            'no_encode_with_complex_malformed_email' => [['email' => 'test+alias@exam'], 'NONE', true],
-            'base64_encode_with_complex_malformed_email_and_validation' => [['email' => base64_encode('test+alias@exam')], 'BASE64_ENCODE', true],
-            'rawurl_encode_with_complex_malformed_email_and_validation' => [['email' => rawurlencode('test+alias@exam')], 'RAW_URL_ENCODE', true],
+            'malformed_key' => [['malformed_key' => $malformedEmail], null, false],
+            'malformed_email_with_validation' => [['email' => $malformedEmail], null, true],
+            'malformed_email_with_default_type' => [['email' => $malformedEmail], 'DEFAULT', true],
+            'default_with_complex_malformed_email_and_validation' => [['email' => $malformedComplexEmail], 'DEFAULT', true],
+            'url_encode_with_complex_malformed_email_and_validation' => [['email' => $malformedComplexEmail], 'URL_ENCODE', true],
+            'no_encode_with_complex_malformed_email' => [['email' => $malformedComplexEmail], 'NONE', true],
+            'base64_encode_with_complex_malformed_email_and_validation' => [['email' => base64_encode($malformedComplexEmail)], 'BASE64_ENCODE', true],
+            'rawurl_encode_with_complex_malformed_email_and_validation' => [['email' => rawurlencode($malformedComplexEmail)], 'RAW_URL_ENCODE', true],
         ];
     } // Function ends
 
@@ -384,7 +390,7 @@ class BaseAuthTraitUnitTest extends TestCase
     public function test_get_cognito_user_by_admin_exception(): void
     {
         $this->expectException(Exception::class);
-        $this->fixture->getCognitoUserByAdmin(request()->merge(['username' => 'testuser']));
+        $this->fixture->getCognitoUserByAdmin(request()->merge(['username' => 'testuser1']));
     } // Function ends
 
     /**
@@ -394,7 +400,7 @@ class BaseAuthTraitUnitTest extends TestCase
     public function test_get_cognito_user_by_admin_exception_wrong_key(): void
     {
         $this->expectException(\TypeError::class);
-        $this->fixture->getCognitoUserByAdmin(request()->merge(['wrong_key' => 'testuser']));
+        $this->fixture->getCognitoUserByAdmin(request()->merge(['wrong_key' => 'testuser2']));
     } // Function ends
 
 } // Class ends
