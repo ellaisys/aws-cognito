@@ -3,6 +3,12 @@
 > [!NOTE]
 > Last Updated: <!-- AUTO:last_updated -->2026-08-31<!-- /AUTO:last_updated -->
 
+## [Release 53 (tag v2.0.9)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.9) - 2026-09-30
+- Feat: Issue [#150](https://github.com/ellaisys/aws-cognito/issues/150) Add additional test cases for improved coverage and reliability.
+- Feat: Add console command coverage for various authentication and management actions.
+- Feat: Add Architecture Diagrams and detailed flow diagrams for various authentication and management processes.
+- Doc: Update documentation to reflect new features, test cases and coverage improvements.
+
 ## [Release 52 (tag v2.0.8)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.8) - 2026-08-31
 - Feat: Issue [#133](https://github.com/ellaisys/aws-cognito/issues/133) Resolved minor bugs and improved code stability.
 - Feat: Add PHPUnit unit/feature/exception tests, including console command coverage.
