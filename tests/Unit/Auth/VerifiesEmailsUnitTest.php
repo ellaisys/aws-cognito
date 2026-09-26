@@ -196,9 +196,10 @@ class VerifiesEmailsUnitTest extends TestCase
     #[Depends('test_method_resend_exists_in_class')]
     #[DataProvider('resendMethodExceptionDataProvider')]
     public function test_method_resend_with_query_data_invalid_payload(
-        string $key, mixed $value = null, string $expectedException): void
+        string $key, ?string $value = null,
+        ?string $expectedException = ValidationException::class): void
     {
-        $request = Request::create('/?' . $key . '=' . $value, 'POST', [], [], [],
+        $request = Request::create('/?' . $key . '=' . $value ?: '', 'POST', [], [], [],
             [
                 'HTTP_ACCEPT' => TestCase::APPLICATION_JSON,
                 'CONTENT_TYPE' => TestCase::APPLICATION_JSON,
