@@ -42,6 +42,9 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CustomExceptionHandlerTest extends TestCase
 {
+    const TEST_EXCEPTION_ROUTE = '/test-exception';
+    const NOT_FOUND_MESSAGE = 'Not Found';
+
     /**
      * Test exceptions that are mapped to a JSON response.
      */
@@ -51,11 +54,11 @@ class CustomExceptionHandlerTest extends TestCase
         Throwable $exception, int $expectedStatusCode,
         string $expectedMessage): void
     {
-        Route::get('/test-exception', function () use ($exception) {
+        Route::get(self::TEST_EXCEPTION_ROUTE, function () use ($exception) {
             throw $exception;
         });
 
-        $response = $this->getJson('/test-exception');
+        $response = $this->getJson(self::TEST_EXCEPTION_ROUTE);
 
         $response->assertStatus($expectedStatusCode);
 
@@ -73,9 +76,9 @@ class CustomExceptionHandlerTest extends TestCase
 
         return [
             'not found' => [
-                new NotFoundHttpException('Not Found'),
+                new NotFoundHttpException(self::NOT_FOUND_MESSAGE),
                 Response::HTTP_BAD_REQUEST,
-                'Not Found',
+                self::NOT_FOUND_MESSAGE,
             ],
 
             'http exception' => [
@@ -170,11 +173,11 @@ class CustomExceptionHandlerTest extends TestCase
     {
         $exception = new AwsCognitoException($message, $previous, [], $expectedStatusCode);
 
-        Route::get('/test-exception', function () use ($exception) {
+        Route::get(self::TEST_EXCEPTION_ROUTE, function () use ($exception) {
             throw $exception;
         });
 
-        $response = $this->getJson('/test-exception');
+        $response = $this->getJson(self::TEST_EXCEPTION_ROUTE);
 
         $response->assertStatus($expectedStatusCode);
     } // Function ends
@@ -226,11 +229,11 @@ class CustomExceptionHandlerTest extends TestCase
     {
         config(['app.debug' => true]);
 
-        Route::get('/test-exception', function () {
+        Route::get(self::TEST_EXCEPTION_ROUTE, function () {
             throw new \Exception('Something went wrong');
         });
 
-        $response = $this->getJson('/test-exception');
+        $response = $this->getJson(self::TEST_EXCEPTION_ROUTE);
 
         $response->assertStatus(Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -252,11 +255,11 @@ class CustomExceptionHandlerTest extends TestCase
     {
         config(['app.debug' => false]);
 
-        Route::get('/test-exception', function () {
+        Route::get(self::TEST_EXCEPTION_ROUTE, function () {
             throw new \Exception('Something went wrong');
         });
 
-        $response = $this->getJson('/test-exception');
+        $response = $this->getJson(self::TEST_EXCEPTION_ROUTE);
 
         $response->assertStatus(Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -271,11 +274,11 @@ class CustomExceptionHandlerTest extends TestCase
     #[Test]
     public function test_unauthorized_exception_redirects_to_login(): void
     {
-        Route::get('/test-exception', function () {
+        Route::get(self::TEST_EXCEPTION_ROUTE, function () {
             throw new AuthenticationException('Authentication required.');
         });
 
-        $response = $this->get('/test-exception');
+        $response = $this->get(self::TEST_EXCEPTION_ROUTE);
 
         $response->assertRedirect();
 
@@ -291,16 +294,16 @@ class CustomExceptionHandlerTest extends TestCase
     {
         $this->from('/previous-page');
 
-        Route::get('/test-exception', function () {
-            throw new NotFoundHttpException('Not Found');
+        Route::get(self::TEST_EXCEPTION_ROUTE, function () {
+            throw new NotFoundHttpException(self::NOT_FOUND_MESSAGE);
         });
 
-        $response = $this->get('/test-exception');
+        $response = $this->get(self::TEST_EXCEPTION_ROUTE);
 
         $response->assertRedirect('/previous-page');
 
         $response->assertSessionHas('status', 'error');
-        $response->assertSessionHas('message', 'Not Found');
+        $response->assertSessionHas('message', self::NOT_FOUND_MESSAGE);
     } // Function ends
 
     /**
@@ -311,14 +314,14 @@ class CustomExceptionHandlerTest extends TestCase
     {
         $this->from('/form');
 
-        Route::get('/test-exception', function () {
+        Route::get(self::TEST_EXCEPTION_ROUTE, function () {
             throw ValidationException::withMessages([
                 'email' => ['The email field is required.'],
                 'password' => ['The password field is required.'],
             ]);
         });
 
-        $response = $this->get('/test-exception');
+        $response = $this->get(self::TEST_EXCEPTION_ROUTE);
 
         $response->assertRedirect('/form');
 
@@ -342,17 +345,17 @@ class CustomExceptionHandlerTest extends TestCase
     {
         Log::spy();
 
-        Route::get('/test-exception', function () {
-            throw new NotFoundHttpException('Not Found');
+        Route::get(self::TEST_EXCEPTION_ROUTE, function () {
+            throw new NotFoundHttpException(self::NOT_FOUND_MESSAGE);
         });
 
-        $this->getJson('/test-exception');
+        $this->getJson(self::TEST_EXCEPTION_ROUTE);
 
         Log::shouldHaveReceived('error')
             ->once()
             ->withArgs(function ($message, $context) {
-                return $message === 'Not Found'
-                    && $context['message'] === 'Not Found'
+                return $message === self::NOT_FOUND_MESSAGE
+                    && $context['message'] === self::NOT_FOUND_MESSAGE
                     && array_key_exists('ip', $context);
             });
     } // Function ends
