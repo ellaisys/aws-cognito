@@ -32,6 +32,7 @@ use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
+use Exception;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -147,11 +148,11 @@ class CustomExceptionHandlerTest extends TestCase
             'email' => ['The email field is required.'],
         ]);
 
-        Route::get('/test-exception', function () use ($exception) {
+        Route::get(self::TEST_EXCEPTION_ROUTE, function () use ($exception) {
             throw $exception;
         });
 
-        $response = $this->getJson('/test-exception');
+        $response = $this->getJson(self::TEST_EXCEPTION_ROUTE);
 
         $response->assertStatus(
             Response::HTTP_UNPROCESSABLE_ENTITY
@@ -230,7 +231,7 @@ class CustomExceptionHandlerTest extends TestCase
         config(['app.debug' => true]);
 
         Route::get(self::TEST_EXCEPTION_ROUTE, function () {
-            throw new \Exception('Something went wrong');
+            throw new Exception('Something went wrong');
         });
 
         $response = $this->getJson(self::TEST_EXCEPTION_ROUTE);
@@ -256,7 +257,7 @@ class CustomExceptionHandlerTest extends TestCase
         config(['app.debug' => false]);
 
         Route::get(self::TEST_EXCEPTION_ROUTE, function () {
-            throw new \Exception('Something went wrong');
+            throw new Exception('Something went wrong');
         });
 
         $response = $this->getJson(self::TEST_EXCEPTION_ROUTE);
