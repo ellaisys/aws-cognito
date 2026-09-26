@@ -4,7 +4,7 @@
     </div>
 @endif
 
-@if ((session('status') && session('status') === 'error') || $errors->any())
+@if ((session('status') && session('status') === 'error') || (isset($errors) && $errors->any()))
     <div class="alert alert-danger" role="alert">
         {{ session('message') }}
         @if ($errors->any())
@@ -23,5 +23,3 @@
         @endif
     </div>
 @endif
-
-

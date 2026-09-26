@@ -12,21 +12,24 @@
                     <form method="POST" action="{{ route('cognito.action.password.reset') }}">
                         @csrf
 
+                        <?php
+                            $tokenValue = isset($token) ? $token : null;
+                            $tokenValue = is_null($tokenValue) && request()->has('token') ? request()->get('token') : $tokenValue;
+                        ?>
+
                         @if(request()->has('code'))
                             <input type="hidden" name="code" value="{{ request()->get('code') }}" />
-                        @elseif(request()->has('token'))
-                            <input type="hidden" name="token" value="{{ request()->get('token') }}" />
+                        @elseif(!is_null($tokenValue))
+                            <input type="hidden" name="token" value="{{ $tokenValue }}" />
                         @else
                             <div class="row mb-3">
                                 <label for="token" class="col-md-4 col-form-label text-md-end">{{ __('Token') }}</label>
 
                                 <div class="col-md-6">
-                                    <input id="token" type="text"
+                                    <input type="text" id="token" name="token"
                                         class="form-control @error('token') is-invalid @enderror"
-                                        name="token"
-                                        value="{{ request()->has('token') ? request()->get('token') : old('token') }}"
-                                        autocomplete="off"
-                                        {{ request()->has('token') ? 'disabled' : 'required autofocus' }}/>
+                                        value="{{ old('token') }}"
+                                        autocomplete="off" required autofocus />
 
                                     @error('token')
                                         <span class="invalid-feedback" role="alert">
@@ -42,15 +45,16 @@
                                 class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
 
                             <div class="col-md-6">
-                                @if(request()->has('email'))
-                                <input type="hidden" name="email" value="{{ request()->get('email') }}" />
-                                @endif
-                                <input id="email" type="email"
+                                <?php
+                                    $emailValue = isset($email) ? $email : null;
+                                    $emailValue = is_null($emailValue) && request()->has('email') ? request()->get('email') : $emailValue;
+                                ?>
+
+                                <input type="email" id="email" name="email"
                                     class="form-control @error('email') is-invalid @enderror"
-                                    name="email"
-                                    value="{{ request()->has('email') ? request()->get('email') : old('email') }}"
+                                    value="{{ $emailValue }}"
                                     autocomplete="off"
-                                    {{ request()->has('email') ? 'disabled' : 'required autofocus' }} />
+                                    {{ !is_null($emailValue) ? 'disabled' : 'required autofocus' }} />
 
                                 @error('email')
                                     <span class="invalid-feedback" role="alert">
