@@ -58,8 +58,8 @@ class ConfirmsPasswordsUnitTest extends TestCase
         // Create a Json request
         $this->requestJson = Request::create('/', 'POST', [], [], [],
             [
-                'HTTP_ACCEPT' => 'application/json',
-                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => TestCase::APPLICATION_JSON,
+                'CONTENT_TYPE' => TestCase::APPLICATION_JSON,
             ]
         );
     } //Function ends
@@ -139,17 +139,17 @@ class ConfirmsPasswordsUnitTest extends TestCase
             'valid password format with new password missing username' => [
                 [
                     'challenge_name' => 'NEW_PASSWORD_REQUIRED',
-                    'password' => 'ValidPassword!123',
-                    'new_password' => 'NewValidPassword!123'
+                    'password' => 'ValidPassword!234',
+                    'new_password' => 'NewValidPassword!234'
                 ],
                 ValidationException::class,
             ],
             'valid data format with all required fields' => [
                 [
                     'challenge_name' => 'NEW_PASSWORD_REQUIRED',
-                    'password' => 'ValidPassword!123',
-                    'new_password' => 'NewValidPassword!123',
-                    'new_password_confirmation' => 'NewValidPassword!123',
+                    'password' => 'ValidPassword!345',
+                    'new_password' => 'NewValidPassword!345',
+                    'new_password_confirmation' => 'NewValidPassword!345',
                     'email' => 'someone@example.com'
                 ],
                 AwsCognitoException::class,

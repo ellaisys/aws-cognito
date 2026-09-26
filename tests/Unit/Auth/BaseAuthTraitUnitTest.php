@@ -53,8 +53,8 @@ class BaseAuthTraitUnitTest extends TestCase
         // Create a Json request
         $this->requestJson = Request::create('/', 'POST', [], [], [],
             [
-                'HTTP_ACCEPT' => 'application/json',
-                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => TestCase::APPLICATION_JSON,
+                'CONTENT_TYPE' => TestCase::APPLICATION_JSON,
             ]
         );
     } //Function ends
@@ -184,8 +184,8 @@ class BaseAuthTraitUnitTest extends TestCase
         // Create a GET request with the provided query parameters
         $request = Request::create('/', 'GET', $queryParams, [], [],
             [
-                'HTTP_ACCEPT' => 'application/json',
-                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => TestCase::APPLICATION_JSON,
+                'CONTENT_TYPE' => TestCase::APPLICATION_JSON,
             ]
         );
 
@@ -231,8 +231,8 @@ class BaseAuthTraitUnitTest extends TestCase
         // Create a GET request with the provided query parameters
         $request = Request::create('/', 'GET', $queryParams, [], [],
             [
-                'HTTP_ACCEPT' => 'application/json',
-                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => TestCase::APPLICATION_JSON,
+                'CONTENT_TYPE' => TestCase::APPLICATION_JSON,
             ]
         );
 

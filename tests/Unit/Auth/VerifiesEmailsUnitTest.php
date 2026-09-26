@@ -56,8 +56,8 @@ class VerifiesEmailsUnitTest extends TestCase
         // Create a Json request
         $this->requestJson = Request::create('/', 'POST', [], [], [],
             [
-                'HTTP_ACCEPT' => 'application/json',
-                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => TestCase::APPLICATION_JSON,
+                'CONTENT_TYPE' => TestCase::APPLICATION_JSON,
             ]
         );
     } //Function ends
@@ -157,8 +157,8 @@ class VerifiesEmailsUnitTest extends TestCase
     {
         $request = Request::create('/?email=someone@example.com', 'POST', [], [], [],
             [
-                'HTTP_ACCEPT' => 'application/json',
-                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => TestCase::APPLICATION_JSON,
+                'CONTENT_TYPE' => TestCase::APPLICATION_JSON,
             ]
         );
         $request->merge(['code' => 'abcd']);
@@ -198,8 +198,8 @@ class VerifiesEmailsUnitTest extends TestCase
     {
         $request = Request::create('/?' . $key . '=' . $value, 'POST', [], [], [],
             [
-                'HTTP_ACCEPT' => 'application/json',
-                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => TestCase::APPLICATION_JSON,
+                'CONTENT_TYPE' => TestCase::APPLICATION_JSON,
             ]
         );
         $this->expectException($expectedException);
@@ -232,8 +232,8 @@ class VerifiesEmailsUnitTest extends TestCase
     {
         $request = Request::create('/?email=someone@gmail.com', 'POST', [], [], [],
             [
-                'HTTP_ACCEPT' => 'application/json',
-                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => TestCase::APPLICATION_JSON,
+                'CONTENT_TYPE' => TestCase::APPLICATION_JSON,
             ]
         );
         $this->class->isControllerAction = true;

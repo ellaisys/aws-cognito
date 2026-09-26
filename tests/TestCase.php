@@ -31,6 +31,8 @@ abstract class TestCase extends OrchestraTestCase
     use RefreshDatabase;
     use InteractsWithViews;
 
+    public const APPLICATION_JSON = 'application/json';
+
     // Seed the database before each test
     protected $seed = true;
     protected $seeder = DatabaseSeeder::class;

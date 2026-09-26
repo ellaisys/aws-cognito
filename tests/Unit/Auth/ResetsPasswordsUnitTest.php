@@ -58,8 +58,8 @@ class ResetsPasswordsUnitTest extends TestCase
         // Create a Json request
         $this->requestJson = Request::create('/', 'POST', [], [], [],
             [
-                'HTTP_ACCEPT' => 'application/json',
-                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => TestCase::APPLICATION_JSON,
+                'CONTENT_TYPE' => TestCase::APPLICATION_JSON,
             ]
         );
     } //Function ends
