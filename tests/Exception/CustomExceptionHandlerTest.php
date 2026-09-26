@@ -45,6 +45,7 @@ class CustomExceptionHandlerTest extends TestCase
 {
     const TEST_EXCEPTION_ROUTE = '/test-exception';
     const NOT_FOUND_MESSAGE = 'Not Found';
+    const ERROR_MESSAGE = 'An error occurred';
 
     /**
      * Test exceptions that are mapped to a JSON response.
@@ -231,7 +232,7 @@ class CustomExceptionHandlerTest extends TestCase
         config(['app.debug' => true]);
 
         Route::get(self::TEST_EXCEPTION_ROUTE, function () {
-            throw new Exception('Something went wrong');
+            throw new Exception(self::ERROR_MESSAGE);
         });
 
         $response = $this->getJson(self::TEST_EXCEPTION_ROUTE);
@@ -239,7 +240,7 @@ class CustomExceptionHandlerTest extends TestCase
         $response->assertStatus(Response::HTTP_INTERNAL_SERVER_ERROR);
 
         $response->assertJson([
-            'error' => 'Something went wrong',
+            'error' => self::ERROR_MESSAGE,
         ]);
 
         $response->assertJsonStructure([
@@ -257,7 +258,7 @@ class CustomExceptionHandlerTest extends TestCase
         config(['app.debug' => false]);
 
         Route::get(self::TEST_EXCEPTION_ROUTE, function () {
-            throw new Exception('Something went wrong');
+            throw new Exception(self::ERROR_MESSAGE);
         });
 
         $response = $this->getJson(self::TEST_EXCEPTION_ROUTE);
@@ -265,7 +266,7 @@ class CustomExceptionHandlerTest extends TestCase
         $response->assertStatus(Response::HTTP_INTERNAL_SERVER_ERROR);
 
         $response->assertJson([
-            'message' => 'Something went wrong. Please try again later.',
+            'message' => self::ERROR_MESSAGE . ' Please try again later.',
         ]);
     } // Function ends
 
