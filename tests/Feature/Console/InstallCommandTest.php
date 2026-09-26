@@ -22,6 +22,9 @@ use Ellaisys\Cognito\Tests\TestCase;
 #[Group('console'), Group('install-command')]
 class InstallCommandTest extends TestCase
 {
+    private const CONFIRMATION_MESSAGE_CONFIGURE = 'Would you like to configure AWS Cognito now?';
+    private const CONFIRMATION_MESSAGE_CREDENTIALS = 'Are your AWS credentials configured and ready to use?';
+
     /**
      * Test the install command can be cancelled.
      */
@@ -31,7 +34,7 @@ class InstallCommandTest extends TestCase
         // Run the command and cancel the installation
         $this->artisan('cognito:install')
             ->expectsConfirmation(
-                'Would you like to configure AWS Cognito now?',
+                self::CONFIRMATION_MESSAGE_CONFIGURE,
                 'no'
             )
             ->expectsOutputToContain(
@@ -49,11 +52,11 @@ class InstallCommandTest extends TestCase
         // Run the command and decline the AWS credential confirmation
         $this->artisan('cognito:install')
             ->expectsConfirmation(
-                'Would you like to configure AWS Cognito now?',
+                self::CONFIRMATION_MESSAGE_CONFIGURE,
                 'yes'
             )
             ->expectsConfirmation(
-                'Are your AWS credentials configured and ready to use?',
+                self::CONFIRMATION_MESSAGE_CREDENTIALS,
                 'no'
             )
             ->assertExitCode(Command::FAILURE);
@@ -68,7 +71,7 @@ class InstallCommandTest extends TestCase
         // Verify that the command is registered with Artisan
         $this->artisan('cognito:install')
             ->expectsConfirmation(
-                'Would you like to configure AWS Cognito now?',
+                self::CONFIRMATION_MESSAGE_CONFIGURE,
                 'no'
             )
             ->assertExitCode(Command::SUCCESS);
