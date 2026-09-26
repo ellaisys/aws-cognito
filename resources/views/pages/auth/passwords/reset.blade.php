@@ -29,7 +29,7 @@
                                     <input type="text" id="token" name="token"
                                         class="form-control @error('token') is-invalid @enderror"
                                         value="{{ old('token') }}"
-                                        autocomplete="off" required autofocus />
+                                        autocomplete="off" required />
 
                                     @error('token')
                                         <span class="invalid-feedback" role="alert">
@@ -49,6 +49,10 @@
                                     $emailValue = isset($email) ? $email : null;
                                     $emailValue = is_null($emailValue) && request()->has('email') ? request()->get('email') : $emailValue;
                                 ?>
+
+                                @if(!is_null($emailValue))
+                                    <input type="hidden" id="email" name="email" value="{{ $emailValue }}" />
+                                @endif
 
                                 <input type="email" id="email" name="email"
                                     class="form-control @error('email') is-invalid @enderror"
