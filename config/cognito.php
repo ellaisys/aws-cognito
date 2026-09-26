@@ -8,12 +8,6 @@
  * file that was distributed with this source code.
  */
 
-use Illuminate\Support\Str;
-
-$allowPhoneNumber = (env('AWS_COGNITO_MFA_SETUP') !== 'OFF' && Str::contains(env('AWS_COGNITO_MFA_TYPE'), 'SMS_MFA')) ||
-    in_array(env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'), ['SMS', 'BOTH']) ||
-    env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false);
-
 return [
     /*
     |--------------------------------------------------------------------------
@@ -138,7 +132,7 @@ return [
         'nickname' => null,
         'preferred_username' => null,
         'email' => 'email', //Do Not set this parameter to null
-        'phone_number' => $allowPhoneNumber ? 'phone' : null,
+        'phone_number' => 'phone',
         'gender' => null,
         'birthdate' => null,
         'locale' => null
@@ -155,6 +149,17 @@ return [
     |
     */
     'user_subject_uuid' => env('AWS_COGNITO_USER_SUBJECT_UUID', 'sub'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allow Phone Number
+    |--------------------------------------------------------------------------
+    |
+    | This option controls whether phone numbers are allowed for Cognito users.
+    | Set this to true to allow phone numbers, or false to disallow them.
+    |
+    */
+    'allow_phone_number' => (bool) env('AWS_COGNITO_ALLOW_PHONE_NUMBER', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -195,6 +200,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cognito User Pool Device Enabled - Pool Configuration
+    |--------------------------------------------------------------------------
+    | This option controls whether the user pool device feature is enabled.
+    | You can set this in your AWS Cognito User Pool configuration, and the
+    | value should be set to true while creating the user pool.
+    | The default value is set to false.
+    |
+    | Note that enabling this feature requires additional configuration in
+    | your AWS Cognito User Pool shown below by user_pool_device_configuration.
+    | Refer to the AWS Cognito documentation for more details.
+    | https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DeviceConfigurationType.html#API_DeviceConfigurationType_Contents
+    */
+    'user_pool_device_enabled' => (bool) env('AWS_COGNITO_DEVICE_ENABLED', false),
+    'user_pool_device_configuration' => [
+        'ChallengeRequiredOnNewDevice' => env('AWS_COGNITO_DEVICE_CHALLENGE_REQUIRED_ON_NEW_DEVICE', false),
+        'DeviceOnlyRememberedOnUserPrompt' => env('AWS_COGNITO_DEVICE_ONLY_REMEMBERED_ON_USER_PROMPT', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cognito Allowed Auth Flows - Client Configuration
     |--------------------------------------------------------------------------
     | This option controls the default cognito allowed auth flows. You can set
@@ -206,7 +231,7 @@ return [
     | The default value is set as below to allow password based authentication
     | and refresh token authentication.
     */
-    'allowed_auth_flows' => (array) explode(',', env('AWS_COGNITO_ALLOWED_AUTH_FLOWS', 'ALLOW_USER_PASSWORD_AUTH,ALLOW_REFRESH_TOKEN_AUTH')),
+    'allowed_auth_flows' => (array) explode(',', env('AWS_COGNITO_ALLOWED_AUTH_FLOWS', 'ALLOW_REFRESH_TOKEN_AUTH,ALLOW_USER_PASSWORD_AUTH')),
 
     /*
     |--------------------------------------------------------------------------
@@ -234,16 +259,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cognito New User
+    | Cognito New User - Desired Delivery Mediums
     |--------------------------------------------------------------------------
+    | This option controls the delivery medium for the welcome message when a
+    | new user is added to the User Pool.
+    | Set EMAIL if email will be used to send the welcome message, else SMS if
+    | the phone number will be used.
     |
-    | This option controls the default cognito when a new user is add to the
-    | User Pool.
-    |
-    | The options available are "NONE", "BOTH", "EMAIL", "SMS"
+    | The options available are "EMAIL", "SMS"
     |
     */
-    'add_user_delivery_mediums' => env('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'BOTH'),
+    'desired_delivery_mediums' => (array) explode(',', env('AWS_COGNITO_DESIRED_DELIVERY_MEDIUMS', 'SMS,EMAIL')),
 
     /*
     |--------------------------------------------------------------------------

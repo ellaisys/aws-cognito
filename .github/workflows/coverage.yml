@@ -118,11 +118,7 @@ jobs:
           mkdir -p build/coverage build/reports
 
           vendor/bin/phpunit \
-            --exclude-group=make-command \
-            --coverage-clover build/coverage/coverage.xml \
-            --coverage-cobertura build/coverage/cobertura.xml \
-            --coverage-html build/coverage/html \
-            --log-junit build/reports/junit.xml
+            --exclude-group=make-command
 
       # ----------------------------------------------------------
       # Preserve PHPUnit Report
@@ -139,7 +135,7 @@ jobs:
       # ----------------------------------------------------------
       - name: Fix PHPUnit coverage paths
         run: |
-          sed -i 's|/home/runner/work/aws-cognito/aws-cognito/|/github/workspace/|g' build/coverage/coverage.xml
+          sed -i 's|/home/runner/work/aws-cognito/aws-cognito/|/github/workspace/|g' build/coverage/clover.xml
 
       # ----------------------------------------------------------
       # Upload results to SonarCloud

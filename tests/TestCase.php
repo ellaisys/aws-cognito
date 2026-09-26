@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Routing\Router;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 
 use Workbench\Database\Seeders\DatabaseSeeder;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -28,6 +29,9 @@ abstract class TestCase extends OrchestraTestCase
 {
     use WithWorkbench;
     use RefreshDatabase;
+    use InteractsWithViews;
+
+    public const APPLICATION_JSON = 'application/json';
 
     // Seed the database before each test
     protected $seed = true;
@@ -45,8 +49,22 @@ abstract class TestCase extends OrchestraTestCase
     {
         parent::setUp();
 
+        /**
+         * Override the configuration at runtime
+         */
+        Config::set('cognito.registration_enabled', true);
+        Config::set('cognito.allow_phone_number', false);
+        Config::set('cognito.force_new_user_password', false);
+        Config::set('cognito.mfa_setup', 'OFF');
+        Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
+        Config::set('cognito.desired_delivery_mediums', ['EMAIL']);
+
         // Automatically mock Vite for all feature tests
         $this->withoutVite();
+
+        if (! defined('LARAVEL_START')) {
+            define('LARAVEL_START', microtime(true));
+        }
     }
 
     /**
@@ -65,6 +83,9 @@ abstract class TestCase extends OrchestraTestCase
                 'database' => ':memory:',
                 'prefix'   => '',
             ]);
+
+            // Ensure session driver is set for testing
+            $config->set('session.driver', 'array');
         });
     }
 
@@ -86,6 +107,20 @@ abstract class TestCase extends OrchestraTestCase
         $validCredentials = $validCredentialsJson ? json_decode($validCredentialsJson, true) : null;
 
         return $validCredentials ?? [];
+    } //Function ends
+
+    /**
+     * Get invalid credentials.
+     *
+     * @return array
+     */
+    protected function getInvalidCredentials(): array
+    {
+        return [
+            'username' => 'invalid_user',
+            'password' => 'InvalidPassword123!',
+            'email' => 'invalid_email@example.com',
+        ];
     } //Function ends
 
     protected function getPackageProviders($app)

@@ -85,6 +85,15 @@ class SyncCommand extends Command
                 throw new ConsoleException('Provide at least one option: --local-to-aws or --aws-to-local');
             } //End if
 
+            // Check if options are provided
+            $needles = ['pool', 'client', 'mfa'];
+            $haystack = array_filter($this->options());
+            if (empty(array_intersect($needles, array_keys($haystack)))) {
+                $this->input->setOption('pool', true);
+                $this->input->setOption('client', true);
+                $this->input->setOption('mfa', true);
+            } //End if
+
             $this->newLine();
             $this->info('Sync the configurations.');
             $this->newLine();
@@ -122,57 +131,77 @@ class SyncCommand extends Command
         // Initialize return value
         $returnValue = Command::SUCCESS;
 
-        $this->newLine();
-        $this->info('Fetching user pool configuration...');
-        $this->getUserPoolConfigUpdEnv();
-        $this->info(self::DONE);
-        if ($this->option('pool')) {
-            return Command::SUCCESS;
-        } // End if
+        try {
+            if ( $this->option('pool')) {
+                $this->newLine();
+                $this->info('Fetching user pool configuration...');
+                $returnValue = $this->getUserPoolConfigUpdEnv();
+                $this->info(self::DONE);
+            } // End if
 
-        $this->newLine();
-        $this->info('Fetching user pool client configuration...');
-        $this->getUserPoolClientConfigUpdEnv();
-        $this->info(self::DONE);
-        if ($this->option('client')) {
-            return Command::SUCCESS;
-        } // End if
+            if ($this->option('client')) {
+                $this->newLine();
+                $this->info('Fetching user pool client configuration...');
+                $returnValue = $this->getUserPoolClientConfigUpdEnv();
+                $this->info(self::DONE);
+            } // End if
 
-        $this->newLine();
-        $this->info('Fetching user pool MFA configuration...');
-        $this->getUserPoolMfaConfigUpdEnv();
-        $this->info(self::DONE);
-        $this->newLine();
-    
+            if ($this->option('mfa')) {
+                $this->newLine();
+                $this->info('Fetching user pool MFA configuration...');
+                $returnValue = $this->getUserPoolMfaConfigUpdEnv();
+                $this->info(self::DONE);
+                $this->newLine();
+            } // End if
+        } catch (Exception $exception) {
+            Log::error('SyncCommand:syncAwsToLocal:Exception');
+            throw $exception;
+        } // Try-catch ends
+
         return $returnValue;
     } //Function ends
 
     /**
      * Get User Pool configuration and update .env file.
      */
-    private function getUserPoolConfigUpdEnv(): void
+    private function getUserPoolConfigUpdEnv(): int
     {
         try {
             // Get user pool configuration from AWS Cognito
-            if ($userPool = $this->getUserPoolConfig($this->userPoolId)) {
+            $userPool = $this->getUserPoolConfig($this->userPoolId);
 
-                $passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?? [];
-                if (!empty($passwordPolicy)) {
-                    // Set the value in .env file (Password Policy - Base 64 encoded data)
-                    $this->setEnv('AWS_COGNITO_PASSWORD_POLICY',
-                        base64_encode(json_encode($passwordPolicy)));
-                } // End if
-
-                $signinPolicy = $userPool['Policies']['SignInPolicy'] ?? [];
-                if (!empty($signinPolicy)) {
-                    // Set the value in .env file (Sign In Policy)
-                    $this->setEnv('AWS_COGNITO_SIGNIN_POLICY',
-                        implode(',', $signinPolicy['AllowedFirstAuthFactors'] ?? []));
-                } // End if
-
-                // Set the value in .env file
-                $this->setEnv('AWS_COGNITO_MFA_SETUP', $userPool['MfaConfiguration'] ?? 'OFF');
+$passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?? [];
+            if (!empty($passwordPolicy)) {
+                // Set the value in .env file (Password Policy - Base 64 encoded data)
+                $this->setEnvConditionally('AWS_COGNITO_PASSWORD_POLICY',
+                    base64_encode(json_encode($passwordPolicy)), 'cognito.password_policy');
             } // End if
+
+            $signinPolicy = $userPool['Policies']['SignInPolicy'] ?: [];
+            if (!empty($signinPolicy)) {
+                // Set the value in .env file (Sign In Policy)
+                $this->setEnvConditionally('AWS_COGNITO_SIGNIN_POLICY',
+                    implode(',', $signinPolicy['AllowedFirstAuthFactors'] ?: []), 'cognito.signin_policy');
+            } // End if
+
+            // Check for Device Configuration
+            $deviceConfiguration= isset($userPool['DeviceConfiguration']) ? $userPool['DeviceConfiguration'] : [];
+            if (!empty($deviceConfiguration)) {
+                // Set the value in .env file (User Pool Device Configuration)
+                $this->setEnv('AWS_COGNITO_DEVICE_ENABLED', true);
+                $this->setEnv('AWS_COGNITO_DEVICE_CHALLENGE_REQUIRED_ON_NEW_DEVICE', $deviceConfiguration['ChallengeRequiredOnNewDevice']);
+                $this->setEnv('AWS_COGNITO_DEVICE_ONLY_REMEMBERED_ON_USER_PROMPT', $deviceConfiguration['DeviceOnlyRememberedOnUserPrompt']);
+            } else {
+                $this->delEnv('AWS_COGNITO_DEVICE_ENABLED');
+                $this->delEnv('AWS_COGNITO_DEVICE_CHALLENGE_REQUIRED_ON_NEW_DEVICE');
+                $this->delEnv('AWS_COGNITO_DEVICE_ONLY_REMEMBERED_ON_USER_PROMPT');
+            } // End if
+
+            // Set the value in .env file (MFA Setup)
+            $this->setEnvConditionally('AWS_COGNITO_MFA_SETUP',
+                $userPool['MfaConfiguration'] ?: 'OFF', 'cognito.mfa_setup');
+
+            return Command::SUCCESS;
         } catch (Exception $exception) {
             Log::error('SyncCommand:getUserPoolConfigUpdEnv:Exception');
             throw $exception;
@@ -182,48 +211,50 @@ class SyncCommand extends Command
     /**
      * Get User Pool Client configuration and update .env file.
      */
-    private function getUserPoolClientConfigUpdEnv(): void
+    private function getUserPoolClientConfigUpdEnv(): int
     {
         try {
             // Get user pool client configuration from AWS Cognito
-            if ($userPoolClient = $this->getUserPoolClientConfig($this->userPoolId, $this->clientId)) {
+            $userPoolClient = $this->getUserPoolClientConfig($this->userPoolId, $this->clientId);
 
-                // Set the value in .env file
-                $this->setEnv('AWS_COGNITO_CLIENT_SECRET', $userPoolClient['ClientSecret'] ?? '');
+            // Set the value in .env file
+            $this->setEnv('AWS_COGNITO_CLIENT_SECRET', $userPoolClient['ClientSecret'] ?: '');
 
-                // Check for ExplicitAuthFlows
-                $explicitAuthFlows = $userPoolClient['ExplicitAuthFlows'] ?? [];
-                if (!empty($explicitAuthFlows)) {
-                    //Set the value in .env file
-                    $this->setEnv('AWS_COGNITO_ALLOWED_AUTH_FLOWS', implode(',', $explicitAuthFlows));
-                } // End if
-
-                // Check for AuthFlowTypes
-                $allowPasskeys = (in_array('ALLOW_' . Enums\CognitoAuthFlowTypes::USER_AUTH->value, $explicitAuthFlows));
-
+            // Check for ExplicitAuthFlows
+            $explicitAuthFlows = $userPoolClient['ExplicitAuthFlows'] ?: [];
+            if (!empty($explicitAuthFlows)) {
                 //Set the value in .env file
-                $this->setEnv('AWS_COGNITO_ALLOW_PASSKEYS', $allowPasskeys ? true : false);
-
-                $accessTokenValidity = $userPoolClient['AccessTokenValidity'] ?? 60; // Default to 60 minutes if not set
-                $multiplyFactor = $userPoolClient['TokenValidityUnits']['AccessToken'] ?? 'minutes'; // Default to minutes if not set
-                if ($multiplyFactor === 'hours') {
-                    $accessTokenValidity *= 60; // Convert hours to minutes
-                } elseif ($multiplyFactor === 'days') {
-                    $accessTokenValidity *= 1440; // Convert days to minutes
-                } // End if
-
-                //Set the value in .env file
-                $this->setEnv('SESSION_LIFETIME', $accessTokenValidity);
-                $this->setEnv('AUTH_PASSWORD_TIMEOUT', $accessTokenValidity*60); // Convert minutes to seconds
-
-                // Set the value in .env file for token revocation
-                $enableTokenRevocation = $userPoolClient['EnableTokenRevocation'] ?? true; // Default to true if not set
-                $this->setEnv('AWS_COGNITO_ENABLE_TOKEN_REVOCATION', $enableTokenRevocation ? true : false);
-
-                // Set the value in .env file for Auth Session Validity
-                $authSessionValidity = $userPoolClient['AuthSessionValidity'] ?? 3;
-                $this->setEnv('AWS_COGNITO_AUTH_SESSION_VALIDITY', ($authSessionValidity * 60)); // Convert minutes to seconds
+                $this->setEnvConditionally('AWS_COGNITO_ALLOWED_AUTH_FLOWS',
+                    implode(',', $explicitAuthFlows), 'cognito.allowed_auth_flows');
             } // End if
+
+            // Check for AuthFlowTypes
+            $allowPasskeys = (in_array('ALLOW_' . Enums\CognitoAuthFlowTypes::USER_AUTH->value, $explicitAuthFlows));
+
+            //Set the value in .env file
+            $this->setEnvConditionally('AWS_COGNITO_ALLOW_PASSKEYS',
+                $allowPasskeys ? true : false, 'cognito.allow_passkeys');
+
+            $accessTokenValidity = isset($userPoolClient['AccessTokenValidity']) ? $userPoolClient['AccessTokenValidity'] : 60; // Default to 60 minutes if not set
+            $multiplyFactor = isset($userPoolClient['TokenValidityUnits']['AccessToken']) ? $userPoolClient['TokenValidityUnits']['AccessToken'] : 'minutes'; // Default to minutes if not set
+            $accessTokenValidity *= ($multiplyFactor === 'hours' ? 60 : 1); // Convert hours to minutes
+            $accessTokenValidity *= ($multiplyFactor === 'days' ? 1440 : 1); // Convert days to minutes
+
+            //Set the value in .env file
+            $this->setEnv('SESSION_LIFETIME', $accessTokenValidity);
+            $this->setEnv('AUTH_PASSWORD_TIMEOUT', $accessTokenValidity*60); // Convert minutes to seconds
+
+            // Set the value in .env file for token revocation
+            $enableTokenRevocation = isset($userPoolClient['EnableTokenRevocation']) ? $userPoolClient['EnableTokenRevocation'] : true; // Default to true if not set
+            $this->setEnvConditionally('AWS_COGNITO_ENABLE_TOKEN_REVOCATION',
+                $enableTokenRevocation ? true : false, 'cognito.enable_token_revocation');
+
+            // Set the value in .env file for Auth Session Validity
+            $authSessionValidity = isset($userPoolClient['AuthSessionValidity']) ? $userPoolClient['AuthSessionValidity'] : 3;
+            $this->setEnvConditionally('AWS_COGNITO_AUTH_SESSION_VALIDITY',
+                ($authSessionValidity * 60), 'cognito.auth_session_validity'); // Convert minutes to seconds
+
+            return Command::SUCCESS;
         } catch (Exception $exception) {
             Log::error('SyncCommand:getUserPoolClientConfigUpdEnv:Exception');
             throw $exception;
@@ -233,15 +264,20 @@ class SyncCommand extends Command
     /**
      * Get User Pool MFA configuration and update .env file.
      */
-    private function getUserPoolMfaConfigUpdEnv(): void
+    private function getUserPoolMfaConfigUpdEnv(): int
     {
         try {
             // Get user pool MFA configuration from AWS Cognito
-            if ($userPoolMfaConfig = $this->getUserPoolMfaConfig($this->userPoolId)) {
+            $userPoolMfaConfig = $this->getUserPoolMfaConfig($this->userPoolId);
 
+            // Check if MFA is enabled for the user pool
+            if(isset($userPoolMfaConfig['MfaConfiguration']) && $userPoolMfaConfig['MfaConfiguration'] !== 'OFF') {
                 // Check Software Token MFA configuration
                 static $softwareTokenText = 'SOFTWARE_TOKEN_MFA';
-                $softwareTokenEnabled = $userPoolMfaConfig['SoftwareTokenMfaConfiguration']['Enabled'] ?? false;
+                $softwareTokenEnabled = false;
+                if(isset($userPoolMfaConfig['SoftwareTokenMfaConfiguration'])) {
+                    $softwareTokenEnabled = $userPoolMfaConfig['SoftwareTokenMfaConfiguration']['Enabled'] ?: false;
+                } // End if
                 $mfatypes = config('cognito.mfa_type');
 
                 // Remove SOFTWARE_TOKEN_MFA from mfa_type if it's not enabled
@@ -255,11 +291,12 @@ class SyncCommand extends Command
                     $mfatypes[] = $softwareTokenText;
                     $this->setEnv('AWS_COGNITO_MFA_TYPE', implode(',', $mfatypes));
                 } // End if
-
-                // Check WebAuthn MFA configuration
-                $this->processUserPoolMfaWebAuthnConfig($userPoolMfaConfig);
-
             } // End if
+
+            // Check WebAuthn MFA configuration
+            $this->processUserPoolMfaWebAuthnConfig($userPoolMfaConfig);
+
+            return Command::SUCCESS;
         } catch (Exception $exception) {
             Log::error('SyncCommand:getUserPoolMfaConfigUpdEnv:Exception');
             throw $exception;
@@ -274,7 +311,7 @@ class SyncCommand extends Command
     private function processUserPoolMfaWebAuthnConfig($userPoolMfaConfig): void
     {
         // Check WebAuthn MFA configuration
-        $webauthnConfig = $userPoolMfaConfig['WebAuthnConfiguration'] ?? null;
+        $webauthnConfig = isset($userPoolMfaConfig['WebAuthnConfiguration']) ? $userPoolMfaConfig['WebAuthnConfiguration'] : null;
         if ($webauthnConfig) {
             // Set RelyingPartyId if it differs from the current config value
             if ($webauthnConfig['RelyingPartyId'] !== config('cognito.web_authn_mfa_configuration.RelyingPartyId')) {
@@ -307,12 +344,17 @@ class SyncCommand extends Command
             $this->newLine();
             $this->info('Syncing local .env configuration to AWS Cognito...');
 
+            if (!$this->userPoolId) {
+                throw new ConsoleException('User Pool ID is not set.');
+            } // End if
+
             $this->info(self::DONE);
             $this->newLine();
+
+            $returnValue = Command::SUCCESS;
         } catch (Exception $exception) {
             Log::error('SyncCommand:syncLocalToAws:Exception');
-            $this->components->error($exception->getMessage());
-            $returnValue = Command::FAILURE;
+            throw $exception;
         } // Try-catch ends
 
         return $returnValue;

@@ -132,7 +132,7 @@ class InstallCommand extends Command
      *
      * @return int
      */
-    private function checkHygieneData(): int
+    protected function checkHygieneData(): int
     {
         try {
             $this->info('Checking AWS configurations...');
@@ -182,7 +182,7 @@ class InstallCommand extends Command
      *
      * @return int
      */
-    private function setEnvironment(): int
+    protected function setEnvironment(): int
     {
         try {
             // Prompt the user for web and API route prefixes
@@ -197,8 +197,8 @@ class InstallCommand extends Command
             $this->setEnv('AWS_COGNITO_VERSION', 'latest');
             $bar->advance();
 
-            // Set AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS to EMAIL
-            $this->setEnv('AWS_COGNITO_ADD_USER_DELIVERY_MEDIUMS', 'EMAIL');
+            // Set AWS_COGNITO_DESIRED_DELIVERY_MEDIUMS to EMAIL
+            $this->setEnv('AWS_COGNITO_DESIRED_DELIVERY_MEDIUMS', 'EMAIL');
             $bar->advance();
 
             // Set AWS_COGNITO_TOKEN_STORAGE to file
@@ -241,7 +241,7 @@ class InstallCommand extends Command
      *
      * @return int
      */
-    private function getUserPoolId(): int
+    protected function getUserPoolId(): int
     {
         try {
             // If the user pool ID is already set in the .env file, return it
@@ -290,7 +290,7 @@ class InstallCommand extends Command
      *
      * @return array{id: string, name: string, status: string}
      */
-    private function promptUserForUserPoolId(): array
+    protected function promptUserForUserPoolId(): array
     {
         try {
             // Initialize the data map for user pools
@@ -327,8 +327,13 @@ class InstallCommand extends Command
                 $suggestedName = 'NewPool-' . Str::random(5);
                 $name = $this->ask('Enter the name of the new pool', $suggestedName);
 
+                // Check the pool name for validity as per cognito standards
+                if (!preg_match('/^[\w\s+=,.@-]+$/', $name)) {
+                    throw new ConsoleException('Invalid pool name. Kindly use only alphanumeric characters and some special characters.');
+                } //End if
+
                 // Create the new pool
-                $newPool = $this->createUserPool($name);
+                $newPool = $this->createUserPool($name, true);
 
                 $poolMap[$choice] = [
                     'id' => $newPool['Id'],
@@ -359,7 +364,7 @@ class InstallCommand extends Command
      *
      * @return string|null
      */
-    private function getUserPoolClientId(?string $userPoolId, bool $isNew = false): ?string
+    protected function getUserPoolClientId(?string $userPoolId, bool $isNew = false): ?string
     {
         try {
             // If the client ID is already set in the .env file, return it
@@ -395,7 +400,7 @@ class InstallCommand extends Command
      *
      * @return array{id: string, name: string}
      */
-    private function promptUserForUserPoolClientId(?string $userPoolId,
+    protected function promptUserForUserPoolClientId(?string $userPoolId,
         bool $isNew = false): array
     {
         try {
@@ -466,7 +471,7 @@ class InstallCommand extends Command
      *
      * @return int
      */
-    private function promptUserForUserGroups(): int
+    protected function promptUserForUserGroups(): int
     {
         try {
             //Initialize the data map for user groups
@@ -518,7 +523,7 @@ class InstallCommand extends Command
      *
      * @return array{id: string, name: string}
      */
-    private function promptUserForNewUserGroup(): array
+    protected function promptUserForNewUserGroup(): array
     {
         try {
             // Prompt the user to create a new group
@@ -559,7 +564,7 @@ class InstallCommand extends Command
      *
      * @return int
      */
-    private function promptUserForDatabaseMigration(): int
+    protected function promptUserForDatabaseMigration(): int
     {
         $choices = [
             'Yes' => 'yes',

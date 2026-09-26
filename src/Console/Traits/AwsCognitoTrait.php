@@ -72,17 +72,19 @@ trait AwsCognitoTrait
      * Create user pool.
      *
      * @param string $poolName
+     * @param bool $deletionProtection (default: false)
      *
      * @return array
      */
-    final protected function createUserPool(string $poolName): array
+    final protected function createUserPool(string $poolName,
+        bool $deletionProtection = false): array
     {
         try {
             //Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
             //Create user pool
-            $response = $client->createUserPool($poolName);
+            $response = $client->createUserPool($poolName, $deletionProtection);
 
             return $response->get('UserPool');
         } catch (Exception $exception) {

@@ -22,7 +22,7 @@ use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
 use Ellaisys\Cognito\Tests\Traits\AuthenticationTrait;
 
-#[Group('passkey')]
+#[Group('web'), Group('passkey'), Group('webauthn')]
 class PasskeyTest extends TestCase
 {
     use AwsCognitoTrait;
@@ -34,12 +34,15 @@ class PasskeyTest extends TestCase
         parent::setUp();
 
         /**
-         * Override the configuration at runtime to disable MFA and set the
-         * MFA type to SOFTWARE_TOKEN_MFA
+         * Override the configuration at runtime
          */
         Config::set('cognito.mfa_setup', 'OFF');
         Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
-        Config::set('cognito.allowed_auth_flows', ['ALLOW_REFRESH_TOKEN_AUTH', 'ALLOW_USER_PASSWORD_AUTH', 'ALLOW_USER_AUTH']);
+        Config::set('cognito.allowed_auth_flows', [
+            'ALLOW_REFRESH_TOKEN_AUTH',
+            'ALLOW_USER_PASSWORD_AUTH',
+            'ALLOW_USER_AUTH',
+        ]);
     } //Function ends
 
     /**
@@ -93,7 +96,7 @@ class PasskeyTest extends TestCase
     public function test_user_webauthn_registration(): void
     {
         // Authenticate the user before running the tests
-        $this->authenticate();
+        $this->authenticateWeb();
 
         $this->withSession(self::$sessionAuthenticated)
             ->post(route('cognito.action.user.passkey.start'))
@@ -111,4 +114,4 @@ class PasskeyTest extends TestCase
         $this->assertArrayHasKey('pubKeyCredParams', $data['CredentialCreationOptions']);
     } //Function ends
 
-} //Class end
+} //Class ends

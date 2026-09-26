@@ -73,7 +73,7 @@ class AwsCognitoJwksService
      */
     public function downloadJwks(): string
     {
-        $url      = sprintf('https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json', $this->region, $this->poolId);
+        $url = sprintf('https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json', $this->region, $this->poolId);
         $response = Http::get($url);
         $response->throw();
 

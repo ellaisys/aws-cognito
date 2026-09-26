@@ -34,6 +34,7 @@ trait RefreshToken
     private $paramRefreshToken = 'refresh_token';
     private $paramUsername = 'username';
     private $deviceKey = 'device_key';
+    private array $usernameAttributes = [];
 
     /**
      * Generate a new token.
@@ -51,12 +52,17 @@ trait RefreshToken
             //Initialize variables
             $refreshToken = $request->has($this->paramRefreshToken) ? $request[$this->paramRefreshToken] : null;
             $username = $request->has($this->paramUsername) ? $request[$this->paramUsername] : null;
+            $this->usernameAttributes = config('cognito.sign_in_username_attributes', []);
 
             //Check if the refresh token and username are provided
             if (empty($refreshToken) || empty($username)) {
                 //Get from authenticated user
                 $authUser = $this->getAuthenticatedUser($request);
-                $username = $username ?? $authUser[$this->paramUsername];
+                if (empty($this->usernameAttributes)) {
+                    $username = $username ?? $authUser['email'];
+                } else {
+                    $username = $username ?? $authUser['sub'];
+                } //End else
 
                 //Get claim from guard
                 $claim = $this->getClaim($request);
@@ -104,10 +110,11 @@ trait RefreshToken
             //Assign params
             $this->paramRefreshToken = $paramRefreshToken;
             $this->paramUsername = $paramUsername;
+            $this->usernameAttributes = config('cognito.sign_in_username_attributes', []);
 
             // If username present in query parameters is email, decode it before validation and processing
             $email = $this->getDataFromQueryParam($request, $this->paramUsername, EncryptionTypes::URL_ENCODE, true);
-            if (!empty($email)) {
+            if (!empty($email) && empty($this->usernameAttributes)) {
                 $request->merge([$this->paramUsername => $email]);
             } //End if
             
@@ -153,17 +160,11 @@ trait RefreshToken
      */
     private function validateRefreshRequest(Request $request)
     {
-        try{
-            $validator = Validator::make($request->all(), $this->rules());
+        $validator = Validator::make($request->all(), $this->rules());
 
-            if ($validator->fails()) {
-                throw new ValidationException($validator);
-            } //End if
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            throw new HttpException(400, 'ERROR_VALIDATION');
-        } //Try-catch ends
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        } //End if
     } //Function ends
 
     /**

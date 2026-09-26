@@ -150,6 +150,7 @@ jobs:
           mkdir -p build/reports
 
           vendor/bin/phpunit \
+            --no-coverage \
             --exclude-group=make-command
 
       # ----------------------------------------------------------

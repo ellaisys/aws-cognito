@@ -149,21 +149,15 @@ class JsonResponseService
 
         } //End if
 
-        if (!is_array($resource)) {
-            $merged = array_merge($resource->additional ?? [], $meta);
-        } else {
-            $merged = $meta;
-        } //End if
-
         if ($resource instanceof JsonResource) {
-            return $resource->additional($merged);
+            return $resource->additional($meta);
         } //End if
 
         if (is_array($resource)) {
             return (
                 new JsonResource(
                     collect($resource)
-                ))->additional($merged);
+                ))->additional($meta);
         } //End if
 
         throw new HttpException(400, 'Resource must be an array or an instance of JsonResource');

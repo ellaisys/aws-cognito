@@ -40,7 +40,7 @@ class ChangePasswordTest extends TestCase
         Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
 
         // Authenticate the user before running the tests
-        $this->authenticate();
+        $this->authenticateWeb();
     } //Function ends
 
     /**

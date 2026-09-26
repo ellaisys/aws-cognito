@@ -1,17 +1,27 @@
 <?php
 
+/*
+ * This file is part of AWS Cognito Auth solution.
+ *
+ * (c) EllaiSys <ellaisys@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Ellaisys\Cognito\Tests\Feature;
 
 use Illuminate\Support\Facades\Config;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Depends;
-use PHPUnit\Framework\Attributes\DependsExternal;
 
 use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
 use Ellaisys\Cognito\Tests\Traits\AuthenticationTrait;
 
+#[Group('web'), Group('invite'), Group('feature')]
 class InviteUserTest extends TestCase
 {
     use AwsCognitoTrait;
@@ -25,23 +35,18 @@ class InviteUserTest extends TestCase
         parent::setUp(); // Always good practice to call parent setup
 
         /**
-         * Override the configuration at runtime to disable MFA and set the
-         * MFA type to SOFTWARE_TOKEN_MFA
+         * Override the configuration at runtime
          */
-        Config::set('cognito.mfa_setup', 'OFF');
-        Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
+        Config::set('cognito.registration_enabled', false);
 
         // Create a unique name and email for the test
-        $name = 'Testbench Invite User ' . date('dmy');
-        $email = 'ellaisys+tb_invite_' . date('dmyVHm') . '@gmail.com';
-
         $this->user = [
-            'name' => $name,
-            'email' => $email
+            'name' => 'Testbench Invite Temp User',
+            'email' => 'ellaisys+tb_tmp_invite_' . random_int(1000, 9999) . '@gmail.com'
         ];
 
         // Authenticate the user before running the tests
-        $this->authenticate();
+        $this->authenticateWeb();
     } //Function ends
 
     /**

@@ -30,13 +30,15 @@
                             </div>
 
                             <div class="flex-fill form-group mt-4 w-50">
+                                <label for="code">MFA Code</label>
                                 <input type="text" name="code" id="code"
                                     class="form-control" placeholder="Enter the code"
                                     pattern="[0-9]{6}" autocomplete="off" maxlength="6"
                                     oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
-                                    tabindex="-2" autofocus required />
+                                    tabindex="-2" required />
                             </div>
                             <div class="flex-fill form-group mt-1 w-50">
+                                <label for="device_name">Device Name</label>
                                 <input type="text" name="device_name" id="device_name"
                                     class="form-control" placeholder="Enter the device name"
                                     value="My Phone" autocomplete="off"

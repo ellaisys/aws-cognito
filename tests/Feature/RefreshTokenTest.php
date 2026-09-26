@@ -14,14 +14,15 @@ namespace Ellaisys\Cognito\Tests\Feature;
 use Illuminate\Support\Facades\Config;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Depends;
-use PHPUnit\Framework\Attributes\DependsExternal;
 
 use Ellaisys\Cognito\Enums;
 use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
 use Ellaisys\Cognito\Tests\Traits\AuthenticationTrait;
 
+#[Group('web'), Group('refresh'), Group('feature')]
 class RefreshTokenTest extends TestCase
 {
     use AwsCognitoTrait;
@@ -33,11 +34,13 @@ class RefreshTokenTest extends TestCase
         parent::setUp();
 
         /**
-         * Override the configuration at runtime to disable MFA and set the
-         * MFA type to SOFTWARE_TOKEN_MFA
+         * Override the configuration at runtime
          */
         Config::set('cognito.mfa_setup', 'OFF');
         Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
+
+        // Authenticate the user before running the tests
+        $this->authenticateWeb();
     } //Function ends
 
     /**
@@ -55,7 +58,6 @@ class RefreshTokenTest extends TestCase
      */
     #[Test]
     #[Depends('test_valid_settings_for_refresh_auth')]
-    #[DependsExternal(LoginTest::class, 'test_user_can_login_with_correct_credentials')]
     public function test_user_can_login_with_correct_refresh_token(): void
     {
         $claim = self::$claim ?? null;
@@ -134,6 +136,39 @@ class RefreshTokenTest extends TestCase
             ->assertStatus(302)
             ->assertSessionHas('status', 'error')
             ->assertSessionHasErrors(['error' => 'Invalid Refresh Token']);
+    } //Function ends
+
+    /**
+     * Test that a user cannot refresh the token with an invalid payload.
+     */
+    #[Test]
+    public function test_refresh_token_with_invalid_payload(): void
+    {
+        $credentials = $this->getValidCredentials();
+        $payload = [
+            'username' => $credentials['username'] ?? '',
+            'refresh_token' => 'invalid_refresh_token',
+        ];
+
+        $this->withSession(self::$sessionAuthenticated)
+            ->post(route('cognito.action.session.refresh'), $payload)
+            ->assertStatus(302)
+            ->assertSessionHasErrors();
+    } //Function ends
+
+    /**
+     * Test that a user cannot refresh the token with no payload.
+     */
+    #[Test]
+    public function test_refresh_token_with_no_payload(): void
+    {
+        $this->withSession(self::$sessionAuthenticated)
+            ->post(route('cognito.action.session.refresh'))
+            ->assertStatus(302)
+            ->assertSessionHasNoErrors();
+
+        // Assert that the user is authenticated
+        $this->assertAuthenticated();
     } //Function ends
 
 } //Class ends

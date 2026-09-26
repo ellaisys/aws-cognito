@@ -8,7 +8,14 @@
     cacheDirectory=".phpunit.cache"
     backupStaticProperties="false"
 >
-    <coverage ignoreDeprecatedCodeUnits="true" />
+    <coverage ignoreDeprecatedCodeUnits="true">
+        <report>
+            <clover outputFile="build/coverage/clover.xml"/>
+            <cobertura outputFile="build/coverage/cobertura.xml"/>
+            <html outputDirectory="build/coverage/html" lowUpperBound="50" highLowerBound="90"/>
+            <text outputFile="build/coverage/coverage.txt" showUncoveredFiles="false" showOnlySummary="true"/>
+        </report>
+    </coverage>
 
     <testsuites>
         <testsuite name="Unit">
