@@ -1,5 +1,8 @@
 # Overall Architecture – Component & Flow Diagram
 
+> [!NOTE]
+> Last Updated: <!-- AUTO:last_updated -->2026-08-28<!-- /AUTO:last_updated -->
+
 This diagram shows the high-level architecture of the `ellaisys/aws-cognito` Laravel package: how HTTP
 requests flow through routes, controllers/traits, guards, the core service, and out to AWS Cognito and
 local storage — tying together the individual flows documented in this folder.
@@ -14,7 +17,7 @@ flowchart TB
 
     subgraph LaravelApp["Laravel Application"]
         subgraph RoutesLayer["Routes"]
-            R1["auth routes<br/>(login, register, refresh, logout)"]
+            R1["auth routes<br/>(login, srp login, register, refresh, logout, verify, challenge)"]
             R2["password routes<br/>(forgot, reset)"]
             R3["mfa routes"]
             R4["device routes"]
@@ -32,7 +35,6 @@ flowchart TB
         end
 
         subgraph GuardLayer["Auth Guards"]
-            G1["CognitoGuard"]
             G2["CognitoTokenGuard"]
             G3["CognitoSessionGuard"]
         end
@@ -44,7 +46,10 @@ flowchart TB
         end
 
         subgraph SupportLayer["Support / Contracts"]
-            X1["Custom Exceptions<br/>(InvalidUserException,<br/>NoLocalUserException,<br/>AwsCognitoException, etc.)"]
+            X1["Custom Exceptions
+            <br/>(CognitoIdentityProviderException throws AwsCognitoException),
+            <br/>(Also refer to InvalidUserException, NoTokenException,
+            NoLocalUserException, etc)"]
             X2["StorageInterface<br/>(Cache/Session)"]
         end
 
@@ -73,7 +78,7 @@ flowchart TB
     R5 --> C5
     R6 --> C6
 
-    C1 --> G1
+    C1 --> GuardLayer
     C1 --> S1
     C2 --> S1
     C3 --> S1
@@ -81,11 +86,8 @@ flowchart TB
     C5 --> S1
     C6 --> S1
 
-    G1 --> S1
-    G2 --> S1
-    G3 --> S1
-    G1 --> X2
-    G2 --> X2
+    GuardLayer --> S1
+    GuardLayer --> X2
 
     S1 --> S2
     S1 --> S3
@@ -174,3 +176,12 @@ sequenceDiagram
   like custom-auth-based passwordless/passkey login.
 - Individual feature flows (login, registration, MFA, devices, passkeys, admin ops) are detailed in their
   respective files in this `docs/flows` folder; this document ties them together at the architecture level.
+
+
+## Additional Resources (Links to detailed flow diagrams)
+
+- [Authentication Flow](./authentication-flow.md)
+- [MFA Flow](./mfa-setup-flow.md)
+- [Device Authentication Flow](./device-actions-flow.md)
+- [Passkey Flow](./passkeys-flow.md)
+- [Admin Operations Flow](./admin-operations-flow.md)
