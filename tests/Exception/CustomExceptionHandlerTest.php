@@ -266,7 +266,7 @@ class CustomExceptionHandlerTest extends TestCase
         $response->assertStatus(Response::HTTP_INTERNAL_SERVER_ERROR);
 
         $response->assertJson([
-            'message' => self::ERROR_MESSAGE . ' Please try again later.',
+            'message' => 'Something went wrong. Please try again later.',
         ]);
     } // Function ends
 
