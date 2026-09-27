@@ -170,14 +170,14 @@ class SyncCommand extends Command
             // Get user pool configuration from AWS Cognito
             $userPool = $this->getUserPoolConfig($this->userPoolId);
 
-$passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?? [];
+            $passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?? [];
             if (!empty($passwordPolicy)) {
                 // Set the value in .env file (Password Policy - Base 64 encoded data)
                 $this->setEnvConditionally('AWS_COGNITO_PASSWORD_POLICY',
                     base64_encode(json_encode($passwordPolicy)), 'cognito.password_policy');
             } // End if
 
-            $signinPolicy = $userPool['Policies']['SignInPolicy'] ?: [];
+            $signinPolicy = $userPool['Policies']['SignInPolicy'] ?? [];
             if (!empty($signinPolicy)) {
                 // Set the value in .env file (Sign In Policy)
                 $this->setEnvConditionally('AWS_COGNITO_SIGNIN_POLICY',
@@ -344,8 +344,10 @@ $passwordPolicy = $userPool['Policies']['PasswordPolicy'] ?? [];
             $this->newLine();
             $this->info('Syncing local .env configuration to AWS Cognito...');
 
-            if (!$this->userPoolId) {
-                throw new ConsoleException('User Pool ID is not set.');
+            // Set pool ID from local .env configuration
+            $this->userPoolId = config('cognito.user_pool_id', null);
+            if (empty($this->userPoolId)) {
+                throw new ConsoleException('User Pool ID is not set in the local .env configuration.');
             } // End if
 
             $this->info(self::DONE);

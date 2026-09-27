@@ -65,6 +65,11 @@ class SyncCommandTest extends TestCase
     public function test_sync_commands_without_options(string $command): void
     {
         try {
+            //Check for local-to-aws option
+            if (str_contains($command, '--local-to-aws')) {
+                Config::set('cognito.user_pool_id', '');
+            } // End if
+
             // Run the command without any options
             $this->artisan($command)
                 ->assertExitCode(Command::FAILURE);
