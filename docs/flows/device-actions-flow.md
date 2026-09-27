@@ -10,7 +10,7 @@ sequenceDiagram
     participant Route as Laravel Route
     participant Controller as DeviceController<br/>(DeviceActions trait)
     participant Validator as Request Validator
-    participant CognitoClient as AwsCognitoClient<br/>(Service)
+    participant CognitoClient as AwsCognitoClient<br/>(ManageDeviceAction trait)
     participant AWS as AWS Cognito<br/>Identity Provider
     participant Store as Storage<br/>(Cache/Session/DB)
 

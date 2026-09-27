@@ -3,79 +3,63 @@
 Documents passwordless/passkey (WebAuthn / custom-auth-challenge based) authentication interactions,
 covering registration of a passkey credential and authentication using it via Cognito's custom auth flow.
 
-> Note: AWS Cognito does not natively support WebAuthn passkeys as of this writing; this flow models the
-> package's `CUSTOM_AUTH` challenge-based approach commonly used to implement passwordless/passkey login,
-> where a Lambda trigger (Define/Create/Verify Auth Challenge) validates the passkey assertion.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Client
     participant Route as Laravel Route
-    participant Controller as PasskeyController<br/>(PasswordlessActions trait)
+    participant Controller as WebAuthPasskeyController<br/>(WebAuthPasskey trait)
     participant Validator as Request Validator
-    participant CognitoClient as AwsCognitoClient<br/>(Service)
-    participant AWS as AWS Cognito<br/>(Custom Auth + Lambda Triggers)
+    participant CognitoClient as AwsCognitoClient<br/>(ManagePasskeyWebAuthnAction trait)
+    participant AWS as AWS Cognito<br/>Identity Provider
     participant Store as Storage<br/>(Cache/Session/DB)
 
-    rect rgb(235,245,255)
-    note over Client,Store: Register Passkey Credential
-    Client->>Route: POST /passkey/register/options {email}
-    Route->>Controller: getRegistrationOptions(Request)
-    Controller->>Validator: validate(email exists, user active)
+    rect rgb(235, 255, 235)
+    note over Client,Store: Register Passkey (WebAuthn)
+    Client->>Route: POST /passkey/start {access_token}
+    Route->>Controller: start(Request)
+    Controller->>Validator: validate(access_token exists, user active)
     alt validation fails
         Validator-->>Controller: ValidationException
         Controller-->>Client: 422 Unprocessable Entity
     else validation passes
-        Controller->>CognitoClient: generateChallengeOptions(email)
-        CognitoClient->>Store: create/store challenge + user handle
-        Store-->>CognitoClient: ack
-        CognitoClient-->>Controller: WebAuthn creation options
-        Controller-->>Client: 200 {publicKeyCredentialCreationOptions}
-    end
-
-    Client->>Client: navigator.credentials.create() (device-side)
-    Client->>Route: POST /passkey/register/verify {email, attestation}
-    Route->>Controller: verifyRegistration(Request)
-    Controller->>Validator: validate(attestation payload structure)
-    alt validation fails
-        Validator-->>Controller: ValidationException
-        Controller-->>Client: 422 Unprocessable Entity
-    else validation passes
-        Controller->>CognitoClient: verifyAttestation(email, attestation)
+        Controller->>CognitoClient: startWebAuthnRegistration(access_token)
+        CognitoClient->>AWS: StartWebAuthnRegistration
         alt attestation invalid / challenge mismatch
             CognitoClient-->>Controller: throw InvalidUserFieldException
             Controller-->>Client: 400 Bad Request
         else success
-            CognitoClient->>AWS: AdminUpdateUserAttributes<br/>(store public key as custom attribute)
             AWS-->>CognitoClient: ack
-            CognitoClient->>Store: persist credential_id + public_key
+            CognitoClient-->>Controller: ack
+            Controller-->>Client: 200 {publicKeyCredentialCreationOptions}
+        end
+    end
+
+    Client->>Client: navigator.credentials.create() (device-side)
+
+    Client->>Route: POST /passkey/complete {access_token, credential}
+    Route->>Controller: complete(Request)
+    Controller->>Validator: validate(credential payload structure)
+    alt validation fails
+        Validator-->>Controller: ValidationException
+        Controller-->>Client: 422 Unprocessable Entity
+    else validation passes
+        Controller->>CognitoClient: completeWebAuthnRegistration(access_token, credential)
+        CognitoClient->>AWS: CompleteWebAuthnRegistration
+        alt error
+            CognitoClient-->>Controller: throw InvalidUserFieldException
+            Controller-->>Client: 400 Bad Request
+        else success
+            AWS-->>CognitoClient: ack
+            CognitoClient->>Store: persist is_webauthn_enabled true
             CognitoClient-->>Controller: success
             Controller-->>Client: 201 {passkey_registered}
         end
     end
     end
 
-    rect rgb(235,255,240)
-    note over Client,Store: Passwordless Login - Initiate
-    Client->>Route: POST /login/passkey/options {email}
-    Route->>Controller: getAuthenticationOptions(Request)
-    Controller->>Validator: validate(email exists)
-    alt user not found
-        Validator-->>Controller: ValidationException / NoLocalUserException
-        Controller-->>Client: 404 Not Found
-    else success
-        Controller->>CognitoClient: initiateCustomAuth(email)
-        CognitoClient->>AWS: InitiateAuth (CUSTOM_AUTH)
-        AWS->>AWS: DefineAuthChallenge Lambda
-        AWS->>AWS: CreateAuthChallenge Lambda<br/>(fetch stored public_key, generate challenge)
-        AWS-->>CognitoClient: ChallengeName=CUSTOM_CHALLENGE, Session, PublicChallengeParameters
-        CognitoClient-->>Controller: challenge + session
-        Controller-->>Client: 200 {publicKeyCredentialRequestOptions, session}
-    end
-    end
-
-    rect rgb(255,250,235)
+    rect rgb(255,255,255)
     note over Client,Store: Passwordless Login - Verify Assertion
     Client->>Client: navigator.credentials.get() (device-side)
     Client->>Route: POST /login/passkey/verify {email, session, assertion}
@@ -103,14 +87,14 @@ sequenceDiagram
 
     rect rgb(255,235,235)
     note over Client,Store: Remove Passkey Credential
-    Client->>Route: DELETE /passkey/{credential_id} {access_token}
-    Route->>Controller: removePasskey(Request, credential_id)
-    Controller->>Validator: validate(credential_id belongs to user)
+    Client->>Route: DELETE /passkey/delete {access_token, credential_id}
+    Route->>Controller: delete(Request, credential_id)
+    Controller->>Validator: validate(credential_id required)
     alt not found / not owned
         Validator-->>Controller: ValidationException
         Controller-->>Client: 404 Not Found
     else success
-        Controller->>CognitoClient: removeCredential(accessToken, credentialId)
+        Controller->>CognitoClient: deleteWebAuthnCredential(access_token, credential_id)
         CognitoClient->>AWS: AdminUpdateUserAttributes<br/>(clear/remove public_key attribute)
         AWS-->>CognitoClient: ack
         CognitoClient->>Store: delete credential record
