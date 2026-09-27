@@ -11,6 +11,8 @@
 
 namespace Ellaisys\Cognito\Tests;
 
+use Illuminate\Support\Facades\Config;
+
 use Illuminate\Support\Str;
 use Illuminate\Routing\Router;
 use Illuminate\Contracts\Config\Repository;
