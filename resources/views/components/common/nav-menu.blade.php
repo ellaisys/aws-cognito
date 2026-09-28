@@ -47,34 +47,38 @@
     </a>
     @endif
 
-    <div class="dropdown-divider"></div>
+    @if (config('cognito.allow_passkeys'))
+        <div class="dropdown-divider"></div>
 
-    @php
-        $passkeyEnabled = (Auth::user() && isset(Auth::user()->is_webauthn_enabled)) ? Auth::user()->is_webauthn_enabled : false;
-    @endphp
+        @php
+            $passkeyEnabled = (Auth::user() && isset(Auth::user()->is_webauthn_enabled)) ? Auth::user()->is_webauthn_enabled : false;
+        @endphp
 
-    @if (Route::has('cognito.action.user.passkey.delete') && config('cognito.allow_passkeys') && $passkeyEnabled)
-    <button type="button" class="dropdown-item"
-        data-role="passkey-webauthn" data-action="delete"
-        data-userkey="{{ base64_encode(Auth::user()->email) }}">
-        {{ __('Delete Passkey') }}
-    </button>
+        @if (Route::has('cognito.action.user.passkey.delete') && $passkeyEnabled)
+        <button type="button" class="dropdown-item"
+            data-role="passkey-webauthn" data-action="delete"
+            data-userkey="{{ base64_encode(Auth::user()->email) }}">
+            {{ __('Delete Passkey') }}
+        </button>
+        @endif
     @endif
 
-    <div class="dropdown-divider"></div>
+    @if (config('cognito.user_pool_device_enabled'))
+        <div class="dropdown-divider"></div>
 
-    @if (Route::has('cognito.action.user.device.create'))
-    <button class="dropdown-item"
-        data-role="device-auth" data-action="register">
-        {{ __('Register Device') }}
-    </button>
-    @endif
+        @if (Route::has('cognito.action.user.device.create'))
+        <button class="dropdown-item"
+            data-role="device-auth" data-action="register">
+            {{ __('Register Device') }}
+        </button>
+        @endif
 
-    @if (Route::has('cognito.action.user.device.delete'))
-    <button class="dropdown-item"
-        data-role="device-auth" data-action="delete">
-        {{ __('Unregister Device') }}
-    </button>
+        @if (Route::has('cognito.action.user.device.delete'))
+        <button class="dropdown-item"
+            data-role="device-auth" data-action="delete">
+            {{ __('Unregister Device') }}
+        </button>
+        @endif
     @endif
 
     <div class="dropdown-divider"></div>
