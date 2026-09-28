@@ -402,7 +402,7 @@ return [
     | encourages it.
     |
     */
-    'allow_passkeys' => env('AWS_COGNITO_ALLOW_PASSKEYS', false),
+    'allow_passkeys' => (bool) env('AWS_COGNITO_ALLOW_PASSKEYS', false),
     'web_authn_mfa_configuration' => [
         'FactorConfiguration' => env('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', 'SINGLE_FACTOR'),
         'RelyingPartyId' => env('AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID', 'localhost'),
@@ -499,7 +499,7 @@ return [
     | send it to the user via email or SMS
     |
     */
-    'force_new_user_password' => env('AWS_COGNITO_FORCE_NEW_USER_PASSWORD', true),
+    'force_new_user_password' => (bool) env('AWS_COGNITO_FORCE_NEW_USER_PASSWORD', true),
 
     /*
     |--------------------------------------------------------------------------
