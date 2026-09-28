@@ -194,7 +194,8 @@ class InstallCommand extends Command
             $bar->start();
 
             // Set AWS_COGNITO_VERSION to latest
-            $this->setEnv('AWS_COGNITO_VERSION', 'latest');
+            $this->setEnvConditionally('AWS_COGNITO_VERSION', 'latest',
+                'cognito.version');
             $bar->advance();
 
             // Set AWS_COGNITO_DESIRED_DELIVERY_MEDIUMS to EMAIL
@@ -202,23 +203,28 @@ class InstallCommand extends Command
             $bar->advance();
 
             // Set AWS_COGNITO_TOKEN_STORAGE to file
-            $this->setEnv('AWS_COGNITO_TOKEN_STORAGE', 'file');
+            $this->setEnvConditionally('AWS_COGNITO_TOKEN_STORAGE',
+                'file', 'cognito.storage_provider');
             $bar->advance();
 
             // Set AWS_COGNITO_FORCE_NEW_USER_PASSWORD to false
-            $this->setEnv('AWS_COGNITO_FORCE_NEW_USER_PASSWORD', false);
+            $this->setEnvConditionally('AWS_COGNITO_FORCE_NEW_USER_PASSWORD',
+                false, 'cognito.force_new_user_password');
             $bar->advance();
 
             // Set AWS_COGNITO_ALLOW_PHONE_NUMBER to false
-            $this->setEnv('AWS_COGNITO_ALLOW_PHONE_NUMBER', false);
+            $this->setEnvConditionally('AWS_COGNITO_ALLOW_PHONE_NUMBER',
+                false, 'cognito.allow_phone_number');
             $bar->advance();
 
             // Set AWS_COGNITO_WEB_PREFIX
-            $this->setEnv('AWS_COGNITO_WEB_PREFIX', $prefixWeb);
+            $this->setEnvConditionally('AWS_COGNITO_WEB_PREFIX',
+                $prefixWeb, 'cognito.web_prefix');
             $bar->advance();
 
             // Set AWS_COGNITO_API_PREFIX
-            $this->setEnv('AWS_COGNITO_API_PREFIX', $prefixApi);
+            $this->setEnvConditionally('AWS_COGNITO_API_PREFIX',
+                $prefixApi, 'cognito.api_prefix');
             $bar->advance();
             $bar->finish();
 
