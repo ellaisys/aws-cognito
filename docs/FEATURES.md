@@ -32,7 +32,7 @@ This document provides a list of features provided by this package. It is not a 
 ### Technical
 
 - Easy API Token handling (uses the cache driver). Refer [Changes in Auth Configurations](README_CONFIG.md#changes-in-auth-configurations)
-- DynamoDB support for Web Sessions and API Tokens. It is useful for server redundency OR multiple containers. Refer [Session Storage Configurations](README_CONFIG.md#dynamodb-storage)
+- DynamoDB support for Web Sessions and API Tokens. It is useful for server redundancy OR multiple containers. Refer [Session Storage Configurations](README_CONFIG.md#dynamodb-storage)
 - Support for App Client without Secret
 - Support for Cognito Groups, including assigning a default group to a new user
 - Session (Web) now has AccessToken and RefreshToken as part of the claim object
