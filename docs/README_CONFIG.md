@@ -82,7 +82,7 @@ protected $routeMiddleware = [
 
 *<u>Laravel 11.0 and above</u>*
 
-The middleware congiguration is defined in the `bootstrap/app.php` file. Please configure as shown below
+The middleware configuration is defined in the `bootstrap/app.php` file. Please configure as shown below
 
 ```php
 // bootstrap/app.php
@@ -141,7 +141,7 @@ The following environment variables are optional and can be used to customize th
 
 #### Session Timeout Configuration
 
-You can configure the session timeout in your `.env` file, aligned with the cognito access token validity, use the `SESSION_LIFETIME` and `AUTH_PASSWORD_TIMEOUT` parameters. This value is in minutes with the default value being 120 mins i.e. 2 hours. This will ensure that the laravel session times out at the same time as the access token. For example:
+You can configure the session timeout in your `.env` file, aligned with the cognito access token validity, use the `SESSION_LIFETIME` and `AUTH_PASSWORD_TIMEOUT` parameters. This value is in minutes with the default value being 120 mins i.e. 2 hours. This will ensure that the Laravel session times out at the same time as the access token. For example:
 
 ```env
 SESSION_LIFETIME=120 // in minutes
@@ -196,7 +196,7 @@ php artisan migrate
 ```
 
 > [!IMPORTANT]
-> This is a new feature that is released in V1.2.0 and shall work with Laravel 8.37 (with anonymous migration support). For verions below Laravel 8.37, this feature is disabled. You will need to update the **users** table migration and add the **sub** column (type:string, nullable:yes, index:yes).
+> This is a new feature that is released in V1.2.0 and shall work with Laravel 8.37 (with anonymous migration support). For versions below Laravel 8.37, this feature is disabled. You will need to update the **users** table migration and add the **sub** column (type:string, nullable:yes, index:yes).
 
 If you need to overwrite the migrations that ship with AWS Cognito, you can publish them using the vendor:publish Artisan command:
 
@@ -232,7 +232,7 @@ This section provides guidance on how to configure your Application models to wo
 #### User Model
 ---
 
-The `User` model is the default model that is used by AWS Cognito to manage the users. In the default laravel setup, the `User` model is located in the `app/Models/User.php` file.
+The `User` model is the default model that is used by AWS Cognito to manage the users. In the default Laravel setup, the `User` model is located in the `app/Models/User.php` file.
 
 > [!IMPORTANT]
 > Starting version 2.0.5 of this package, we have released a few traits to be included into your User Model.
