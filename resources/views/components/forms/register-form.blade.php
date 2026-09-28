@@ -1,3 +1,5 @@
+@inject('controller', 'Ellaisys\Cognito\Http\Controllers\Auth\RegisterController')
+
 <form method="POST" action="{{ route('cognito.action.register.submit') }}">
     @csrf
 
@@ -48,7 +50,7 @@
     </div>
     @endif
 
-    @if(!empty($userPhoneField))
+    @if(!empty($userPhoneField) && ($controller->isPhoneNumberAllowed()))
     <div class="row mb-3">
         <label for="{{ $userPhoneField }}"
             class="col-md-4 col-form-label text-md-end">{{ __('Phone Number') }}</label>
