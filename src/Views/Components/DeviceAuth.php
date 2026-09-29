@@ -95,6 +95,11 @@ class DeviceAuth extends CognitoBaseComponent
      */
     public function render(): View|Closure|string
     {
-        return view('cognito::components.device.main');
+        // Check if the user pool device feature is enabled
+        if (config('cognito.user_pool_device_enabled')) {
+            return view('cognito::components.device.main');
+        } // End if
+
+        return '';
     } //Function end
 } //Class end
