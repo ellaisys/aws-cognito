@@ -118,7 +118,11 @@ jobs:
           mkdir -p build/coverage build/reports
 
           vendor/bin/phpunit \
-            --display-notices --display-deprecations
+            --display-notices \
+            --display-deprecations \
+            --display-phpunit-notices \
+            --display-phpunit-deprecations \
+            --display-all-issues
 
       # ----------------------------------------------------------
       # Preserve PHPUnit Report
