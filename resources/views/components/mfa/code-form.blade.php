@@ -19,7 +19,7 @@
                                 <input type="text" id="challenge_value" name="challenge_value"
                                     class="form-control @error('challenge_value') is-invalid @enderror"
                                     value="" minlength="4"
-                                    autocomplete="email" required autofocus />
+                                    autocomplete="email" required />
 
                                 @error('challenge_value')
                                     <span class="invalid-feedback" role="alert">

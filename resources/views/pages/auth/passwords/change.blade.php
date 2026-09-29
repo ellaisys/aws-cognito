@@ -19,7 +19,7 @@
                                 <input id="password" type="password"
                                     class="form-control @error('password') is-invalid @enderror"
                                     name="password" value=""
-                                    autocomplete="off" required autofocus />
+                                    autocomplete="off" required />
 
                                 @error('password')
                                     <span class="invalid-feedback" role="alert">
