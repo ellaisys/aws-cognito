@@ -79,7 +79,12 @@ class PasskeyWebAuthn extends CognitoBaseComponent
      */
     public function render(): View|Closure|string
     {
-        return view('cognito::components.passkey.webauthn');
+        // Check if the passkey feature is enabled
+        if (config('cognito.allow_passkeys')) {
+            return view('cognito::components.passkey.webauthn');
+        } // End if
+
+        return '';
     } //Function end
 
 } //Class end
