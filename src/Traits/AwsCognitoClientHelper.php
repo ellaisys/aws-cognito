@@ -251,20 +251,14 @@ trait AwsCognitoClientHelper
                 $payload['MessageAction'] = $messageAction;
             } //End If
 
-            //Set Delivery Mediums
-            if (config('cognito.add_user_delivery_mediums')!="NONE") {
-                if (config('cognito.add_user_delivery_mediums')=="BOTH") {
-                    $payload['DesiredDeliveryMediums'] = ['EMAIL', 'SMS'];
-                } else {
-                    $defaultDeliveryMedium = config('cognito.add_user_delivery_mediums', "EMAIL");
-                    $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
-                } //End if
+            // Set Delivery Mediums
+            $deliveryMediums = config('cognito.desired_delivery_mediums', ['EMAIL']);
+            if (config('cognito.mfa_setup') !== 'OFF') {
+                $deliveryMediums[] = 'SMS';
             } //End if
-            
-            if (config('cognito.mfa_setup')!="OFF") {
-                $defaultDeliveryMedium = 'SMS';
-                $payload['DesiredDeliveryMediums'] = [ $defaultDeliveryMedium ];
-            } //End if
+            $payload['DesiredDeliveryMediums'] = array_values(
+                array_unique($deliveryMediums)
+            );
         } catch (Exception $e) {
             Log::error('AwsCognitoClientHelper:buildInviteUserPayload:Exception');
             throw $e;

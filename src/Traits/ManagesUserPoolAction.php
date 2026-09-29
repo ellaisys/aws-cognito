@@ -80,10 +80,12 @@ trait ManagesUserPoolAction
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPool.html
      *
      * @param string $poolName
+     * @param bool $deletionProtection (default: false)
      *
      * @return \AwsResult
      */
-    final public function createUserPool(string $poolName): AwsResult
+    final public function createUserPool(string $poolName,
+        bool $deletionProtection = false): AwsResult
     {
         try {
             $payload = [
@@ -114,6 +116,7 @@ trait ManagesUserPoolAction
                     ]
                 ],
                 'AutoVerifiedAttributes' => ['email'],
+                'DeletionProtection' => $deletionProtection ? 'ACTIVE' : 'INACTIVE',
                 'Schema' => [
                     [
                         'Name' => 'email',
@@ -128,7 +131,6 @@ trait ManagesUserPoolAction
                 'UsernameConfiguration' => [
                     'CaseSensitive' => false
                 ],
-                'UsernameAttributes' => config('cognito.sign_in_username_attributes', ['email']),
                 'UserPoolTags' => [
                     'Project' => config('app.name', 'AWS Cognito'),
                     'Environment' => config('app.env', 'Development'),
@@ -136,10 +138,20 @@ trait ManagesUserPoolAction
                 ],
             ];
 
+            // Add username attributes if configured
+            if (!empty(config('cognito.sign_in_username_attributes', []))) {
+                $payload['UsernameAttributes'] = config('cognito.sign_in_username_attributes');
+            } //End if
+
             // If MFA is enabled, then add the SMS configuration to the payload
             if ((config('cognito.mfa_setup', 'OFF') !== 'OFF') ||
                 (in_array('SMS_OTP', config('cognito.signin_policy', ['PASSWORD'])))) {
                 $payload['SmsConfiguration'] = config('cognito.sms_mfa_configuration.SmsConfiguration');
+            } //End if
+
+            // Add user pool device configuration if set
+            if (config('cognito.user_pool_device_enabled', false)) {
+                $payload['DeviceConfiguration'] = config('cognito.user_pool_device_configuration');
             } //End if
 
             return $this->client->createUserPool($payload);
@@ -287,6 +299,7 @@ trait ManagesUserPoolAction
                     config('app.url', 'http://localhost')
                 ],
                 'SupportedIdentityProviders' => ['COGNITO'],
+                'PreventUserExistenceErrors' => 'ENABLED',
                 'ReadAttributes' => ['name', 'given_name', 'email', 'email_verified'],
             ];
 

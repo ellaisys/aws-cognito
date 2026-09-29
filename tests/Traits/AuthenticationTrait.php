@@ -15,6 +15,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\DependsExternal;
 
+use Illuminate\Testing\TestResponse;
+
 use Ellaisys\Cognito\Enums;
 
 use Exception;
@@ -22,9 +24,9 @@ use Exception;
 trait AuthenticationTrait
 {
     /**
-     * Authenticate the user using valid credentials.
+     * Authenticate the user using valid credentials for web.
      */
-    public function authenticate(): void
+    public function authenticateWeb(): TestResponse
     {
         $this->validateUserPoolClientConfig(
             Enums\CognitoAuthFlowTypes::USER_PASSWORD_AUTH);
@@ -35,7 +37,7 @@ trait AuthenticationTrait
             'username' => $credentials['email'] ?? '',
             'password' => $credentials['password'] ?? '',
         ];
-        $this->post(route('cognito.action.login.submit'), $payload);
+        $response = $this->post(route('cognito.action.login.submit'), $payload);
 
         // Assert that the user is authenticated
         $this->assertAuthenticated();
@@ -43,6 +45,40 @@ trait AuthenticationTrait
         if (session()->has('claim')) {
             self::$sessionAuthenticated = session()->all();
             self::$claim = session('claim');
+        } //End if
+
+        $this->assertClaimIsValid();
+
+        return $response;
+    } //Function ends
+
+    /**
+     * Authenticate the user using valid credentials for API.
+     */
+    public function authenticateApi(): void
+    {
+        $this->validateUserPoolClientConfig(
+            Enums\CognitoAuthFlowTypes::USER_PASSWORD_AUTH);
+
+        // Get valid credentials for the user
+        $credentials = $this->getValidCredentials();
+        $payload = [
+            'username' => $credentials['email'] ?? '',
+            'password' => $credentials['password'] ?? '',
+        ];
+        $response = $this->postJson($this->apiPath('/login'), $payload)
+            ->assertStatus(200)
+            ->assertJsonPath('status', 'success')
+            ->assertJsonStructure([
+                'data' => [
+                    'AccessToken',
+                    'RefreshToken',
+                    'IdToken',
+                ],
+            ]);
+
+        if (array_key_exists('data', $response->json())) {
+            self::$claim = $response->json();
         } //End if
 
         $this->assertClaimIsValid();

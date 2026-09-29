@@ -89,7 +89,7 @@ trait AuthenticatesUsers
      *
      * @return mixed
      */
-    protected function attemptLogin(Request $request,
+    final public function attemptLogin(Request $request,
         CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH,
         string $paramUsername='email',
         string $paramPassword='password',
@@ -106,7 +106,7 @@ trait AuthenticatesUsers
             $guard = $this->getGuard($request);
 
             //Raise Pre Auth Event
-            $this->callPreAuthEvent($request);
+            $this->callPreAuthEvent($request, $paramPassword);
 
             //Get the password policy
             $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
@@ -162,7 +162,7 @@ trait AuthenticatesUsers
      *
      * @return mixed
      */
-    protected function attemptLoginSRP(Request $request,
+    final public function attemptLoginSRP(Request $request,
         CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_SRP_AUTH,
         string $paramUsername = 'email',
         string $paramPassword = 'password',
@@ -180,7 +180,7 @@ trait AuthenticatesUsers
             $guard = $this->getGuard($request);
 
             //Raise Pre Auth Event
-            $this->callPreAuthEvent($request);
+            $this->callPreAuthEvent($request, $paramPassword);
 
             //Generate the SRP_A parameter if not present in the request
             if (!$request->has($paramPassword)) {
@@ -232,10 +232,11 @@ trait AuthenticatesUsers
     /**
      * Logout action for the API based approach.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     * @param bool $forced (optional) set to true to force logout the user.
      * @return bool
      */
-    public function logout(Request $request, bool $forced = false)
+    final public function logout(Request $request, bool $forced = false)
     {
         $returnValue = null;
         try {
@@ -289,7 +290,7 @@ trait AuthenticatesUsers
      *
      * @return mixed
      */
-    protected function challenge(Request $request): mixed
+    final public function challenge(Request $request): mixed
     {
         $returnValue = null;
         try {
@@ -400,7 +401,7 @@ trait AuthenticatesUsers
     {
         try {
             if ($request->has('challenge_name')) {
-                $challangeName = CognitoChallengeTypes::from($request['challenge_name']);
+                $challangeName = CognitoChallengeTypes::tryFrom($request['challenge_name']);
                 if ($challangeName == CognitoChallengeTypes::SELECT_CHALLENGE &&
                     $request->has('challenge_value') &&
                     $request['challenge_value'] == 'PASSWORD_SRP') {
@@ -615,11 +616,12 @@ trait AuthenticatesUsers
      * @param \Illuminate\Http\Request $request
      * @return void
      */
-    private function callPreAuthEvent(Request $request): void
+    private function callPreAuthEvent(Request $request,
+        string $paramPassword='password'): void
     {
         //Raise pre registration event
         event(new PreAuthEvent(
-            $request->except($this->passwordField),
+            $request->except($paramPassword),
             $request->ip()
         ));
     } //Function ends
@@ -674,11 +676,11 @@ trait AuthenticatesUsers
     protected function rulesChallenge()
     {
         return [
-            'username'          => 'sometimes',
-            'session'           => 'required',
-            'challenge_name'    => 'required|string|in:SELECT_CHALLENGE,WEB_AUTHN,EMAIL_OTP,SMS_OTP,SELECT_MFA_TYPE,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD,PASSWORD_SRP,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER,NEW_PASSWORD_REQUIRED',
+            'session'           => 'required|string',
+            'challenge_name'    => 'required|string|in:SELECT_CHALLENGE,WEB_AUTHN,EMAIL_OTP,SMS_OTP,SELECT_MFA_TYPE,SOFTWARE_TOKEN_MFA,SMS_MFA,EMAIL_MFA,PASSWORD,PASSWORD_VERIFIER,DEVICE_SRP_AUTH,DEVICE_PASSWORD_VERIFIER,NEW_PASSWORD_REQUIRED',
             'challenge_value'   => 'required|string',
-            'challenge_params'  => 'sometimes|string'
+            'challenge_params'  => 'sometimes|string',
+            'username'          => 'sometimes|string',
         ];
     } //Function ends
 

@@ -172,18 +172,19 @@ trait AwsCognitoClientAdminAction
      *
      * @param string $username
      *
-     * @return mixed
+     * @return \Aws\Result
+     * @throws AwsCognitoException
      */
-    public function adminGetUser(string $username): mixed
+    public function adminGetUser(string $username): AwsResult
     {
         try {
             return $this->client->adminGetUser([
                 'Username' => $username,
                 'UserPoolId' => $this->poolId,
             ]);
-        } catch (CognitoIdentityProviderException $e) {
+        } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAdminAction:adminGetUser:CognitoIdentityProviderException');
-            throw $e;
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
     } //Function ends
 

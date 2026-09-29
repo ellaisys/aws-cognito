@@ -115,7 +115,7 @@ trait VerifiesEmails
 
             //Create data to save
             $payload = $request->only([
-                'email', 'code'
+                'email'
             ]);
 
             $response = app()->make(AwsCognitoClient::class)->resendConfirmationCode(

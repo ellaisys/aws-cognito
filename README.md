@@ -116,6 +116,8 @@ The following diagram illustrates the high level architecture and design of this
 
 ![Laravel Authentication using AWS Cognito - Architecture and Design](./assets/images/aws_cognito_package_architecture.png)
 
+For more details on the architecture and design, refer to [Architecture and Design](./docs/flows/architecture-overview.md)
+
 
 ## Installation
 

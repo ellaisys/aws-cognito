@@ -132,12 +132,11 @@ trait ResetsPasswords
      */
     public function showResetForm(Request $request, string $token = null)
     {
-        return view('cognito.form.password.reset')->with(
-            [
-                'email' => $request->email ?? '',
+        return view('cognito::pages.auth.passwords.reset')
+            ->with([
+                'email' => $request->email ?: '',
                 'token' => $token
-            ]
-        );
+            ]);
     } //Function ends
 
     /**

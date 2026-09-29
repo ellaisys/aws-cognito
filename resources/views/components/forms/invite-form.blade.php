@@ -1,3 +1,5 @@
+@inject('controller', 'Ellaisys\Cognito\Http\Controllers\Auth\RegisterController')
+
 <form method="POST" action="{{ route('cognito.action.invite.submit') }}">
     @csrf
 
@@ -17,7 +19,7 @@
             <input id="{{ $userNameField }}" type="text"
                 class="form-control @error($userNameField) is-invalid @enderror"
                 name="{{ $userNameField }}" value="{{ old($userNameField) }}"
-                required autocomplete="name" autofocus />
+                required autocomplete="name" />
 
             @error($userNameField)
                 <span class="invalid-feedback" role="alert">
@@ -48,7 +50,7 @@
     </div>
     @endif
 
-    @if(!empty($userPhoneField))
+    @if(!empty($userPhoneField) && ($controller->isPhoneNumberAllowed()))
     <div class="row mb-3">
         <label for="{{ $userPhoneField }}"
             class="col-md-4 col-form-label text-md-end">{{ __('Phone Number') }}</label>

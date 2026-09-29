@@ -14,6 +14,7 @@ namespace Ellaisys\Cognito\Tests\Feature;
 use Illuminate\Support\Facades\Config;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\DependsExternal;
 
@@ -22,6 +23,7 @@ use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
 use Ellaisys\Cognito\Tests\Traits\AuthenticationTrait;
 
+#[Group('web'), Group('login'), Group('logout'), Group('feature')]
 class LogoutTest extends TestCase
 {
     use AwsCognitoTrait;
@@ -33,7 +35,7 @@ class LogoutTest extends TestCase
         parent::setUp();
 
         // Authenticate the user before running the tests
-        $this->authenticate();
+        $this->authenticateWeb();
     } //Function ends
 
     /**

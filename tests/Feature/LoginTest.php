@@ -15,12 +15,14 @@ use Illuminate\Support\Facades\Config;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\Group;
 
 use Ellaisys\Cognito\Enums;
 use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
 use Ellaisys\Cognito\Tests\Traits\AuthenticationTrait;
 
+#[Group('web'), Group('login'), Group('feature')]
 class LoginTest extends TestCase
 {
     use AwsCognitoTrait;
@@ -32,8 +34,7 @@ class LoginTest extends TestCase
         parent::setUp();
 
         /**
-         * Override the configuration at runtime to disable MFA and set the
-         * MFA type to SOFTWARE_TOKEN_MFA
+         * Override the configuration at runtime
          */
         Config::set('cognito.mfa_setup', 'OFF');
         Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
@@ -67,31 +68,13 @@ class LoginTest extends TestCase
     #[Depends('test_valid_settings_for_password_auth')]
     public function test_user_can_login_with_correct_credentials(): void
     {
-        // Get valid credentials for the user
-        $credentials = $this->getValidCredentials();
-        $payload = [
-            'username' => $credentials['email'] ?? '',
-            'password' => $credentials['password'] ?? '',
-        ];
-
-        $this->post(route('cognito.action.login.submit'), $payload)
+        $this->authenticateWeb()
             ->assertStatus(302)
             ->assertRedirect(route('cognito.home'))
             ->assertSessionHas('status', 'success')
             ->assertSessionHas('message')
             ->assertSessionHas('claim')
             ->assertSessionHasNoErrors();
-
-        // Assert that the user is authenticated
-        $this->assertAuthenticated();
-
-        if (session()->has('claim')) {
-            self::$sessionAuthenticated = session()->all();
-            self::$claim = session('claim');
-        }
-
-        // Assert that the claim is not null
-        $this->assertClaimIsValid();
     } //Function ends
 
     /**

@@ -16,7 +16,7 @@
             <input id="{{ $userEmailField }}" type="email"
                 class="form-control @error($userEmailField) is-invalid @enderror @if(old($userEmailField)) is-valid @endif"
                 name="{{ $userEmailField }}" value="{{ old($userEmailField) }}"
-                @if(old($userEmailField)) readonly @else required autocomplete="email" autofocus @endif />
+                @if(old($userEmailField)) readonly @else required autocomplete="email" @endif />
 
             @error($userEmailField)
                 <span class="invalid-feedback" role="alert">
