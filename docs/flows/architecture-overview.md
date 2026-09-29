@@ -1,7 +1,7 @@
 # Overall Architecture – Component & Flow Diagram
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-08-28<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-09-29<!-- /AUTO:last_updated -->
 
 This diagram shows the high-level architecture of the `ellaisys/aws-cognito` Laravel package: how HTTP
 requests flow through routes, controllers/traits, guards, the core service, and out to AWS Cognito and
