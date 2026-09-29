@@ -118,7 +118,7 @@ jobs:
           mkdir -p build/coverage build/reports
 
           vendor/bin/phpunit \
-            --exclude-group=make-command
+            --display-notices --display-deprecations
 
       # ----------------------------------------------------------
       # Preserve PHPUnit Report
