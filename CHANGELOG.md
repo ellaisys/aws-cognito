@@ -1,7 +1,7 @@
 # AWS Cognito Laravel Package Changelog
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-09-29<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-09-30<!-- /AUTO:last_updated -->
 
 ## [Release 53 (tag v2.0.9)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.9) - 2026-09-30
 - Feat: Issue [#147](https://github.com/ellaisys/aws-cognito/issues/147) Add console command coverage for various authentication and management actions.
