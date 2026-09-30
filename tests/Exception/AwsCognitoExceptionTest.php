@@ -29,7 +29,7 @@ class AwsCognitoExceptionTest extends TestCase
     #[DataProvider('AwsErrorCodeProvider')]
     public function test_it_maps_aws_error_codes(string $awsErrorCode, string $expectedCode): void
     {
-        $previous = $this->createMock(CognitoIdentityProviderException::class);
+        $previous = $this->createStub(CognitoIdentityProviderException::class);
         $previous->method('getAwsErrorCode')->willReturn($awsErrorCode);
 
         $exception = new AwsCognitoException('ignored', $previous);
@@ -44,7 +44,7 @@ class AwsCognitoExceptionTest extends TestCase
     #[Test]
     public function test_it_uses_factory_constructor(): void
     {
-        $previous = $this->createMock(CognitoIdentityProviderException::class);
+        $previous = $this->createStub(CognitoIdentityProviderException::class);
         $previous->method('getAwsErrorCode')->willReturn('NotAuthorizedException');
 
         $exception = AwsCognitoException::create($previous);
