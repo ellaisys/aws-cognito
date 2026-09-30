@@ -5,9 +5,10 @@
 
 ## [Release 53 (tag v2.0.9)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.9) - 2026-09-30
 - Feat: Issue [#147](https://github.com/ellaisys/aws-cognito/issues/147) Add console command coverage for various authentication and management actions.
-- Feat: Issue [#150](https://github.com/ellaisys/aws-cognito/issues/150) Add additional test cases for improved coverage and reliability.
+- Feat: Issue [#150](https://github.com/ellaisys/aws-cognito/issues/150) Add additional test cases for improved coverage and reliability. The coverage is more than 50%.
 - Feat: Issue [#151](https://github.com/ellaisys/aws-cognito/issues/151) API Testing of routes and endpoints.
 - Feat: Add Architecture Diagrams and detailed flow diagrams for various authentication and management processes.
+- Fix: Document corrections from PR [#154](https://github.com/ellaisys/aws-cognito/pull/154) and PR [#155](https://github.com/ellaisys/aws-cognito/pull/155)
 - Doc: Update documentation to reflect new features, test cases, and coverage improvements.
 
 ## [Release 52 (tag v2.0.8)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.8) - 2026-08-31
