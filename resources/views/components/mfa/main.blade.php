@@ -101,7 +101,9 @@
 
                         // Show the action popup
                         const modalId = document.getElementById('modalMfaActivate');
-                        Modal.getOrCreateInstance(modalId).show();
+                        if (Modal && modalId) {
+                            Modal.getOrCreateInstance(modalId).show();
+                        } //End if
                         
                         return true;
                     } //End if
