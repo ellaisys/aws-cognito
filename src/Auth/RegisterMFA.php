@@ -11,6 +11,8 @@
 
 namespace Ellaisys\Cognito\Auth;
 
+use Aws\Result as AwsResult;
+
 use Auth;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -39,9 +41,55 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function activateMFA(string $guard='web'): mixed
+    final public function activate(Request $request): mixed
     {
-        return Auth::guard($guard)->associateSoftwareTokenMFA();
+        // Initialize variables
+        $returnValue = null;
+
+        try {
+            // Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
+
+            // Token Object
+            $accessToken = $this->getAccessToken($request);
+
+            // Get authenticated user
+            $user = $this->getAuthenticatedUser($request);
+            $username = $user['username'] ?? $user['email'] ?? '';
+
+            // Get the response from AWS Cognito for the MFA configurations
+            $response = $client->associateSoftwareTokenMFA($accessToken);
+
+            // Build payload
+            $secretCode = $response->get('SecretCode');
+            $uriTotp = '';
+            $uriTotp .= 'otpauth://totp/' . config('app.name');
+            $uriTotp .= ' (' . $username . ')?secret=' . $secretCode;
+            $uriTotp .= '&issuer=' . config('app.name');
+
+            $returnValue = [
+                'SecretCode' => $secretCode,
+                'SecretCodeQR' => config('cognito.mfa_qr_library') . $uriTotp,
+                'TotpUri' => $uriTotp
+            ];
+
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $returnValue;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($returnValue);
+            } else {
+                $returnValue = view('cognito::partials.mfa.activate-form', [
+                    'status' => 'success',
+                    'message' => 'MFA activated successfully',
+                    'data' => $returnValue
+                ]);
+            } //Return response
+        } catch (Exception $exception) {
+            Log::error('RegisterMFA:activate:Exception');
+            throw $exception;
+        } //End try
+        return $returnValue;
     } //Function ends
 
     /**
@@ -53,13 +101,13 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function verify(Request $request,
+    final public function verify(Request $request,
         ?string $code=null, ?string $deviceName=null): mixed
     {
-        try {
-            // Initialize variables
-            $returnValue = null;
+        // Initialize variables
+        $returnValue = null;
 
+        try {
             // Merge the request data with the provided code and device name
             if (!empty($code)) {
                 $request->merge(['code' => $code]);
@@ -80,16 +128,19 @@ trait RegisterMFA
             // Get the guard
             $guard = $this->getGuard($request);
 
-            // Verify the MFA for the authenticated user
-            $response = Auth::guard($guard)->verifySoftwareTokenMFA(
-                $request['code'],
-                $request['device_name'] ?? 'My Device'
-            );
+            // Create AWS Cognito Client
+            $client = app()->make(AwsCognitoClient::class);
 
-            // If the verification is successful, toggle ON the MFA for the authenticated user
-            if (!empty($response) && ($response['Status']=='SUCCESS')) {
-                $this->toggleMFA($request, true, true);
-            } //End if
+            // Token Object
+            $accessToken = $this->getAccessToken($request);
+
+            // Verify the MFA for the authenticated user
+            $response = $client->verifySoftwareTokenMFA(
+                $request['code'], $accessToken,
+                null, $request['device_name'] ?? 'My Device');
+
+            // Toggle ON the MFA for the authenticated user
+            $this->toggleMFA($request, true, true);
 
             //Return response
             if ($this->isControllerAction) {
@@ -118,7 +169,7 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function deactivate(Request $request): mixed
+    final public function deactivate(Request $request): mixed
     {
         return $this->toggleMFA($request, false);
     } //Function ends
@@ -177,7 +228,7 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function enable(Request $request): mixed
+    final public function enable(Request $request): mixed
     {
         return $this->toggleAdminMFA($request, true);
     } //Function ends
@@ -189,7 +240,7 @@ trait RegisterMFA
      *
      * @return mixed
      */
-    public function disable(Request $request): mixed
+    final public function disable(Request $request): mixed
     {
         return $this->toggleAdminMFA($request, false);
     } //Function ends
