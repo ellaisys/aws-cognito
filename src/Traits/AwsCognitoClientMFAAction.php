@@ -41,10 +41,15 @@ trait AwsCognitoClientMFAAction
      * @param string $accessToken (optional)
      * @param string $session (optional)
      *
-     * @return mixed
+     * @return \Aws\Result
+     * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function associateSoftwareTokenMFA(?string $accessToken = null, ?string $session = null)
+    public function associateSoftwareTokenMFA(
+        ?string $accessToken = null, ?string $session = null): AwsResult
     {
+        //Initialize variables
+        $response = null;
+    
         try {
             //Build payload
             $payload = [];
@@ -61,9 +66,9 @@ trait AwsCognitoClientMFAAction
             } //End if
 
             $response = $this->client->associateSoftwareToken($payload);
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientMFAAction:associateSoftwareTokenMFA:Exception');
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientMFAAction:associateSoftwareTokenMFA:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $response;
@@ -78,11 +83,16 @@ trait AwsCognitoClientMFAAction
      * @param string $session (optional)
      * @param string $deviceName (optional)
      *
-     * @return mixed
+     * @return \Aws\Result
+     * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function verifySoftwareTokenMFA(string $userCode, ?string $accessToken = null,
-        ?string $session = null, ?string $deviceName = null)
+    public function verifySoftwareTokenMFA(string $userCode,
+        ?string $accessToken = null,
+        ?string $session = null, ?string $deviceName = null): AwsResult
     {
+        //Initialize variables
+        $response = null;
+
         try {
             //Build payload
             $payload = [
@@ -102,9 +112,9 @@ trait AwsCognitoClientMFAAction
             } //End if
 
             $response = $this->client->verifySoftwareToken($payload);
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientMFAAction:verifySoftwareTokenMFA:Exception');
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientMFAAction:verifySoftwareTokenMFA:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
         return $response;
@@ -120,7 +130,8 @@ trait AwsCognitoClientMFAAction
      * @return \Aws\Result
      * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function setUserMFAPreference(string $accessToken, bool $isEnable=false):AwsResult
+    public function setUserMFAPreference(string $accessToken,
+        bool $isEnable=false):AwsResult
     {
         try {
             //Build payload
@@ -149,8 +160,12 @@ trait AwsCognitoClientMFAAction
      * @return \Aws\Result
      * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function adminSetUserMFAPreference(string $username, bool $isEnable=false): AwsResult
+    public function adminSetUserMFAPreference(string $username,
+        bool $isEnable=false): AwsResult
     {
+        //Initialize variables
+        $response = null;
+
         try {
             //Build payload
             $payload = [

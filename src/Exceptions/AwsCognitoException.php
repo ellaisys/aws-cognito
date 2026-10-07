@@ -94,11 +94,11 @@ class AwsCognitoException extends HttpException
                 $errorCode = self::COGNITO_AUTH_USERNAME_EXISTS;
                 break;
 
-            case 'EnableSoftwareTokenMFAException':
             case 'SoftwareTokenMFANotFoundException':
                 $errorCode = self::COGNITO_MFA;
                 break;
 
+            case 'EnableSoftwareTokenMFAException':
             case 'CodeMismatchException':
             case 'ExpiredCodeException':
                 $errorCode = self::COGNITO_AUTH_CODE_INVALID;
