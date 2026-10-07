@@ -20,13 +20,31 @@
                 this.#alertbox('Info', message, 'info');
             }
 
-            #alertbox(title, text, icon = 'success', timer = 3000, showConfirmButton = false) {
+            processing(message = 'Processing...') {
+                return Swal.fire({
+                    title: message,
+                    text: 'Please wait while we process your request.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+
+            #alertbox(title, text, icon = 'success', timer = 3000,
+                showConfirmButton = false, allowOutsideClick = true,
+                allowEscapeKey = true)
+            {
                 try {
-                    Swal.fire({
+                    return Swal.fire({
                         title: title,
                         text: text,
                         icon: icon,
                         confirmButtonText: 'Cool',
+                        allowOutsideClick: allowOutsideClick,
+                        allowEscapeKey: allowEscapeKey,
                         showConfirmButton: showConfirmButton,
                         timer: timer
                     });
