@@ -14,19 +14,15 @@
     @if (config('cognito.mfa_setup')!='OFF')
         <div class="dropdown-divider"></div>
 
-        @if (Route::has('cognito.form.user.mfa.activate'))
-        <a class="dropdown-item" href="{{ route('cognito.form.user.mfa.activate') }}"
+        <button type="button" class="dropdown-item" disabled
             data-role="mfa" data-action="activate">
             {{ __('Activate MFA') }}
-        </a>
-        @endif
+        </button>
 
-        @if (Route::has('cognito.action.user.mfa.deactivate'))
-        <a class="dropdown-item" href="{{ route('cognito.action.user.mfa.deactivate') }}"
+        <button type="button" class="dropdown-item" disabled
             data-role="mfa" data-action="deactivate">
             {{ __('Deactivate MFA') }}
-        </a>
-        @endif
+        </button>
 
         <div class="dropdown-divider"></div>
 
