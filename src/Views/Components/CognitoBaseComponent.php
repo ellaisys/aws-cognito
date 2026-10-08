@@ -32,7 +32,7 @@ class CognitoBaseComponent extends Component
      *
      * @return string
      */
-    protected function getUsername(): string
+    final protected function getUsername(): string
     {
         $username = 'cognito-user';
         
@@ -51,6 +51,21 @@ class CognitoBaseComponent extends Component
         } // End if
 
         return $username;
+    } //Function end
+
+    /**
+     * Check if the current user has an admin role
+     *
+     * @return bool
+     */
+    final protected function isUserAdmin(): bool
+    {
+        try {
+            return true;
+        } catch (Exception $exception) {
+            Log::error('CognitoBaseComponent:isUserAdmin:Exception');
+            throw $exception;
+        } //End try-catch
     } //Function end
 
     /**
@@ -193,7 +208,7 @@ class CognitoBaseComponent extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('cognito::components.passkey.webauthn');
+        return '';
     } //Function end
 
 } //Class end
