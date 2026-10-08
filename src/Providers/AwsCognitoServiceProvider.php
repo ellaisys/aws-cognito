@@ -153,8 +153,8 @@ class AwsCognitoServiceProvider extends ServiceProvider
 
             // Publish JavaScripts
             $this->publishes([
-                __DIR__ . '/../../resources/assets/js' => public_path('vendor/ellaisys/aws-cognito/js'),
-            ], 'js');
+                __DIR__ . '/../../dist/' => public_path('vendor/ellaisys/aws-cognito/'),
+            ], 'cognito-assets');
 
             // Publish Controllers
             $this->publishes([
