@@ -115,6 +115,8 @@ Optionally, you can select the following, based on your application requirements
 - `ALLOW_USER_SRP_AUTH` (User authentication with SRP)
 - `ALLOW_USER_AUTH` (Passwordless authentication)
 
+Do make sure to check the `Prevent User Existence Errors` option in Production environments. This stops Cognito from revealing whether an user is registered or not, and prevents cyber attackers from exploiting user information.
+
 Adjust the attributes below based on your application requirements, or leave them as default.
 
 Save the changes by clicking the **Save Changes** button at the bottom of the page.
