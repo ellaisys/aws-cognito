@@ -16,29 +16,27 @@
 
         <button type="button" class="dropdown-item" disabled
             data-role="mfa" data-action="activate">
-            {{ __('Activate MFA') }}
+            {{ __('cognito::messages.mfa.activate') }}
         </button>
 
         <button type="button" class="dropdown-item" disabled
             data-role="mfa" data-action="deactivate">
-            {{ __('Deactivate MFA') }}
+            {{ __('cognito::messages.mfa.deactivate') }}
         </button>
 
         <div class="dropdown-divider"></div>
 
-        @if (Route::has('cognito.action.mfa.enable'))
-        <a class="dropdown-item" href="{{ route('cognito.action.mfa.enable') }}"
-            data-role="mfa" data-action="enable">
-            {{ __('Enable MFA') }}
-        </a>
-        @endif
+        <button type="button" class="dropdown-item" disabled
+            data-role="mfa" data-action="enable"
+            data-userkey="{{ base64_encode(Auth::user()->email) }}">
+            {{ __('cognito::messages.mfa.enable') }}
+        </button>
 
-        @if (Route::has('cognito.action.mfa.disable'))
-        <a class="dropdown-item" href="{{ route('cognito.action.mfa.disable') }}"
-            data-role="mfa" data-action="disable">
-            {{ __('Disable MFA') }}
-        </a>
-        @endif
+        <button type="button" class="dropdown-item" disabled
+            data-role="mfa" data-action="disable"
+            data-userkey="{{ base64_encode(Auth::user()->email) }}">
+            {{ __('cognito::messages.mfa.disable') }}
+        </button>
     @endif
 
     @if (config('cognito.allow_passkeys'))
@@ -52,7 +50,7 @@
         <button type="button" class="dropdown-item"
             data-role="passkey-webauthn" data-action="delete"
             data-userkey="{{ base64_encode(Auth::user()->email) }}">
-            {{ __('Delete Passkey') }}
+            {{ __('cognito::messages.passkey.delete') }}
         </button>
         @endif
     @endif
@@ -63,14 +61,14 @@
         @if (Route::has('cognito.action.user.device.create'))
         <button class="dropdown-item"
             data-role="device-auth" data-action="register">
-            {{ __('Register Device') }}
+            {{ __('cognito::messages.device.register') }}
         </button>
         @endif
 
         @if (Route::has('cognito.action.user.device.delete'))
         <button class="dropdown-item"
             data-role="device-auth" data-action="delete">
-            {{ __('Unregister Device') }}
+            {{ __('cognito::messages.device.unregister') }}
         </button>
         @endif
     @endif
@@ -83,7 +81,7 @@
         frmAction=document.getElementById('form-action');
         frmAction.action='{{ route('cognito.logout') }}';
         frmAction.submit();">
-        {{ __('Logout') }}
+        {{ __('cognito::messages.auth.nav_label_logout') }}
     </button>
     @endif
 
@@ -93,7 +91,7 @@
         frmAction=document.getElementById('form-action');
         frmAction.action='{{ route('cognito.logout_forced') }}';
         frmAction.submit();">
-        {{ __('Logout (Forced)') }}
+        {{ __('cognito::messages.auth.nav_label_logout_forced') }}
     </button>
     @endif
 

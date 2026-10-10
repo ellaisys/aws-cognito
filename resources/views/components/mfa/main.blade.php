@@ -14,8 +14,8 @@
          */
         document.addEventListener("DOMContentLoaded", function(event) {
             // Add event listeners to all buttons with the data-role attribute set to "mfa"
-            const elemsDeviceAuth = document.querySelectorAll('[data-role="mfa"]');
-            elemsDeviceAuth.forEach(button => {
+            const elemsMfaAuth = document.querySelectorAll('[data-role="mfa"]');
+            elemsMfaAuth.forEach(button => {
                 try {
                     // Initialize and check device registration status
                     let mfaService = new MfaService();
@@ -24,13 +24,21 @@
                     let dataAction = button?.attributes['data-action']?.value?.toLowerCase() ?? null;
                     if (dataAction === 'activate' && mfaService) {
                         button.disabled = false;
-                    }
+                    } //End if
 
                     if (dataAction === 'deactivate' && mfaService) {
                         button.disabled = false;
-                    }
+                    } //End if
+
+                    if (dataAction === 'enable' && mfaService && mfaService.isAdmin) {
+                        button.disabled = false;
+                    } //End if
+
+                    if (dataAction === 'disable' && mfaService && mfaService.isAdmin) {
+                        button.disabled = false;
+                    } //End if
                 } catch (error) {
-                    console.error('Error processing device auth button:', error);
+                    console.error('Error processing mfa auth button:', error);
                     button.disabled = false;
                 } // Try ends
 
@@ -52,6 +60,24 @@
                         this.disabled = false;
                     } else if (dataAction === 'deactivate') { // Deactivate MFA
                         let response = await service.deactivate();
+                        this.disabled = false;
+                    } else if (dataAction === 'enable') { // Enable MFA for a specific user (admin only)
+                        let username = button?.attributes['data-userkey']?.value ?? null;
+                        if (!username) {
+                            console.warn('No user key specified for MFA enable action.');
+                            this.disabled = false;
+                            return;
+                        } //End if
+                        let response = await service.setUserMfaState(atob(username), true);
+                        this.disabled = false;
+                    } else if (dataAction === 'disable') { // Disable MFA for a specific user (admin only)
+                        let username = button?.attributes['data-userkey']?.value ?? null;
+                        if (!username) {
+                            console.warn('No user key specified for MFA disable action.');
+                            this.disabled = false;
+                            return;
+                        } //End if
+                        let response = await service.setUserMfaState(atob(username), false);
                         this.disabled = false;
                     } else { // Handle unknown action
                         console.warn('Unknown action for MFA button.');
@@ -76,8 +102,15 @@
              */
             constructor() {
                 this.csrfToken = "{{ csrf_token() }}";
-                this.isAdmin = "{{ $isAdminRole ?: false }}";
             }
+
+            /**
+             * Getter to check if the current user has admin privileges.
+             * @returns {boolean} True if the user is an admin, false otherwise.
+             */
+            get isAdmin() {
+                return {{ $isAdminRole ? 'true' : 'false' }};
+            } //End get
 
             /**
              * Main function to activate the MFA for the user. It
@@ -136,6 +169,34 @@
                 } catch (error) {
                     console.error('Error deactivating MFA:', error);
                     this.#alert('MFA deactivation failed. Check the console for details.', 'error');
+                    return false;
+                } //Try-catch ends
+            } //Function end
+
+            /**
+             * Function to set the MFA enable and disable state for the
+             * specific user. This is an admin role function.
+             */
+            async setUserMfaState(username, state=false) {
+                try {
+                    if (!this.isAdmin) {
+                        throw new Error('Admin privileges are required to set MFA state');
+                    } //End if
+
+                    if (!username) {
+                        throw new Error('Username is required to set MFA state');
+                    } //End if
+
+                    let response = null;
+                    if (state === true) {
+                        let response = await this.#enable(username);
+                    } else {
+                        let response = await this.#disable(username);
+                    } //End if
+
+                    return true;
+                } catch (error) {
+                    console.error('Error setting user MFA state:', error);
                     return false;
                 } //Try-catch ends
             } //Function end
@@ -224,7 +285,11 @@
                 } //Try-catch ends
             } //Function end
 
-            async #enable() {
+            /**
+             * Function to enable the MFA for the user. It communicates
+             * with the server to initiate the enabling process.
+             */
+            async #enable(username) {
                 try {
                     // Show processing alert
                     window.processingAlert = this.#alert('Enabling MFA...', 'processing');
@@ -236,7 +301,8 @@
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
                             'X-CSRF-TOKEN': this.csrfToken
-                        }
+                        },
+                        body: JSON.stringify({ username: username })
                     });
 
                     // Hide processing alert once response is received
@@ -256,7 +322,11 @@
                 } //Try-catch ends
             } //Function end
 
-            async #disable() {
+            /**
+             * Function to disable the MFA for the user. It communicates
+             * with the server to initiate the disabling process.
+             */
+            async #disable(username) {
                 try {
                     // Show processing alert
                     window.processingAlert = this.#alert('Disabling MFA...', 'processing');
@@ -268,7 +338,8 @@
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
                             'X-CSRF-TOKEN': this.csrfToken
-                        }
+                        },
+                        body: JSON.stringify({ username: username })
                     });
 
                     // Hide processing alert once response is received
@@ -311,7 +382,6 @@
                     alert(message);
                 } //End if
             } //Function end
-
         } //Class end
     </script>
 @endpush

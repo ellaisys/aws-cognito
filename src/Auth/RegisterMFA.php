@@ -81,7 +81,7 @@ trait RegisterMFA
             } else {
                 $returnValue = view('cognito::partials.mfa.activate-form', [
                     'status' => 'success',
-                    'message' => 'MFA activated successfully',
+                    'message' => __('cognito::messages.mfa.activation_success'),
                     'data' => $returnValue
                 ]);
             } //Return response
