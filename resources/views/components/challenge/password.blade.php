@@ -5,7 +5,7 @@
 ])
 
 @if(in_array($challengeNameValue, ['SELECT_MFA_TYPE']))
-    <div class="d-inline-flex p-0">
+    <div class="row mb-3">
         <label for="pass_code" class="col-md-4 col-form-label text-md-end"
             id="challenge_value_label">{{ __('cognito::messages.view_component.challenge.password.select_mfa_type') }}</label>
 
@@ -34,7 +34,7 @@
         </div>
     </div>
 @else
-    <div class="d-inline-flex p-0">
+    <div class="row mb-3">
         <label for="pass_code" class="col-md-4 col-form-label text-md-end"
             id="challenge_value_label">{{ __('cognito::messages.view_component.challenge.password.pass_code') }}</label>
 
