@@ -98,17 +98,17 @@ The package exposes following keys to change the default setting. These keys can
 
 - [Login (MFA Enabled)](#login-with-mfa)
 - [Software Token MFA](#software-token-mfa-functionality)
-    + [Activate MFA](#1-activate-mfa)
-    + [Verify MFA Token](#2-verify-mfa)
-    + [Deactivate MFA](#3-deactivate-mfa)
+    + [Activate MFA](#activate-mfa)
+    + [Verify MFA Token](#verify-mfa)
+    + [Deactivate MFA](#deactivate-mfa)
 - [Enable MFA](#enable-mfa)
 - [Disable MFA](#disable-mfa)
 
 ## Blade Component (web app)
 
 The package provides a blade component for 
-1. `MFA management`, and 
-2. `MFA based authentication`
+1. `MFA based authentication`
+2. `MFA management`
 
 The MFA based authentication component is integrated into the `challenge` component.
 
@@ -155,6 +155,87 @@ Use the `challenge` component in your challenge page to handle the MFA authentic
 Using this component will simplify the implementation of the MFA authentication functionality in your application.
 
 The data is **secure**, as per the cyber security standards, and the necessary scripts and methods are provided in the component to implement the MFA feature in your application.
+
+### *MFA Management*
+
+The MFA management functionality allows you to handle the activation and deactivation of the Software Token MFA for users. By including the `RegisterMFA` trait in your controller, you gain access to the necessary methods to manage MFA for your users.
+
+In the web application context, the trait methods can be invoked from your controller actions to activate or deactivate the Software Token MFA for users. Typically, you would call these methods in response to user actions, such as clicking a button to enable or disable MFA in their account settings.
+
+The API based approach is detailed in the subsequent sections of this documentation.
+
+For the Web application context, the package exposes, view components, and necessary scripts to facilitate the MFA management process. Add it to your blade templates where you want to manage the MFA settings for the users.
+
+For example, you might include a section in your account settings page where users can activate or deactivate the MFA for their account.
+
+```blade
+@extends(config('cognito.views.layout'))
+
+@section('content')
+
+<x-cognito::common.js-scripts />
+<x-cognito::mfa-auth />
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mb-2">
+                <div class="card-header">
+                    {{ __('Dashboard') }}
+                </div>
+
+                <div class="card-body">
+                    <h2><strong>Welcome: {{ __('You are logged in!') }}</strong></h2>
+                </div>
+            </div>
+
+            @stack('cognito-mfa-activate-form')
+        </div>
+    </div>
+</div>
+
+@stack('cognito-common-scripts')
+@stack('cognito-mfa-scripts')
+
+@endsection
+
+```
+
+#### Activate MFA (Web Application)
+
+Call the appropriate methods using simple html elements. With the data attributes `data-role="mfa"` and `data-action="activate"`, you can trigger the MFA activation process.
+
+```html
+<button type="button" class="dropdown-item" disabled
+    data-role="mfa" data-action="activate">
+    Activate MFA
+</button>
+```
+
+The response from the web application will display the QR code for activating the Software MFA token as shown below:
+<img src="../assets/images/web_application_activate.png" width="50%" alt="cognito mfa activate for web"/>
+
+>[!IMPORTANT]
+>In case you want to change the QR Generator library, you can change the value in the configuration file with the key **mfa_qr_library**. Alternately, you can set the string in the environment file identified by **AWS_COGNITO_MFA_QR_LIBRARY**.
+
+#### Verify MFA (Web Application)
+
+To verify MFA, the user needs to respond to the activation challenge by providing the code from the authenticator application. This can be done through a form submission displayed by the web application during the activation process.
+
+
+#### Deactivate MFA (Web Application)
+
+To deactivate MFA, the user can trigger the deactivation process using a form or an API request with the `data-role="mfa"` and `data-action="deactivate"` attributes set. This will prompt the web application to handle the deactivation and update the user's MFA status accordingly.
+
+```html
+<button type="button" class="dropdown-item" disabled
+    data-role="mfa" data-action="deactivate">
+    Deactivate MFA
+</button>
+```
+
+Other actions available in this `data-action` attribute include `deactivate` to deactivate MFA, `enable` to enable MFA, and `disable` to disable MFA.
+
 
 ## API Documentation
 
@@ -226,15 +307,15 @@ The activate process allows the user to configure the Software MFA. To configure
 
 The process completes when the code is verified using the [Verify MFA](#2-verify-mfa) step.
 
-##### Web and API based Approach
+The package provides the necessary methods to handle the activation of the Software Token MFA for users. Just including the trait in your controller is sufficient to access these methods.
 
-The function call looks as shown below. Just reference the the method activateMFA, with the guard name as a parameter, in the trait that you added above in configuration. This shall activate the Software MFA token.
+In case, you want to modify the activation process, write your custom logic in the controller and call the activate method with the request parameter, provided in the trait. This shall activate the Software MFA token.
 
 ```php
 public function actionActivate()
 {
 try {
-        return $this->activateMFA('api'); //Pass the guard name for web/api calls
+        return $this->activate($request); //Pass the request object
     } catch(Exception $e) {
         throw $e;
     } //Try-catch ends
@@ -249,12 +330,7 @@ The response that you will get for the API call would look this
     "TotpUri": "otpauth://totp/ApplicationName (john@doe.com)?secret=ESKPE46WBNOAB7QXXXXXXXXXXXXXXXXXXXPFIVJVJFEPDP2NNIA&issuer=ApplicationName"
 }
 ```
-and the web response, you can design a page like this to show the code for activating the Software MFA token.
 
-<img src="../assets/images/web_application_activate.png" width="50%" alt="cognito mfa activate for web"/>
-
->[!IMPORTANT]
->In case you want to change the QR Generator library, you can change the value in the configuration file with the key **mfa_qr_library**. Alternately, you can set the string in the environment file identified by **AWS_COGNITO_MFA_QR_LIBRARY**. 
 
 #### Verify MFA
 
@@ -264,7 +340,7 @@ In order to complete the activation process, the verification is an essential st
 public function actionVerify(string $code)
 {
 try {
-        return $this->verifyMFA('api', $code); //Pass the guard name for web/api calls and the MFA code from the device
+        return $this->verify($request, $code); //Pass the request object and the MFA code from the device
     } catch(Exception $e) {
         throw $e;
     } //Try-catch ends
@@ -275,8 +351,6 @@ try {
 #### Deactivate MFA
 
 In order to deactivate the MFA for the authenticated user, this endpoint can be called to deactivate the MFA. In most practical situations, you can skip this implementation, based on your application requirements. However, if you want to provide this feature, you can implement the following method in your controller.
-
-In order to enable/disable a user's MFA setting by an admin, based on your RBAC implementation, you can use the [Enable](#enable-mfa) and [Disable](#disable-mfa) endpoints.
 
 Below curl helps deactivate the user's MFA, returning the HTTP Success Code.
 
