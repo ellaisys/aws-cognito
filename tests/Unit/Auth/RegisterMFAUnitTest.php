@@ -81,6 +81,14 @@ class RegisterMFAUnitTest extends TestCase
         );
     } // Function ends
 
+    #[Test]
+    #[Depends('test_method_activate_exists_in_class')]
+    public function test_activate_method_basic_call_but_unauthenticated_user(): void
+    {
+        $this->expectException(HttpException::class);
+        $this->class->activate(request());
+    } // Function ends
+
     /**
      * Test that the verify method exists in the class.
      */
@@ -92,6 +100,60 @@ class RegisterMFAUnitTest extends TestCase
             method_exists($this->class, 'verify'),
             'Method verify does not exist in the class using RegisterMFA.'
         );
+    } // Function ends
+
+    /**
+     * Test that the verify method can be called but with an unauthenticated user.
+     */
+    #[Test]
+    #[Depends('test_method_verify_exists_in_class')]
+    #[DataProvider('provideVerifyMethodBasicCallData')]
+    public function test_verify_method_basic_call_but_unauthenticated_user(
+        array $data, string $expectedException, string $code=null,
+        string $deviceName=null,
+    ): void
+    {
+        $this->expectException($expectedException);
+        $this->class->verify(request()->merge($data), $code, $deviceName);
+    } // Function ends
+
+    /**
+     * Data provider for test_verify_method_basic_call_but_unauthenticated_user.
+     */
+    public static function provideVerifyMethodBasicCallData(): array
+    {
+        return [
+            'no data' => [
+                [],
+                ValidationException::class,
+            ],
+            'malformed code' => [
+                ['code' => true],
+                ValidationException::class,
+            ],
+            'empty code' => [
+                ['code' => null],
+                ValidationException::class,
+            ],
+            'non-string code' => [
+                ['code' => 123456],
+                ValidationException::class,
+            ],
+            'valid code' => [
+                ['code' => '123456', 'device_name' => 'test_device'],
+                HttpException::class,
+            ],
+            'valid code but no device name' => [
+                ['code' => '123456'],
+                HttpException::class,
+            ],
+            'valid code and device name as arguments' => [
+                [],
+                HttpException::class,
+                '123456',
+                'test_device',
+            ],
+        ];
     } // Function ends
 
     /**
@@ -108,6 +170,17 @@ class RegisterMFAUnitTest extends TestCase
     } // Function ends
 
     /**
+     * Test that the deactivate method throws an HttpException for unauthenticated users.
+     */
+    #[Test]
+    #[Depends('test_method_deactivate_exists_in_class')]
+    public function test_deactivate_method_basic_call_but_unauthenticated_user(): void
+    {
+        $this->expectException(HttpException::class);
+        $this->class->deactivate(request());
+    } // Function ends
+
+    /**
      * Test that the enable method exists in the class.
      */
     #[Test]
@@ -121,6 +194,17 @@ class RegisterMFAUnitTest extends TestCase
     } // Function ends
 
     /**
+     * Test that the enable method throws an HttpException for unauthenticated users.
+     */
+    #[Test]
+    #[Depends('test_method_enable_exists_in_class')]
+    public function test_enable_method_basic_call_but_unauthenticated_user(): void
+    {
+        $this->expectException(HttpException::class);
+        $this->class->enable(request());
+    } // Function ends
+
+    /**
      * Test that the disable method exists in the class.
      */
     #[Test]
@@ -131,6 +215,17 @@ class RegisterMFAUnitTest extends TestCase
             method_exists($this->class, 'disable'),
             'Method disable does not exist in the class using RegisterMFA.'
         );
+    } // Function ends
+
+    /**
+     * Test that the disable method throws an HttpException for unauthenticated users.
+     */
+    #[Test]
+    #[Depends('test_method_disable_exists_in_class')]
+    public function test_disable_method_basic_call_but_unauthenticated_user(): void
+    {
+        $this->expectException(HttpException::class);
+        $this->class->disable(request());
     } // Function ends
 
 } //Class ends
