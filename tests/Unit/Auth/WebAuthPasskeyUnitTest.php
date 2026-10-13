@@ -78,6 +78,14 @@ class WebAuthPasskeyUnitTest extends TestCase
         );
     } // Function ends
 
+    #[Test]
+    #[Depends('test_method_start_exists_in_class')]
+    public function test_method_start_with_no_data_with_authenticated_user(): void
+    {
+        $this->expectException(HttpException::class);
+        $this->class->start(request());
+    } // Function ends
+
     /**
      * Test that the complete method exists in the class.
      */
@@ -89,6 +97,28 @@ class WebAuthPasskeyUnitTest extends TestCase
             method_exists($this->class, 'complete'),
             'Method complete does not exist in the class using WebAuthPasskey.'
         );
+    } // Function ends
+
+    /**
+     * Test that the complete method throws an HttpException for unauthenticated users.
+     */
+    #[Test]
+    #[Depends('test_method_complete_exists_in_class')]
+    public function test_complete_method_no_data_with_authenticated_user(): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->class->complete(request());
+    } // Function ends
+
+    /**
+     * Test that the complete method throws an HttpException for unauthenticated users.
+     */
+    #[Test]
+    #[Depends('test_method_complete_exists_in_class')]
+    public function test_complete_method_valid_data_with_authenticated_user(): void
+    {
+        $this->expectException(HttpException::class);
+        $this->class->complete(request()->merge(['credential' => 'data']));
     } // Function ends
 
     /**
@@ -105,6 +135,32 @@ class WebAuthPasskeyUnitTest extends TestCase
     } // Function ends
 
     /**
+     * Test that the challenge method throws an HttpException for unauthenticated users.
+     */
+    #[Test]
+    #[Depends('test_method_challenge_exists_in_class')]
+    #[DataProvider('challengeMethodDataProvider')]
+    public function test_challenge_method_no_data_with_authenticated_user(
+        array $data, string $expectedException, string $challengeName = null): void
+    {
+        $this->expectException($expectedException);
+        $this->class->challenge(request()->merge($data), $challengeName);
+    } // Function ends
+
+    /**
+     * Data provider for the test_challenge_method_no_data_with_authenticated_user test.
+     */
+    public static function challengeMethodDataProvider(): array
+    {
+        return [
+            [[], ValidationException::class],
+            [['challenge_name' => 'some_challenge'], ValidationException::class],
+            [['challenge_name' => 'some_challenge'], ValidationException::class, 'WEB_AUTHN'],
+            [['challenge_name' => 'WEB_AUTHN', 'extra_data' => 'value'], ValidationException::class],
+        ];
+    } // Function ends
+
+    /**
      * Test that the delete method exists in the class.
      */
     #[Test]
@@ -115,5 +171,29 @@ class WebAuthPasskeyUnitTest extends TestCase
             method_exists($this->class, 'delete'),
             'Method delete does not exist in the class using WebAuthPasskey.'
         );
+    } // Function ends
+
+    /**
+     * Test that the delete method throws an HttpException for unauthenticated users.
+     */
+    #[Test]
+    #[Depends('test_method_delete_exists_in_class')]
+    #[DataProvider('deleteMethodDataProvider')]
+    public function test_delete_method_for_authenticated_user(
+        array $data, string $expectedException): void
+    {
+        $this->expectException($expectedException);
+        $this->class->delete(request()->merge($data));
+    } // Function ends
+
+    /**
+     * Data provider for the test_delete_method_for_authenticated_user test.
+     */
+    public static function deleteMethodDataProvider(): array
+    {
+        return [
+            [[], ValidationException::class],
+            [['credential_id' => 'some_invalid_id'], HttpException::class],
+        ];
     } // Function ends
 } //Class ends
