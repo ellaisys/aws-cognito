@@ -212,6 +212,8 @@ Call the appropriate methods using simple html elements. With the data attribute
 </button>
 ```
 
+This will trigger the MFA activation process from the View Component and display the necessary UI elements for the user to complete the activation. To customize the appearance or behavior, you can modify the corresponding partial view rendered by the component. The partial view `cognito::partials.mfa.activate-form` is typically located in the `resources/views/vendor/cognito/partials/mfa/` directory of your Laravel application. You can publish the vendor views using the `php artisan vendor:publish` command if the views are not already present in your application.
+
 The response from the web application will display the QR code for activating the Software MFA token as shown below:
 <img src="../assets/images/web_application_activate.png" width="50%" alt="cognito mfa activate for web"/>
 
