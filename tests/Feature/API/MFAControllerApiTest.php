@@ -14,7 +14,7 @@ namespace Ellaisys\Cognito\Tests\Feature\API;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Group;
 
-#[Group('api')]
+#[Group('api'), Group('mfa'), Group('register-mfa')]
 class MFAControllerApiTest extends ApiTestCase
 {
     #[Test]

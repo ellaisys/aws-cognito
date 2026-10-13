@@ -30,7 +30,7 @@ use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-#[Group('web'), Group('unit'), Group('auth-trait'), Group('register-mfa')]
+#[Group('web'), Group('unit'), Group('auth-trait'), Group('mfa'), Group('register-mfa')]
 #[CoversTrait(RegisterMFA::class)]
 class RegisterMFAUnitTest extends TestCase
 {
