@@ -30,7 +30,7 @@ use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-#[Group('web'), Group('unit'), Group('auth-trait'), Group('web-authn-passkey')]
+#[Group('web'), Group('unit'), Group('auth-trait'), Group('passkey'), Group('webauthn')]
 #[CoversTrait(WebAuthPasskey::class)]
 class WebAuthPasskeyUnitTest extends TestCase
 {
