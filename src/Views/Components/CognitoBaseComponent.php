@@ -32,7 +32,7 @@ class CognitoBaseComponent extends Component
      *
      * @return string
      */
-    final protected function getUsername(): string
+    final public function getUsername(): string
     {
         $username = 'cognito-user';
         
@@ -58,7 +58,7 @@ class CognitoBaseComponent extends Component
      *
      * @return bool
      */
-    final protected function isUserAdmin(): bool
+    final public function isUserAdmin(): bool
     {
         try {
             return true;
