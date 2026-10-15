@@ -34,6 +34,9 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 #[CoversClass(Challenge::class)]
 class ChallengeComponentTest extends TestCase
 {
+    /**
+     * Test that the challenge component renders correctly.
+     */
     #[Test]
     public function test_challenge_component_renders_correctly(): void
     {
@@ -41,6 +44,9 @@ class ChallengeComponentTest extends TestCase
             ->assertSee(['<input type="hidden" name="_token"'], false);
     } // Function ends
 
+    /**
+     * Test that the challenge component throws an exception with invalid session data.
+     */
     #[Test]
     public function test_challenge_component_with_invalid_session_data(): void
     {
@@ -51,6 +57,9 @@ class ChallengeComponentTest extends TestCase
         $this->blade('<x-cognito::challenge :challenge-form-name="\'auth-challenge-form\'" />');
     } // Function ends
 
+    /**
+     * Test that the challenge component renders correctly with session data.
+     */
     #[Test]
     #[DataProvider('sessionDataProvider')]
     public function test_challenge_component_with_session_data(
@@ -63,6 +72,9 @@ class ChallengeComponentTest extends TestCase
             ->assertSee(['<input type="hidden" name="_token"'], false);
     } // Function ends
 
+    /**
+     * Data provider for session data tests.
+     */
     public static function sessionDataProvider(): array
     {
         return [
