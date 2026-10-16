@@ -47,12 +47,6 @@ class DeviceActionsUnitTest extends TestCase
     {
         parent::setUp();
 
-        // Set config values
-        Config::set('cognito.allow_phone_number', false);
-        Config::set('cognito.mfa_setup', 'OFF');
-        Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
-        Config::set('cognito.desired_delivery_mediums', ['EMAIL']);
-
         // Create a new fixture
         $this->class = new class {
             use DeviceActions;
