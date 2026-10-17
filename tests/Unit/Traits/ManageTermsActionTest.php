@@ -78,7 +78,7 @@ class ManageTermsActionTest extends TestCase
     public function test_listTerms_method_invalid_response(): void
     {
         $this->expectException(HttpException::class);
-        $response = $this->client->listTerms(10, 'some_token', 'invalid_parameter');
+        $this->client->listTerms(10, 'some_token', 'invalid_parameter');
     } // Function ends
 
     /**

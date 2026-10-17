@@ -84,7 +84,7 @@ class ManagesUserPoolActionTest extends TestCase
     public function test_listUserPools_method_invalid_response(): void
     {
         $this->expectException(HttpException::class);
-        $response = $this->client->listUserPools(
+        $this->client->listUserPools(
             10, self::SAMPLE_INVALID_DATA['pagination_token']
         );
     } //Function ends
@@ -261,7 +261,7 @@ class ManagesUserPoolActionTest extends TestCase
     public function test_listUserPoolClients_method_invalid_response(): void
     {
         $this->expectException(HttpException::class);
-        $response = $this->client->listUserPoolClients(
+        $this->client->listUserPoolClients(
             10, self::SAMPLE_INVALID_DATA['pagination_token'],
             self::SAMPLE_INVALID_DATA['pool_id']
         );
