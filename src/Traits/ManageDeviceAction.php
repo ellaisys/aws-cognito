@@ -57,13 +57,11 @@ trait ManageDeviceAction
             } //End if
 
             //Execute the payload
-            $response = $this->client->listDevices($payload);
+            return $this->client->listDevices($payload);
         } catch (CognitoIdentityProviderException $e) {
             Log::error('ManageDeviceAction:listDevices:CognitoIdentityProviderException');
             throw AwsCognitoException::create($e);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -85,13 +83,11 @@ trait ManageDeviceAction
             ];
 
             //Execute the payload
-            $response = $this->client->getDevice($payload);
+            return $this->client->getDevice($payload);
         } catch (CognitoIdentityProviderException $e) {
             Log::error('ManageDeviceAction:getDevice:CognitoIdentityProviderException');
             throw AwsCognitoException::create($e);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -121,13 +117,11 @@ trait ManageDeviceAction
 
             $payload = array_merge($payload, $payloadData);
 
-            $response = $this->client->confirmDevice($payload);
+            return $this->client->confirmDevice($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManageDeviceAction:confirmDevice:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -151,13 +145,11 @@ trait ManageDeviceAction
                 'DeviceRememberedStatus' => $rememberStatus->value,
             ];
 
-            $response = $this->client->updateDeviceStatus($payload);
+            return $this->client->updateDeviceStatus($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManageDeviceAction:updateDeviceStatus:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -169,7 +161,8 @@ trait ManageDeviceAction
      *
      * @return AwsResult
      */
-    final public function forgetDevice(string $accessToken, string $deviceKey): AwsResult
+    final public function forgetDevice(string $accessToken,
+        string $deviceKey): AwsResult
     {
         try {
             //Build payload
@@ -179,13 +172,11 @@ trait ManageDeviceAction
             ];
 
             //Execute the payload
-            $response = $this->client->forgetDevice($payload);
+            return $this->client->forgetDevice($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManageDeviceAction:forgetDevice:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -198,7 +189,8 @@ trait ManageDeviceAction
      *
      * @return AwsResult
      */
-    final public function adminListDevices(string $username, ?string $paginationToken=null, int $maxResults = 10): AwsResult
+    final public function adminListDevices(string $username,
+        ?string $paginationToken=null, int $maxResults = 10): AwsResult
     {
         try {
             //Build payload
@@ -213,13 +205,11 @@ trait ManageDeviceAction
             } //End if
 
             //Execute the payload
-            $response = $this->client->adminListDevices($payload);
+            return $this->client->adminListDevices($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManageDeviceAction:adminListDevices:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -231,7 +221,8 @@ trait ManageDeviceAction
      *
      * @return AwsResult
      */
-    final public function adminGetDevice(string $username, string $deviceKey): AwsResult
+    final public function adminGetDevice(string $username,
+        string $deviceKey): AwsResult
     {
         try {
             //Build payload
@@ -242,13 +233,11 @@ trait ManageDeviceAction
             ];
 
             //Execute the payload
-            $response = $this->client->adminGetDevice($payload);
+            return $this->client->adminGetDevice($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManageDeviceAction:adminGetDevice:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -260,7 +249,8 @@ trait ManageDeviceAction
      *
      * @return AwsResult
      */
-    final public function adminForgetDevice(string $username, string $deviceKey): AwsResult
+    final public function adminForgetDevice(string $username,
+        string $deviceKey): AwsResult
     {
         try {
             //Build payload
@@ -271,13 +261,11 @@ trait ManageDeviceAction
             ];
 
             //Execute the payload
-            $response = $this->client->adminForgetDevice($payload);
+            return $this->client->adminForgetDevice($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManageDeviceAction:adminForgetDevice:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -302,13 +290,11 @@ trait ManageDeviceAction
                 'DeviceRememberedStatus' => $rememberStatus->value,
             ];
 
-            $response = $this->client->adminUpdateDeviceStatus($payload);
+            return $this->client->adminUpdateDeviceStatus($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManageDeviceAction:adminUpdateDeviceStatus:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
 } //Trait ends
