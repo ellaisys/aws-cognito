@@ -54,7 +54,7 @@ class ManageGroupActionTest extends TestCase
      * Test if the listGroups method exists.
      */
     #[Test]
-    public function test_method_listGroups_exits(): void
+    public function test_method_listGroups_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'listGroups'));
     } //Function ends
@@ -63,7 +63,7 @@ class ManageGroupActionTest extends TestCase
      * Test the response of the listGroups method with valid parameters.
      */
     #[Test]
-    #[Depends('test_method_listGroups_exits')]
+    #[Depends('test_method_listGroups_exists')]
     public function test_listGroups_method_valid_response(): void
     {
         $response = $this->client->listGroups();
@@ -74,7 +74,7 @@ class ManageGroupActionTest extends TestCase
      * Test the response of the listGroups method with invalid parameters.
      */
     #[Test]
-    #[Depends('test_method_listGroups_exits')]
+    #[Depends('test_method_listGroups_exists')]
     public function test_listGroups_method_invalid_response(): void
     {
         $this->expectException(HttpException::class);
@@ -85,7 +85,7 @@ class ManageGroupActionTest extends TestCase
      * Test if the getGroup method exists.
      */
     #[Test]
-    public function test_method_getGroup_exits(): void
+    public function test_method_getGroup_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'getGroup'));
     } //Function ends
@@ -94,7 +94,7 @@ class ManageGroupActionTest extends TestCase
      * Test the response of the getGroup method with a valid group name.
      */
     #[Test]
-    #[Depends('test_method_getGroup_exits')]
+    #[Depends('test_method_getGroup_exists')]
     public function test_getGroup_method_with_valid_group_name(): void
     {
         $response = $this->client->getGroup('default');
@@ -105,7 +105,7 @@ class ManageGroupActionTest extends TestCase
      * Test the response of the getGroup method with an invalid group name.
      */
     #[Test]
-    #[Depends('test_method_getGroup_exits')]
+    #[Depends('test_method_getGroup_exists')]
     public function test_getGroup_method_with_invalid_group_name(): void
     {
         $this->expectException(HttpException::class);
@@ -116,7 +116,7 @@ class ManageGroupActionTest extends TestCase
      * Test if the createGroup method exists.
      */
     #[Test]
-    public function test_method_createGroup_exits(): void
+    public function test_method_createGroup_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'createGroup'));
     } //Function ends
@@ -125,7 +125,7 @@ class ManageGroupActionTest extends TestCase
      * Test the response of the createGroup method with a valid group name.
      */
     #[Test]
-    #[Depends('test_method_createGroup_exits')]
+    #[Depends('test_method_createGroup_exists')]
     public function test_createGroup_method_with_valid_group_name(): void
     {
         $response = $this->client->createGroup(
@@ -138,7 +138,7 @@ class ManageGroupActionTest extends TestCase
      * Test the response of the createGroup method with an invalid group name.
      */
     #[Test]
-    #[Depends('test_method_createGroup_exits')]
+    #[Depends('test_method_createGroup_exists')]
     public function test_createGroup_method_with_invalid_group_name(): void
     {
         $this->expectException(HttpException::class);
@@ -151,7 +151,7 @@ class ManageGroupActionTest extends TestCase
      * Test if the updateGroup method exists.
      */
     #[Test]
-    public function test_method_updateGroup_exits(): void
+    public function test_method_updateGroup_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'updateGroup'));
     } //Function ends
@@ -160,7 +160,7 @@ class ManageGroupActionTest extends TestCase
      * Test the response of the updateGroup method with a valid group name.
      */
     #[Test]
-    #[Depends('test_method_updateGroup_exits')]
+    #[Depends('test_method_updateGroup_exists')]
     public function test_updateGroup_method_with_valid_group_name(): void
     {
         $response = $this->client->updateGroup('default', 'Default Group');
@@ -171,7 +171,7 @@ class ManageGroupActionTest extends TestCase
      * Test the response of the updateGroup method with an invalid group name.
      */
     #[Test]
-    #[Depends('test_method_updateGroup_exits')]
+    #[Depends('test_method_updateGroup_exists')]
     public function test_updateGroup_method_with_invalid_group_name(): void
     {
         $this->expectException(HttpException::class);
@@ -184,7 +184,7 @@ class ManageGroupActionTest extends TestCase
      * Test if the deleteGroup method exists.
      */
     #[Test]
-    public function test_method_deleteGroup_exits(): void
+    public function test_method_deleteGroup_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'deleteGroup'));
     } //Function ends
@@ -193,7 +193,7 @@ class ManageGroupActionTest extends TestCase
      * Test the response of the deleteGroup method with an invalid group name.
      */
     #[Test]
-    #[Depends('test_method_deleteGroup_exits')]
+    #[Depends('test_method_deleteGroup_exists')]
     public function test_deleteGroup_method_with_invalid_group_name(): void
     {
         $this->expectException(HttpException::class);
@@ -204,7 +204,7 @@ class ManageGroupActionTest extends TestCase
      * Test the response of the deleteGroup method with a valid group name.
      */
     #[Test]
-    #[Depends('test_method_deleteGroup_exits')]
+    #[Depends('test_method_deleteGroup_exists')]
     public function test_deleteGroup_method_with_valid_group_name(): void
     {
         $response = $this->client->deleteGroup(self::SAMPLE_DATA['name']);

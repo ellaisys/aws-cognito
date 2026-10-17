@@ -60,7 +60,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test if the listUserPools method exists.
      */
     #[Test]
-    public function test_method_listUserPools_exits(): void
+    public function test_method_listUserPools_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'listUserPools'));
     } //Function ends
@@ -69,7 +69,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the listUserPools method with valid parameters.
      */
     #[Test]
-    #[Depends('test_method_listUserPools_exits')]
+    #[Depends('test_method_listUserPools_exists')]
     public function test_listUserPools_method_valid_response(): void
     {
         $response = $this->client->listUserPools();
@@ -80,7 +80,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the listUserPools method with invalid parameters.
      */
     #[Test]
-    #[Depends('test_method_listUserPools_exits')]
+    #[Depends('test_method_listUserPools_exists')]
     public function test_listUserPools_method_invalid_response(): void
     {
         $this->expectException(HttpException::class);
@@ -93,7 +93,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test if the describeUserPool method exists.
      */
     #[Test]
-    public function test_method_describeUserPool_exits(): void
+    public function test_method_describeUserPool_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'describeUserPool'));
     } //Function ends
@@ -102,7 +102,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the describeUserPool method with valid data.
      */
     #[Test]
-    #[Depends('test_method_describeUserPool_exits')]
+    #[Depends('test_method_describeUserPool_exists')]
     public function test_describeUserPool_method_with_valid_data(): void
     {
         $response = $this->client->describeUserPool();
@@ -113,7 +113,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the describeUserPool method with invalid data.
      */
     #[Test]
-    #[Depends('test_method_describeUserPool_exits')]
+    #[Depends('test_method_describeUserPool_exists')]
     public function test_describeUserPool_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);
@@ -124,7 +124,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test if the createUserPool method exists.
      */
     #[Test]
-    public function test_method_createUserPool_exits(): void
+    public function test_method_createUserPool_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'createUserPool'));
     } //Function ends
@@ -133,7 +133,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the createUserPool method with valid data.
      */
     #[Test]
-    #[Depends('test_method_createUserPool_exits')]
+    #[Depends('test_method_createUserPool_exists')]
     public function test_createUserPool_method_with_valid_data(): string
     {
         $response = $this->client->createUserPool(
@@ -152,7 +152,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the createUserPool method with invalid data.
      */
     #[Test]
-    #[Depends('test_method_createUserPool_exits')]
+    #[Depends('test_method_createUserPool_exists')]
     public function test_createUserPool_method_with_invalid_data(): void
     {
         // Set configuration at runtime
@@ -168,7 +168,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test if the updateUserPool method exists.
      */
     #[Test]
-    public function test_method_updateUserPool_exits(): void
+    public function test_method_updateUserPool_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'updateUserPool'));
     } //Function ends
@@ -192,7 +192,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the updateUserPool method with invalid data.
      */
     #[Test]
-    #[Depends('test_method_updateUserPool_exits')]
+    #[Depends('test_method_updateUserPool_exists')]
     public function test_updateUserPool_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);
@@ -206,7 +206,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test if the deleteUserPool method exists.
      */
     #[Test]
-    public function test_method_deleteUserPool_exits(): void
+    public function test_method_deleteUserPool_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'deleteUserPool'));
     } //Function ends
@@ -215,7 +215,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the deleteUserPool method with invalid data.
      */
     #[Test]
-    #[Depends('test_method_deleteUserPool_exits')]
+    #[Depends('test_method_deleteUserPool_exists')]
     public function test_deleteUserPool_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);
@@ -237,7 +237,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test if the listUserPoolClients method exists.
      */
     #[Test]
-    public function test_method_listUserPoolClients_exits(): void
+    public function test_method_listUserPoolClients_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'listUserPoolClients'));
     } //Function ends
@@ -246,7 +246,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the listUserPoolClients method with valid parameters.
      */
     #[Test]
-    #[Depends('test_method_listUserPoolClients_exits')]
+    #[Depends('test_method_listUserPoolClients_exists')]
     public function test_listUserPoolClients_method_valid_response(): void
     {
         $response = $this->client->listUserPoolClients();
@@ -257,7 +257,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the listUserPoolClients method with invalid parameters.
      */
     #[Test]
-    #[Depends('test_method_listUserPoolClients_exits')]
+    #[Depends('test_method_listUserPoolClients_exists')]
     public function test_listUserPoolClients_method_invalid_response(): void
     {
         $this->expectException(HttpException::class);
@@ -271,7 +271,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test if the describeUserPoolClient method exists.
      */
     #[Test]
-    public function test_method_describeUserPoolClient_exits(): void
+    public function test_method_describeUserPoolClient_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'describeUserPoolClient'));
     } //Function ends
@@ -280,7 +280,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the describeUserPoolClient method with valid data.
      */
     #[Test]
-    #[Depends('test_method_describeUserPoolClient_exits')]
+    #[Depends('test_method_describeUserPoolClient_exists')]
     public function test_describeUserPoolClient_method_with_valid_data(): void
     {
         $response = $this->client->describeUserPoolClient();
@@ -291,7 +291,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the describeUserPoolClient method with invalid data.
      */
     #[Test]
-    #[Depends('test_method_describeUserPoolClient_exits')]
+    #[Depends('test_method_describeUserPoolClient_exists')]
     public function test_describeUserPoolClient_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);
@@ -305,7 +305,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test if the createUserPoolClient method exists.
      */
     #[Test]
-    public function test_method_createUserPoolClient_exits(): void
+    public function test_method_createUserPoolClient_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'createUserPoolClient'));
     } //Function ends
@@ -314,7 +314,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the createUserPoolClient method with valid data.
      */
     #[Test]
-    #[Depends('test_method_createUserPoolClient_exits')]
+    #[Depends('test_method_createUserPoolClient_exists')]
     public function test_createUserPoolClient_method_with_valid_data(): array
     {
         $response = $this->client->createUserPoolClient(
@@ -334,7 +334,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the createUserPoolClient method with invalid data.
      */
     #[Test]
-    #[Depends('test_method_createUserPoolClient_exits')]
+    #[Depends('test_method_createUserPoolClient_exists')]
     public function test_createUserPoolClient_method_with_invalid_data(): void
     {
         $this->expectException(Exception::class);
@@ -348,7 +348,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test if the deleteUserPoolClient method exists.
      */
     #[Test]
-    public function test_method_deleteUserPoolClient_exits(): void
+    public function test_method_deleteUserPoolClient_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'deleteUserPoolClient'));
     } //Function ends
@@ -357,7 +357,7 @@ class ManagesUserPoolActionTest extends TestCase
      * Test the response of the deleteUserPoolClient method with invalid data.
      */
     #[Test]
-    #[Depends('test_method_deleteUserPoolClient_exits')]
+    #[Depends('test_method_deleteUserPoolClient_exists')]
     public function test_deleteUserPoolClient_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);

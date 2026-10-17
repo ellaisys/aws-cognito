@@ -54,7 +54,7 @@ class ManageTermsActionTest extends TestCase
      * Test if the listTerms method exists.
      */
     #[Test]
-    public function test_method_listTerms_exits(): void
+    public function test_method_listTerms_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'listTerms'));
     } // Function ends
@@ -63,7 +63,7 @@ class ManageTermsActionTest extends TestCase
      * Test the response of the listTerms method with valid parameters.
      */
     #[Test]
-    #[Depends('test_method_listTerms_exits')]
+    #[Depends('test_method_listTerms_exists')]
     public function test_listTerms_method_valid_response(): void
     {
         $response = $this->client->listTerms();
@@ -74,7 +74,7 @@ class ManageTermsActionTest extends TestCase
      * Test the response of the listTerms method with invalid parameters.
      */
     #[Test]
-    #[Depends('test_method_listTerms_exits')]
+    #[Depends('test_method_listTerms_exists')]
     public function test_listTerms_method_invalid_response(): void
     {
         $this->expectException(HttpException::class);
@@ -85,7 +85,7 @@ class ManageTermsActionTest extends TestCase
      * Test if the describeTerms method exists.
      */
     #[Test]
-    public function test_method_describeTerms_exits(): void
+    public function test_method_describeTerms_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'describeTerms'));
     } // Function ends
@@ -94,7 +94,7 @@ class ManageTermsActionTest extends TestCase
      * Test the response of the describeTerms method with an invalid group name.
      */
     #[Test]
-    #[Depends('test_method_describeTerms_exits')]
+    #[Depends('test_method_describeTerms_exists')]
     public function test_describeTerms_method_with_invalid_name(): void
     {
         $this->expectException(HttpException::class);
@@ -105,7 +105,7 @@ class ManageTermsActionTest extends TestCase
      * Test if the createTerms method exists.
      */
     #[Test]
-    public function test_method_createTerms_exits(): void
+    public function test_method_createTerms_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'createTerms'));
     } // Function ends
@@ -114,7 +114,7 @@ class ManageTermsActionTest extends TestCase
      * Test the response of the createTerms method with a valid data.
      */
     #[Test]
-    #[Depends('test_method_createTerms_exits')]
+    #[Depends('test_method_createTerms_exists')]
     public function test_createTerms_method_with_valid_data(): string
     {
         $response = $this->client->createTerms(
@@ -135,7 +135,7 @@ class ManageTermsActionTest extends TestCase
      * Test the response of the createTerms method with invalid data.
      */
     #[Test]
-    #[Depends('test_method_createTerms_exits')]
+    #[Depends('test_method_createTerms_exists')]
     public function test_createTerms_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);
@@ -149,7 +149,7 @@ class ManageTermsActionTest extends TestCase
      * Test if the updateTerms method exists.
      */
     #[Test]
-    public function test_method_updateTerms_exits(): void
+    public function test_method_updateTerms_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'updateTerms'));
     } //Function ends
@@ -174,7 +174,7 @@ class ManageTermsActionTest extends TestCase
      * Test the response of the updateTerms method with an invalid data.
      */
     #[Test]
-    #[Depends('test_method_updateTerms_exits')]
+    #[Depends('test_method_updateTerms_exists')]
     public function test_updateTerms_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);
@@ -187,7 +187,7 @@ class ManageTermsActionTest extends TestCase
      * Test if the deleteTerms method exists.
      */
     #[Test]
-    public function test_method_deleteTerms_exits(): void
+    public function test_method_deleteTerms_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'deleteTerms'));
     } // Function ends
@@ -196,7 +196,7 @@ class ManageTermsActionTest extends TestCase
      * Test the response of the deleteTerms method with invalid data.
      */
     #[Test]
-    #[Depends('test_method_deleteTerms_exits')]
+    #[Depends('test_method_deleteTerms_exists')]
     public function test_deleteTerms_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);
