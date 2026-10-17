@@ -72,7 +72,7 @@ trait ManageTermsAction
             //Build payload
             $payload = [
                 'UserPoolId' => $userPoolId ?? $this->poolId,
-                'TermId' => $termId
+                'TermsId' => $termId
             ];
 
             return $this->client->describeTerms($payload);
@@ -132,7 +132,7 @@ trait ManageTermsAction
             //Build payload
             $payload = [
                 'UserPoolId' => $userPoolId ?? $this->poolId,
-                'TermId' => $termId,
+                'TermsId' => $termId,
                 'Enforcement' => 'NONE',
                 'TermsSource' => 'LINK',
             ];
@@ -168,7 +168,7 @@ trait ManageTermsAction
             //Build payload
             $payload = [
                 'UserPoolId' => $userPoolId ?? $this->poolId,
-                'TermId' => $termId
+                'TermsId' => $termId
             ];
 
             return $this->client->deleteTerms($payload);
