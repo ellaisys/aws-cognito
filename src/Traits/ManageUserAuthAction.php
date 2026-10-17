@@ -39,7 +39,7 @@ trait ManageUserAuthAction
      * @param string $username
      * @return \AwsResult
      */
-    public function initiateAuth(CognitoAuthFlowTypes $authFlow,
+    final public function initiateAuth(CognitoAuthFlowTypes $authFlow,
         array $payloadData, string $username): AwsResult
     {
         try {
@@ -54,13 +54,11 @@ trait ManageUserAuthAction
             //Add Secret Hash in case of Client Secret being configured
             $payload = $this->cognitoSecretHash($username, $payload);
 
-            $response = $this->client->initiateAuth($payload);
+            return $this->client->initiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManageUserAuthAction:initiateAuth:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -71,7 +69,7 @@ trait ManageUserAuthAction
      *
      * @return \AwsResult
      */
-    public function getUser(string $accessToken): AwsResult
+    final public function getUser(string $accessToken): AwsResult
     {
         try {
             return $this->client->getUser([
@@ -94,7 +92,7 @@ trait ManageUserAuthAction
      *
      * @return \AwsResult
      */
-    public function respondToAuthChallenge(
+    final public function respondToAuthChallenge(
         CognitoChallengeTypes $challengeName, string $session,
         string $challengeValue, string $username): AwsResult
     {
@@ -123,13 +121,11 @@ trait ManageUserAuthAction
             $payload = $this->cognitoSecretHash($username, $payload);
 
             //Execute the payload
-            $response = $this->client->respondToAuthChallenge($payload);
+            return $this->client->respondToAuthChallenge($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManageUserAuthAction:respondToAuthChallenge:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
 } //Trait ends
