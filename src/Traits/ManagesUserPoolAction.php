@@ -205,15 +205,15 @@ trait ManagesUserPoolAction
      * Delete user pool.
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DeleteUserPool.html
      *
-     * @param string|null $userPoolId
+     * @param string $userPoolId
      *
      * @return \AwsResult
      */
-    final public function deleteUserPool(?string $userPoolId = null): AwsResult
+    final public function deleteUserPool(string $userPoolId): AwsResult
     {
         try {
             return $this->client->deleteUserPool([
-                'UserPoolId' => $userPoolId ?? $this->poolId
+                'UserPoolId' => $userPoolId
             ]);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManagesUserPoolAction:deleteUserPool:CognitoIdentityProviderException');
