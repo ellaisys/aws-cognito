@@ -12,7 +12,6 @@
 namespace Ellaisys\Cognito\Tests\Unit\Traits;
 
 use Illuminate\Support\Facades\Config;
-use Illuminate\Http\Request;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Group;
@@ -36,10 +35,9 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 class ManageGroupActionTest extends TestCase
 {
     private $client;
-    private Request $requestJson;
 
     const SAMPLE_DATA = [
-        'group_name' => 'new_group_name',
+        'name' => 'new_group_name',
         'description' => 'sample_description',
     ];
 
@@ -80,7 +78,7 @@ class ManageGroupActionTest extends TestCase
     public function test_listGroups_method_invalid_response(): void
     {
         $this->expectException(HttpException::class);
-        $response = $this->client->listGroups(10, 'some_token', 'invalid_parameter');
+        $this->client->listGroups(10, 'some_token', 'invalid_parameter');
     } //Function ends
 
     /**
@@ -131,7 +129,7 @@ class ManageGroupActionTest extends TestCase
     public function test_createGroup_method_with_valid_group_name(): void
     {
         $response = $this->client->createGroup(
-            self::SAMPLE_DATA['group_name']
+            self::SAMPLE_DATA['name']
         );
         $this->assertIsArray($response->toArray());
     } //Function ends
@@ -145,7 +143,7 @@ class ManageGroupActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->createGroup(
-            self::SAMPLE_DATA['group_name'], 'some description',
+            self::SAMPLE_DATA['name'], 'some description',
             0, 'some_string_of_20_characters', 'wrong_pool_id');
     } //Function ends
 
@@ -209,7 +207,7 @@ class ManageGroupActionTest extends TestCase
     #[Depends('test_method_deleteGroup_exits')]
     public function test_deleteGroup_method_with_valid_group_name(): void
     {
-        $response = $this->client->deleteGroup(self::SAMPLE_DATA['group_name']);
+        $response = $this->client->deleteGroup(self::SAMPLE_DATA['name']);
         $this->assertIsArray($response->toArray());
     } //Function ends
 
