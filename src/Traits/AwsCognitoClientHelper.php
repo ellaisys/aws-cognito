@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 use Illuminate\Support\Facades\Log;
 
+use Throwable;
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -28,9 +29,9 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
  */
 class AwsCognitoChallengeException extends BadRequestHttpException
 {
-    public function __construct($message = 'Invalid challenge value', $code = 400, Exception $previous = null)
+    public function __construct($message = 'Invalid challenge value', $code = 400, Throwable $previous = null)
     {
-        parent::__construct($message, $code, $previous);
+        parent::__construct($message, $previous, $code);
     }
 } //Class ends
 
@@ -50,9 +51,12 @@ trait AwsCognitoClientHelper
      *
      * @throws BadRequestHttpException If the challenge type or value is invalid.
      */
-    protected function buildChallengePayload(CognitoChallengeTypes $challengeName,
+    final public function buildChallengePayload(CognitoChallengeTypes $challengeName,
         string $challengeValue, string $username): array
     {
+        // Initilize variables
+        $challengePayload = [];
+
         try {
             //Set challenge with username as default data
             $challengePayload=['USERNAME' => $username];
@@ -145,9 +149,9 @@ trait AwsCognitoClientHelper
                     throw new AwsCognitoChallengeException('Invalid challenge type: ' . $challengeName->value);
                     break;
             } //End Switch
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             Log::error('AwsCognitoClientHelper:buildChallengePayload:Exception');
-            throw $e;
+            throw $exception;
         } //Try-catch ends
 
         return $challengePayload;
@@ -159,7 +163,7 @@ trait AwsCognitoClientHelper
      * @param array $payload The payload to which the secret hash will be added.
      * @return array
      */
-    protected function cognitoSecretHash(string $username, array $payload): array
+    final public function cognitoSecretHash(string $username, array $payload): array
     {
         if ($this->boolClientSecret) {
             //Generate secret hash
@@ -214,7 +218,7 @@ trait AwsCognitoClientHelper
      * @param string|null $messageAction (optional)
      * @return array The constructed payload for inviting a user.
      */
-    protected function buildInviteUserPayload(
+    final public function buildInviteUserPayload(
         array $payload, ?string $password = null,
         ?array $attributes = [], ?array $clientMetadata = null,
         ?string $messageAction = null): array
