@@ -24,14 +24,13 @@ use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Auth\EncryptionTypes;
 use Ellaisys\Cognito\AwsCognitoClient;
 use Ellaisys\Cognito\Traits\AwsCognitoClientHelper;
-use Ellaisys\Cognito\Exceptions\AwsCognitoChallengeException;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-#[Group('web'), Group('unit'), Group('trait'), Group('user-auth')]
+#[Group('web'), Group('unit'), Group('trait'), Group('helper')]
 class AwsCognitoClientHelperTest extends TestCase
 {
     private $client;
