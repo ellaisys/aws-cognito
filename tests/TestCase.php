@@ -35,6 +35,24 @@ abstract class TestCase extends OrchestraTestCase
 
     public const APPLICATION_JSON = 'application/json';
 
+    public const SAMPLE_DATA = [
+        'device_key' => 'sample_device_key',
+        'device_name' => 'sample_device_name',
+    ];
+
+    public const SAMPLE_INVALID_DATA = [
+        'user_pool_id' => 'invalid_user_pool_id',
+        'username' => 'invalid_username',
+        'access_token' => 'invalid_access_token',
+        'refresh_token' => 'invalid_refresh_token',
+        'session_value' => 'invalid_session_value_of_20_characters',
+        'device_key' => 'invalid_device_key',
+        'device_name' => 'invalid_device_name',
+        'pagination_token' => 'invalid_pagination_token',
+        'confirmation_code' => 'invalid_confirmation_code',
+        'client_metadata' => ['invalid_key' => 'invalid_value'],
+    ];
+
     // Seed the database before each test
     protected $seed = true;
     protected $seeder = DatabaseSeeder::class;
