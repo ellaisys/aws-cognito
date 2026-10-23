@@ -38,17 +38,6 @@ class AwsCognitoClientAdminActionTest extends TestCase
 {
     private $client;
 
-    const SAMPLE_DATA = [
-    ];
-
-    const SAMPLE_INVALID_DATA = [
-        'user_pool_id' => 'invalid_user_pool_id',
-        'username' => 'invalid_username',
-        'access_token' => 'invalid_access_token',
-        'pagination_token' => 'invalid_pagination_token',
-        'session_value' => 'invalid_session_value_of_20_characters'
-    ];
-
     // Runs before each test method
     protected function setUp(): void
     {
@@ -77,7 +66,7 @@ class AwsCognitoClientAdminActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminConfirmSignUp(
-            self::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['username'],
             ['some_param' => 'some_value']
         );
     } // Function ends
@@ -101,7 +90,7 @@ class AwsCognitoClientAdminActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminEnableUser(
-            self::SAMPLE_INVALID_DATA['username']
+            TestCase::SAMPLE_INVALID_DATA['username']
         );
     } // Function ends
 
@@ -124,7 +113,7 @@ class AwsCognitoClientAdminActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminDisableUser(
-            self::SAMPLE_INVALID_DATA['username']
+            TestCase::SAMPLE_INVALID_DATA['username']
         );
     } // Function ends
 
@@ -147,7 +136,7 @@ class AwsCognitoClientAdminActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminUserGlobalSignOut(
-            self::SAMPLE_INVALID_DATA['username']
+            TestCase::SAMPLE_INVALID_DATA['username']
         );
     } // Function ends
 
@@ -188,7 +177,7 @@ class AwsCognitoClientAdminActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->invalidatePassword(
-            self::SAMPLE_INVALID_DATA['username']
+            TestCase::SAMPLE_INVALID_DATA['username']
         );
     } // Function ends
 
@@ -211,7 +200,7 @@ class AwsCognitoClientAdminActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminGetUser(
-            self::SAMPLE_INVALID_DATA['username']
+            TestCase::SAMPLE_INVALID_DATA['username']
         );
     } // Function ends
 
@@ -258,7 +247,7 @@ class AwsCognitoClientAdminActionTest extends TestCase
 
         $this->expectException(HttpException::class);
         $this->client->deleteUser(
-            self::SAMPLE_INVALID_DATA['username']
+            TestCase::SAMPLE_INVALID_DATA['username']
         );
     } // Function ends
 
@@ -275,7 +264,7 @@ class AwsCognitoClientAdminActionTest extends TestCase
 
         $this->expectException(HttpException::class);
         $this->client->deleteUser(
-            self::SAMPLE_INVALID_DATA['username']
+            TestCase::SAMPLE_INVALID_DATA['username']
         );
     } // Function ends
 
@@ -298,7 +287,7 @@ class AwsCognitoClientAdminActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $response = $this->client->adminSetUserPassword(
-            self::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['username'],
             'invalid_password'
         );
     } // Function ends
@@ -343,9 +332,9 @@ class AwsCognitoClientAdminActionTest extends TestCase
         $this->expectException(HttpException::class);
         $this->client->adminRespondToAuthChallenge(
             CognitoChallengeTypes::PASSWORD,
-            self::SAMPLE_INVALID_DATA['session_value'],
+            TestCase::SAMPLE_INVALID_DATA['session_value'],
             'invalid_challenge_value',
-            self::SAMPLE_INVALID_DATA['username']
+            TestCase::SAMPLE_INVALID_DATA['username']
         );
     } // Function ends
 
@@ -370,7 +359,32 @@ class AwsCognitoClientAdminActionTest extends TestCase
         $this->client->adminInitiateAuth(
             CognitoAuthFlowTypes::ADMIN_NO_SRP_AUTH,
             [],
-            self::SAMPLE_INVALID_DATA['username']
+            TestCase::SAMPLE_INVALID_DATA['username']
+        );
+    } // Function ends
+
+    /**
+     * Test if the adminUpdateUserAttributes method exists.
+     */
+    #[Test]
+    public function test_method_adminUpdateUserAttributes_exists(): void
+    {
+        $this->assertTrue(method_exists($this->client, 'adminUpdateUserAttributes'));
+    } // Function ends
+
+    /**
+     * Test the response of the adminUpdateUserAttributes method with invalid
+     * data.
+     */
+    #[Test]
+    #[Depends('test_method_adminUpdateUserAttributes_exists')]
+    public function test_adminUpdateUserAttributes_method_with_invalid_data(): void
+    {
+        $this->expectException(HttpException::class);
+        $this->client->adminUpdateUserAttributes(
+            TestCase::SAMPLE_INVALID_DATA['username'],
+            [],
+            TestCase::SAMPLE_INVALID_DATA['client_metadata']
         );
     } // Function ends
 
