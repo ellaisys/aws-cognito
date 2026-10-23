@@ -300,4 +300,38 @@ trait AwsCognitoClientAdminAction
         } //Try-catch ends
     } // Function ends
 
+    /**
+     * Set a users attributes.
+     * http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminUpdateUserAttributes.html.
+     *
+     * @param string $username
+     * @param array $attributes
+     * @param array|null $clientMetadata
+     * @return \Aws\Result
+     * @throws \AwsCognitoException
+     */
+    final public function adminUpdateUserAttributes(string $username,
+        array $attributes, ?array $clientMetadata = null): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'Username' => $username,
+                'UserPoolId' => $this->poolId,
+                'UserAttributes' => $this->formatAttributes($attributes),
+            ];
+
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
+            } //End if
+
+            //Execute the payload
+            return $this->client->adminUpdateUserAttributes($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClient:adminUpdateUserAttributes:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //End try
+    } //Function ends
+
 } // Trait ends
