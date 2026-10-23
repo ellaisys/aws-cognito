@@ -43,6 +43,8 @@ abstract class TestCase extends OrchestraTestCase
     public const SAMPLE_INVALID_DATA = [
         'user_pool_id' => 'invalid_user_pool_id',
         'username' => 'invalid_username',
+        'password' => 'InvalidPassword123!',
+        'email' => 'invalid_email@example.com',
         'access_token' => 'invalid_access_token',
         'refresh_token' => 'invalid_refresh_token',
         'session_value' => 'invalid_session_value_of_20_characters',
@@ -51,6 +53,9 @@ abstract class TestCase extends OrchestraTestCase
         'pagination_token' => 'invalid_pagination_token',
         'confirmation_code' => 'invalid_confirmation_code',
         'client_metadata' => ['invalid_key' => 'invalid_value'],
+        'attributes' => ['email' => 'some_invalid_email@example.com'],
+        'message_action' => 'invalid_message_action',
+        'user_group_name' => 'invalid_user_group_name',
     ];
 
     // Seed the database before each test
@@ -137,9 +142,9 @@ abstract class TestCase extends OrchestraTestCase
     protected function getInvalidCredentials(): array
     {
         return [
-            'username' => 'invalid_user',
-            'password' => 'InvalidPassword123!',
-            'email' => 'invalid_email@example.com',
+            'username' => self::SAMPLE_INVALID_DATA['username'],
+            'password' => self::SAMPLE_INVALID_DATA['password'],
+            'email' => self::SAMPLE_INVALID_DATA['email'],
         ];
     } //Function ends
 
