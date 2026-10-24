@@ -79,7 +79,7 @@ trait ManageUserAuthAction
             Log::error('ManageUserAuthAction:getUser:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-    } //Function ends
+    } // Function ends
 
     /**
      * Responds to an authentication challenge
@@ -126,6 +126,38 @@ trait ManageUserAuthAction
             Log::error('ManageUserAuthAction:respondToAuthChallenge:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-    } //Function ends
+    } // Function ends
 
-} //Trait ends
+    /**
+     * Update a user's attributes.
+     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_UpdateUserAttributes.html
+     *
+     * @param string $accessToken
+     * @param array $attributes
+     * @param array|null $clientMetadata
+     * @return \Aws\Result
+     * @throws \AwsCognitoException
+     */
+    final public function updateUserAttributes(string $accessToken,
+        array $attributes, ?array $clientMetadata = null): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'AccessToken' => $accessToken,
+                'UserAttributes' => $this->formatAttributes($attributes),
+            ];
+
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
+            } //End if
+
+            //Execute the payload
+            return $this->client->updateUserAttributes($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClient:updateUserAttributes:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //End try
+    } // Function ends
+} // Trait ends

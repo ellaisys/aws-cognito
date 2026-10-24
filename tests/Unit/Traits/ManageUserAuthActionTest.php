@@ -37,16 +37,6 @@ class ManageUserAuthActionTest extends TestCase
 {
     private $client;
 
-    const SAMPLE_DATA = [
-    ];
-
-    const SAMPLE_INVALID_DATA = [
-        'username' => 'invalid_username',
-        'access_token' => 'invalid_access_token',
-        'pagination_token' => 'invalid_pagination_token',
-        'session_value' => 'invalid_session_value_of_20_characters'
-    ];
-
     // Runs before each test method
     protected function setUp(): void
     {
@@ -76,10 +66,10 @@ class ManageUserAuthActionTest extends TestCase
         $this->client->initiateAuth(
             CognitoAuthFlowTypes::USER_PASSWORD_AUTH,
             [
-                'USERNAME' => self::SAMPLE_INVALID_DATA['username'],
-                'PASSWORD' => 'invalid_password'
+                'USERNAME' => TestCase::SAMPLE_INVALID_DATA['username'],
+                'PASSWORD' => TestCase::SAMPLE_INVALID_DATA['password'],
             ],
-            self::SAMPLE_INVALID_DATA['username']
+            TestCase::SAMPLE_INVALID_DATA['username']
         );
     } // Function ends
 
@@ -101,7 +91,7 @@ class ManageUserAuthActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->getUser(
-            self::SAMPLE_INVALID_DATA['access_token']
+            TestCase::SAMPLE_INVALID_DATA['access_token']
         );
     } // Function ends
 
@@ -124,9 +114,33 @@ class ManageUserAuthActionTest extends TestCase
         $this->expectException(HttpException::class);
         $this->client->respondToAuthChallenge(
             CognitoChallengeTypes::SOFTWARE_TOKEN_MFA,
-            self::SAMPLE_INVALID_DATA['session_value'],
+            TestCase::SAMPLE_INVALID_DATA['session_value'],
             'invalid_challenge_value',
-            self::SAMPLE_INVALID_DATA['username']
+            TestCase::SAMPLE_INVALID_DATA['username']
+        );
+    } // Function ends
+
+    /**
+     * Test if the updateUserAttributes method exists.
+     */
+    #[Test]
+    public function test_method_updateUserAttributes_exists(): void
+    {
+        $this->assertTrue(method_exists($this->client, 'updateUserAttributes'));
+    } // Function ends
+
+    /**
+     * Test the response of the updateUserAttributes method with invalid data.
+     */
+    #[Test]
+    #[Depends('test_method_updateUserAttributes_exists')]
+    public function test_updateUserAttributes_method_with_invalid_data(): void
+    {
+        $this->expectException(HttpException::class);
+        $this->client->updateUserAttributes(
+            TestCase::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['attributes'],
+            TestCase::SAMPLE_INVALID_DATA['client_metadata'],
         );
     } // Function ends
 } // Class ends
