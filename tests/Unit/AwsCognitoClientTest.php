@@ -76,12 +76,98 @@ class AwsCognitoClientTest extends TestCase
     } // Function ends
 
     /**
+     * Test the response of the authenticate method with invalid
+     * data.
+     */
+    #[Test]
+    #[Depends('test_method_authenticate_exists')]
+    #[DataProvider('getAuthenticateInvalidDataProvider')]
+    public function test_authenticate_method_with_invalid_data(
+        CognitoAuthFlowTypes $authFlow, string $password,
+        string $deviceKey = null, string $challenge = null
+    ): void
+    {
+        $this->expectException(HttpException::class);
+        $this->client->authenticate(
+            $authFlow,
+            TestCase::SAMPLE_INVALID_DATA['email'],
+            $password,
+            $deviceKey,
+            $challenge,
+            TestCase::SAMPLE_INVALID_DATA['client_metadata']
+        );
+    } // Function ends
+
+    /**
+     * Data provider for test_authenticate_method_with_invalid_data.
+     */
+    public static function getAuthenticateInvalidDataProvider(): array
+    {
+        return [
+            'user auth' => [
+                CognitoAuthFlowTypes::USER_AUTH,
+                TestCase::SAMPLE_INVALID_DATA['password'],
+                TestCase::SAMPLE_INVALID_DATA['device_key'],
+                TestCase::SAMPLE_INVALID_DATA['challenge_type']
+            ],
+            'user srp auth' => [
+                CognitoAuthFlowTypes::USER_SRP_AUTH,
+                TestCase::SAMPLE_INVALID_DATA['password'],
+                null,
+                null
+            ],
+            'custom auth' => [
+                CognitoAuthFlowTypes::CUSTOM_AUTH,
+                TestCase::SAMPLE_INVALID_DATA['password'],
+                TestCase::SAMPLE_INVALID_DATA['device_key'],
+                TestCase::SAMPLE_INVALID_DATA['challenge_type']
+            ],
+            'password auth' => [
+                CognitoAuthFlowTypes::USER_PASSWORD_AUTH,
+                TestCase::SAMPLE_INVALID_DATA['password'],
+                TestCase::SAMPLE_INVALID_DATA['device_key'],
+                null
+            ],
+            'admin no Srp auth' => [
+                CognitoAuthFlowTypes::ADMIN_NO_SRP_AUTH,
+                TestCase::SAMPLE_INVALID_DATA['password'],
+                TestCase::SAMPLE_INVALID_DATA['device_key'],
+                TestCase::SAMPLE_INVALID_DATA['challenge_type']
+            ],
+            'admin user password auth' => [
+                CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH,
+                TestCase::SAMPLE_INVALID_DATA['password'],
+                TestCase::SAMPLE_INVALID_DATA['device_key'],
+                null
+            ]
+        ];
+    } // Function ends
+
+    /**
      * Test if the register method exists.
      */
     #[Test]
     public function test_method_register_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'register'));
+    } // Function ends
+
+    /**
+     * Test the response of the register method with invalid
+     * data.
+     */
+    #[Test]
+    #[Depends('test_method_register_exists')]
+    public function test_register_method_with_invalid_data(): void
+    {
+        $this->expectException(HttpException::class);
+        $this->client->register(
+            TestCase::SAMPLE_INVALID_DATA['email'],
+            TestCase::SAMPLE_INVALID_DATA['password'],
+            TestCase::SAMPLE_INVALID_DATA['attributes'],
+            TestCase::SAMPLE_INVALID_DATA['client_metadata'],
+            TestCase::SAMPLE_INVALID_DATA['user_group_name']
+        );
     } // Function ends
 
     /**

@@ -63,6 +63,7 @@ abstract class TestCase extends OrchestraTestCase
         'message_action' => 'invalid_message_action',
         'user_group_name' => 'invalid_user_group_name',
         'code' => '000000',
+        'challenge_type' => 'invalid_challenge'
     ];
 
     // Seed the database before each test
