@@ -329,7 +329,7 @@ trait AwsCognitoClientAdminAction
             //Execute the payload
             return $this->client->adminUpdateUserAttributes($payload);
         } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClient:adminUpdateUserAttributes:CognitoIdentityProviderException');
+            Log::error('AwsCognitoClientAdminAction:adminUpdateUserAttributes:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //End try
     } //Function ends
