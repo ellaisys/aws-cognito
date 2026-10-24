@@ -280,8 +280,10 @@ class AwsCognitoClient
      * @param string $username
      * @param array $clientMetadata (optional)
      * @return string
+     * @throws \AwsCognitoException
      */
-    final public function sendResetLink(string $username, ?array $clientMetadata = null): string
+    final public function sendResetLink(string $username,
+        ?array $clientMetadata = null): string
     {
         try {
             //Build payload
@@ -321,9 +323,13 @@ class AwsCognitoClient
      * @param string $code
      * @param string $username
      * @param string $password
+     * @param array|null $clientMetadata (optional)
      * @return string
+     * @throws \AwsCognitoException
      */
-    final public function resetPassword(string $code, string $username, string $password): string
+    final public function resetPassword(string $code,
+        string $username, string $password,
+        ?array $clientMetadata = null): string
     {
         try {
             //Initialize variables
@@ -340,6 +346,11 @@ class AwsCognitoClient
             //Add Secret Hash in case of Client Secret being configured
             $payload = $this->cognitoSecretHash($username, $payload);
 
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
+            } //End if
+
             $this->client->confirmForgotPassword($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClient:resetPassword:CognitoIdentityProviderException');
@@ -355,12 +366,12 @@ class AwsCognitoClient
      *
      * @param $username
      * @param $password (optional) (default=null)
-     * @param array $attributes (optional) (default=[])
-     * @param array $clientMetadata (optional)
+     * @param array|null $attributes (optional) (default=[])
+     * @param array|null $clientMetadata (optional)
      * @param string $messageAction (optional)
      * @param string $groupname (optional)
-     * @return AwsResult
-     * @throws InvalidUserException|AwsCognitoException
+     * @return \Aws\Result
+     * @throws \InvalidUserException|\AwsCognitoException
      */
     final public function inviteUser(string $username, ?string $password = null,
         ?array $attributes = [], ?array $clientMetadata = null,
@@ -408,21 +419,19 @@ class AwsCognitoClient
      * @param string $password
      * @param string $session
      *
-     * @return bool
+     * @return string
      */
-    final public function confirmPassword($username, $password, $session)
+    final public function confirmPassword(string $username,
+        string $password, string $session): string
     {
         try {
             $this->adminRespondToAuthChallenge(
                 CognitoChallengeTypes::NEW_PASSWORD_REQUIRED,
                 $session, $password, $username
             );
-        } catch (CognitoIdentityProviderException $exception) {
-            if ($exception->getAwsErrorCode() === self::CODE_MISMATCH || $exception->getAwsErrorCode() === self::EXPIRED_CODE) {
-                return Password::INVALID_TOKEN;
-            } //End if
-
-            throw AwsCognitoException::create($exception);
+        } catch (Exception $exception) {
+            Log::error('AwsCognitoClient:confirmPassword:Exception');
+            throw $exception;
         } //Try-catch ends
 
         return Password::PASSWORD_RESET;
@@ -460,11 +469,11 @@ class AwsCognitoClient
      *
      * @param string $username
      * @param string $confirmationCode
-     * @param array|null $clientMetadata
+     * @param array|null $clientMetadata (optional)
      * @return \Aws\Result
      * @throws \AwsCognitoException
      */
-    final public function confirmUserSignUp(string $username, string $confirmationCode,
+    final public function confirmSignUp(string $username, string $confirmationCode,
         ?array $clientMetadata = null): AwsResult
     {
         try {
@@ -486,7 +495,7 @@ class AwsCognitoClient
 
             return $this->client->confirmSignUp($payload);
         } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClient:confirmUserSignUp:CognitoIdentityProviderException');
+            Log::error('AwsCognitoClient:confirmSignUp:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
     } //Function ends
@@ -496,7 +505,7 @@ class AwsCognitoClient
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ResendConfirmationCode.html
      *
      * @param string $username
-     * @param array|null $clientMetadata
+     * @param array|null $clientMetadata (optional)
      * @return \Aws\Result
      * @throws \AwsCognitoException
      */
@@ -525,39 +534,6 @@ class AwsCognitoClient
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
     } //Function ends
-
-    /**
-     * Update a user's attributes.
-     * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_UpdateUserAttributes.html
-     *
-     * @param string $username
-     * @param array $attributes
-     * @param array|null $clientMetadata
-     * @return \Aws\Result
-     * @throws \AwsCognitoException
-     */
-    final public function updateUserAttributes(string $username,
-        array $attributes, ?array $clientMetadata = null): AwsResult
-    {
-        try {
-            //Build payload
-            $payload = [
-                'AccessToken' => $username,
-                'UserAttributes' => $this->formatAttributes($attributes),
-            ];
-
-            //Set Client Metadata
-            if (!empty($clientMetadata)) {
-                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
-            } //End if
-
-            //Execute the payload
-            return $this->client->updateUserAttributes($payload);
-        } catch (CognitoIdentityProviderException $exception) {
-            Log::error('AwsCognitoClient:updateUserAttributes:CognitoIdentityProviderException');
-            throw AwsCognitoException::create($exception);
-        } //End try
-    } //Function ends
     
     /**
      * Generate a new token using refresh token.
@@ -565,10 +541,12 @@ class AwsCognitoClient
      *
      * @param string $refreshToken
      * @param string $username
+     * @param string|null $deviceKey (optional)
+     * @param array|null $clientMetadata (optional)
      * @return \Aws\Result
      * @throws \AwsCognitoException
      */
-    public function refreshToken(string $refreshToken, string $username,
+    final public function refreshToken(string $refreshToken, string $username,
         ?string $deviceKey = null, ?array $clientMetadata = null): AwsResult
     {
         // Initiaze variables

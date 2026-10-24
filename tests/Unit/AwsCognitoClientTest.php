@@ -12,6 +12,7 @@
 namespace Ellaisys\Cognito\Tests\Unit;
 
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Password;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Group;
@@ -93,12 +94,44 @@ class AwsCognitoClientTest extends TestCase
     } // Function ends
 
     /**
+     * Test the response of the sendResetLink method with invalid
+     * username.
+     */
+    #[Test]
+    #[Depends('test_method_sendResetLink_exists')]
+    public function test_sendResetLink_method_with_invalid_username(): void
+    {
+        $response = $this->client->sendResetLink(
+            TestCase::SAMPLE_INVALID_DATA['email'],
+            TestCase::SAMPLE_INVALID_DATA['client_metadata']
+        );
+        $this->assertEquals(Password::RESET_LINK_SENT, $response);
+    } // Function ends
+
+    /**
      * Test if the resetPassword method exists.
      */
     #[Test]
     public function test_method_resetPassword_exists(): void
     {
         $this->assertTrue(method_exists($this->client, 'resetPassword'));
+    } // Function ends
+
+    /**
+     * Test the response of the resetPassword method with invalid
+     * data.
+     */
+    #[Test]
+    #[Depends('test_method_resetPassword_exists')]
+    public function test_resetPassword_method_with_invalid_data(): void
+    {
+        $this->expectException(HttpException::class);
+        $this->client->resetPassword(
+            TestCase::SAMPLE_INVALID_DATA['code'],
+            TestCase::SAMPLE_INVALID_DATA['email'],
+            TestCase::SAMPLE_INVALID_DATA['password'],
+            TestCase::SAMPLE_INVALID_DATA['client_metadata']
+        );
     } // Function ends
 
     /**
@@ -160,6 +193,22 @@ class AwsCognitoClientTest extends TestCase
     } // Function ends
 
     /**
+     * Test the response of the confirmPassword method with invalid
+     * data.
+     */
+    #[Test]
+    #[Depends('test_method_confirmPassword_exists')]
+    public function test_confirmPassword_method_with_invalid_data(): void
+    {
+        $this->expectException(HttpException::class);
+        $this->client->confirmPassword(
+            TestCase::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['password'],
+            TestCase::SAMPLE_INVALID_DATA['session_value']
+        );
+    } // Function ends
+
+    /**
      * Test if the changePassword method exists.
      */
     #[Test]
@@ -183,10 +232,6 @@ class AwsCognitoClientTest extends TestCase
             TestCase::SAMPLE_INVALID_DATA['password'] . 'new'
         );
     } // Function ends
-
-
-
-
 
     /**
      * Test if the confirmSignUp method exists.
@@ -213,9 +258,6 @@ class AwsCognitoClientTest extends TestCase
         );
     } // Function ends
 
-
-
-
     /**
      * Test if the resendConfirmationCode method exists.
      */
@@ -241,41 +283,6 @@ class AwsCognitoClientTest extends TestCase
 
         $this->assertIsArray($data);
     } // Function ends
-
-
-
-
-
-    /**
-     * Test if the updateUserAttributes method exists.
-     */
-    #[Test]
-    public function test_method_updateUserAttributes_exists(): void
-    {
-        $this->assertTrue(method_exists($this->client, 'updateUserAttributes'));
-    } // Function ends
-
-    /**
-     * Test the response of the updateUserAttributes method with invalid
-     * data.
-     */
-    #[Test]
-    #[Depends('test_method_updateUserAttributes_exists')]
-    public function test_updateUserAttributes_method_with_invalid_data(): void
-    {
-        $this->expectException(HttpException::class);
-        $this->client->updateUserAttributes(
-            TestCase::SAMPLE_INVALID_DATA['username'],
-            [],
-            TestCase::SAMPLE_INVALID_DATA['client_metadata'],
-        );
-    } // Function ends
-
-
-
-
-
-
 
     /**
      * Test if the refreshToken method exists.
@@ -350,5 +357,4 @@ class AwsCognitoClientTest extends TestCase
         );
         $this->assertTrue($response);
     } // Function ends
-
 } // Class ends
