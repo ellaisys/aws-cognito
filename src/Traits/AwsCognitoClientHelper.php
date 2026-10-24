@@ -291,4 +291,21 @@ trait AwsCognitoClientHelper
         return $userAttributes;
     } //Function ends
 
+    /**
+     * Build Client Metadata to be forwarded to Cognito.
+     *
+     * @param array $attributes
+     * @param array|null $clientMetadata
+     * @return array
+     */
+    protected function buildClientMetadata(array $attributes,
+        ?array $clientMetadata = null): array
+    {
+        if (!empty($clientMetadata)) {
+            $attributes = array_merge($attributes, $clientMetadata);
+        } //End if
+
+        return $attributes;
+    } //Function ends
+
 } //Trait ends
