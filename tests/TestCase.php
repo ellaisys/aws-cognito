@@ -56,6 +56,7 @@ abstract class TestCase extends OrchestraTestCase
         'attributes' => ['email' => 'some_invalid_email@example.com'],
         'message_action' => 'invalid_message_action',
         'user_group_name' => 'invalid_user_group_name',
+        'code' => '000000'
     ];
 
     // Seed the database before each test
