@@ -37,10 +37,13 @@ trait ManageUserAuthAction
      * @param \CognitoAuthFlowTypes $authFlow
      * @param array $payloadData
      * @param string $username
-     * @return \AwsResult
+     * @param array|null $clientMetadata
+     * @return \Aws\Result
+     * @throws \AwsCognitoException
      */
     final public function initiateAuth(CognitoAuthFlowTypes $authFlow,
-        array $payloadData, string $username): AwsResult
+        array $payloadData, string $username,
+        ?array $clientMetadata = null): AwsResult
     {
         try {
             //Build payload
@@ -53,6 +56,13 @@ trait ManageUserAuthAction
 
             //Add Secret Hash in case of Client Secret being configured
             $payload = $this->cognitoSecretHash($username, $payload);
+
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([
+                    'username' => $username
+                ], $clientMetadata);
+            } //End if
 
             return $this->client->initiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {

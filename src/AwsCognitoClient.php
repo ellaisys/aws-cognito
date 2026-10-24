@@ -154,13 +154,18 @@ class AwsCognitoClient
      * Checks if credentials of a user are valid.
      * @see http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminInitiateAuth.html
      *
+     * @param CognitoAuthFlowTypes $authFlow
      * @param string $username
      * @param string $password
-     * @return \Aws\Result|bool
+     * @param string|null $deviceKey
+     * @param string|null $challenge
+     * @param array|null $clientMetadata
+     * @return \Aws\Result
+     * @throws \AwsCognitoException
      */
     public function authenticate(CognitoAuthFlowTypes $authFlow,
         string $username, ?string $password, ?string $deviceKey = null,
-        ?string $challenge = null)
+        ?string $challenge = null, ?array $clientMetadata = null): AwsResult
     {
         try {
             //Initialize variables
@@ -215,9 +220,15 @@ class AwsCognitoClient
 
             // Call appropriate method based on the auth flow type
             if ($isAdminAuthFlow) {
-                $response = $this->adminInitiateAuth($authFlow, $payload, $username);
+                $response = $this->adminInitiateAuth(
+                    $authFlow, $payload,
+                    $username, $clientMetadata
+                );
             } else {
-                $response = $this->initiateAuth($authFlow, $payload, $username);
+                $response = $this->initiateAuth(
+                    $authFlow, $payload,
+                    $username, $clientMetadata
+                );
             } //End if
         } catch (Exception $exception) {
             Log::error('AwsCognitoClient:authenticate:Exception');
