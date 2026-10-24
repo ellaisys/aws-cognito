@@ -35,16 +35,6 @@ class AwsCognitoClientHelperTest extends TestCase
 {
     private $client;
 
-    const SAMPLE_DATA = [
-    ];
-
-    const SAMPLE_INVALID_DATA = [
-        'username' => 'invalid_username',
-        'access_token' => 'invalid_access_token',
-        'pagination_token' => 'invalid_pagination_token',
-        'session_value' => 'invalid_session_value_of_20_characters'
-    ];
-
     // Runs before each test method
     protected function setUp(): void
     {
@@ -91,22 +81,22 @@ class AwsCognitoClientHelperTest extends TestCase
             'invalid challenge type' => [
                 CognitoChallengeTypes::CUSTOM_CHALLENGE,
                 'invalid_challenge_value',
-                self::SAMPLE_INVALID_DATA['username']
+                TestCase::SAMPLE_INVALID_DATA['username']
             ],
             'invalid mfa value' => [
                 CognitoChallengeTypes::SELECT_MFA_TYPE,
                 'invalid_mfa_value',
-                self::SAMPLE_INVALID_DATA['username']
+                TestCase::SAMPLE_INVALID_DATA['username']
             ],
             'invalid select challenge' => [
                 CognitoChallengeTypes::SELECT_CHALLENGE,
                 'invalid_select_challenge_value',
-                self::SAMPLE_INVALID_DATA['username']
+                TestCase::SAMPLE_INVALID_DATA['username']
             ],
             'invalid password verifier' => [
                 CognitoChallengeTypes::PASSWORD_VERIFIER,
                 'invalid_password_verifier_value',
-                self::SAMPLE_INVALID_DATA['username']
+                TestCase::SAMPLE_INVALID_DATA['username']
             ]
         ];
     } // Function ends
@@ -135,7 +125,7 @@ class AwsCognitoClientHelperTest extends TestCase
      */
     public static function challengeValidDataProvider(): array
     {
-        $username = 'some_username';
+        $username = TestCase::SAMPLE_INVALID_DATA['username'];
         return [
             'password challenge' => [
                 CognitoChallengeTypes::PASSWORD,
@@ -157,13 +147,13 @@ class AwsCognitoClientHelperTest extends TestCase
             ],
             'sms mfa' => [
                 CognitoChallengeTypes::SMS_MFA,
-                '123456',
+                TestCase::SAMPLE_INVALID_DATA['code'],
                 $username,
                 'SMS_MFA_CODE'
             ],
             'software token mfa' => [
                 CognitoChallengeTypes::SOFTWARE_TOKEN_MFA,
-                '654321',
+                TestCase::SAMPLE_INVALID_DATA['code'],
                 $username,
                 'SOFTWARE_TOKEN_MFA_CODE'
             ],
@@ -181,13 +171,13 @@ class AwsCognitoClientHelperTest extends TestCase
             ],
             'sms otp' => [
                 CognitoChallengeTypes::SMS_OTP,
-                '234567',
+                TestCase::SAMPLE_INVALID_DATA['code'],
                 $username,
                 'SMS_OTP_CODE'
             ],
             'email otp' => [
                 CognitoChallengeTypes::EMAIL_OTP,
-                '345678',
+                TestCase::SAMPLE_INVALID_DATA['code'],
                 $username,
                 'EMAIL_OTP_CODE'
             ],
@@ -199,7 +189,7 @@ class AwsCognitoClientHelperTest extends TestCase
             ],
             'new password required' => [
                 CognitoChallengeTypes::NEW_PASSWORD_REQUIRED,
-                'new_password_value',
+                TestCase::SAMPLE_INVALID_DATA['password'],
                 $username,
                 'NEW_PASSWORD'
             ],
@@ -232,7 +222,7 @@ class AwsCognitoClientHelperTest extends TestCase
         array $data): void
     {
         $response = $this->client->cognitoSecretHash(
-            self::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['username'],
             $data
         );
 
@@ -273,15 +263,12 @@ class AwsCognitoClientHelperTest extends TestCase
     #[Depends('test_method_buildInviteUserPayload_exists')]
     public function test_buildInviteUserPayload_method_with_valid_data(): void
     {
-        // Get invalid credentials for testing
-        $invalidCredentials = $this->getInvalidCredentials();
-
         // Set configuration
         Config::set('cognito.mfa_setup', 'OPTIONAL');
 
         $response = $this->client->buildInviteUserPayload(
             [],
-            $invalidCredentials['password'],
+            TestCase::SAMPLE_INVALID_DATA['password'],
             ['email' => 'invalid_email'],
             ['custom_metadata' => 'invalid_metadata'],
             'RESEND'
@@ -297,9 +284,6 @@ class AwsCognitoClientHelperTest extends TestCase
     #[Depends('test_method_buildInviteUserPayload_exists')]
     public function test_buildInviteUserPayload_method_with_invalid_data(): void
     {
-        // Get invalid credentials for testing
-        $invalidCredentials = $this->getInvalidCredentials();
-
         // Set configuration
         Config::set('cognito.mfa_setup', 'OPTIONAL');
         Config::set('cognito.mfa_type', ['SMS_MFA']);
@@ -307,7 +291,7 @@ class AwsCognitoClientHelperTest extends TestCase
         $this->expectException(HttpException::class);
         $this->client->buildInviteUserPayload(
             [],
-            $invalidCredentials['password'],
+            TestCase::SAMPLE_INVALID_DATA['password'],
             ['email' => 'invalid_email'],
             ['custom_metadata' => 'invalid_metadata'],
             'RESEND'
