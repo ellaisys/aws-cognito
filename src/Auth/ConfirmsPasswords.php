@@ -175,7 +175,7 @@ trait ConfirmsPasswords
         );
         if ($response === Password::PASSWORD_RESET) {
             //Update the user attributes
-            $responseAttributesUpdate = $client->setUserAttributes(
+            $responseAttributesUpdate = $client->adminUpdateUserAttributes(
                 $payload[$paramUsername], [
                 'email_verified' => 'true',
             ]);
@@ -221,12 +221,9 @@ trait ConfirmsPasswords
                 $payload[$passwordOld],
                 $payload[$passwordNew]
             );
-        } catch(Exception $e) {
-            Log::error('ConfirmsPasswords:confirm:Exception');
-            if ($e instanceof CognitoIdentityProviderException) {
-                throw AwsCognitoException::create($e);
-            } //End if
-            throw $e;
+        } catch(Exception $exception) {
+            Log::error('ConfirmsPasswords:changePassword:Exception');
+            throw $exception;
         } //Try-catch ends
     } //Function ends
 
