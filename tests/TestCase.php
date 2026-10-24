@@ -36,12 +36,18 @@ abstract class TestCase extends OrchestraTestCase
     public const APPLICATION_JSON = 'application/json';
 
     public const SAMPLE_DATA = [
+        'name' => 'new_pool_name',
+        'description' => 'sample_description',
         'device_key' => 'sample_device_key',
         'device_name' => 'sample_device_name',
+        'user_group_name' => 'default'
     ];
 
     public const SAMPLE_INVALID_DATA = [
         'user_pool_id' => 'invalid_user_pool_id',
+        'client_id' => 'invalid_client_id',
+        'name' => 'invalid_name',
+        'description' => 'invalid_description',
         'username' => 'invalid_username',
         'password' => 'InvalidPassword123!',
         'email' => 'invalid_email@example.com',
@@ -56,7 +62,7 @@ abstract class TestCase extends OrchestraTestCase
         'attributes' => ['email' => 'some_invalid_email@example.com'],
         'message_action' => 'invalid_message_action',
         'user_group_name' => 'invalid_user_group_name',
-        'code' => '000000'
+        'code' => '000000',
     ];
 
     // Seed the database before each test

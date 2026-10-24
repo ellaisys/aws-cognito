@@ -36,19 +36,6 @@ class ManageDeviceActionTest extends TestCase
 {
     private $client;
 
-    const SAMPLE_DATA = [
-        'device_key' => 'sample_device_key',
-        'device_name' => 'sample_device_name',
-    ];
-
-    const SAMPLE_INVALID_DATA = [
-        'username' => 'invalid_username',
-        'access_token' => 'invalid_access_token',
-        'device_key' => 'invalid_device_key',
-        'device_name' => 'invalid_device_name',
-        'pagination_token' => 'invalid_pagination_token'
-    ];
-
     // Runs before each test method
     protected function setUp(): void
     {
@@ -76,9 +63,9 @@ class ManageDeviceActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->listDevices(
-            self::SAMPLE_INVALID_DATA['access_token'],
+            TestCase::SAMPLE_INVALID_DATA['access_token'],
             10,
-            self::SAMPLE_INVALID_DATA['pagination_token']
+            TestCase::SAMPLE_INVALID_DATA['pagination_token']
         );
     } // Function ends
 
@@ -100,8 +87,8 @@ class ManageDeviceActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->getDevice(
-            self::SAMPLE_INVALID_DATA['access_token'],
-            self::SAMPLE_INVALID_DATA['device_key']
+            TestCase::SAMPLE_INVALID_DATA['access_token'],
+            TestCase::SAMPLE_INVALID_DATA['device_key']
         );
     } // Function ends
 
@@ -123,9 +110,9 @@ class ManageDeviceActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->confirmDevice(
-            self::SAMPLE_INVALID_DATA['access_token'],
-            self::SAMPLE_INVALID_DATA['device_key'],
-            self::SAMPLE_INVALID_DATA['device_name'],
+            TestCase::SAMPLE_INVALID_DATA['access_token'],
+            TestCase::SAMPLE_INVALID_DATA['device_key'],
+            TestCase::SAMPLE_INVALID_DATA['device_name'],
             []
         );
     } // Function ends
@@ -148,8 +135,8 @@ class ManageDeviceActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->updateDeviceStatus(
-            self::SAMPLE_INVALID_DATA['access_token'],
-            self::SAMPLE_INVALID_DATA['device_key']
+            TestCase::SAMPLE_INVALID_DATA['access_token'],
+            TestCase::SAMPLE_INVALID_DATA['device_key']
         );
     } // Function ends
 
@@ -171,8 +158,8 @@ class ManageDeviceActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->forgetDevice(
-            self::SAMPLE_INVALID_DATA['access_token'],
-            self::SAMPLE_INVALID_DATA['device_key']
+            TestCase::SAMPLE_INVALID_DATA['access_token'],
+            TestCase::SAMPLE_INVALID_DATA['device_key']
         );
     } // Function ends
 
@@ -195,8 +182,8 @@ class ManageDeviceActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminListDevices(
-            self::SAMPLE_INVALID_DATA['username'],
-            self::SAMPLE_INVALID_DATA['pagination_token']
+            TestCase::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['pagination_token']
         );
     } // Function ends
 
@@ -218,8 +205,8 @@ class ManageDeviceActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminGetDevice(
-            self::SAMPLE_INVALID_DATA['username'],
-            self::SAMPLE_INVALID_DATA['device_key']
+            TestCase::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['device_key']
         );
     } // Function ends
 
@@ -241,8 +228,8 @@ class ManageDeviceActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminForgetDevice(
-            self::SAMPLE_INVALID_DATA['username'],
-            self::SAMPLE_INVALID_DATA['device_key']
+            TestCase::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['device_key']
         );
     } // Function ends
 
@@ -264,8 +251,8 @@ class ManageDeviceActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminUpdateDeviceStatus(
-            self::SAMPLE_INVALID_DATA['username'],
-            self::SAMPLE_INVALID_DATA['device_key']
+            TestCase::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['device_key']
         );
     } // Function ends
 } // Class ends

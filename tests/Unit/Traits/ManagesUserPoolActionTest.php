@@ -36,17 +36,6 @@ class ManagesUserPoolActionTest extends TestCase
 {
     private $client;
 
-    const SAMPLE_INVALID_DATA = [
-        'pool_id' => 'invalid_pool_id',
-        'client_id' => 'invalid_client_id',
-        'pagination_token' => 'invalid_pagination_token'
-    ];
-
-    const SAMPLE_DATA = [
-        'name' => 'new_pool_name',
-        'description' => 'sample_description',
-    ];
-
     // Runs before each test method
     protected function setUp(): void
     {
@@ -85,7 +74,7 @@ class ManagesUserPoolActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->listUserPools(
-            10, self::SAMPLE_INVALID_DATA['pagination_token']
+            10, TestCase::SAMPLE_INVALID_DATA['pagination_token']
         );
     } //Function ends
 
@@ -117,7 +106,7 @@ class ManagesUserPoolActionTest extends TestCase
     public function test_describeUserPool_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);
-        $this->client->describeUserPool(self::SAMPLE_INVALID_DATA['pool_id']);
+        $this->client->describeUserPool(TestCase::SAMPLE_INVALID_DATA['user_pool_id']);
     } //Function ends
 
     /**
@@ -137,7 +126,7 @@ class ManagesUserPoolActionTest extends TestCase
     public function test_createUserPool_method_with_valid_data(): string
     {
         $response = $this->client->createUserPool(
-            self::SAMPLE_DATA['name']
+            TestCase::SAMPLE_DATA['name']
         );
         $data = $response->toArray();
 
@@ -197,7 +186,7 @@ class ManagesUserPoolActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->updateUserPool(
-            self::SAMPLE_INVALID_DATA['pool_id'],
+            TestCase::SAMPLE_INVALID_DATA['user_pool_id'],
             ['name' => 'Invalid Pool Name']
         );
     } //Function ends
@@ -219,7 +208,7 @@ class ManagesUserPoolActionTest extends TestCase
     public function test_deleteUserPool_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);
-        $this->client->deleteUserPool(self::SAMPLE_INVALID_DATA['pool_id']);
+        $this->client->deleteUserPool(TestCase::SAMPLE_INVALID_DATA['user_pool_id']);
     } //Function ends
 
     /**
@@ -262,8 +251,8 @@ class ManagesUserPoolActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->listUserPoolClients(
-            10, self::SAMPLE_INVALID_DATA['pagination_token'],
-            self::SAMPLE_INVALID_DATA['pool_id']
+            10, TestCase::SAMPLE_INVALID_DATA['pagination_token'],
+            TestCase::SAMPLE_INVALID_DATA['user_pool_id']
         );
     } //Function ends
 
@@ -296,8 +285,8 @@ class ManagesUserPoolActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->describeUserPoolClient(
-            self::SAMPLE_INVALID_DATA['pool_id'],
-            self::SAMPLE_INVALID_DATA['client_id']
+            TestCase::SAMPLE_INVALID_DATA['user_pool_id'],
+            TestCase::SAMPLE_INVALID_DATA['client_id']
         );
     } //Function ends
 
@@ -318,7 +307,7 @@ class ManagesUserPoolActionTest extends TestCase
     public function test_createUserPoolClient_method_with_valid_data(): array
     {
         $response = $this->client->createUserPoolClient(
-            self::SAMPLE_DATA['name'] . 'Client'
+            TestCase::SAMPLE_DATA['name'] . 'Client'
         );
         $data = $response->toArray();
 
@@ -339,8 +328,8 @@ class ManagesUserPoolActionTest extends TestCase
     {
         $this->expectException(Exception::class);
         $this->client->createUserPoolClient(
-            self::SAMPLE_INVALID_DATA['client_id'],
-            self::SAMPLE_INVALID_DATA['pool_id']
+            TestCase::SAMPLE_INVALID_DATA['client_id'],
+            TestCase::SAMPLE_INVALID_DATA['user_pool_id']
         );
     } //Function ends
 
@@ -362,8 +351,8 @@ class ManagesUserPoolActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->deleteUserPoolClient(
-            self::SAMPLE_INVALID_DATA['pool_id'],
-            self::SAMPLE_INVALID_DATA['client_id']
+            TestCase::SAMPLE_INVALID_DATA['user_pool_id'],
+            TestCase::SAMPLE_INVALID_DATA['client_id']
         );
     } //Function ends
 

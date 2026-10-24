@@ -37,18 +37,6 @@ class ManageUserGroupActionTest extends TestCase
 {
     private $client;
 
-    const SAMPLE_DATA = [
-        'group_name' => 'default'
-    ];
-
-    const SAMPLE_INVALID_DATA = [
-        'username' => 'invalid_username',
-        'group_name' => 'invalid_group_name',
-        'access_token' => 'invalid_access_token',
-        'pagination_token' => 'invalid_pagination_token',
-        'session_value' => 'invalid_session_value_of_20_characters'
-    ];
-
     // Runs before each test method
     protected function setUp(): void
     {
@@ -76,8 +64,8 @@ class ManageUserGroupActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminAddUserToGroup(
-            self::SAMPLE_INVALID_DATA['username'],
-            self::SAMPLE_INVALID_DATA['group_name']
+            TestCase::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['user_group_name']
         );
     } // Function ends
 
@@ -93,7 +81,7 @@ class ManageUserGroupActionTest extends TestCase
 
         $response = $this->client->adminAddUserToGroup(
             $credentials['email'],
-            self::SAMPLE_DATA['group_name']
+            TestCase::SAMPLE_DATA['user_group_name']
         );
 
         $data = $response->toArray();
@@ -118,8 +106,8 @@ class ManageUserGroupActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminRemoveUserFromGroup(
-            self::SAMPLE_INVALID_DATA['username'],
-            self::SAMPLE_INVALID_DATA['group_name']
+            TestCase::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['user_group_name']
         );
     } // Function ends
 
@@ -135,7 +123,7 @@ class ManageUserGroupActionTest extends TestCase
 
         $response = $this->client->adminRemoveUserFromGroup(
             $credentials['email'],
-            self::SAMPLE_DATA['group_name']
+            TestCase::SAMPLE_DATA['user_group_name']
         );
 
         $data = $response->toArray();
@@ -160,8 +148,8 @@ class ManageUserGroupActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminListGroupsForUser(
-            self::SAMPLE_INVALID_DATA['username'],
-            self::SAMPLE_INVALID_DATA['pagination_token']
+            TestCase::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['pagination_token']
         );
     } // Function ends
 
@@ -183,8 +171,8 @@ class ManageUserGroupActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->listUsersInGroup(
-            self::SAMPLE_INVALID_DATA['group_name'],
-            self::SAMPLE_INVALID_DATA['pagination_token']
+            TestCase::SAMPLE_INVALID_DATA['user_group_name'],
+            TestCase::SAMPLE_INVALID_DATA['pagination_token']
         );
     } // Function ends
 
@@ -196,7 +184,7 @@ class ManageUserGroupActionTest extends TestCase
     public function test_listUsersInGroup_method_with_valid_data(): void
     {
         $response = $this->client->listUsersInGroup(
-            self::SAMPLE_DATA['group_name']
+            TestCase::SAMPLE_DATA['user_group_name']
         );
         $data = $response->toArray();
 

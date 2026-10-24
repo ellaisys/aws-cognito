@@ -37,16 +37,6 @@ class ManagePasskeyWebAuthnActionTest extends TestCase
 {
     private $client;
 
-    const SAMPLE_DATA = [
-    ];
-
-    const SAMPLE_INVALID_DATA = [
-        'username' => 'invalid_username',
-        'access_token' => 'invalid_access_token',
-        'pagination_token' => 'invalid_pagination_token',
-        'session_value' => 'invalid_session_value_of_20_characters'
-    ];
-
     // Runs before each test method
     protected function setUp(): void
     {
@@ -74,7 +64,7 @@ class ManagePasskeyWebAuthnActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->startWebAuthnRegistration(
-            self::SAMPLE_INVALID_DATA['access_token']
+            TestCase::SAMPLE_INVALID_DATA['access_token']
         );
     } // Function ends
 
@@ -96,7 +86,7 @@ class ManagePasskeyWebAuthnActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->completeWebAuthnRegistration(
-            self::SAMPLE_INVALID_DATA['access_token'],
+            TestCase::SAMPLE_INVALID_DATA['access_token'],
             ['some_data' => 'invalid_value']
         );
     } // Function ends
@@ -119,9 +109,9 @@ class ManagePasskeyWebAuthnActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->listWebAuthnCredentials(
-            self::SAMPLE_INVALID_DATA['access_token'],
+            TestCase::SAMPLE_INVALID_DATA['access_token'],
             20,
-            self::SAMPLE_INVALID_DATA['pagination_token']
+            TestCase::SAMPLE_INVALID_DATA['pagination_token']
         );
     } // Function ends
 
@@ -143,7 +133,7 @@ class ManagePasskeyWebAuthnActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->deleteWebAuthnCredential(
-            self::SAMPLE_INVALID_DATA['access_token'],
+            TestCase::SAMPLE_INVALID_DATA['access_token'],
             'invalid_credential_id'
         );
     } // Function ends
@@ -167,7 +157,7 @@ class ManagePasskeyWebAuthnActionTest extends TestCase
         $this->expectException(HttpException::class);
         $this->client->authWebAuthnCredential(
             CognitoAuthFlowTypes::USER_AUTH,
-            self::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['username'],
             'some_challenge'
         );
     } // Function ends

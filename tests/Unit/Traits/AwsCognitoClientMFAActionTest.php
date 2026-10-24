@@ -37,17 +37,6 @@ class AwsCognitoClientMFAActionTest extends TestCase
 {
     private $client;
 
-    const SAMPLE_DATA = [
-    ];
-
-    const SAMPLE_INVALID_DATA = [
-        'user_pool_id' => 'invalid_user_pool_id',
-        'username' => 'invalid_username',
-        'access_token' => 'invalid_access_token',
-        'pagination_token' => 'invalid_pagination_token',
-        'session_value' => 'invalid_session_value_of_20_characters'
-    ];
-
     // Runs before each test method
     protected function setUp(): void
     {
@@ -76,7 +65,7 @@ class AwsCognitoClientMFAActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->associateSoftwareTokenMFA(
-            self::SAMPLE_INVALID_DATA['access_token']
+            TestCase::SAMPLE_INVALID_DATA['access_token']
         );
     } // Function ends
 
@@ -91,7 +80,7 @@ class AwsCognitoClientMFAActionTest extends TestCase
         $this->expectException(HttpException::class);
         $this->client->associateSoftwareTokenMFA(
             null,
-            self::SAMPLE_INVALID_DATA['session_value']
+            TestCase::SAMPLE_INVALID_DATA['session_value']
         );
     } // Function ends
 
@@ -114,8 +103,8 @@ class AwsCognitoClientMFAActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->verifySoftwareTokenMFA(
-            'invalid_user_code',
-            self::SAMPLE_INVALID_DATA['access_token']
+            TestCase::SAMPLE_INVALID_DATA['code'],
+            TestCase::SAMPLE_INVALID_DATA['access_token']
         );
     } // Function ends
 
@@ -129,9 +118,9 @@ class AwsCognitoClientMFAActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->verifySoftwareTokenMFA(
-            'invalid_user_code',
+            TestCase::SAMPLE_INVALID_DATA['code'],
             null,
-            self::SAMPLE_INVALID_DATA['session_value']
+            TestCase::SAMPLE_INVALID_DATA['session_value']
         );
     } // Function ends
 
@@ -154,7 +143,7 @@ class AwsCognitoClientMFAActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->setUserMFAPreference(
-            self::SAMPLE_INVALID_DATA['access_token']
+            TestCase::SAMPLE_INVALID_DATA['access_token']
         );
     } // Function ends
 
@@ -180,7 +169,7 @@ class AwsCognitoClientMFAActionTest extends TestCase
 
         $this->expectException(HttpException::class);
         $this->client->adminSetUserMFAPreference(
-            self::SAMPLE_INVALID_DATA['access_token'],
+            TestCase::SAMPLE_INVALID_DATA['access_token'],
             true
         );
     } // Function ends
@@ -195,7 +184,7 @@ class AwsCognitoClientMFAActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->adminSetUserMFAPreference(
-            self::SAMPLE_INVALID_DATA['username'],
+            TestCase::SAMPLE_INVALID_DATA['username'],
             true
         );
     } // Function ends
@@ -218,7 +207,7 @@ class AwsCognitoClientMFAActionTest extends TestCase
     {
         $this->expectException(HttpException::class);
         $this->client->getUserPoolMfaConfig(
-            self::SAMPLE_INVALID_DATA['user_pool_id']
+            TestCase::SAMPLE_INVALID_DATA['user_pool_id']
         );
     } // Function ends
 
@@ -258,7 +247,7 @@ class AwsCognitoClientMFAActionTest extends TestCase
 
         $this->expectException(HttpException::class);
         $this->client->setUserPoolMfaConfig(
-            self::SAMPLE_INVALID_DATA['user_pool_id']
+            TestCase::SAMPLE_INVALID_DATA['user_pool_id']
         );
     } // Function ends
 
