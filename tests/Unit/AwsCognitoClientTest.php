@@ -189,24 +189,24 @@ class AwsCognitoClientTest extends TestCase
 
 
     /**
-     * Test if the confirmUserSignUp method exists.
+     * Test if the confirmSignUp method exists.
      */
     #[Test]
-    public function test_method_confirmUserSignUp_exists(): void
+    public function test_method_confirmSignUp_exists(): void
     {
-        $this->assertTrue(method_exists($this->client, 'confirmUserSignUp'));
+        $this->assertTrue(method_exists($this->client, 'confirmSignUp'));
     } // Function ends
 
     /**
-     * Test the response of the confirmUserSignUp method with invalid
+     * Test the response of the confirmSignUp method with invalid
      * data.
      */
     #[Test]
-    #[Depends('test_method_confirmUserSignUp_exists')]
-    public function test_confirmUserSignUp_method_with_invalid_data(): void
+    #[Depends('test_method_confirmSignUp_exists')]
+    public function test_confirmSignUp_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);
-        $this->client->confirmUserSignUp(
+        $this->client->confirmSignUp(
             TestCase::SAMPLE_INVALID_DATA['username'],
             TestCase::SAMPLE_INVALID_DATA['confirmation_code'],
             TestCase::SAMPLE_INVALID_DATA['client_metadata'],
