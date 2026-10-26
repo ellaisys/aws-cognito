@@ -238,7 +238,9 @@ trait AuthenticatesUsers
      */
     final public function logout(Request $request, bool $forced = false)
     {
+        // Initialize variables
         $returnValue = null;
+
         try {
             //Initialize parameters
             $guard = $this->getGuard($request);
