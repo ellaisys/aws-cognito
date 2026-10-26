@@ -89,7 +89,7 @@ Route::group([], function () {
             Route::group(['prefix' => 'mfa', 'controller' => MFAController::class], function() {
                 Route::get('/activate', 'activate')->name('form.user.mfa.activate');
                 Route::post('/verify', 'verify')->name('action.user.mfa.activate');
-                Route::get('/deactivate', 'deactivate')->name('action.user.mfa.deactivate');
+                Route::post('/deactivate', 'deactivate')->name('action.user.mfa.deactivate');
                 Route::post('/enable', 'enable')->name('action.mfa.enable');
                 Route::post('/disable', 'disable')->name('action.mfa.disable');
             });

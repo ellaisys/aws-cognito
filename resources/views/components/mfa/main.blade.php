@@ -260,7 +260,7 @@
 
                     // Communicate with the server to deactivate MFA
                     let response = await fetch("{{ $urlMfaDeactivateEndpoint ?? '' }}", {
-                        method: 'GET',
+                        method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
