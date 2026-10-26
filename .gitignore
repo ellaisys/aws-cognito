@@ -14,7 +14,6 @@ composer.lock
 # Ignore npm modules and files
 /node_modules
 /dist
-package-lock.json
 npm-debug.log
 yarn.lock
 
