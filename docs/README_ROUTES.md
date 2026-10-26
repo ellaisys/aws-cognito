@@ -132,8 +132,8 @@ POST      cognito/user/invite ..................................... cognito.acti
 // Web routes for MFA
 GET|HEAD  cognito/user/mfa/activate ................................ cognito.form.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@activate
 GET|HEAD  cognito/user/mfa/deactivate ........................ cognito.action.user.mfa.deactivate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@deactivate
-GET|HEAD  cognito/user/mfa/disable ...................................... cognito.action.mfa.disable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@disable
-GET|HEAD  cognito/user/mfa/enable ......................................... cognito.action.mfa.enable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@enable
+POST      cognito/user/mfa/disable ...................................... cognito.action.mfa.disable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@disable
+POST      cognito/user/mfa/enable ......................................... cognito.action.mfa.enable › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@enable
 POST      cognito/user/mfa/verify .................................. cognito.action.user.mfa.activate › Ellaisys\Cognito\Http\Controllers\Auth\MFAController@verify
 
 // Web routes for Passkey (FIDO2 Security Keys)
