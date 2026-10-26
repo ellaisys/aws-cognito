@@ -81,7 +81,7 @@ class CognitoBaseComponentTest extends TestCase
     #[Depends('test_method_getUsername_exists')]
     public function test_method_getUsername_returns_default_string(): void
     {
-        $returnValue = $this->class->getUsername(); 
+        $returnValue = $this->class->getUsername();
         $this->assertIsString($returnValue);
         $this->assertEquals('cognito-user', $returnValue);
     } // Function ends

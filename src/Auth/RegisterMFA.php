@@ -67,7 +67,7 @@ trait RegisterMFA
             $uriTotp .= ' (' . $username . ')?secret=' . $secretCode;
             $uriTotp .= '&issuer=' . config('app.name');
 
-            $returnValue = [
+            $data = [
                 'SecretCode' => $secretCode,
                 'SecretCodeQR' => config('cognito.mfa_qr_library') . $uriTotp,
                 'TotpUri' => $uriTotp
@@ -75,14 +75,14 @@ trait RegisterMFA
 
             //Return response
             if ($this->isControllerAction) {
-                $returnValue = $returnValue;
+                $returnValue = $data;
             } elseif ($this->getIsJsonResponse($request)) {
-                $returnValue = $this->response->success($returnValue);
+                $returnValue = $this->response->success($data);
             } else {
                 $returnValue = view('cognito::partials.mfa.activate-form', [
                     'status' => 'success',
                     'message' => __('cognito::messages.mfa.activation_success'),
-                    'data' => $returnValue
+                    'data' => $data
                 ]);
             } //Return response
         } catch (Exception $exception) {
@@ -124,9 +124,6 @@ trait RegisterMFA
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
-
-            // Get the guard
-            $guard = $this->getGuard($request);
 
             // Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);

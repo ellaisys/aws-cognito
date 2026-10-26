@@ -46,7 +46,7 @@ trait AwsCognitoClientMFAAction
      */
     final public function associateSoftwareTokenMFA(
         ?string $accessToken = null, ?string $session = null): AwsResult
-    {   
+    {
         try {
             //Build payload
             $payload = [];

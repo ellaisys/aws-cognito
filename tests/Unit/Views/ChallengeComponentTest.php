@@ -96,7 +96,7 @@ class ChallengeComponentTest extends TestCase
                         'CODE_DELIVERY_DESTINATION' => 'user@example.com',
                     ],
                 ]]
-            ],            
+            ],
         ];
     } // Function ends
 } // Class ends

@@ -286,7 +286,7 @@ class AwsCognitoClientAdminActionTest extends TestCase
     public function test_adminSetUserPassword_method_with_invalid_data(): void
     {
         $this->expectException(HttpException::class);
-        $response = $this->client->adminSetUserPassword(
+        $this->client->adminSetUserPassword(
             TestCase::SAMPLE_INVALID_DATA['username'],
             'invalid_password'
         );
