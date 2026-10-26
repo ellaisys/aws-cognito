@@ -140,18 +140,23 @@ class RegisterMFAUnitTest extends TestCase
                 ValidationException::class,
             ],
             'valid code' => [
-                ['code' => '123456', 'device_name' => 'test_device'],
+                [
+                    'code' => TestCase::SAMPLE_INVALID_DATA['code'],
+                    'device_name' => TestCase::SAMPLE_INVALID_DATA['device_name']
+                ],
                 HttpException::class,
             ],
             'valid code but no device name' => [
-                ['code' => '123456'],
+                [
+                    'code' => TestCase::SAMPLE_INVALID_DATA['code']
+                ],
                 HttpException::class,
             ],
             'valid code and device name as arguments' => [
                 [],
                 HttpException::class,
-                '123456',
-                'test_device',
+                TestCase::SAMPLE_INVALID_DATA['code'],
+                TestCase::SAMPLE_INVALID_DATA['device_name'],
             ],
         ];
     } // Function ends
