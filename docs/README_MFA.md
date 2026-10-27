@@ -74,25 +74,60 @@ Save the changes.
 #### Step 3: Confirmation of saved MFA settings
 ![Cognito MFA Flow #3](../assets/images/aws_cognito_mfa_flow4.png)
 
+
 ### *Laravel Configurations*
 
-The package exposes following keys to change the default setting. These keys can be configured in the `.env` file or in the `config/aws-cognito.php` file. The default values are set in the configuration file.
- - The `AWS_COGNITO_MFA_SETUP` should be set to **ON** or **OPTIONAL** to enable the MFA feature. The default value is OFF resulting into disabled MFA functionality.
+The package provides the following environment variables to configure Multi-Factor Authentication (MFA). You can define these variables in your `.env` file or configure their default values in `config/aws-cognito.php`.
 
-    When the `AWS_COGNITO_MFA_SETUP` is set to **OPTIONAL**, the user can choose to enable or disable the MFA functionality. When the `AWS_COGNITO_MFA_SETUP` is set to **ON**, the user must enable the MFA functionality.
-
- - The `AWS_COGNITO_MFA_TYPE` can have values **SOFTWARE_TOKEN_MFA** (default) for the Software Token, **SMS_MFA** for the SMS based TOTP, or **EMAIL_MFA** for the Email based TOTP. The default value is **SOFTWARE_TOKEN_MFA**.
-
-    To support multiple MFA types, you can set the value to **SOFTWARE_TOKEN_MFA,SMS_MFA**. The package will handle multiple MFA types and will provide the necessary challenge to the user based on the configuration. The first MFA type in the list will be the default MFA type for the user. The user can change the MFA type in the user profile settings.
-
-   The provider configuration aids to send out the SMS from AWS with additional costs. Refer AWS SNS pricing for more details [AWS SMS Pricing](https://aws.amazon.com/sns/sms-pricing/)
-
-```php
-
-    AWS_COGNITO_MFA_SETUP="ON"
-    AWS_COGNITO_MFA_TYPE="SOFTWARE_TOKEN_MFA"
-
+```env
+AWS_COGNITO_MFA_SETUP="ON"
+AWS_COGNITO_MFA_TYPE="SOFTWARE_TOKEN_MFA"
 ```
+
+##### MFA Setup
+
+Use `AWS_COGNITO_MFA_SETUP` to control whether MFA is enabled, optional, or disabled.
+
+| Value | Description |
+|---|---|
+| `OFF` | Disables MFA. This is the default value. |
+| `OPTIONAL` | Allows users to choose whether to enable or disable MFA. |
+| `ON` | Requires users to enable MFA. |
+
+For example, to require MFA for all users, set the following value in your `.env` file:
+
+```env
+AWS_COGNITO_MFA_SETUP="ON"
+```
+
+To allow users to manage their own MFA preferences, set the value to `OPTIONAL`.
+
+##### MFA Type
+
+Use `AWS_COGNITO_MFA_TYPE` to specify the supported MFA method or methods. The default value is `SOFTWARE_TOKEN_MFA`.
+
+| Value | Description |
+|---|---|
+| `SOFTWARE_TOKEN_MFA` | Software token-based MFA. |
+| `SMS_MFA` | SMS-based MFA. |
+| `EMAIL_MFA` | Email-based MFA. |
+
+To configure a single MFA method, set the environment variable to the desired value:
+
+```env
+AWS_COGNITO_MFA_TYPE="SOFTWARE_TOKEN_MFA"
+```
+
+##### Supporting Multiple MFA Types
+
+The package supports configuring multiple MFA methods using a comma-separated list. For example:
+
+```env
+AWS_COGNITO_MFA_TYPE="SOFTWARE_TOKEN_MFA,SMS_MFA"
+```
+
+When multiple methods are configured, the package handles the appropriate MFA challenge based on the configuration. **The first method in the list is used as the default MFA method** for the user. Users can change their MFA method through their user profile settings, subject to the configured options and AWS Cognito capabilities.
+
 
 ## Features
 
@@ -111,6 +146,22 @@ The package provides a blade component for
 2. `MFA management`
 
 The MFA based authentication component is integrated into the `challenge` component.
+
+### *Vite Configuration*
+
+The blade component for the web application requires Vite to be properly configured to handle the necessary scripts and assets. Ensure that your Vite setup includes the appropriate configuration for handling the component's JavaScript and CSS files. The component uses bootstrap version 5.3 with Modal support.
+
+Add the following code to your `app.js` file in your project's `resources/js` folder to ensure proper handling of the component's assets:
+
+```javascript
+// app.js
+import './bootstrap';
+import { Modal } from 'bootstrap';
+
+window.Modal = Modal;
+```
+Building the blade component with Vite ensures that the necessary JavaScript and CSS assets are properly loaded, allowing the component to function correctly within your web application. To complete the setup, make sure to run the Vite build process using the appropriate command for your environment, such as `npm run dev` for development or `npm run build` for production.
+
 
 ### *MFA based Authentication*
 
@@ -412,3 +463,4 @@ For the list of published routes and configurations, please refer [API Routes](.
 
 ## References
 - [AWS Cognito MFA](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-mfa.html)
+- [AWS SMS Pricing](https://aws.amazon.com/sns/sms-pricing/) You may incur additional costs to send out the SMS from AWS. Refer AWS SNS pricing for more details.
