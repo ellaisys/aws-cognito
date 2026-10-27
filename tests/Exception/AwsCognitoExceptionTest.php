@@ -69,7 +69,7 @@ class AwsCognitoExceptionTest extends TestCase
             'throttle limit exceeded' => ['LimitExceededException', AwsCognitoException::COGNITO_THROTTLING_LIMIT],
             'too many requests' => ['TooManyRequestsException', AwsCognitoException::COGNITO_THROTTLING_LIMIT],
             'invalid webauthn' => ['WebAuthnOriginNotAllowedException', AwsCognitoException::COGNITO_WEB_AUTH_INVALID],
-            'enable software token mfa' => ['EnableSoftwareTokenMFAException', AwsCognitoException::COGNITO_MFA],
+            'enable software token mfa' => ['EnableSoftwareTokenMFAException', AwsCognitoException::COGNITO_AUTH_CODE_INVALID],
             'software token mfa not found' => ['SoftwareTokenMFANotFoundException', AwsCognitoException::COGNITO_MFA],
             'invalid user pool configuration' => ['InvalidUserPoolConfigurationException', AwsCognitoException::COGNITO_AUTH_POOL_CONFIG_INVALID],
             'invalid password' => ['InvalidPasswordException', AwsCognitoException::COGNITO_INVALID_PASSWORD],

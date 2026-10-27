@@ -80,7 +80,7 @@ class RegisterMfaTest extends TestCase
     public function test_deactivate_action_with_authenticated_user(): void
     {
         $this->withSession(self::$sessionAuthenticated)
-            ->get(route('cognito.action.user.mfa.deactivate'))
+            ->post(route('cognito.action.user.mfa.deactivate'))
             ->assertStatus(302)
             ->assertSessionHasNoErrors();
     } // Function ends
