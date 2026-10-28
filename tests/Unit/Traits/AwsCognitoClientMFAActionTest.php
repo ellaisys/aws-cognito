@@ -258,6 +258,11 @@ class AwsCognitoClientMFAActionTest extends TestCase
     #[Depends('test_method_setUserPoolMfaConfig_exists')]
     public function test_setUserPoolMfaConfig_method_with_valid_data(): void
     {
+        // Set configuration with valid data
+        Config::set('cognito.mfa_setup', 'OPTIONAL');
+        Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA', 'WEB_AUTHN']);
+        Config::set('cognito.allow_passkeys', true);
+
         $response = $this->client->setUserPoolMfaConfig();
         $data = $response->toArray();
 
