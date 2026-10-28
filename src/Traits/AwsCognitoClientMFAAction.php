@@ -283,7 +283,7 @@ trait AwsCognitoClientMFAAction
             //Add WebAuthn configuration if enabled
             if ($isMfaEnabled && in_array('WEB_AUTHN', $listMfaTypes)) {
                 $payload = array_merge($payload, [
-                    'WebAuthnMfaConfiguration' => config('cognito.web_authn_mfa_configuration')
+                    'WebAuthnConfiguration' => config('cognito.web_authn_mfa_configuration')
                 ]);
             } //End if
 
