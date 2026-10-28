@@ -3,6 +3,12 @@
 > [!NOTE]
 > Last Updated: <!-- AUTO:last_updated -->2026-09-30<!-- /AUTO:last_updated -->
 
+## [Release 54 (tag v2.0.10)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.10) - 2026-10-31
+- Feat: Issue [#156](https://github.com/ellaisys/aws-cognito/issues/156) Add additional test cases for improved coverage and reliability. The coverage is more than 75%.
+- Feat: Issue [#157](https://github.com/ellaisys/aws-cognito/issues/157) Convert MFA views into Blade Component.
+- Refactor: Rename AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD to AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION across the package.
+- Doc: Update documentation and configuration in README_MFA.md and README_FIDO2.md
+
 ## [Release 53 (tag v2.0.9)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.9) - 2026-09-30
 - Feat: Issue [#147](https://github.com/ellaisys/aws-cognito/issues/147) Add console command coverage for various authentication and management actions.
 - Feat: Issue [#150](https://github.com/ellaisys/aws-cognito/issues/150) Add additional test cases for improved coverage and reliability. The coverage is more than 50%.
