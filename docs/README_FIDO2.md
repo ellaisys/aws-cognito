@@ -75,7 +75,7 @@ Configure below keys into the .env file to change the default values.
 > [!NOTE]
 > More details are available in the configuration file with the key `web_authn_mfa_configuration`.
  - The `AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID` is the domain name of the application. This is required for the FIDO2 Security Keys OR Passkey based MFA functionality. The default value is **`localhost`**.
- - The `AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD` can have values **`preferred`** (default), **`required`** or **`discouraged`**. More details are available in the configuration file with the key `web_authn_mfa_configuration`.
+ - The `AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION` can have values **`preferred`** (default), **`required`** or **`discouraged`**. More details are available in the configuration file with the key `web_authn_mfa_configuration`.
 
    The provider configuration aids to send out the SMS from AWS with additional costs. Refer AWS SNS pricing for more details [AWS SMS Pricing](https://aws.amazon.com/sns/sms-pricing/)
 

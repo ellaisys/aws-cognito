@@ -406,7 +406,7 @@ return [
     'web_authn_mfa_configuration' => [
         'FactorConfiguration' => env('AWS_COGNITO_WEB_AUTHN_FACTOR_CONFIGURATION', 'SINGLE_FACTOR'),
         'RelyingPartyId' => env('AWS_COGNITO_WEB_AUTHN_RELYING_PARTY_ID', 'localhost'),
-        'UserVerification' => env('AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD', 'preferred'),
+        'UserVerification' => env('AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION', 'preferred'),
     ],
 
     /*
