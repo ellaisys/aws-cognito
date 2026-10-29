@@ -34,7 +34,6 @@ use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Guards\Traits\BaseCognitoGuard;
-use Ellaisys\Cognito\Guards\Traits\CognitoMFA;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
@@ -46,7 +45,7 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoSessionGuard extends SessionGuard implements StatefulGuard
 {
-    use BaseCognitoGuard, CognitoMFA;
+    use BaseCognitoGuard;
 
     /**
      * Username key

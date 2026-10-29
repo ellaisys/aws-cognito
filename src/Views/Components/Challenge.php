@@ -43,14 +43,11 @@ class Challenge extends Component
                 // Process the data to extract necessary information for the view
                 $this->processData($challengeData);
             }
-        } catch (HttpException $exception) {
+        } catch (Exception | HttpException $exception) {
             Log::error('CognitoChallenge:constructor:HttpException');
-            throw $exception;
-        } catch (Exception $exception) {
-            Log::error('CognitoChallenge:constructor:Exception');
             throw new HttpException(400, $exception->getMessage());
-        }
-    }
+        } // Try-catch ends
+    } // Constructor ends
 
     private function processData(array $data): void
     {
@@ -76,7 +73,7 @@ class Challenge extends Component
         } else {
             throw new HttpException(400, 'The data provided is not valid for a challenge response.');
         }
-    } //Function end
+    } // Function ends
 
     /**
      * Get the view / contents that represent the component.
@@ -95,5 +92,5 @@ class Challenge extends Component
             'userEmailValue' => $this->userEmailValue,
             'challengeValuePlaceholder' => $this->challengeValuePlaceholder
         ]);
-    } //Function end
-} //Class end
+    } // Function ends
+} // Class ends

@@ -49,13 +49,11 @@ trait ManagePasskeyWebAuthnAction
                 'AccessToken' => $accessToken
             ];
 
-            $response = $this->client->startWebAuthnRegistration($payload);
+            return $this->client->startWebAuthnRegistration($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManagePasskeyWebAuthnAction:startWebAuthnRegistration:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -77,13 +75,11 @@ trait ManagePasskeyWebAuthnAction
                 'Credential' => $credential
             ];
 
-            $response = $this->client->completeWebAuthnRegistration($payload);
+            return $this->client->completeWebAuthnRegistration($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManagePasskeyWebAuthnAction:completeWebAuthnRegistration:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -107,13 +103,11 @@ trait ManagePasskeyWebAuthnAction
                 'NextToken' => $nextToken
             ];
 
-            $response = $this->client->listWebAuthnCredentials($payload);
+            return $this->client->listWebAuthnCredentials($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManagePasskeyWebAuthnAction:listWebAuthnCredentials:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -135,13 +129,11 @@ trait ManagePasskeyWebAuthnAction
                 'CredentialId' => $credentialId
             ];
 
-            $response = $this->client->deleteWebAuthnCredential($payload);
+            return $this->client->deleteWebAuthnCredential($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('ManagePasskeyWebAuthnAction:deleteWebAuthnCredential:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -163,7 +155,7 @@ trait ManagePasskeyWebAuthnAction
             return $this->authenticate($authFlow, $username, null, null, $challenge);
         } catch (Exception $exception) {
             Log::error('ManagePasskeyWebAuthnAction:authWebAuthnCredential:Exception');
-            throw AwsCognitoException::create($exception);
+            throw $exception;
         } //Try-catch ends
     } //Function ends
     

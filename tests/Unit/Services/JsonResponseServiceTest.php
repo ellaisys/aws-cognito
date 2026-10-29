@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ellaisys\Cognito\Tests\Unit;
+namespace Ellaisys\Cognito\Tests\Unit\Services;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Http\Response;

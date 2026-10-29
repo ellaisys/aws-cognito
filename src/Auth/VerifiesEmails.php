@@ -62,7 +62,7 @@ trait VerifiesEmails
             ]);
 
             //Call AWS Cognito to confirm user sign up
-            $response = app()->make(AwsCognitoClient::class)->confirmUserSignUp(
+            $response = app()->make(AwsCognitoClient::class)->confirmSignUp(
                     $payload['email'], $payload['code'],
                     $clientMetadata
                 );

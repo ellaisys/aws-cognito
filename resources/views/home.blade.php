@@ -5,6 +5,7 @@
 <x-cognito::common.js-scripts />
 <x-cognito::passkey-webauthn />
 <x-cognito::device-auth />
+<x-cognito::mfa-auth />
 
 <div class="container">
     <div class="row justify-content-center">
@@ -53,7 +54,7 @@
                 </div>
             </div>
 
-            <x-cognito::mfa.activate-form />
+            @stack('cognito-mfa-activate-form')
         </div>
     </div>
 </div>
@@ -61,5 +62,6 @@
 @stack('cognito-common-scripts')
 @stack('cognito-passkey-webauthn-scripts')
 @stack('cognito-device-auth-scripts')
+@stack('cognito-mfa-scripts')
 
 @endsection

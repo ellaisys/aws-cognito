@@ -33,6 +33,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 use Exception;
+use LogicException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -232,7 +233,7 @@ class CustomExceptionHandlerTest extends TestCase
         config(['app.debug' => true]);
 
         Route::get(self::TEST_EXCEPTION_ROUTE, function () {
-            throw new Exception(self::ERROR_MESSAGE);
+            throw new LogicException(self::ERROR_MESSAGE);
         });
 
         $response = $this->getJson(self::TEST_EXCEPTION_ROUTE);
@@ -258,7 +259,7 @@ class CustomExceptionHandlerTest extends TestCase
         config(['app.debug' => false]);
 
         Route::get(self::TEST_EXCEPTION_ROUTE, function () {
-            throw new Exception(self::ERROR_MESSAGE);
+            throw new LogicException(self::ERROR_MESSAGE);
         });
 
         $response = $this->getJson(self::TEST_EXCEPTION_ROUTE);

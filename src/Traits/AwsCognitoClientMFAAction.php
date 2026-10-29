@@ -41,9 +41,11 @@ trait AwsCognitoClientMFAAction
      * @param string $accessToken (optional)
      * @param string $session (optional)
      *
-     * @return mixed
+     * @return \Aws\Result
+     * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function associateSoftwareTokenMFA(?string $accessToken = null, ?string $session = null)
+    final public function associateSoftwareTokenMFA(
+        ?string $accessToken = null, ?string $session = null): AwsResult
     {
         try {
             //Build payload
@@ -60,13 +62,11 @@ trait AwsCognitoClientMFAAction
                 $payload = array_merge($payload, [ 'Session' => $session ]);
             } //End if
 
-            $response = $this->client->associateSoftwareToken($payload);
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientMFAAction:associateSoftwareTokenMFA:Exception');
-            throw $e;
+            return $this->client->associateSoftwareToken($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientMFAAction:associateSoftwareTokenMFA:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -78,10 +78,12 @@ trait AwsCognitoClientMFAAction
      * @param string $session (optional)
      * @param string $deviceName (optional)
      *
-     * @return mixed
+     * @return \Aws\Result
+     * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function verifySoftwareTokenMFA(string $userCode, ?string $accessToken = null,
-        ?string $session = null, ?string $deviceName = null)
+    final public function verifySoftwareTokenMFA(string $userCode,
+        ?string $accessToken = null,
+        ?string $session = null, ?string $deviceName = null): AwsResult
     {
         try {
             //Build payload
@@ -101,13 +103,11 @@ trait AwsCognitoClientMFAAction
                 $payload = array_merge($payload, [ 'Session' => $session ]);
             } //End if
 
-            $response = $this->client->verifySoftwareToken($payload);
-        } catch (Exception $e) {
-            Log::error('AwsCognitoClientMFAAction:verifySoftwareTokenMFA:Exception');
-            throw $e;
+            return $this->client->verifySoftwareToken($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientMFAAction:verifySoftwareTokenMFA:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -120,7 +120,8 @@ trait AwsCognitoClientMFAAction
      * @return \Aws\Result
      * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function setUserMFAPreference(string $accessToken, bool $isEnable=false):AwsResult
+    final public function setUserMFAPreference(string $accessToken,
+        bool $isEnable=false):AwsResult
     {
         try {
             //Build payload
@@ -130,13 +131,11 @@ trait AwsCognitoClientMFAAction
             ];
             $payload = array_merge($payload, $this->buildPreferencePayload($isEnable));
 
-            $response = $this->client->setUserMFAPreference($payload);
+            return $this->client->setUserMFAPreference($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientMFAAction:setUserMFAPreference:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -149,7 +148,8 @@ trait AwsCognitoClientMFAAction
      * @return \Aws\Result
      * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function adminSetUserMFAPreference(string $username, bool $isEnable=false): AwsResult
+    final public function adminSetUserMFAPreference(string $username,
+        bool $isEnable=false): AwsResult
     {
         try {
             //Build payload
@@ -159,13 +159,11 @@ trait AwsCognitoClientMFAAction
             ];
             $payload = array_merge($payload, $this->buildPreferencePayload($isEnable));
 
-            $response = $this->client->adminSetUserMFAPreference($payload);
+            return $this->client->adminSetUserMFAPreference($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientMFAAction:adminSetUserMFAPreference:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -224,24 +222,19 @@ trait AwsCognitoClientMFAAction
      * @return \Aws\Result
      * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function getUserPoolMfaConfig(?string $userPoolId = null): AwsResult
+    final public function getUserPoolMfaConfig(?string $userPoolId = null): AwsResult
     {
-        //Initialize variables
-        $response = null;
-
         try {
             //Build payload
             $payload = [
                 'UserPoolId' => $userPoolId ?? $this->poolId,
             ];
 
-            $response = $this->client->getUserPoolMfaConfig($payload);
+            return $this->client->getUserPoolMfaConfig($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientMFAAction:getUserPoolMfaConfig:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
     } //Function ends
 
     /**
@@ -251,11 +244,8 @@ trait AwsCognitoClientMFAAction
      * @return \Aws\Result
      * @throws \Ellaisys\Cognito\Exceptions\AwsCognitoException
      */
-    public function setUserPoolMfaConfig(): AwsResult
+    final public function setUserPoolMfaConfig(?string $userPoolId = null): AwsResult
     {
-        //Initialize variables
-        $response = null;
-
         try {
             // Check if MFA is enabled and get the list of MFA types
             $isMfaEnabled = (config('cognito.mfa_setup') != 'OFF')?true:false;
@@ -263,7 +253,7 @@ trait AwsCognitoClientMFAAction
 
             //Build payload
             $payload = [
-                'UserPoolId' => $this->poolId,
+                'UserPoolId' => $userPoolId ?? $this->poolId,
                 'MfaConfiguration' => config('cognito.mfa_setup', 'OFF'),
             ];
 
@@ -293,17 +283,15 @@ trait AwsCognitoClientMFAAction
             //Add WebAuthn configuration if enabled
             if ($isMfaEnabled && in_array('WEB_AUTHN', $listMfaTypes)) {
                 $payload = array_merge($payload, [
-                    'WebAuthnMfaConfiguration' => config('cognito.web_authn_mfa_configuration')
+                    'WebAuthnConfiguration' => config('cognito.web_authn_mfa_configuration')
                 ]);
             } //End if
 
-            $response = $this->client->setUserPoolMfaConfig($payload);
+            return $this->client->setUserPoolMfaConfig($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientMFAAction:setUserPoolMfaConfig:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
+    } // Function ends
 
-        return $response;
-    } //Function ends
-
-} //Trait ends
+} // Trait ends

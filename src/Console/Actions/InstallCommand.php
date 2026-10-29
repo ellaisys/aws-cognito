@@ -186,8 +186,8 @@ class InstallCommand extends Command
     {
         try {
             // Prompt the user for web and API route prefixes
-            $prefixWeb = $this->ask( 'Enter the web route prefix (e.g. cognito)', 'cognito' );
-            $prefixApi = $this->ask( 'Enter the API route prefix (e.g. api/cognito)', 'cognito' );
+            $prefixWeb = $this->ask('Enter the web route prefix (e.g. cognito)', 'cognito');
+            $prefixApi = $this->ask('Enter the API route prefix (e.g. api/cognito)', 'cognito');
 
             $this->info('Setting environment variables...');
             $bar = $this->output->createProgressBar(7);

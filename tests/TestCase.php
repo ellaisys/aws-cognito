@@ -35,6 +35,37 @@ abstract class TestCase extends OrchestraTestCase
 
     public const APPLICATION_JSON = 'application/json';
 
+    public const SAMPLE_DATA = [
+        'name' => 'new_pool_name',
+        'description' => 'sample_description',
+        'device_key' => 'sample_device_key',
+        'device_name' => 'sample_device_name',
+        'user_group_name' => 'default'
+    ];
+
+    public const SAMPLE_INVALID_DATA = [
+        'user_pool_id' => 'invalid_user_pool_id',
+        'client_id' => 'invalid_client_id',
+        'name' => 'invalid_name',
+        'description' => 'invalid_description',
+        'username' => 'invalid_username',
+        'password' => 'InvalidPassword123!',
+        'email' => 'invalid_email@example.com',
+        'access_token' => 'invalid_access_token',
+        'refresh_token' => 'invalid_refresh_token',
+        'session_value' => 'invalid_session_value_of_20_characters',
+        'device_key' => 'invalid_device_key',
+        'device_name' => 'invalid_device_name',
+        'pagination_token' => 'invalid_pagination_token',
+        'confirmation_code' => 'invalid_confirmation_code',
+        'client_metadata' => ['invalid_key' => 'invalid_value'],
+        'attributes' => ['email' => 'some_invalid_email@example.com'],
+        'message_action' => 'invalid_message_action',
+        'user_group_name' => 'invalid_user_group_name',
+        'code' => '000000',
+        'challenge_type' => 'invalid_challenge'
+    ];
+
     // Seed the database before each test
     protected $seed = true;
     protected $seeder = DatabaseSeeder::class;
@@ -119,9 +150,9 @@ abstract class TestCase extends OrchestraTestCase
     protected function getInvalidCredentials(): array
     {
         return [
-            'username' => 'invalid_user',
-            'password' => 'InvalidPassword123!',
-            'email' => 'invalid_email@example.com',
+            'username' => self::SAMPLE_INVALID_DATA['username'],
+            'password' => self::SAMPLE_INVALID_DATA['password'],
+            'email' => self::SAMPLE_INVALID_DATA['email'],
         ];
     } //Function ends
 

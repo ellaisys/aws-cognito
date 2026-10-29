@@ -59,7 +59,6 @@ class DeviceAuth extends CognitoBaseComponent
             $this->newDeviceData = $this->processNewDeviceData();
         } catch (Exception $e) {
             throw new HttpException(400, $e->getMessage());
-
         }
     } //Function end
 

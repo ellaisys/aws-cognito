@@ -11,6 +11,12 @@ composer.lock
 /build
 /skills
 
+# Ignore npm modules and files
+/node_modules
+/dist
+npm-debug.log
+yarn.lock
+
 # Ignore workbench files and directories
 /workbench/.env
 /workbench/storage

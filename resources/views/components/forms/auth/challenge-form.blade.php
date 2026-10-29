@@ -14,7 +14,7 @@
         } //End if
     @endphp
 
-    <div class="row mb-3">
+    <div class="flex-fill">
         @stack('cognito-challenge-passcode')
     </div>
 

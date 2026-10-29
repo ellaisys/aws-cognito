@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Aws\Result as AwsResult;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
 
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
@@ -37,20 +38,27 @@ trait AwsCognitoClientAdminAction
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminConfirmSignUp.html
      *
      * @param string $username
-     * @return bool
+     * @return AwsResult
      */
-    public function adminConfirmSignUp($username): bool
+    final public function adminConfirmSignUp(string $username, ?array $clientMetadata = null): AwsResult
     {
         try {
-            $this->client->adminConfirmSignUp([
+            //Build payload
+            $payload = [
                 'UserPoolId' => $this->poolId,
                 'Username' => $username,
-            ]);
-            return true;
-        } catch (Exception $e) {
-            return false;
-        } //Try-catch ends
+            ];
 
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
+            } //End if
+
+            return $this->client->adminConfirmSignUp($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminConfirmSignUp:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //Try-catch ends
     } //Function ends
 
     /**
@@ -59,9 +67,9 @@ trait AwsCognitoClientAdminAction
      * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#adminenableuser
      *
      * @param string $username
-     * @return bool
+     * @return AwsResult
      */
-    public function adminEnableUser(string $username): bool
+    final public function adminEnableUser(string $username): AwsResult
     {
         try {
             return $this->client->adminEnableUser([
@@ -69,17 +77,11 @@ trait AwsCognitoClientAdminAction
                 'Username' => $username
             ]);
 
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::COGNITO_NOT_AUTHORIZED_ERROR) {
-                return true;
-            } //End if
-
-            throw $e;
-        } catch (Exception $e) {
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminEnableUser:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
-        return true;
-    } //Function ends
+    } // Function ends
 
     /**
      * Deactivates a user and revokes all access tokens for the user.
@@ -87,9 +89,9 @@ trait AwsCognitoClientAdminAction
      * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#admindisableuser
      *
      * @param string $username
-     * @return bool
+     * @return AwsResult
      */
-    public function adminDisableUser(string $username): bool
+    final public function adminDisableUser(string $username): AwsResult
     {
         try {
             return $this->client->adminDisableUser([
@@ -97,16 +99,10 @@ trait AwsCognitoClientAdminAction
                 'Username' => $username
             ]);
 
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::COGNITO_NOT_AUTHORIZED_ERROR) {
-                return true;
-            } //End if
-
-            throw $e;
-        } catch (Exception $e) {
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminDisableUser:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
-        return true;
     } //Function ends
 
     /**
@@ -118,22 +114,16 @@ trait AwsCognitoClientAdminAction
      * @param string $username
      * @return bool
      */
-    public function adminUserGlobalSignOut(string $username): bool
+    final public function adminUserGlobalSignOut(string $username): bool
     {
         try {
-            return $this->client->adminUserGlobalSignOut([
+            $this->client->adminUserGlobalSignOut([
                 'UserPoolId' => $this->poolId,
                 'Username' => $username
             ]);
-
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::COGNITO_NOT_AUTHORIZED_ERROR) {
-                return true;
-            } //End if
-
-            throw $e;
-        } catch (Exception $e) {
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminUserGlobalSignOut:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
         return true;
     } //Function ends
@@ -144,26 +134,20 @@ trait AwsCognitoClientAdminAction
      * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-cognito-idp-2016-04-18.html#adminresetuserpassword
      *
      * @param string $username
-     * @return bool
+     * @return \Aws\Result
+     * @throws AwsCognitoException
      */
-    public function invalidatePassword(string $username): bool
+    final public function invalidatePassword(string $username): AwsResult
     {
         try {
             return $this->client->adminResetUserPassword([
                 'UserPoolId' => $this->poolId,
                 'Username' => $username,
             ]);
-
-        } catch (CognitoIdentityProviderException $e) {
-            if ($e->getAwsErrorCode() === self::COGNITO_NOT_AUTHORIZED_ERROR) {
-                return true;
-            } //End if
-
-            throw $e;
-        } catch (Exception $e) {
-            throw $e;
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:invalidatePassword:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
         } //Try-catch ends
-        return true;
     } //Function ends
 
     /**
@@ -175,7 +159,7 @@ trait AwsCognitoClientAdminAction
      * @return \Aws\Result
      * @throws AwsCognitoException
      */
-    public function adminGetUser(string $username): AwsResult
+    final public function adminGetUser(string $username): AwsResult
     {
         try {
             return $this->client->adminGetUser([
@@ -197,7 +181,7 @@ trait AwsCognitoClientAdminAction
      * @return \Aws\Result
      * @throws AwsCognitoException
      */
-    public function deleteUser($username): AwsResult
+    final public function deleteUser(string $username): AwsResult
     {
         try {
             if (config('cognito.delete_user', false)) {
@@ -224,7 +208,7 @@ trait AwsCognitoClientAdminAction
      *
      * @return string
      */
-    public function adminSetUserPassword(string $username, string $password,
+    final public function adminSetUserPassword(string $username, string $password,
         bool $permanent = false): string
     {
         try {
@@ -236,14 +220,6 @@ trait AwsCognitoClientAdminAction
             ]);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAdminAction:adminSetUserPassword:CognitoIdentityProviderException');
-            if ($exception->getAwsErrorCode() === self::USER_NOT_FOUND) {
-                return Password::INVALID_USER;
-            } //End if
-
-            if ($exception->getAwsErrorCode() === self::INVALID_PASSWORD) {
-                return Lang::has('passwords.password') ? 'passwords.password' : $exception->getAwsErrorMessage();
-            } //End if
-
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
 
@@ -261,9 +237,9 @@ trait AwsCognitoClientAdminAction
      *
      * @return \Aws\Result
      */
-    public function adminRespondToAuthChallenge(
+    final public function adminRespondToAuthChallenge(
         CognitoChallengeTypes $challengeName, string $session,
-        string $challengeValue, string $username)
+        string $challengeValue, string $username): AwsResult
     {
         try {
             //Build payload
@@ -283,14 +259,12 @@ trait AwsCognitoClientAdminAction
             $payload = $this->cognitoSecretHash($username, $payload);
 
             //Execute the payload
-            $response = $this->client->adminRespondToAuthChallenge($payload);
+            return $this->client->adminRespondToAuthChallenge($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAdminAction:adminRespondToAuthChallenge:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
-
-        return $response;
-    } //Function ends
+    } // Function ends
 
     /**
      * Declares an authentication flow and initiates sign-in for a user
@@ -300,10 +274,13 @@ trait AwsCognitoClientAdminAction
      * @param CognitoAuthFlowTypes $authFlow
      * @param array $payloadData
      * @param string $username
-     * @return AwsResult
+     * @param array|null $clientMetadata
+     * @return \Aws\Result
+     * @throws \AwsCognitoException
      */
-    public function adminInitiateAuth(CognitoAuthFlowTypes $authFlow,
-        array $payloadData, string $username): AwsResult
+    final public function adminInitiateAuth(CognitoAuthFlowTypes $authFlow,
+        array $payloadData, string $username,
+        ?array $clientMetadata = null): AwsResult
     {
         try {
             //Build payload
@@ -319,13 +296,52 @@ trait AwsCognitoClientAdminAction
             //Add Secret Hash in case of Client Secret being configured
             $payload = $this->cognitoSecretHash($username, $payload);
 
-            $response = $this->client->adminInitiateAuth($payload);
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([
+                    'username' => $username
+                ], $clientMetadata);
+            } //End if
+
+            return $this->client->adminInitiateAuth($payload);
         } catch (CognitoIdentityProviderException $exception) {
             Log::error('AwsCognitoClientAdminAction:adminInitiateAuth:CognitoIdentityProviderException');
             throw AwsCognitoException::create($exception);
         } //Try-catch ends
+    } // Function ends
 
-        return $response;
+    /**
+     * Set a users attributes.
+     * http://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminUpdateUserAttributes.html.
+     *
+     * @param string $username
+     * @param array $attributes
+     * @param array|null $clientMetadata
+     * @return \Aws\Result
+     * @throws \AwsCognitoException
+     */
+    final public function adminUpdateUserAttributes(string $username,
+        array $attributes, ?array $clientMetadata = null): AwsResult
+    {
+        try {
+            //Build payload
+            $payload = [
+                'Username' => $username,
+                'UserPoolId' => $this->poolId,
+                'UserAttributes' => $this->formatAttributes($attributes),
+            ];
+
+            //Set Client Metadata
+            if (!empty($clientMetadata)) {
+                $payload['ClientMetadata'] = $this->buildClientMetadata([], $clientMetadata);
+            } //End if
+
+            //Execute the payload
+            return $this->client->adminUpdateUserAttributes($payload);
+        } catch (CognitoIdentityProviderException $exception) {
+            Log::error('AwsCognitoClientAdminAction:adminUpdateUserAttributes:CognitoIdentityProviderException');
+            throw AwsCognitoException::create($exception);
+        } //End try
     } //Function ends
 
-} //Trait ends
+} // Trait ends

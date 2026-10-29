@@ -66,13 +66,33 @@ class InstallCommandTest extends TestCase
      * Test the install command can be invoked.
      */
     #[Test]
-    public function test_install_command_is_registered(): void
+    public function test_install_command_with_credentials_are_confirmed(): void
     {
         // Verify that the command is registered with Artisan
         $this->artisan('cognito:install')
             ->expectsConfirmation(
                 self::CONFIRMATION_MESSAGE_CONFIGURE,
-                'no'
+                'yes'
+            )
+            ->expectsConfirmation(
+                self::CONFIRMATION_MESSAGE_CREDENTIALS,
+                'yes'
+            )
+            ->expectsChoice(
+                'Do you want to run the database migration now?',
+                'Yes', ['Yes', 'No']
+            )
+            ->expectsQuestion(
+                'Enter the web route prefix (e.g. cognito)',
+                'cognito'
+            )
+            ->expectsQuestion(
+                'Enter the API route prefix (e.g. api/cognito)',
+                'cognito'
+            )
+            ->expectsQuestion(
+                'Would you like to assign new users to a default group?',
+                false
             )
             ->assertExitCode(Command::SUCCESS);
     } //Function ends

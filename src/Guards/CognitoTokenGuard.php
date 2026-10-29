@@ -27,7 +27,6 @@ use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
 
 use Ellaisys\Cognito\Guards\Traits\BaseCognitoGuard;
-use Ellaisys\Cognito\Guards\Traits\CognitoMFA;
 
 use Exception;
 use Ellaisys\Cognito\Exceptions\NoLocalUserException;
@@ -39,7 +38,7 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 class CognitoTokenGuard extends TokenGuard
 {
-    use BaseCognitoGuard, CognitoMFA;
+    use BaseCognitoGuard;
 
     /**
      * Username key

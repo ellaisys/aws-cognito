@@ -36,6 +36,8 @@ return [
     ],
 
     'auth' => [
+        'nav_label_logout' => 'Logout',
+        'nav_label_logout_forced' => 'Logout (Forced)',
         'registration_success' => 'Registration successful! Please check your email for verification instructions.',
         'invitation_success' => 'User invited successfully! An invitation email has been sent to the user.',
         'login_success' => 'Login successful!',
@@ -59,12 +61,25 @@ return [
     ],
 
     'mfa' => [
+        'activate' => 'Activate MFA',
+        'deactivate' => 'Deactivate MFA',
+        'enable' => 'Enable MFA',
+        'disable' => 'Disable MFA',
         'activation_success' => 'MFA activated successfully!',
         'deactivation_success' => 'MFA deactivated successfully!',
         'verification_success' => 'MFA verification successful!',
         'verification_failed' => 'MFA verification failed. Please try again.',
         'enabled_success' => 'MFA enabled successfully!',
         'disabled_success' => 'MFA disabled successfully!',
+    ],
+
+    'passkey' => [
+        'delete' => 'Delete Passkey',
+    ],
+
+    'device' => [
+        'register' => 'Register Device',
+        'unregister' => 'Unregister Device',
     ],
 
     'challenge' => [

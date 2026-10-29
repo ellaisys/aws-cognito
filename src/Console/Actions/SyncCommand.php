@@ -320,7 +320,7 @@ class SyncCommand extends Command
 
             // Set UserVerification if it differs from the current config value
             if ($webauthnConfig['UserVerification'] !== config('cognito.web_authn_mfa_configuration.UserVerificationMethod')) {
-                $this->setEnv('AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION_METHOD', $webauthnConfig['UserVerification']);
+                $this->setEnv('AWS_COGNITO_WEB_AUTHN_USER_VERIFICATION', $webauthnConfig['UserVerification']);
             } // End if
 
             // Set FactorConfiguration if it differs from the current config value
