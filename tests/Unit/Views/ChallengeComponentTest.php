@@ -24,6 +24,9 @@ use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Auth\EncryptionTypes;
 use Ellaisys\Cognito\Views\Components\Challenge;
+use Ellaisys\Cognito\Views\Components\DeviceAuth;
+use Ellaisys\Cognito\Views\Components\MfaAuth;
+use Ellaisys\Cognito\Views\Components\PasskeyWebAuthn;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
@@ -31,7 +34,6 @@ use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[Group('web'), Group('unit'), Group('views'), Group('component'), Group('challenge')]
-#[CoversClass(Challenge::class)]
 class ChallengeComponentTest extends TestCase
 {
     /**

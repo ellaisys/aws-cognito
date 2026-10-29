@@ -31,7 +31,6 @@ use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[Group('web'), Group('unit'), Group('views'), Group('component'), Group('device'), Group('auth')]
-#[CoversClass(DeviceAuth::class)]
 class DeviceAuthComponentTest extends TestCase
 {
     /**
