@@ -22,7 +22,7 @@ workbench:
     web: true
     api: true
     commands: true
-    components: true
+    components: false
     factories: true
     views: true
   build:
