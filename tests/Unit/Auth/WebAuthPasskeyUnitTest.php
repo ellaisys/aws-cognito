@@ -42,6 +42,13 @@ class WebAuthPasskeyUnitTest extends TestCase
     {
         parent::setUp();
 
+        // Set configurations for the tests
+        Config::set('cognito.allowed_auth_flows', [
+            'ALLOW_REFRESH_TOKEN_AUTH',
+            'ALLOW_USER_PASSWORD_AUTH',
+            'ALLOW_USER_AUTH',
+        ]);
+
         // Create a new fixture
         $this->class = new class {
             use WebAuthPasskey;

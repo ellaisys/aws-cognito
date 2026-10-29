@@ -32,11 +32,7 @@ class LoginSrpControllerApiTest extends ApiTestCase
     {
         parent::setUp();
 
-        /**
-         * Override the configuration at runtime
-         */
-        Config::set('cognito.mfa_setup', 'OFF');
-        Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
+        // Set configurations for the tests
         Config::set('cognito.allowed_auth_flows', [
             'ALLOW_USER_SRP_AUTH',
         ]);

@@ -334,6 +334,7 @@ class BaseAuthTraitUnitTest extends TestCase
     #[Test]
     public function test_validate_cognito_flow_exception(): void
     {
+        // Set configurations for the tests
         Config::set('cognito.allowed_auth_flows', ['ALLOW_REFRESH_TOKEN_AUTH']);
 
         $this->expectException(Exception::class);

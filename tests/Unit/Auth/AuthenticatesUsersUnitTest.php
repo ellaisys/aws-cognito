@@ -106,6 +106,7 @@ class AuthenticatesUsersUnitTest extends TestCase
     #[Depends('test_method_attemptLoginSRP_exists_in_class')]
     public function test_method_attemptLoginSRP_with_invalid_config(): void
     {
+        // Set configurations for the tests
         Config::set('cognito.allowed_auth_flows', [
             'ALLOW_USER_PASSWORD_AUTH',
         ]);
@@ -128,6 +129,7 @@ class AuthenticatesUsersUnitTest extends TestCase
     #[Depends('test_method_attemptLoginSRP_exists_in_class')]
     public function test_method_attemptLoginSRP_with_invalid_data(): void
     {
+        // Set configurations for the tests
         Config::set('cognito.allowed_auth_flows', [
             'ALLOW_USER_SRP_AUTH',
         ]);
