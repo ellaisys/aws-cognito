@@ -32,6 +32,8 @@ workbench:
     - db-wipe
     - migrate:fresh:
       --seed: true
+      --seeder: Workbench\Database\Seeders\DatabaseSeeder
+    - sync-skeleton
   assets:
     - laravel-assets
   sync:

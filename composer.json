@@ -105,18 +105,16 @@
             "@prepare"
         ],
         "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "build": "@php vendor/bin/testbench workbench:build --ansi",
-        "migrate": "@php vendor/bin/testbench migrate:refresh --ansi",
-        "sync": "@php vendor/bin/testbench workbench:sync-skeleton --ansi",
-        "prepare": [
-            "@clear",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
             "@build",
-            "@sync",
-            "@php vendor/bin/testbench package:discover --ansi"
+            "@php vendor/bin/testbench serve --ansi"
         ],
         "test": [
-            "@prepare",            
-            "@php vendor/bin/phpunit --no-coverage"
+            "@clear",
+            "@php vendor/bin/phpunit"
         ]
     }
 }
