@@ -118,7 +118,6 @@ jobs:
           mkdir -p build/coverage build/reports
 
           vendor/bin/phpunit \
-            --filter ChallengeComponentTest \
             --display-notices \
             --display-deprecations \
             --display-phpunit-notices \
