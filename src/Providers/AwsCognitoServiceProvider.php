@@ -403,10 +403,10 @@ class AwsCognitoServiceProvider extends ServiceProvider
         Blade::componentNamespace('Ellaisys\\Cognito\\Views\\Components', 'cognito');
 
         //Register individual blade components
-        Blade::component('challenge', Components\Challenge::class);
-        Blade::component('passkey-webauthn', Components\PasskeyWebAuthn::class);
-        Blade::component('device-auth', Components\DeviceAuth::class);
-        Blade::component('mfa-auth', Components\MfaAuth::class);
+        Blade::component('cognito::challenge', Components\Challenge::class);
+        Blade::component('cognito::passkey-webauthn', Components\PasskeyWebAuthn::class);
+        Blade::component('cognito::device-auth', Components\DeviceAuth::class);
+        Blade::component('cognito::mfa-auth', Components\MfaAuth::class);
     } //Function ends
 
     /**
