@@ -39,7 +39,7 @@ workbench:
   sync:
     - from: config
       to: workbench/config
-      reverse: true
+      reverse: false
     - from: storage
       to: workbench/storage
       reverse: true
