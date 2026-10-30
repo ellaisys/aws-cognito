@@ -63,8 +63,8 @@ The [demo application code](https://github.com/ellaisys/demo_cognito_app) is ava
 |8.0|Yes :heavy_check_mark:|
 |8.1|Yes :heavy_check_mark:|
 |8.2|Yes :heavy_check_mark:|
-|8.3|NA |
-|8.4|NA |
+|8.3|Yes :heavy_check_mark:|
+|8.4|Yes :heavy_check_mark:|
 
 </td><td>
 
