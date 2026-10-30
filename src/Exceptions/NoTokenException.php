@@ -22,7 +22,7 @@ class NoTokenException extends HttpException
 {
 
     public function __construct(string $message = 'Authentication token not provided',
-        Throwable $previous = null, int $code = 0, array $headers = [])
+        ?Throwable $previous = null, int $code = 0, array $headers = [])
     {
         parent::__construct(401, $message, $previous, $headers, $code);
     }
