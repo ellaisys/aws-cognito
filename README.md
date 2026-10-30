@@ -135,7 +135,7 @@ This project follows secure coding and quality assurance practices throughout it
 
 [![PHPUnit Tests](https://github.com/ellaisys/aws-cognito/actions/workflows/phpunit.yml/badge.svg)](https://github.com/ellaisys/aws-cognito/actions/workflows/phpunit.yml)
 [![Code Coverage](https://github.com/ellaisys/aws-cognito/actions/workflows/coverage.yml/badge.svg)](https://github.com/ellaisys/aws-cognito/actions/workflows/coverage.yml)
-[![Code Coverage](https://img.shields.io/badge/coverage-56.2%25-lightgrey?logo=sonarqubecloud)](https://sonarcloud.io/project/overview?id=ellaisys_aws-cognito)
+[![Code Coverage](https://img.shields.io/badge/coverage-79.5%25-lightgrey?logo=sonarqubecloud)](https://sonarcloud.io/project/overview?id=ellaisys_aws-cognito)
 
 
 </div>
