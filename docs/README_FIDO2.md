@@ -1,7 +1,7 @@
 # FIDO2 Security OR Passkey Functionality
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-10-29<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-10-30<!-- /AUTO:last_updated -->
 
 This package provides the FIDO2 Security Keys OR Passkey based functionality. This is a passwordless authentication approach, where the user can use the security key or passkey to authenticate.
 

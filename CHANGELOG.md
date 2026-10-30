@@ -1,7 +1,7 @@
 # AWS Cognito Laravel Package Changelog
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-10-29<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-10-30<!-- /AUTO:last_updated -->
 
 ## [Release 54 (tag v2.0.10)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.10) - 2026-10-31
 - Feat: Issue [#156](https://github.com/ellaisys/aws-cognito/issues/156) Add additional test cases for improved coverage and reliability. The coverage is more than 75%.
