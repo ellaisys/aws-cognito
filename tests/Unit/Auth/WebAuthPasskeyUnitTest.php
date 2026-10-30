@@ -148,7 +148,7 @@ class WebAuthPasskeyUnitTest extends TestCase
     #[Depends('test_method_challenge_exists_in_class')]
     #[DataProvider('challengeMethodDataProvider')]
     public function test_challenge_method_no_data_with_authenticated_user(
-        array $data, string $expectedException, string $challengeName = null): void
+        array $data, string $expectedException, ?string $challengeName = null): void
     {
         $this->expectException($expectedException);
         $this->class->challenge(request()->merge($data), $challengeName);

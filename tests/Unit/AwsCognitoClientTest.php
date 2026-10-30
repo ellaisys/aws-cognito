@@ -84,7 +84,7 @@ class AwsCognitoClientTest extends TestCase
     #[DataProvider('getAuthenticateInvalidDataProvider')]
     public function test_authenticate_method_with_invalid_data(
         CognitoAuthFlowTypes $authFlow, string $password,
-        string $deviceKey = null, string $challenge = null
+        ?string $deviceKey = null, ?string $challenge = null
     ): void
     {
         $this->expectException(HttpException::class);

@@ -109,8 +109,8 @@ class RegisterMFAUnitTest extends TestCase
     #[Depends('test_method_verify_exists_in_class')]
     #[DataProvider('provideVerifyMethodBasicCallData')]
     public function test_verify_method_basic_call_but_unauthenticated_user(
-        array $data, string $expectedException, string $code=null,
-        string $deviceName=null,
+        array $data, string $expectedException, ?string $code=null,
+        ?string $deviceName=null,
     ): void
     {
         $this->expectException($expectedException);
