@@ -79,7 +79,7 @@ The validations are built in and API response format is standardized.
     POST      api/cognito/register .......................................... Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@register
     POST      api/cognito/token/revalidate ............................ Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
     POST      api/cognito/token/refresh .................................. Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@refresh
-    POST      api/cognito/user/changepassword .......................... Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@change
+    POST      api/cognito/user/changepassword ......................... Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@confirm
     POST      api/cognito/user/invite ................................... Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@actionInvite
     GET|HEAD  api/cognito/user/profile ................................ Ellaisys\Cognito\Http\Controllers\Api\UserController@actionGetRemoteUser
     
@@ -125,7 +125,7 @@ POST      cognito/register/verify ........................... cognito.action.reg
 GET|POST  cognito/session/revalidate ................. cognito.action.session.revalidate › Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@revalidate
 POST      cognito/session/refresh .......................... cognito.action.session.refresh › Ellaisys\Cognito\Http\Controllers\Auth\RefreshTokenController@refresh
 GET|HEAD  cognito/user/changepassword ................................................................................................ cognito.form.change.password
-POST      cognito/user/changepassword .................... cognito.action.change.password › Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@change
+POST      cognito/user/changepassword .................... cognito.action.change.password › Ellaisys\Cognito\Http\Controllers\Auth\ConfirmPasswordController@confirm
 GET|HEAD  cognito/user/invite ............................................................................................................ cognito.form.user.invite
 POST      cognito/user/invite ..................................... cognito.action.invite.submit › Ellaisys\Cognito\Http\Controllers\Auth\RegisterController@invite
 

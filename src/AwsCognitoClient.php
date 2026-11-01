@@ -424,31 +424,6 @@ class AwsCognitoClient
     } //Function ends
 
     /**
-     * Set a new password for a user that has been flagged as needing a password change.
-     *
-     * @param string $username
-     * @param string $password
-     * @param string $session
-     *
-     * @return string
-     */
-    final public function confirmPassword(string $username,
-        string $password, string $session): string
-    {
-        try {
-            $this->adminRespondToAuthChallenge(
-                CognitoChallengeTypes::NEW_PASSWORD_REQUIRED,
-                $session, $password, $username
-            );
-        } catch (Exception $exception) {
-            Log::error('AwsCognitoClient:confirmPassword:Exception');
-            throw $exception;
-        } //Try-catch ends
-
-        return Password::PASSWORD_RESET;
-    } //Function ends
-
-    /**
      * Changes the password for a specified user in a user pool.
      * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ChangePassword.html
      *
