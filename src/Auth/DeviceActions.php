@@ -76,6 +76,8 @@ trait DeviceActions
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::messages.device.list'))
                     ->with('data', $response);
             } //Return response
         } catch (Exception $e) {
@@ -140,6 +142,8 @@ trait DeviceActions
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::messages.device.created'))
                     ->with('data', $response);
             } //Return response
         } catch (Exception $e) {
@@ -207,6 +211,8 @@ trait DeviceActions
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::messages.device.updated'))
                     ->with('data', $response);
             } //Return response
         } catch (Exception $e) {
@@ -272,6 +278,8 @@ trait DeviceActions
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::messages.device.list'))
                     ->with('data', $response);
             } //Return response
         } catch (Exception $e) {
@@ -329,6 +337,8 @@ trait DeviceActions
             } else {
                 $returnValue = redirect()
                     ->route($this->redirectPath())
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::messages.device.deleted'))
                     ->with('data', $response);
             } //Return response
         } catch (Exception $e) {
