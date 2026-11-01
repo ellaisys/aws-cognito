@@ -60,18 +60,19 @@ trait RegisterMFA
             // Get the response from AWS Cognito for the MFA configurations
             $response = $client->associateSoftwareTokenMFA($accessToken);
 
-            // Build payload
-            $secretCode = $response->get('SecretCode');
+            // Build response data
+            $data = $response->toArray();
+            $secretCode = $data['SecretCode'] ?? '';
             $uriTotp = '';
             $uriTotp .= 'otpauth://totp/' . config('app.name');
             $uriTotp .= ' (' . $username . ')?secret=' . $secretCode;
             $uriTotp .= '&issuer=' . config('app.name');
+            $data['TotpUri'] = $uriTotp;
 
-            $data = [
-                'SecretCode' => $secretCode,
-                'SecretCodeQR' => config('cognito.mfa_qr_library') . $uriTotp,
-                'TotpUri' => $uriTotp
-            ];
+            //Add QR code generation if the library is configured
+            if (!empty(config('cognito.mfa_qr_library'))) {
+                $data['SecretCodeQR'] = config('cognito.mfa_qr_library') . $uriTotp;
+            } //End if
 
             //Return response
             if ($this->isControllerAction) {
