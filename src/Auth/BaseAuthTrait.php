@@ -399,7 +399,8 @@ trait BaseAuthTrait
      * @return \AwsResult
      * @throws \InvalidUserException
      */
-    final public function getCognitoUserByAdmin(Request $request, string $username='username'): AwsResult
+    final public function getCognitoUserByAdmin(Request $request,
+        string $username='username'): AwsResult
     {
         try {
             //Create AWS Cognito Client
