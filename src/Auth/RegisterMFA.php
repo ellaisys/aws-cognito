@@ -273,13 +273,16 @@ trait RegisterMFA
                 throw new ValidationException($validator);
             } //End if
 
-            //Create AWS Cognito Client
+            // Validate the user
+            $this->getAccessToken($request);
+
+            // Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
            
-            //Get the response from AWS Cognito for the MFA configurations
+            // Get the response from AWS Cognito for the MFA configurations
             $response = $client->adminSetUserMFAPreference($request['username'], $isEnable);
 
-            //Return response
+            // Return response
             if ($this->isControllerAction) {
                 $returnValue = $response;
             } elseif ($this->getIsJsonResponse($request)) {
@@ -300,6 +303,6 @@ trait RegisterMFA
         } //End try
 
         return $returnValue;
-    } //Function ends
+    } // Function ends
 
-} //Trait ends
+} // Trait ends
