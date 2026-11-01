@@ -48,13 +48,6 @@ class PreRegistrationEvent
         $this->type = $type;
         $this->data = $data;
         $this->ipAddress = $ipAddress;
-
-        // Log the event data for debugging purposes
-        Log::debug('PreRegistrationEvent fired', [
-            'type' => $this->type,
-            'data' => $this->data,
-            'ip_address' => $this->ipAddress,
-        ]);
     }
 
     /**
@@ -67,4 +60,4 @@ class PreRegistrationEvent
     {
         return [];
     }
-}
+} // Class ends

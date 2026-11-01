@@ -50,13 +50,6 @@ class PostAuthFailedEvent
         $this->data = $data;
         $this->error = $error;
         $this->ipAddress = $ipAddress;
-
-        // Log the event data for debugging purposes
-        Log::debug('PostAuthFailedEvent fired', [
-            'data' => $this->data,
-            'error' => $this->error ? $this->error->getMessage() : null,
-            'ip_address' => $this->ipAddress,
-        ]);
     }
 
     /**
@@ -69,4 +62,4 @@ class PostAuthFailedEvent
     {
         return [];
     }
-}
+} // Class ends

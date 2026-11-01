@@ -54,14 +54,6 @@ class PostRegistrationEvent
         $this->user = $user;
         $this->data = $data;
         $this->ipAddress = $ipAddress;
-
-        // Log the event data for debugging purposes
-        Log::debug('PostRegistrationEvent fired', [
-            'type' => $this->type,
-            'user' => $this->user,
-            'data' => $this->data,
-            'ip_address' => $this->ipAddress,
-        ]);
     }
 
     /**
@@ -74,4 +66,4 @@ class PostRegistrationEvent
     {
         return [];
     }
-}
+} // Class ends
