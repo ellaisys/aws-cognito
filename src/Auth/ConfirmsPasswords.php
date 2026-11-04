@@ -106,15 +106,18 @@ trait ConfirmsPasswords
                 $request[$passwordNew]
             );
 
+            //Initialize parameters
+            $guard = $this->getGuard($request);
+
+            //Logout the user from the current guard
+            Auth::guard($guard)->logout(true);
+
             //Return response
             if ($this->isControllerAction) {
                 $returnValue = $response;
             } elseif ($this->getIsJsonResponse($request)) {
                 $returnValue = $this->response->success($response);
             } else {
-                //Invalidate session
-                $request->session()->invalidate();
-
                 $returnValue = redirect()
                     ->route($this->redirectPath())
                     ->with('status', 'success')

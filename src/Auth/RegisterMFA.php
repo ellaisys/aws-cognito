@@ -258,14 +258,6 @@ trait RegisterMFA
         $returnValue = null;
 
         try {
-            if (!$request->has('username')) {
-                //Get Authenticated user
-                $authUser = $this->getAuthenticatedUser($request);
-
-                // Merge the request data with the authenticated user's username
-                $request->merge(['username' => $authUser['email']]);
-            } //End if
-
             // Validate the request data
             $validator = Validator::make($request->all(), [
                 'username' => 'required|string'
