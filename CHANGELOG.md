@@ -5,6 +5,7 @@
 
 ## [Release 55 (tag v2.0.11)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.11) - 2026-11-30
 - Fix: Issue [#160](https://github.com/ellaisys/aws-cognito/issues/160) Security vulnerability resolved.
+- Fix: Improve test coverage and reliability for security-related features. Coverage is now over 80%.
 - Doc: Update security guidelines in SECURITY.md to reflect the latest changes.
 - Doc: Update recognition program details in SECURITY.md to clarify public acknowledgment process.
 
