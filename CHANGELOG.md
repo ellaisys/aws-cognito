@@ -1,7 +1,7 @@
 # AWS Cognito Laravel Package Changelog
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-10-30<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-11-04<!-- /AUTO:last_updated -->
 
 ## [Release 55 (tag v2.0.11)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.11) - 2026-11-30
 - Fix: Issue [#160](https://github.com/ellaisys/aws-cognito/issues/160) Security vulnerability resolved.
