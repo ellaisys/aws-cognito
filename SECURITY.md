@@ -31,9 +31,9 @@ We appreciate your vigilance in identifying security vulnerabilities. However, i
 Please note that we may not consider some issues, such as self-XSS or other user-inflicted vulnerabilities, within the scope of our security policy. Nevertheless, we still appreciate hearing about them and encourage responsible disclosure.
 
 ## Reward and Recognition
-We value the contributions of the security community and understand the time and effort put into finding and reporting vulnerabilities. As a token of our appreciation, we offer a reward program for eligible reports. The program's specifics, including eligibility criteria and rewards, will be communicated to you when you report the security issue.
+We value the contributions of the security community and understand the time and effort put into finding and reporting vulnerabilities. As a token of our appreciation, we offer a public recognition program for eligible reports. The program's specifics, including eligibility criteria and the recognition process, will be communicated to you when you report the security issue.
 
-If you are not interested in receiving a reward but would like to be recognized for your contribution, please let us know, and we will gladly acknowledge your efforts.
+If you are not interested in being recognized for your contribution in any public manner, please let us know, and we will gladly acknowledge your efforts.
 
 ## Responsible Disclosure
 We kindly request that you:

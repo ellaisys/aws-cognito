@@ -86,10 +86,10 @@ sequenceDiagram
 
     Client->>Route: POST /password/reset
     Route->>Controller: reset(Request)
-    Controller->>Validator: validate(code, password confirmed)
-    Controller->>CognitoClient: confirmPassword(email, code, password)
+    Controller->>Validator: validate(token, password confirmed)
+    Controller->>CognitoClient: resetPassword(token, email, password)
     CognitoClient->>AWS: ConfirmForgotPassword
-    alt invalid/expired code
+    alt invalid/expired token
         AWS-->>CognitoClient: CodeMismatchException
         CognitoClient-->>Controller: throw InvalidUserFieldException
         Controller-->>Client: 400 Bad Request

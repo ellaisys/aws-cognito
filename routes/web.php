@@ -81,8 +81,8 @@ Route::group([], function () {
         });
 
         Route::group(['prefix' => 'user'], function() {
-            Route::get('/changepassword', function () { return view('cognito::pages.auth.passwords.change'); })->name('form.change.password');
-            Route::post('/changepassword', [ConfirmPasswordController::class, 'change'])->name('action.change.password');
+            Route::get('/changepassword', [ConfirmPasswordController::class, 'showConfirmForm'])->name('form.change.password');
+            Route::post('/changepassword', [ConfirmPasswordController::class, 'confirm'])->name('action.change.password');
             Route::get('/invite', function () { return view('cognito::pages.auth.invite'); })->name('form.user.invite');
             Route::post('/invite', [RegisterController::class, 'actionInvite'])->name('action.invite.submit');
 

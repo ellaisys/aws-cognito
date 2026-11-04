@@ -205,8 +205,10 @@ class RegisterMFAUnitTest extends TestCase
     #[Depends('test_method_enable_exists_in_class')]
     public function test_enable_method_basic_call_but_unauthenticated_user(): void
     {
+        $request = $this->requestJson;
+        $request->merge(['username' => TestCase::SAMPLE_INVALID_DATA['email']]);
         $this->expectException(HttpException::class);
-        $this->class->enable(request());
+        $this->class->enable($request);
     } // Function ends
 
     /**
@@ -229,8 +231,10 @@ class RegisterMFAUnitTest extends TestCase
     #[Depends('test_method_disable_exists_in_class')]
     public function test_disable_method_basic_call_but_unauthenticated_user(): void
     {
+        $request = $this->requestJson;
+        $request->merge(['username' => TestCase::SAMPLE_INVALID_DATA['email']]);
         $this->expectException(HttpException::class);
-        $this->class->disable(request());
+        $this->class->disable($request);
     } // Function ends
 
 } //Class ends

@@ -34,10 +34,7 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 
 trait ConfirmsPasswords
 {
-    /**
-     * private variable for Cognito User
-     */
-    private $authData = null;
+    use BaseAuthTrait;
 
     /**
      * private variable for password policy
@@ -58,181 +55,89 @@ trait ConfirmsPasswords
      */
     public function showConfirmForm()
     {
-        return view('auth.passwords.confirm');
-    }
+        return view('cognito::pages.auth.passwords.change');
+    } // Function ends
 
     /**
      * Confirm the given user's password.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @param  string  $paramUsername
+     * @param  string  $passwordOld
+     * @param  string  $passwordNew
+     *
+     * @return mixed
      */
-    public function confirm(
-        Request $request, string $guard='web',
-        string $paramUsername='email',
-        string $passwordOld='password', string $passwordNew='new_password')
+    final public function confirm(
+        Request $request, string $paramUsername='email',
+        string $passwordOld='password', string $passwordNew='new_password'): mixed
     {
         try
         {
-            //Initialize parameters
+            // Initialize variables
             $returnValue = null;
 
-            //Assign params
+            // Assign params
             $this->paramUsername = $paramUsername;
             $this->paramPasswordOld = $passwordOld;
             $this->paramPasswordNew = $passwordNew;
 
-            //Transform to collection
-            if ($request instanceof Request) {
-                $payload = collect($request->all());
-            } //End if
-
-            //Get User data from Guard
-            $claim = Auth::guard($guard)->getClaim();
-            if (empty($claim)) {
-                if ($request->has('challenge_name') && $request->input('challenge_name') == 'NEW_PASSWORD_REQUIRED') {
-                    $payload = $payload->replace([$paramUsername => $request->input($paramUsername)]);
-                } else {
-                    throw new InvalidUserException();
-                } //End if
-            } else {
-                $payload = $payload->replace([$paramUsername => $claim['username']]);
-            } //End if
-
-            //Get the password policy
+            // Get the password policy
             $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
-            //Validate request
-            $validator = Validator::make($payload->all(), $this->rules(), [
+            // Validate payload
+            $validator = Validator::make($request->all(), $this->rules(), [
                 'regex' => 'Must contain atleast '.$this->passwordPolicy['message'],
             ]);
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
 
-            //Create AWS Cognito Client
+            // Create AWS Cognito Client
             $client = app()->make(AwsCognitoClient::class);
 
-            //Get User Data
-            $this->authData = $client->adminGetUser($payload[$paramUsername]);
+            // Token Object
+            $accessToken = $this->getAccessToken($request);
 
-            //Action based on User Status
-            switch (CognitoUserStatusTypes::from($this->authData['UserStatus'])) {
-                case CognitoUserStatusTypes::FORCE_CHANGE_PASSWORD:
-                    $returnValue = $this->forceNewPassword(
-                        $client, $payload,
-                        $paramUsername, $passwordOld, $passwordNew
-                    );
-                    break;
+            // Change the user's password using the AWS Cognito client
+            $response = $client->changePassword(
+                $accessToken,
+                $request[$passwordOld],
+                $request[$passwordNew]
+            );
 
-                case CognitoUserStatusTypes::RESET_REQUIRED:
-                    throw new AwsCognitoException(AwsCognitoException::COGNITO_RESET_PWD_REQ_INVALID);
-                    break;
+            //Initialize parameters
+            $guard = $this->getGuard($request);
 
-                default:
-                    $returnValue = $this->changePassword(
-                        $client, $guard, $payload,
-                        $passwordOld, $passwordNew
-                    );
-                    break;
-            } //End switch
+            //Logout the user from the current guard
+            Auth::guard($guard)->logout(true);
+
+            //Return response
+            if ($this->isControllerAction) {
+                $returnValue = $response;
+            } elseif ($this->getIsJsonResponse($request)) {
+                $returnValue = $this->response->success($response);
+            } else {
+                $returnValue = redirect()
+                    ->route($this->redirectPath())
+                    ->with('status', 'success')
+                    ->with('message', trans('cognito::messages.auth.password_change_success'))
+                    ->with('data', $response);
+            } //Return response
 
             return $returnValue;
-        } catch(Exception $e) {
-            Log::error('ConfirmsPasswords:confirm:Exception');
-            throw $e;
-        } //Try-catch ends
-    } //Function ends
-
-    /**
-     * If a user is being forced to set a new password for the first time follow that flow instead.
-     *
-     * @param  \Ellaisys\Cognito\AwsCognitoClient  $client
-     * @param  \Illuminate\Support\Collection  $request
-     * @param  string  $paramUsername
-     * @param  string  $passwordOld
-     * @param  string  $passwordNew
-     *
-     * @return string
-     */
-    private function forceNewPassword(
-        AwsCognitoClient $client,
-        Collection $payload, string $paramUsername,
-        string $passwordOld, string $passwordNew)
-    {
-        //Authenticate user
-        $login = $client->authenticate(
-            CognitoAuthFlowTypes::ADMIN_USER_PASSWORD_AUTH,
-            $payload[$paramUsername],
-            $payload[$passwordOld]
-        );
-
-        //Confirm new password for the user
-        $response = $client->confirmPassword(
-            $payload[$paramUsername],
-            $payload[$passwordNew],
-            $login->get('Session')
-        );
-        if ($response === Password::PASSWORD_RESET) {
-            //Update the user attributes
-            $responseAttributesUpdate = $client->adminUpdateUserAttributes(
-                $payload[$paramUsername], [
-                'email_verified' => 'true',
-            ]);
-
-            if ($responseAttributesUpdate) {
-                return $response;
-            } else {
-                throw new AwsCognitoException(AwsCognitoException::COGNITO_RESET_PWD_FAILED);
-            } //End if
-        } else {
-            throw new AwsCognitoException(AwsCognitoException::COGNITO_RESET_PWD_REQ_INVALID);
-        } //End if
-    } //Function ends
-
-    /**
-     * Method to change the password for the currently signed-in user.
-     *
-     * @param  \Ellaisys\Cognito\AwsCognitoClient  $client
-     * @param  string  $guard
-     * @param  \Illuminate\Support\Collection  $request
-     * @param  string  $passwordOld
-     * @param  string  $passwordNew
-     *
-     * @return string
-     */
-    private function changePassword(
-        AwsCognitoClient $client, string $guard,
-        Collection $payload, string $passwordOld, string $passwordNew)
-    {
-        try
-        {
-            //Get Authenticated user
-            $authUser = Auth::guard($guard)->user();
-            if (empty($authUser)) { throw new InvalidUserException(); }
-
-            //AccessToken Object
-            $claim = Auth::guard($guard)->getClaim();
-            if (empty($claim)) { throw new InvalidUserException(); }
-            $accessToken = $claim['token'];
-
-            return $client->changePassword(
-                $accessToken,
-                $payload[$passwordOld],
-                $payload[$passwordNew]
-            );
         } catch(Exception $exception) {
-            Log::error('ConfirmsPasswords:changePassword:Exception');
+            Log::error('ConfirmsPasswords:confirm:Exception');
             throw $exception;
         } //Try-catch ends
-    } //Function ends
+    } // Function ends
 
     /**
      * Get the password confirmation validation rules.
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         try {
             return [
@@ -244,6 +149,5 @@ trait ConfirmsPasswords
             Log::error('ConfirmsPasswords:rules:Exception');
             throw $e;
         } //End try
-    } //Function ends
-
-} //Trait ends
+    } // Function ends
+} // Trait ends

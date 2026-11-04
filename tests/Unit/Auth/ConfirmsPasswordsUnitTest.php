@@ -108,37 +108,30 @@ class ConfirmsPasswordsUnitTest extends TestCase
         return [
             'no data' => [
                 [],
-                InvalidUserException::class,
+                ValidationException::class,
             ],
-            'invalid challenge name' => [
-                ['challenge' => ''],
-                InvalidUserException::class,
+            'invalid password name' => [
+                ['password' => ''],
+                ValidationException::class,
             ],
-            'invalid challenge value' => [
-                ['challenge_name' => 'invalid'],
-                InvalidUserException::class,
-            ],
-            'valid challenge and missing password' => [
-                ['challenge_name' => 'NEW_PASSWORD_REQUIRED'],
+            'invalid password key' => [
+                ['passkey' => 'invalid'],
                 ValidationException::class,
             ],
             'invalid password format' => [
                 [
-                    'challenge_name' => 'NEW_PASSWORD_REQUIRED',
                     'password' => 'InvalidPasswordFormat'
                 ],
                 ValidationException::class,
             ],
             'valid password format missing new password' => [
                 [
-                    'challenge_name' => 'NEW_PASSWORD_REQUIRED',
                     'password' => 'ValidPassword!123'
                 ],
                 ValidationException::class,
             ],
             'valid password format with new password missing username' => [
                 [
-                    'challenge_name' => 'NEW_PASSWORD_REQUIRED',
                     'password' => 'ValidPassword!234',
                     'new_password' => 'NewValidPassword!234'
                 ],
@@ -146,13 +139,12 @@ class ConfirmsPasswordsUnitTest extends TestCase
             ],
             'valid data format with all required fields' => [
                 [
-                    'challenge_name' => 'NEW_PASSWORD_REQUIRED',
                     'password' => 'ValidPassword!345',
                     'new_password' => 'NewValidPassword!345',
                     'new_password_confirmation' => 'NewValidPassword!345',
                     'email' => 'someone@example.com'
                 ],
-                AwsCognitoException::class,
+                HttpException::class,
             ],
         ];
     } // Function ends

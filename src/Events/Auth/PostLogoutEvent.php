@@ -42,12 +42,6 @@ class PostLogoutEvent
     {
         $this->data = $data;
         $this->ipAddress = $ipAddress;
-
-        // Log the event data for debugging purposes
-        Log::debug('PostLogoutEvent fired', [
-            'data' => $this->data,
-            'ip_address' => $this->ipAddress,
-        ]);
     }
 
     /**
@@ -60,4 +54,4 @@ class PostLogoutEvent
     {
         return [];
     }
-}
+} // Class ends

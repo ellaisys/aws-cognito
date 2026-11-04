@@ -119,7 +119,7 @@ trait ResetsPasswords
         } //Try-Catch ends
 
         return $returnValue;
-    } //Function ends
+    } // Function ends
 
     /**
      * Display the password reset view for the given token.
@@ -137,21 +137,20 @@ trait ResetsPasswords
                 'email' => $request->email ?: '',
                 'token' => $token
             ]);
-    } //Function ends
+    } // Function ends
 
     /**
      * Get the password reset validation rules.
      *
      * @return array
      */
-    protected function rules()
+    public function rules(): array
     {
         return [
-            $this->paramToken       => 'required_without:'.$this->paramCode,
-            $this->paramCode        => 'required_without:'.$this->paramToken,
+            $this->paramToken       => 'required_without:' . $this->paramCode,
+            $this->paramCode        => 'required_without:' . $this->paramToken,
             $this->paramUsername    => 'required|email',
-            $this->paramPassword    => ['required', 'confirmed', 'regex:'.$this->passwordPolicy['regex']],
+            $this->paramPassword    => ['required', 'confirmed', 'regex:' . $this->passwordPolicy['regex']],
         ];
-    } //Function ends
-
-} //Trait ends
+    } // Function ends
+} // Trait ends

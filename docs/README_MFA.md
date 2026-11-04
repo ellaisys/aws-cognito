@@ -269,7 +269,7 @@ The response from the web application will display the QR code for activating th
 <img src="../assets/images/web_application_activate.png" width="50%" alt="cognito mfa activate for web"/>
 
 >[!IMPORTANT]
->In case you want to change the QR Generator library, you can change the value in the configuration file with the key **mfa_qr_library**. Alternately, you can set the string in the environment file identified by **AWS_COGNITO_MFA_QR_LIBRARY**.
+>In case you want to change the QR Generator library, you can change the value in the configuration file with the key **mfa_qr_library**. Alternately, you can set the string in the environment file identified by **AWS_COGNITO_MFA_QR_LIBRARY**. If you set it to an empty value (""), no QR code will be generated automatically.
 
 #### Verify MFA (Web Application)
 

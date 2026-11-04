@@ -36,65 +36,18 @@ class ConfirmPasswordController extends Controller
     use ConfirmsPasswords;
 
     /**
-     * Where to redirect users when the intended url fails.
+     * Constructor.
      *
-     * @var string
      */
-    protected $redirectTo = 'cognito.form.login';
-
-    /**
-     * Action to update the user password
-     *
-     * @param  \Illuminate\Http\Request  $request
-     */
-    public function change(Request $request)
+    public function __construct()
     {
-        try
-        {
-            //Initialize parameters
-            $returnValue = null;
-            $guard = 'web';
-            $isJsonResponse = false;
+        //Mandate authentication for all the API's of this controller
+        $this->middleware('aws-cognito');
 
-            //Check if request is json
-            if ($this->isJson($request)) {
-                $isJsonResponse = true;
-                $guard = 'api';
-            } //End if
+        //Set flag to indicate action called from controller
+        $this->setIsControllerAction(false);
 
-            //Validate request
-            $validator = Validator::make($request->all(), [
-                'email'    => 'sometimes|email',
-                'password'  => 'required',
-                'new_password' => 'required|confirmed',
-            ]);
-            $validator->validate();
-
-            //Change password
-            $response = $this->confirm($request, $guard);
-
-            //Logout on success
-            auth()->guard($guard)->logout(true);
-
-            //Check the password
-            if ($isJsonResponse) {
-                $returnValue = $this->response->success($response);
-            } else {
-                //Invalidate session
-                $request->session()->invalidate();
-
-                //Redirect to the login or homepage
-                $returnValue = redirect()
-                    ->route(config('cognito.routes.web.login_page', $this->redirectTo))
-                    ->with('status', 'success')
-                    ->with('message', trans('cognito::messages.auth.password_change_success'));
-            } //End if
-
-            return $returnValue;
-        } catch(Exception $e) {
-            Log::error('ConfirmPasswordController:change:Exception');
-            throw $e;
-        } //Try-catch ends
-    } //Function ends
+        parent::__construct();
+    }
 
 } //Class ends

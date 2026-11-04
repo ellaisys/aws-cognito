@@ -14,14 +14,16 @@ namespace Ellaisys\Cognito\Tests\Feature;
 use Illuminate\Support\Facades\Config;
 
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Depends;
-use PHPUnit\Framework\Attributes\DependsExternal;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use Ellaisys\Cognito\Enums;
 use Ellaisys\Cognito\Tests\TestCase;
 use Ellaisys\Cognito\Tests\Traits\AwsCognitoTrait;
 use Ellaisys\Cognito\Tests\Traits\AuthenticationTrait;
 
+#[Group('web'), Group('feature'), Group('route'), Group('change-password')]
 class ChangePasswordTest extends TestCase
 {
     use AwsCognitoTrait;
@@ -41,7 +43,7 @@ class ChangePasswordTest extends TestCase
 
         // Authenticate the user before running the tests
         $this->authenticateWeb();
-    } //Function ends
+    } // Function ends
 
     /**
      * Test loading the change password page.
@@ -76,7 +78,11 @@ class ChangePasswordTest extends TestCase
 
         $this->withSession(self::$sessionAuthenticated)
             ->post(route('cognito.action.change.password'), $payload)
-            ->assertStatus(302);
+            ->assertStatus(302)
+            ->assertSessionHas('status', 'success')
+            ->assertSessionHas('message')
+            ->assertSessionHas('data')
+            ->assertSessionHasNoErrors();
     } // Function ends
 
-} //Class ends
+} // Class ends

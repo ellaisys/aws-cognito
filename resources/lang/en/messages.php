@@ -78,8 +78,12 @@ return [
     ],
 
     'device' => [
+        'list' => 'List Devices',
         'register' => 'Register Device',
         'unregister' => 'Unregister Device',
+        'created' => 'Device registered successfully.',
+        'deleted' => 'Device deleted successfully.',
+        'updated' => 'Device updated successfully.',
     ],
 
     'challenge' => [

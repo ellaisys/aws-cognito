@@ -67,7 +67,7 @@ Route::group([
             Route::post('/invite', [RegisterController::class, 'actionInvite']);
 
             //Change password
-            Route::post('/changepassword', [ConfirmPasswordController::class, 'change']);
+            Route::post('/changepassword', [ConfirmPasswordController::class, 'confirm']);
 
             //Route group for MFA
             Route::group(['prefix' => 'mfa', 'controller' => MFAController::class], function() {

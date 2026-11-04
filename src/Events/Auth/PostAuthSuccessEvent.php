@@ -48,13 +48,6 @@ class PostAuthSuccessEvent
         $this->user = $user;
         $this->data = $data;
         $this->ipAddress = $ipAddress;
-
-        // Log the event data for debugging purposes
-        Log::debug('PostAuthSuccessEvent fired', [
-            'user' => $this->user,
-            'data' => $this->data,
-            'ip_address' => $this->ipAddress,
-        ]);
     }
 
     /**
@@ -67,4 +60,4 @@ class PostAuthSuccessEvent
     {
         return [];
     }
-}
+} // Class ends

@@ -30,7 +30,7 @@ use Illuminate\Validation\ValidationException;
 use Ellaisys\Cognito\Exceptions\AwsCognitoException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-#[Group('web'), Group('unit'), Group('trait'), Group('base')]
+#[Group('web'), Group('unit'), Group('base')]
 #[CoversClass(AwsCognitoClient::class)]
 class AwsCognitoClientTest extends TestCase
 {
@@ -266,31 +266,6 @@ class AwsCognitoClientTest extends TestCase
             TestCase::SAMPLE_INVALID_DATA['client_metadata'],
             TestCase::SAMPLE_INVALID_DATA['message_action'],
             TestCase::SAMPLE_INVALID_DATA['user_group_name']
-        );
-    } // Function ends
-
-    /**
-     * Test if the confirmPassword method exists.
-     */
-    #[Test]
-    public function test_method_confirmPassword_exists(): void
-    {
-        $this->assertTrue(method_exists($this->client, 'confirmPassword'));
-    } // Function ends
-
-    /**
-     * Test the response of the confirmPassword method with invalid
-     * data.
-     */
-    #[Test]
-    #[Depends('test_method_confirmPassword_exists')]
-    public function test_confirmPassword_method_with_invalid_data(): void
-    {
-        $this->expectException(HttpException::class);
-        $this->client->confirmPassword(
-            TestCase::SAMPLE_INVALID_DATA['username'],
-            TestCase::SAMPLE_INVALID_DATA['password'],
-            TestCase::SAMPLE_INVALID_DATA['session_value']
         );
     } // Function ends
 
