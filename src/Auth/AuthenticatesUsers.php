@@ -18,10 +18,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 use Ellaisys\Cognito\AwsCognitoClaim;
 use Ellaisys\Cognito\AwsCognitoClient;
-use Ellaisys\Cognito\AwsCognitoUserPool;
 
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoChallengeTypes;
@@ -102,14 +102,8 @@ trait AuthenticatesUsers
             // Validate Cognito auth flow
             $this->validateCognitoFlow($authFlow);
 
-            // Get the authentication guard
-            $guard = $this->getGuard($request);
-
             //Raise Pre Auth Event
             $this->callPreAuthEvent($request, $paramPassword);
-
-            //Get the password policy
-            $passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
 
             //Validate request
             $validator = Validator::make(
@@ -120,14 +114,15 @@ trait AuthenticatesUsers
                 ]),
                 [
                     $paramUsername => 'required|string',
-                    $paramPassword => ['required', 'regex:' . $passwordPolicy['regex']],
+                    $paramPassword => ['required', Password::defaults()],
                     $deviceKeyParam => 'sometimes|string'
-                ], [
-                    'regex' => 'Must contain atleast ' . $passwordPolicy['message']
                 ]);
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
+
+            // Get the authentication guard
+            $guard = $this->getGuard($request);            
 
             //Authenticate User
             $response = Auth::guard($guard)->attempt(
@@ -176,9 +171,6 @@ trait AuthenticatesUsers
             // Validate Cognito auth flow
             $this->validateCognitoFlow($authFlow);
 
-            // Get the authentication guard
-            $guard = $this->getGuard($request);
-
             //Raise Pre Auth Event
             $this->callPreAuthEvent($request, $paramPassword);
 
@@ -207,6 +199,9 @@ trait AuthenticatesUsers
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
+
+            // Get the authentication guard
+            $guard = $this->getGuard($request);
 
             //Authenticate User
             $response = Auth::guard($guard)->attempt(
@@ -296,9 +291,6 @@ trait AuthenticatesUsers
     {
         $returnValue = null;
         try {
-            // Initialize variables
-            $guard = $this->getGuard($request);
-
             //Convert challenge name to upper case if present in the request
             if ($request->has('challenge_name')) {
                 $request->merge(['challenge_name' => strtoupper($request['challenge_name'])]);
@@ -312,6 +304,9 @@ trait AuthenticatesUsers
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
+
+            // Get the authentication guard
+            $guard = $this->getGuard($request);
 
             //Generate challenge array
             $challenge = $request->only([
@@ -632,7 +627,7 @@ trait AuthenticatesUsers
      * Call the post-authentication success event.
      *
      * @param \Illuminate\Http\Request $request
-     * @param string $guard
+     * @param string $paramPassword
      * @return void
      */
     private function callPostAuthSuccessEvent(
@@ -656,7 +651,8 @@ trait AuthenticatesUsers
      * Call the post-authentication error event.
      *
      * @param \Illuminate\Http\Request $request
-     * @param \Exception $e
+     * @param \Exception $exception
+     * @param string $paramPassword
      * @return void
      */
     private function callPostAuthErrorEvent(
@@ -675,7 +671,7 @@ trait AuthenticatesUsers
      *
      * @return array
      */
-    protected function rulesChallenge()
+    protected function rulesChallenge(): array
     {
         return [
             'session'           => 'required|string',
@@ -691,7 +687,7 @@ trait AuthenticatesUsers
      *
      * @return array
      */
-    protected function rulesChallengeValue(bool $isDeviceAuth = false)
+    protected function rulesChallengeValue(bool $isDeviceAuth = false): array
     {
         $rules = [
             'PASSWORD_CLAIM_SIGNATURE'      => 'sometimes|string',
