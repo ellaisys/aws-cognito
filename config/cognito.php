@@ -185,6 +185,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cognito Password Uncompromised Check
+    |--------------------------------------------------------------------------
+    | This option controls whether the password uncompromised check is enabled.
+    | Set this to true to enable the check, or false to disable it.
+    | In production environments, it is recommended to enable this check to
+    | ensure that passwords are not compromised.
+    |
+    */
+    'password_uncompromised_check' => (bool) env('AWS_COGNITO_PASSWORD_UNCOMPROMISED_CHECK', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cognito Sign In Policy - Pool Configuration
     |--------------------------------------------------------------------------
     | This option controls the default cognito sign in policy. You can set the
