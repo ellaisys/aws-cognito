@@ -28,49 +28,45 @@ class AwsCognitoUserPool
      *
      * @var \Ellaisys\Cognito\AwsCognitoUserPool
      */
-    private $dataUserPool;
+    private array $dataUserPool;
 
     /**
      * The AWS Cognito User Pool data.
      *
      * @var \Ellaisys\Cognito\AwsCognitoClient
      */
-    private $client;
-
+    private AwsCognitoClient $client;
     
     /**
      * Create a new AWS Cognito User Pool instance.
      */
-    public function __construct(AwsCognitoClient $client)
+    public function __construct(AwsCognitoClient $client, ?string $userPoolId = null)
     {
         $this->client = $client;
-        $response = $client->describeUserPool();
-        $this->dataUserPool = $response->get('UserPool');
+        $this->dataUserPool = $this->getDataUserPool($userPoolId);
     } //Function ends
 
-
     //Setter and Getter
-    public function getDataUserPool()
+    final public function getDataUserPool(?string $userPoolId = null): array
     {
         if(empty($this->dataUserPool)) {
-            $response = $this->client->describeUserPool();
+            $response = $this->client->describeUserPool($userPoolId);
             $this->dataUserPool = $response->get('UserPool');
         } //If ends
         return $this->dataUserPool;
     } //Function ends
-    public function setDataUserPool($dataUserPool)
+    final public function setDataUserPool(array $dataUserPool): void
     {
         $this->dataUserPool = $dataUserPool;
     } //Function ends
 
-
     /**
      * Get a Password Policy.
      */
-    public function getPasswordPolicy(bool $regex = false)
+    final public function getPasswordPolicy(bool $regex = false, ?string $userPoolId = null)
     {
         if(empty($this->dataUserPool)) {
-            $this->getDataUserPool();
+            $this->getDataUserPool($userPoolId);
         } //If ends
 
         if (!isset($this->dataUserPool['Policies']['PasswordPolicy']) &&
@@ -93,7 +89,8 @@ class AwsCognitoUserPool
      *
      * @return array
      */
-    private function processPolicy($passwordPolicy) {
+    private function processPolicy($passwordPolicy): array
+    {
         $regexString = '/^';
         $messageText = '';
         foreach ($passwordPolicy as $key => $value) {
@@ -141,7 +138,6 @@ class AwsCognitoUserPool
         $regexString .= '$/';
         return ['regex' => $regexString, 'message' => $messageText];
     } //Function ends
-
 
     /**
      * Get Schema Attributes.
