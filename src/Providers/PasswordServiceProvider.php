@@ -11,10 +11,14 @@
 
 namespace Ellaisys\Cognito\Providers;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Fortify\Rules\Password as FortifyPassword;
+
+use Ellaisys\Cognito\AwsCognitoUserPool;
+use Ellaisys\Cognito\Providers\StorageProvider;
 
 /**
  * Class PasswordServiceProvider.
@@ -22,9 +26,21 @@ use Laravel\Fortify\Rules\Password as FortifyPassword;
 class PasswordServiceProvider extends ServiceProvider
 {
     /**
+     * The key used to store the Cognito password policy match in the cache.
+     */
+    const COGNITO_PASSWORD_POLICY_MATCH_KEY = 'cognito_password_policy_match';
+
+    /**
      * The Cognito password policy.
      */
     private $cognitoPasswordPolicy;
+
+    /**
+     * The provider.
+     *
+     * @var \Ellaisys\Cognito\Providers\StorageProvider
+     */
+    protected $provider;
 
     /**
      * Boot the service provider.
@@ -33,9 +49,10 @@ class PasswordServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->cognitoPasswordPolicy = $this->getCognitoPasswordPolicy();
+        // Create the storage provider instance
+        $this->provider = app('ellaisys.aws.cognito.provider.storage');
 
-        // Set up the password rules for both Fortify and password validation.
+        // Set up the password rules
         $this->bootPasswordRules();
     } //Function ends
 
@@ -46,6 +63,10 @@ class PasswordServiceProvider extends ServiceProvider
      */
     protected function bootPasswordRules(): void
     {
+        // Get the Cognito password policy
+        $this->cognitoPasswordPolicy = $this->getCognitoPasswordPolicy();
+
+        // Set up the password rules for password validation.
         $this->bootPasswordValidationRules();
     } //Function ends
 
@@ -161,7 +182,8 @@ class PasswordServiceProvider extends ServiceProvider
      */
     private function getCognitoPasswordPolicy(): array
     {
-        return config('cognito.password_policy', [
+        // Get the password policy from the configuration
+        $configPolicy = config('cognito.password_policy', [
             'MinimumLength' => 8,
             'MaximumLength' => 64,
             'RequireSymbols' => true,
@@ -169,6 +191,20 @@ class PasswordServiceProvider extends ServiceProvider
             'RequireLowercase' => true,
             'RequireNumbers' => true
         ]);
+
+        if ($this->provider && $this->provider->has(self::COGNITO_PASSWORD_POLICY_MATCH_KEY)) {
+            return $configPolicy;
+        } else {
+            // Create AWS Cognito User Pool instance
+            $cognitoUserPool = app()->make(AwsCognitoUserPool::class);
+            $cognitoPolicy = $cognitoUserPool->getPasswordPolicy(false);
+
+            if ($cognitoPolicy == $configPolicy) {
+                $this->provider->add(self::COGNITO_PASSWORD_POLICY_MATCH_KEY, 1, 3600);
+            } // End if
+
+            return $cognitoPolicy ?? $configPolicy;
+        } // End else
     } //Function ends
 
 } //Class ends
