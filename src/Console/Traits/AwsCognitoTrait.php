@@ -14,6 +14,7 @@ namespace Ellaisys\Cognito\Console\Traits;
 use Illuminate\Support\Facades\Log;
 
 use Ellaisys\Cognito\AwsCognitoClient;
+use Ellaisys\Cognito\AwsCognitoUserPool;
 use Ellaisys\Cognito\Enums;
 
 use Exception;
@@ -55,13 +56,11 @@ trait AwsCognitoTrait
     final protected function getUserPoolConfig(?string $userPoolId = null): array
     {
         try {
-            //Create AWS Cognito Client
-            $client = app()->make(AwsCognitoClient::class);
+            //Create AWS Cognito User Pool instance
+            $cognitoUserPool = app()->make(AwsCognitoUserPool::class);
 
             //Get user pool configuration
-            $response = $client->describeUserPool($userPoolId);
-
-            return $response->get('UserPool');
+            return $cognitoUserPool->getDataUserPool($userPoolId);
         } catch (Exception $exception) {
             Log::error('AwsCognitoTrait:getUserPoolConfig:Exception');
             throw $exception;
