@@ -93,6 +93,9 @@ class PasswordServiceProvider extends ServiceProvider
             // Set symbols
             $rule = $this->setSymbols($rule);
 
+            // Set uncompromised
+            $rule = $this->setUncompromised($rule);
+
             return $rule;
         });
     } //Function ends
@@ -154,7 +157,6 @@ class PasswordServiceProvider extends ServiceProvider
     } //Function ends
 
     /**
-     * Set symbols requirement for the password based on the Cognito policy.
      *
      * @return \Illuminate\Validation\Rules\Password
      */
@@ -169,10 +171,11 @@ class PasswordServiceProvider extends ServiceProvider
      *
      * @return \Illuminate\Validation\Rules\Password
      */
-    private function setUncompromised(Password $password): Password
+    private function setUncompromised(Password $password,
+        bool $uncompromised = true): Password
     {
         $isUncompromisedCheck = config('cognito.password_uncompromised_check', true);
-        return $isUncompromisedCheck ? $password->uncompromised() : $password;
+        return ($isUncompromisedCheck && $uncompromised) ? $password->uncompromised() : $password;
     } //Function ends
 
     /**
