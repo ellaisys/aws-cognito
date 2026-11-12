@@ -168,6 +168,10 @@ return [
     | This option defines the default Amazon Cognito User Pool password policy.
     | You can configure the password policy in your AWS Cognito User Pool and
     | provide the policy here as a Base64-encoded JSON string.
+    | Note that the minimum length is enforced to be at least 6 characters and
+    | whitespace is not allowed in the password. For more information, refer to
+    | the AWS Cognito documentation for password policies.
+    | https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-cognito-userpool-passwordpolicy.html
     |
     | The default policy is:
     |
