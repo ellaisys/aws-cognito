@@ -192,8 +192,10 @@ return [
     | In production environments, it is recommended to enable this check to
     | ensure that passwords are not compromised.
     |
+    | The default value is set to false.
+    |
     */
-    'password_uncompromised_check' => (bool) env('AWS_COGNITO_PASSWORD_UNCOMPROMISED_CHECK', true),
+    'password_uncompromised_check' => (bool) env('AWS_COGNITO_PASSWORD_UNCOMPROMISED_CHECK', false),
 
     /*
     |--------------------------------------------------------------------------
