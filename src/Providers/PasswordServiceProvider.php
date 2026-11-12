@@ -200,7 +200,7 @@ class PasswordServiceProvider extends ServiceProvider
         } else {
             // Create AWS Cognito User Pool instance
             $cognitoUserPool = app()->make(AwsCognitoUserPool::class);
-            $cognitoPolicy = $cognitoUserPool->getPasswordPolicy(false);
+            $cognitoPolicy = $cognitoUserPool->getPasswordPolicy();
 
             if ($cognitoPolicy == $configPolicy) {
                 $this->provider->add(self::COGNITO_PASSWORD_POLICY_MATCH_KEY, 1, 3600);

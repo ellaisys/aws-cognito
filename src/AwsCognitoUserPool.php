@@ -62,8 +62,11 @@ class AwsCognitoUserPool
 
     /**
      * Get a Password Policy.
+     * @param string|null $userPoolId
+     *
+     * @return array
      */
-    final public function getPasswordPolicy(bool $regex = false, ?string $userPoolId = null)
+    final public function getPasswordPolicy(?string $userPoolId = null): array
     {
         if(empty($this->dataUserPool)) {
             $this->getDataUserPool($userPoolId);
@@ -75,83 +78,7 @@ class AwsCognitoUserPool
         } //If ends
         $passwordPolicy = $this->dataUserPool['Policies']['PasswordPolicy'];
 
-        if ($regex) {
-            return $this->processPolicy($passwordPolicy);
-        } else {
-            return $passwordPolicy;
-        } //If ends
-    } //Function ends
-
-    /**
-     * Process Password Policy.
-     *
-     * @param array $passwordPolicy
-     *
-     * @return array
-     */
-    private function processPolicy($passwordPolicy): array
-    {
-        $regexString = '/^';
-        $messageText = '';
-        foreach ($passwordPolicy as $key => $value) {
-            switch ($key) {
-                case 'MinimumLength':
-                    $minValue = $value;
-                    $messageText .= 'minimum length of ' . $value . ', ';
-                    break;
-                
-                case 'RequireUppercase':
-                    if ($value) {
-                        $regexString .= '(?=.*[A-Z])';
-                        $messageText .= 'one uppercase letter, ';
-                    } //If ends
-                    break;
-
-                case 'RequireLowercase':
-                    if ($value) {
-                        $regexString .= '(?=.*[a-z])';
-                        $messageText .= 'one lowercase letter, ';
-                    } //If ends
-                    break;
-
-                case 'RequireNumbers':
-                    if ($value) {
-                        $regexString .= '(?=.*\d)';
-                        $messageText .= 'one number, ';
-                    } //If ends
-                    break;
-
-                case 'RequireSymbols':
-                    if ($value) {
-                        //Generate the regex for special characters
-                        $regexString .= '(?=.*[\^$*.\[\]{}\(\)?\-\"!@#%&\/,><\':;|_~`=+])';
-                        $messageText .= 'one special character, ';
-                    } //If ends
-                    break;
-                
-                default:
-                    # code...
-                    break;
-            } //Switch ends
-        } //Foreach ends
-        $regexString .= '([^\s]){' . $minValue . ',99}';
-        $regexString .= '$/';
-        return ['regex' => $regexString, 'message' => $messageText];
-    } //Function ends
-
-    /**
-     * Get Schema Attributes.
-     */
-    public function getSchemaAttributes()
-    {
-        if(empty($this->dataUserPool)) {
-            $this->getDataUserPool();
-        } //If ends
-
-        if (!isset($this->dataUserPool['SchemaAttributes'])) {
-            throw new AwsCognitoException('Schema attributes not found in user pool.');
-        } //If ends
-        return $this->dataUserPool['SchemaAttributes'];
+        return $passwordPolicy;
     } //Function ends
 
 } //Class ends
