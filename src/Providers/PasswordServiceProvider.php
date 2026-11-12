@@ -101,14 +101,15 @@ class PasswordServiceProvider extends ServiceProvider
     } //Function ends
 
     /**
-     * Set the minimum length for the password.
+     * Set the minimum length for the password and enforce no whitespace
+     * as a requirement for the AWS Cognito password policy.
      *
      * @return \Illuminate\Validation\Rules\Password
      */
     private function setMinimumLength(): Password
     {
-        $minLength = $this->cognitoPasswordPolicy['MinimumLength'] ?? 8;
-        return Password::min($minLength);
+        $minLength = $this->cognitoPasswordPolicy['MinimumLength'] ?? 6;
+        return Password::min($minLength)->rules(['regex:/\A\S+\z/']);
     } //Function ends
 
     /**
@@ -119,7 +120,7 @@ class PasswordServiceProvider extends ServiceProvider
     private function setMaximumLength(Password $password): Password
     {
         if (method_exists(Password::class, 'max')) {
-            $maxLength = $this->cognitoPasswordPolicy['MaximumLength'] ?? 64;
+            $maxLength = 99;
             return $password->max($maxLength);
         } // End if
         return $password;
