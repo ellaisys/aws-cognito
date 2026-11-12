@@ -140,7 +140,11 @@ class PasswordServiceProvider extends ServiceProvider
 
         if ($isUpperCase && $isLowerCase) {
             $returnValue = $returnValue->mixedCase();
-        } elseif ($isUpperCase || $isLowerCase) {
+        } elseif ($isUpperCase) {
+            $returnValue = $returnValue->rules(['regex:/\A(?=.*[A-Z])\S+\z/']);
+        } elseif ($isLowerCase) {
+            $returnValue = $returnValue->rules(['regex:/\A(?=.*[a-z])\S+\z/']);
+        } else {
             $returnValue = $returnValue->letters();
         } // End if
         return $returnValue;
