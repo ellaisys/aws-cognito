@@ -40,7 +40,8 @@ class AwsCognitoUserPool
     /**
      * Create a new AWS Cognito User Pool instance.
      */
-    public function __construct(AwsCognitoClient $client, ?string $userPoolId = null)
+    public function __construct(AwsCognitoClient $client,
+        ?string $userPoolId = null)
     {
         $this->client = $client;
         $this->dataUserPool = $this->getDataUserPool($userPoolId);
@@ -76,9 +77,7 @@ class AwsCognitoUserPool
             !is_array($this->dataUserPool['Policies']['PasswordPolicy'])) {
             throw new AwsCognitoException('Password policy not found in user pool.');
         } //If ends
-        $passwordPolicy = $this->dataUserPool['Policies']['PasswordPolicy'];
-
-        return $passwordPolicy;
+        return $this->dataUserPool['Policies']['PasswordPolicy'];
     } //Function ends
 
 } //Class ends

@@ -122,7 +122,7 @@ trait AuthenticatesUsers
             } //End if
 
             // Get the authentication guard
-            $guard = $this->getGuard($request);            
+            $guard = $this->getGuard($request);
 
             //Authenticate User
             $response = Auth::guard($guard)->attempt(
