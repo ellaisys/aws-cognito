@@ -192,8 +192,7 @@ class PasswordServiceProvider extends ServiceProvider
     {
         // Get the password policy from the configuration
         $configPolicy = config('cognito.password_policy', [
-            'MinimumLength' => 8,
-            'MaximumLength' => 64,
+            'MinimumLength' => 6,
             'RequireSymbols' => true,
             'RequireUppercase' => true,
             'RequireLowercase' => true,
