@@ -16,11 +16,10 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 use Ellaisys\Cognito\AwsCognitoClient;
-use Ellaisys\Cognito\AwsCognitoUserPool;
 
 use Ellaisys\Cognito\Enums\CognitoAuthFlowTypes;
 use Ellaisys\Cognito\Enums\CognitoUserStatusTypes;
@@ -35,11 +34,6 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
 trait ConfirmsPasswords
 {
     use BaseAuthTrait;
-
-    /**
-     * private variable for password policy
-     */
-    private $passwordPolicy = null;
 
     /**
      * Passed params
@@ -82,13 +76,8 @@ trait ConfirmsPasswords
             $this->paramPasswordOld = $passwordOld;
             $this->paramPasswordNew = $passwordNew;
 
-            // Get the password policy
-            $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
-
             // Validate payload
-            $validator = Validator::make($request->all(), $this->rules(), [
-                'regex' => 'Must contain atleast '.$this->passwordPolicy['message'],
-            ]);
+            $validator = Validator::make($request->all(), $this->rules());
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
@@ -139,15 +128,10 @@ trait ConfirmsPasswords
      */
     public function rules(): array
     {
-        try {
-            return [
-                $this->paramUsername => 'sometimes|email',
-                $this->paramPasswordOld => ['required', 'regex:'.$this->passwordPolicy['regex']],
-                $this->paramPasswordNew => ['required', 'confirmed', 'regex:'.$this->passwordPolicy['regex']],
-            ];
-        } catch (Exception $e) {
-            Log::error('ConfirmsPasswords:rules:Exception');
-            throw $e;
-        } //End try
+        return [
+            $this->paramUsername => 'sometimes|string',
+            $this->paramPasswordOld => ['required', Password::defaults()],
+            $this->paramPasswordNew => ['required', 'confirmed', Password::defaults()],
+        ];
     } // Function ends
 } // Trait ends

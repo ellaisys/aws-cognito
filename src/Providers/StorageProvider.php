@@ -63,7 +63,7 @@ class StorageProvider
      *
      * @return void
      */
-    public function add($key, $value, $duration=3600)
+    public function add(string $key, $value, int $duration=3600): void
     {
         // If the laravel version is 5.8 or higher then convert minutes to seconds.
         if ($this->laravelVersion !== null
@@ -84,7 +84,7 @@ class StorageProvider
      *
      * @return void
      */
-    public function forever($key, $value)
+    public function forever(string $key, $value): void
     {
         $this->cache()->forever($key, $value);
     }
@@ -96,7 +96,7 @@ class StorageProvider
      *
      * @return bool
      */
-    public function has($key)
+    public function has(string $key): bool
     {
         return $this->cache()->has($key);
     }
@@ -108,7 +108,7 @@ class StorageProvider
      *
      * @return mixed
      */
-    public function get($key)
+    public function get(string $key): mixed
     {
         return $this->cache()->get($key);
     }
@@ -120,7 +120,7 @@ class StorageProvider
      *
      * @return bool
      */
-    public function destroy($key)
+    public function destroy(string $key): bool
     {
         if ($this->has($key)) {
             return $this->cache()->forget($key);

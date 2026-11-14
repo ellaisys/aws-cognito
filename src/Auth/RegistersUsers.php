@@ -17,9 +17,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 use Ellaisys\Cognito\AwsCognitoClient;
-use Ellaisys\Cognito\AwsCognitoUserPool;
 
 use Ellaisys\Cognito\Events\Auth\PreRegistrationEvent;
 use Ellaisys\Cognito\Events\Auth\PostRegistrationEvent;
@@ -43,11 +43,6 @@ trait RegistersUsers
      * Private variable for Registration Type
      */
     private RegistrationTypes $registrationType = RegistrationTypes::REGISTER;
-
-    /**
-     * private variable for password policy
-     */
-    private $passwordPolicy = null;
 
     /**
      * Passed params
@@ -106,14 +101,10 @@ trait RegistersUsers
             //Raise pre registration event
             $this->callPreRegistrationEvent($request);
 
-            //Get the password policy
-            $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
-
             //Validate request
             $validator = Validator::make(
-                $request->all(), $this->rulesRegisterUser(), [
-                'regex' => 'Must contain atleast '.$this->passwordPolicy['message'],
-            ]);
+                $request->all(), $this->rulesRegisterUser()
+            );
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
@@ -401,7 +392,8 @@ trait RegistersUsers
         //Check the new user password config
         if (config('cognito.force_new_user_password', true)) {
             $rules = array_merge($rules, [ $this->paramPassword => [
-                'required', 'confirmed', 'regex:' . $this->passwordPolicy['regex']]]);
+                'required', 'confirmed', Password::defaults()
+            ]]);
         } //End if
 
         //Check for mandatory phone number requirement
