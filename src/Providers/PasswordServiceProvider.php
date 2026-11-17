@@ -63,9 +63,6 @@ class PasswordServiceProvider extends ServiceProvider
      */
     protected function bootPasswordRules(): void
     {
-        // Get the Cognito password policy
-        $this->cognitoPasswordPolicy = $this->getCognitoPasswordPolicy();
-
         // Set up the password rules for password validation.
         $this->bootPasswordValidationRules();
     } //Function ends
@@ -78,6 +75,8 @@ class PasswordServiceProvider extends ServiceProvider
     protected function bootPasswordValidationRules(): void
     {
         Password::defaults(function () {
+            $this->cognitoPasswordPolicy ??= $this->getCognitoPasswordPolicy();
+
             // Minimum password length
             $rule = $this->setMinimumLength();
 
