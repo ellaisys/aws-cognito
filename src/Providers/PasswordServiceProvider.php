@@ -75,6 +75,7 @@ class PasswordServiceProvider extends ServiceProvider
     protected function bootPasswordValidationRules(): void
     {
         Password::defaults(function () {
+            // Get the Cognito password policy
             $this->cognitoPasswordPolicy ??= $this->getCognitoPasswordPolicy();
 
             // Minimum password length
