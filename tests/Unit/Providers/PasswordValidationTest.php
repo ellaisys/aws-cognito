@@ -102,7 +102,7 @@ class PasswordValidationTest extends TestCase
             'without mixed case' => ['strong@123'],
             'without numbers' => ['Strong@Password'],
             'without symbols' => ['StrongPassword123'],
-            'with spaces' => ['Strong Password@123'],           
+            'with spaces' => ['Strong Password@123'],
             'with minimum length of 8' => ['Abc@123', [
                 'MinimumLength' => 8]],
             'without capital case' => ['strong@123', [
