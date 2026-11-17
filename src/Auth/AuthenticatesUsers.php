@@ -48,6 +48,26 @@ trait AuthenticatesUsers
     use BaseAuthTrait;
 
     /**
+     * The parameter name for the username field.
+     */
+    private string $paramUsername;
+
+    /**
+     * The parameter name for the password field.
+     */
+    private string $paramPassword;
+
+    /**
+     * The parameter name for the session token field.
+     */
+    private string $sessionTokenParam;
+
+    /**
+     * The parameter name for the device key field.
+     */
+    private string $deviceKeyParam;
+
+    /**
      * Pulls list of groups attached to a user in Cognito
      *
      * @param string $username
@@ -76,7 +96,7 @@ trait AuthenticatesUsers
         } //Try-catch ends
 
         return $groups;
-    } //End if
+    } //Function ends
 
     /**
      * Attempt to log the user into the application.
@@ -93,12 +113,18 @@ trait AuthenticatesUsers
         CognitoAuthFlowTypes $authFlow = CognitoAuthFlowTypes::USER_PASSWORD_AUTH,
         string $paramUsername='email',
         string $paramPassword='password',
+        string $sessionTokenParam = 'session_token',
         string $deviceKeyParam = 'device_key')
     {
         // Initialize variables
         $returnValue = null;
 
         try {
+            $this->paramUsername = $paramUsername;
+            $this->paramPassword = $paramPassword;
+            $this->deviceKeyParam = $deviceKeyParam;
+            $this->sessionTokenParam = $sessionTokenParam;
+
             // Validate Cognito auth flow
             $this->validateCognitoFlow($authFlow);
 
@@ -107,16 +133,9 @@ trait AuthenticatesUsers
 
             //Validate request
             $validator = Validator::make(
-                $request->only([
-                    $paramUsername,
-                    $paramPassword,
-                    $deviceKeyParam
-                ]),
-                [
-                    $paramUsername => 'required|string',
-                    $paramPassword => ['required', Password::defaults()],
-                    $deviceKeyParam => 'sometimes|string'
-                ]);
+                $request->all(),
+                $this->rulesAttemptLogin($authFlow)
+            );
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
@@ -168,12 +187,6 @@ trait AuthenticatesUsers
         $returnValue = null;
 
         try {
-            // Validate Cognito auth flow
-            $this->validateCognitoFlow($authFlow);
-
-            //Raise Pre Auth Event
-            $this->callPreAuthEvent($request, $paramPassword);
-
             //Generate the SRP_A parameter if not present in the request
             if (!$request->has($paramPassword)) {
                 // Generate public and private ephemeral values
@@ -187,37 +200,17 @@ trait AuthenticatesUsers
                 ]);
             } //End if
 
-            //Validate request
-            $validator = Validator::make(
-                $request->only([$paramUsername, $paramPassword, $sessionTokenParam, $deviceKeyParam]),
-                [
-                    $paramUsername  => 'required|string',
-                    $paramPassword  => 'required|string',
-                    $sessionTokenParam => 'required|string',
-                    $deviceKeyParam    => 'sometimes|string'
-                ]);
-            if ($validator->fails()) {
-                throw new ValidationException($validator);
-            } //End if
-
-            // Get the authentication guard
-            $guard = $this->getGuard($request);
-
-            //Authenticate User
-            $response = Auth::guard($guard)->attempt(
-                    $request->all(), false,
-                    $paramUsername, $paramPassword,
-                    $authFlow
-                );
-
-            //Return response
-            $returnValue = $this->processClaimResponse($request, $response);
+            // Attempt login
+            return $this->attemptLogin(
+                $request,
+                $authFlow,
+                $paramUsername,
+                $paramPassword,
+                $sessionTokenParam,
+                $deviceKeyParam
+            );
         } catch (Exception $exception) {
             Log::error('AuthenticatesUsers:attemptLoginSRP:Exception');
-
-            //Rise Post Auth Failed Event
-            $this->callPostAuthErrorEvent($request, $exception, $paramPassword);
-
             throw $exception;
         } //Try-catch ends
 
@@ -664,6 +657,32 @@ trait AuthenticatesUsers
             $request->except($paramPassword),
             $exception, $request->ip()
         ));
+    } //Function ends
+
+    /**
+     * Get the attempt login validation rules.
+     *
+     * @param CognitoAuthFlowTypes $authFlow
+     * @return array
+     */
+    protected function rulesAttemptLogin(CognitoAuthFlowTypes $authFlow): array
+    {
+        $rules = [
+            $this->paramUsername => 'required|string',
+            $this->deviceKeyParam => 'sometimes|string',
+        ];
+
+        if ($authFlow === CognitoAuthFlowTypes::USER_PASSWORD_AUTH) {
+            $rules[$this->paramPassword] = ['required', Password::defaults()];
+            $rules[$this->sessionTokenParam] = 'sometimes|string';
+        } //End if
+
+        if ($authFlow === CognitoAuthFlowTypes::USER_SRP_AUTH) {
+            $rules[$this->paramPassword] = 'required|string';
+            $rules[$this->sessionTokenParam] = 'required|string';
+        } //End if
+
+        return $rules;
     } //Function ends
 
     /**
