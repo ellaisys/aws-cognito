@@ -39,7 +39,7 @@
                 {{ __('Click here to request code') }}</button>
 
             @if (Route::has('cognito.form.register.verify'))
-            <a href="{{ route('cognito.form.register.verify') }}" class="btn btn-link float-end">
+            <a href="{{ route('cognito.form.register.verify') }}" class="btn btn-link float-end px-4">
                 {{ __('Verify?') }}
             </a>
             @endif
