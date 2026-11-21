@@ -756,7 +756,7 @@
   .dropdown-menu-dark .dropdown-item:hover,
   .dropdown-menu-dark .dropdown-item:focus {
     color: #fff;
-    background-color: rgb(255 255 255 / 15%);
+    background-color: #495057;
   }
 
   .dropdown-menu-dark .dropdown-item.active,
