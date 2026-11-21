@@ -29,17 +29,17 @@ class StorageProvider
      *
      * @var string
      */
-    protected $tag = 'ellaisys.aws.cognito';
+    protected string $tag = 'ellaisys.aws.cognito';
 
     /**
      * @var bool
      */
-    protected $supportsTags;
+    protected ?bool $supportsTags = null;
 
     /**
      * @var string|null
      */
-    protected $laravelVersion;
+    protected ?string $laravelVersion = null;
 
     /**
      * Constructor.
