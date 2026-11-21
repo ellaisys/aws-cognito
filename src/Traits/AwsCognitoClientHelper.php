@@ -29,7 +29,8 @@ use Aws\CognitoIdentityProvider\Exception\CognitoIdentityProviderException;
  */
 class AwsCognitoChallengeException extends BadRequestHttpException
 {
-    public function __construct($message = 'Invalid challenge value', $code = 400, Throwable $previous = null)
+    public function __construct($message = 'Invalid challenge value',
+        $code = 400, ?Throwable $previous = null)
     {
         parent::__construct($message, $previous, $code);
     }

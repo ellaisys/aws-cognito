@@ -168,6 +168,10 @@ return [
     | This option defines the default Amazon Cognito User Pool password policy.
     | You can configure the password policy in your AWS Cognito User Pool and
     | provide the policy here as a Base64-encoded JSON string.
+    | Note that the minimum length is enforced to be at least 6 characters and
+    | whitespace is not allowed in the password. For more information, refer to
+    | the AWS Cognito documentation for password policies.
+    | https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-cognito-userpool-passwordpolicy.html
     |
     | The default policy is:
     |
@@ -182,6 +186,20 @@ return [
     |
     */
     'password_policy' => (array) json_decode(base64_decode(env('AWS_COGNITO_PASSWORD_POLICY', 'eyJNaW5pbXVtTGVuZ3RoIjo4LCJSZXF1aXJlVXBwZXJjYXNlIjp0cnVlLCJSZXF1aXJlTG93ZXJjYXNlIjp0cnVlLCJSZXF1aXJlTnVtYmVycyI6dHJ1ZSwiUmVxdWlyZVN5bWJvbHMiOnRydWUsIlRlbXBvcmFyeVBhc3N3b3JkVmFsaWRpdHlEYXlzIjo3fQ=='))),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cognito Password Uncompromised Check
+    |--------------------------------------------------------------------------
+    | This option controls whether the password uncompromised check is enabled.
+    | Set this to true to enable the check, or false to disable it.
+    | In production environments, it is recommended to enable this check to
+    | ensure that passwords are not compromised.
+    |
+    | The default value is set to false.
+    |
+    */
+    'password_uncompromised_check' => (bool) env('AWS_COGNITO_PASSWORD_UNCOMPROMISED_CHECK', false),
 
     /*
     |--------------------------------------------------------------------------

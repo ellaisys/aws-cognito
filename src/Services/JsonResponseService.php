@@ -61,7 +61,6 @@ class JsonResponseService
             ->setStatusCode($statusCode);
     } //Function end
 
-
     /**
      * @param array $resource
      * @param int $code
@@ -70,7 +69,7 @@ class JsonResponseService
      */
     public function fail($exception, array $resource = [],
         $statusCode = Response::HTTP_BAD_REQUEST,
-        string $message = null, string $errorKey = null)
+        ?string $message = null, ?string $errorKey = null)
     {
         return $this->putAdditionalMeta(
                 $resource, 'error', $exception,
@@ -79,7 +78,6 @@ class JsonResponseService
             ->response()
             ->setStatusCode($statusCode);
     } //Function end
-
 
     /**
      * @param array $resource
@@ -94,7 +92,6 @@ class JsonResponseService
             ->setStatusCode($code);
     } //Function end
 
-
     /**
      * @param $resource
      * @param $status
@@ -103,7 +100,7 @@ class JsonResponseService
      */
     private function putAdditionalMeta($resource, $status, $e = null,
         $statusCode = Response::HTTP_BAD_REQUEST,
-        string $message = null, string $errorKey = null)
+        ?string $message = null, ?string $errorKey = null)
     {
         $meta   = [
             'message'        => $message,

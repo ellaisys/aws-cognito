@@ -15,11 +15,10 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 use Ellaisys\Cognito\AwsCognitoClient;
-use Ellaisys\Cognito\AwsCognitoUserPool;
 use Ellaisys\Cognito\Enums\CognitoUserStatusTypes;
 
 use Exception;
@@ -30,11 +29,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 trait ResetsPasswords
 {
     use BaseAuthTrait;
-
-    /**
-     * private variable for password policy
-     */
-    private $passwordPolicy = null;
 
     /**
      * Passed params
@@ -65,13 +59,8 @@ trait ResetsPasswords
             $this->paramToken = $paramToken;
             $this->paramPassword = $paramPassword;
 
-            //Get the password policy
-            $this->passwordPolicy = app()->make(AwsCognitoUserPool::class)->getPasswordPolicy(true);
-
             //Validate request
-            $validator = Validator::make($request->all(), $this->rules(), [
-                'regex' => $this->passwordPolicy['message'],
-            ]);
+            $validator = Validator::make($request->all(), $this->rules());
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             } //End if
@@ -150,7 +139,7 @@ trait ResetsPasswords
             $this->paramToken       => 'required_without:' . $this->paramCode,
             $this->paramCode        => 'required_without:' . $this->paramToken,
             $this->paramUsername    => 'required|email',
-            $this->paramPassword    => ['required', 'confirmed', 'regex:' . $this->passwordPolicy['regex']],
+            $this->paramPassword    => ['required', 'confirmed', Password::defaults()],
         ];
     } // Function ends
 } // Trait ends

@@ -46,11 +46,17 @@ AWS_COGNITO_REGISTRATION_ENABLED=true //optional - default value is false.
 AWS_COGNITO_DEFAULT_USER_GROUP="Customers" //optional - default value is null.
 
 AWS_COGNITO_FORCE_NEW_USER_PASSWORD=true //optional - default value is false.
+AWS_COGNITO_PASSWORD_UNCOMPROMISED_CHECK=true //optional - default value is false.
 
 # Configuration for user invitation only
 AWS_COGNITO_NEW_USER_MESSAGE_ACTION="SUPPRESS" //optional - default value is null.
 AWS_COGNITO_FORCE_NEW_USER_EMAIL_VERIFIED=true //optional - default value is false.
 ```
+
+The package provides support for enforcing the AWS Cognito password policy, including checks for minimum and maximum length, case requirements, numbers, symbols, and uncompromised passwords. The behavior of the uncompromised password check can be controlled using the `AWS_COGNITO_PASSWORD_UNCOMPROMISED_CHECK` environment key. This allows you to enable or disable the uncompromised password check as per your application's security requirements.
+
+In case you enable the `AWS_COGNITO_PASSWORD_UNCOMPROMISED_CHECK` environment key, the package will enforce the uncompromised password check during all password validation processes. This may impact existing users who have passwords that do not meet the uncompromised criteria.
+
 
 ## Features
 

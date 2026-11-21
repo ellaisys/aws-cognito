@@ -88,6 +88,7 @@ abstract class TestCase extends OrchestraTestCase
         Config::set('cognito.registration_enabled', true);
         Config::set('cognito.allow_phone_number', false);
         Config::set('cognito.force_new_user_password', false);
+        Config::set('cognito.password_uncompromised_check', false);
         Config::set('cognito.mfa_setup', 'OFF');
         Config::set('cognito.mfa_type', ['SOFTWARE_TOKEN_MFA']);
         Config::set('cognito.desired_delivery_mediums', ['EMAIL']);

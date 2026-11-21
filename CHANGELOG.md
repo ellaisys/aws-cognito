@@ -3,6 +3,11 @@
 > [!NOTE]
 > Last Updated: <!-- AUTO:last_updated -->2026-11-04<!-- /AUTO:last_updated -->
 
+## [Release 56 (tag v2.0.12)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.12) - 2026-11-30
+- Feat: Issue [#158](https://github.com/ellaisys/aws-cognito/issues/158) Implement the Laravel vallidation rules for AWS Cognito password policy. Update the test cases accordingly.
+- Feat: Add support for uncompromised password check using `AWS_COGNITO_PASSWORD_UNCOMPROMISED_CHECK` environment key.
+- Doc: Update documentation to include details about the uncompromised password check.
+
 ## [Release 55 (tag v2.0.11)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.11) - 2026-11-04
 - Fix: Issue [#160](https://github.com/ellaisys/aws-cognito/issues/160) Security vulnerability resolved.
 - Fix: Improve test coverage and reliability for security-related features. Coverage is now over 80%.

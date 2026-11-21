@@ -28,6 +28,7 @@ This document provides guidance on configuring the AWS Cognito service and the L
 
     + [Session Storage Configurations](#session-storage-configurations)
         * DynamoDB Storage
+        * Memcached Storage
 
 - [References](#references)
 
@@ -281,9 +282,11 @@ class User extends Authenticatable
 
 ### *Session Storage Configurations*
 
-The AWS Cognito service provider uses Laravel's built-in session management system to manage the session storage. By default, the session storage is set to `file` driver. You can change the session storage driver to `database`,  `dynamodb` in your `.env` file.
+The AWS Cognito service provider uses Laravel's built-in session management system to manage the session storage. By default, the session storage is set to `file` driver. You can change the session storage driver to `database`,  `dynamodb`, or `memcached` in your `.env` file.
 
-This package supports both `database` and `dynamodb` session storage drivers. You can choose the one that best suits your needs.
+This package supports `file`, `database`, `dynamodb`, and `memcached` session storage drivers. You can choose the one that best suits your needs.
+
+The `dynamodb` and `memcached` session additional configurations are required to properly set up the session storage. The Laravel documentation provides further details on configuring these drivers.
 
 ##### *DynamoDB Storage*
 If you have a deployment architecture, that involves multiple servers and you want to maintain the Sessions or Tokens across the servers, you can use the AWS DynamoDB.
@@ -319,6 +322,33 @@ DYNAMODB_ENDPOINT="https://dynamodb.us-west-2.amazonaws.com" // You can change t
 ```
 
 Refer the [AWS DynamoDB Documentation](https://docs.aws.amazon.com/general/latest/gr/ddb.html) and refer the endpoints provided in **Service endpoints** section.
+
+
+#### *Memcached Storage*
+Memcached is a high-performance, distributed memory caching system that can be used to store session data. If you want to use Memcached for session storage, you need to configure it in your `.env` file. This package supports Memcached as a session and cache storage driver.
+
+You will be required to enable the PHP Memcached extension in your server environment to use Memcached as a session and cache storage driver.
+
+**Update the .env file for Memcached configurations**
+
+Add/Edit the following fields to your `.env` file and set the values according to your Memcached settings:
+
+```env
+# Cache Configuration
+CACHE_DRIVER="memcached"
+
+# Session Configuration
+SESSION_DRIVER="memcached"
+SESSION_LIFETIME=120
+SESSION_DOMAIN="set-your-domain-name" //The domain name can be as per your preference
+SESSION_SECURE_COOKIE=true
+
+# Memcached Configuration
+MEMCACHED_HOST="127.0.0.1"
+MEMCACHED_PORT=11211
+```
+
+In case you are using SASL authentication with Memcached, you need to provide additional configuration options such as `MEMCACHED_USERNAME` and `MEMCACHED_PASSWORD` in your `.env` file.
 
 
 ## References

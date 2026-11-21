@@ -59,7 +59,7 @@ class AwsCognitoClaim
      *
      * @return void
      */
-    public function __construct(AwsResult $result, Authenticatable $user=null) {
+    public function __construct(AwsResult $result, ?Authenticatable $user=null) {
         try {
             $authResult = $result['AuthenticationResult'];
             if (!is_array($authResult)) {

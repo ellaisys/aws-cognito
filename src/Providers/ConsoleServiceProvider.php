@@ -25,15 +25,17 @@ class ConsoleServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands($this->provides());
         }
-    }
+    } //Function ends
 
     public function provides(): array
     {
         return self::defaultCommands()->toArray();
-    }
+    } //Function ends
 
     /**
      * Get the package default commands.
+     *
+     * @return Collection
      */
     public static function defaultCommands(): Collection
     {
