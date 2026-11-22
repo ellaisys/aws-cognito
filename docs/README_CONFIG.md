@@ -21,11 +21,12 @@ This document provides guidance on configuring the AWS Cognito service and the L
         * Support for App Client without Secret Enabled
 
     + [Changes in Auth Configurations](#changes-in-auth-configurations)
-    + [Publishing Configurations](#publishing-configurations)
+    + [Publishing Configurations - Optional](#publishing-configurations-optional)
     + [Database Configurations](#database-configurations)
     + [Model Configurations](#model-configurations)
         * User Model
 
+    + [Routes and Web Views Configuration](README_ROUTES.md)
     + [Session Storage Configurations](#session-storage-configurations)
         * DynamoDB Storage
         * Memcached Storage
@@ -180,10 +181,14 @@ In order to use AWS Cognito as your authentication driver, you will need to make
 
 ### *Publishing Configurations* (Optional)
 
+The AWS Cognito package comes with a default configuration file that contains various settings for the package. Most of the time, the default configuration should work fine, but you may not always need to publish and modify it to suit your application's specific requirements. Changes to the configuration file should be made only if you need to customize the behavior of the package.
+
 You can publish the AWS Cognito configuration file using the following command:
 ```sh
 php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="config"
 ```
+
+The published configuration file will be located in the `config` directory of your Laravel application as `cognito.php`. You can modify this file to customize the behavior of the AWS Cognito package according to your application's requirements.
 
 
 ### *Database Configurations*
