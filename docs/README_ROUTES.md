@@ -146,37 +146,7 @@ POST      cognito/login/passkey/challenge ....... cognito.action.auth.passkey.ch
 
 ## Web Views and Components
 
-The package provides preconfigured blade views and components, for quick development. The views are based on Bootstrap stylesheet framework and can be customized as needed. It supports [Bootstrap v5.3](https://getbootstrap.com/docs/5.3) out of the box. 
-
-In case you are using Tailwind CSS, you may need to customize the views accordingly. The package does not provide Tailwind-specific views out of the box, so you will need to adapt the existing Bootstrap-based views to match your Tailwind setup. However, we provide bootstrap to tailwind conversion guidance and library to assist with the conversion.
-
-If you are using Tailwind CSS v4, you may use the provided bootstrap to tailwind conversion library to adapt the views accordingly. For using the conversion library modify the `resources/css/app.css` file to include the necessary Tailwind directives and ensure the conversion library is properly configured.
-
-```css
-@import 'tailwindcss';
-
-/* AWS Cognito package styles for Bootstrap-Tailwind integration */
-@import "../../vendor/ellaisys/aws-cognito/resources/css/bootstrap-tailwind.css";
-...
-```
-
-Similarly, for the JavaScript part, you may need to include the necessary Bootstrap-Tailwind integration scripts in your `resources/js/app.js` file to ensure proper functionality of the converted views.
-```javascript
-import 'bootstrap';
-
-/* AWS Cognito package scripts for Bootstrap-Tailwind integration */
-import '../../vendor/ellaisys/aws-cognito/resources/js/bootstrap-tailwind.js';
-...
-```
-
-After including the necessary CSS and JavaScript files for the Bootstrap-Tailwind integration, you should compile your assets using Laravel Mix to ensure that the changes take effect. This will allow your application to properly utilize the converted views with Tailwind CSS.
-To compile your assets using Laravel Mix, you can run the following command in your terminal:
-
-```bash
-npm run dev
-```
-
-This will process your CSS and JavaScript files, including the Bootstrap-Tailwind integration, and generate the necessary compiled assets for your application.
+The package provides Laravel blade view components for handling various web interactions related to AWS Cognito. These view components have php/html blade code and javascript functions to handles multiple web components, including MFA challenge verification within your application.
 
 If you need to overwrite the views that ship with this package, you can publish them using the vendor:publish Artisan command make required changes.
 

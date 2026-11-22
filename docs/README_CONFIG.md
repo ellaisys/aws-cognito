@@ -26,6 +26,10 @@ This document provides guidance on configuring the AWS Cognito service and the L
     + [Model Configurations](#model-configurations)
         * User Model
 
+    + [Vite Configurations](#vite-configurations)
+        * [Bootstrap Support](#bootstrap-support)
+        * [Tailwind CSS Support](#tailwind-css-support)
+
     + [Routes and Web Views Configuration](README_ROUTES.md)
     + [Session Storage Configurations](#session-storage-configurations)
         * DynamoDB Storage
@@ -284,6 +288,57 @@ class User extends Authenticatable
 
 ```
 
+
+### *Vite Configurations*
+
+> [!IMPORTANT]
+> We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to handle MFA challenge verification within your application.
+
+To properly integrate the AWS Cognito package with your web application using Vite, you need to ensure that the necessary JavaScript and CSS assets are correctly handled. Add the following code to your `app.js` file in your project's `resources/js` folder:
+
+Building the blade component with Vite ensures that the necessary JavaScript and CSS assets are properly loaded, allowing the component to function correctly within your web application. To complete the setup, make sure to run the Vite build process using the appropriate command for your environment, such as `npm run dev` for development or `npm run build` for production.
+
+#### Bootstrap Support
+
+The package provides preconfigured blade views and components, for quick development. The views are based on Bootstrap stylesheet framework and can be customized as needed. It supports [Bootstrap v5.3](https://getbootstrap.com/docs/5.3) out of the box.
+
+```javascript
+// app.js
+import './bootstrap';
+import { Modal } from 'bootstrap';
+
+window.Modal = Modal;
+```
+
+This ensures that the Bootstrap modal functionality is available globally in your application, allowing the MFA blade components to function correctly.
+
+#### Tailwind CSS Support
+
+If you are using Tailwind CSS with Vite, ensure that your Vite configuration properly handles the Tailwind CSS files and any necessary PostCSS plugins. This will allow the blade component to correctly apply the Tailwind styles alongside the Bootstrap modal functionality.
+
+In case you are using Tailwind CSS, you may need to customize the views accordingly. The package does not provide Tailwind-specific views out of the box, so you will need to adapt the existing Bootstrap-based views to match your Tailwind setup. However, we provide bootstrap to tailwind conversion library to assist so that the conversion process is easier and more streamlined.
+
+If you are using Tailwind CSS v4, you may use the provided bootstrap to tailwind conversion library to adapt the views accordingly. For using the conversion library modify the `resources/css/app.css` and `resources/js/app.js` files to include the necessary Tailwind directives and ensure the conversion library is properly configured.
+
+```css
+@import 'tailwindcss';
+
+/* AWS Cognito package styles for Bootstrap-Tailwind integration */
+@import "../../vendor/ellaisys/aws-cognito/resources/css/bootstrap-tailwind.css";
+...
+```
+
+Similarly, for the JavaScript part, you may need to include the necessary Bootstrap-Tailwind integration scripts in your `resources/js/app.js` file to ensure proper functionality of the converted views.
+
+```javascript
+import 'bootstrap';
+
+/* AWS Cognito package scripts for Bootstrap-Tailwind integration */
+import '../../vendor/ellaisys/aws-cognito/resources/js/bootstrap-tailwind.js';
+import { Modal } from '../../vendor/ellaisys/aws-cognito/resources/js/bootstrap-tailwind.js';
+window.Modal = Modal;
+...
+```
 
 ### *Session Storage Configurations*
 
