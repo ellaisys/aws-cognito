@@ -224,7 +224,7 @@ class Modal {
         this.createBackdrop();
 
         // Force layout before applying the visible state so CSS transitions run.
-        void this.element.offsetHeight;
+        this.element.offsetHeight;
 
         this.element.classList.add('show');
         this.backdrop?.classList.add('show');
@@ -249,16 +249,18 @@ class Modal {
         this.element.setAttribute('aria-hidden', 'true');
         this.element.removeAttribute('aria-modal');
 
-        Promise.all([
-            Modal.waitForTransition(this.element),
-            Modal.waitForTransition(this.backdrop)
-        ]).then(() => {
+        const completeHide = () => {
             if (transitionToken !== this.transitionToken || this.isDisposed) {
                 return;
             }
 
             this.completeHide();
-        });
+        };
+
+        Promise.all([
+            Modal.waitForTransition(this.element),
+            Modal.waitForTransition(this.backdrop)
+        ]).then(completeHide, completeHide);
     }
 
     toggle() {
@@ -287,7 +289,7 @@ class Modal {
     createBackdrop() {
         if (
             this.backdrop ||
-            this.element.getAttribute('data-bs-backdrop') === 'false'
+            this.element.dataset.bsBackdrop === 'false'
         ) {
             return;
         }
@@ -436,9 +438,14 @@ class Modal {
 
         this.element.classList.add('modal-static');
 
-        Modal.waitForTransition(dialog).then(() => {
+        const removeStaticClass = () => {
             this.element.classList.remove('modal-static');
-        });
+        };
+
+        Modal.waitForTransition(dialog).then(
+            removeStaticClass,
+            removeStaticClass
+        );
     }
 
     static getInstance(element) {
@@ -514,7 +521,7 @@ class Modal {
             return;
         }
 
-        const backdropOption = modal.getAttribute('data-bs-backdrop');
+        const backdropOption = modal.dataset.bsBackdrop;
 
         if (backdropOption === 'static') {
             instance.handleStaticBackdrop();
@@ -543,7 +550,7 @@ class Modal {
             if (trigger) {
                 event.preventDefault();
 
-                const target = trigger.getAttribute('data-bs-target')
+                const target = trigger.dataset.bsTarget
                     || trigger.getAttribute('href');
 
                 if (target?.startsWith('#')) {
@@ -592,7 +599,7 @@ class Modal {
             }
 
             if (event.key === 'Escape') {
-                if (instance.element.getAttribute('data-bs-keyboard') === 'false') {
+                if (instance.element.dataset.bsKeyboard === 'false') {
                     return;
                 }
 
