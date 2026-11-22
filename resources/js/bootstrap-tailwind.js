@@ -224,11 +224,15 @@ class Modal {
         this.createBackdrop();
 
         // Force layout before applying the visible state so CSS transitions run.
-        this.element.offsetHeight;
+        this.forceReflow(this.backdrop);
 
         this.element.classList.add('show');
         this.backdrop?.classList.add('show');
         this.focusInitialElement();
+    }
+
+    forceReflow(element) {
+        return element.offsetHeight;
     }
 
     hide() {
@@ -299,7 +303,7 @@ class Modal {
         document.body.appendChild(this.backdrop);
 
         // Apply the initial backdrop state before adding .show.
-        void this.backdrop.offsetHeight;
+        this.forceReflow(this.backdrop);
     }
 
     focusableElements() {
@@ -339,7 +343,7 @@ class Modal {
         }
 
         const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
+        const lastElement = focusableElements.at(-1);
 
         if (event.shiftKey && document.activeElement === firstElement) {
             event.preventDefault();
