@@ -28,134 +28,56 @@ class AwsCognitoUserPool
      *
      * @var \Ellaisys\Cognito\AwsCognitoUserPool
      */
-    private $dataUserPool;
+    private array $dataUserPool;
 
     /**
      * The AWS Cognito User Pool data.
      *
      * @var \Ellaisys\Cognito\AwsCognitoClient
      */
-    private $client;
-
+    private AwsCognitoClient $client;
     
     /**
      * Create a new AWS Cognito User Pool instance.
      */
-    public function __construct(AwsCognitoClient $client)
+    public function __construct(AwsCognitoClient $client,
+        ?string $userPoolId = null)
     {
         $this->client = $client;
-        $response = $client->describeUserPool();
-        $this->dataUserPool = $response->get('UserPool');
+        $this->dataUserPool = $this->getDataUserPool($userPoolId);
     } //Function ends
 
-
     //Setter and Getter
-    public function getDataUserPool()
+    final public function getDataUserPool(?string $userPoolId = null): array
     {
         if(empty($this->dataUserPool)) {
-            $response = $this->client->describeUserPool();
+            $response = $this->client->describeUserPool($userPoolId);
             $this->dataUserPool = $response->get('UserPool');
         } //If ends
         return $this->dataUserPool;
     } //Function ends
-    public function setDataUserPool($dataUserPool)
+    final public function setDataUserPool(array $dataUserPool): void
     {
         $this->dataUserPool = $dataUserPool;
     } //Function ends
 
-
     /**
      * Get a Password Policy.
+     * @param string|null $userPoolId
+     *
+     * @return array
      */
-    public function getPasswordPolicy(bool $regex = false)
+    final public function getPasswordPolicy(?string $userPoolId = null): array
     {
         if(empty($this->dataUserPool)) {
-            $this->getDataUserPool();
+            $this->getDataUserPool($userPoolId);
         } //If ends
 
         if (!isset($this->dataUserPool['Policies']['PasswordPolicy']) &&
             !is_array($this->dataUserPool['Policies']['PasswordPolicy'])) {
             throw new AwsCognitoException('Password policy not found in user pool.');
         } //If ends
-        $passwordPolicy = $this->dataUserPool['Policies']['PasswordPolicy'];
-
-        if ($regex) {
-            return $this->processPolicy($passwordPolicy);
-        } else {
-            return $passwordPolicy;
-        } //If ends
-    } //Function ends
-
-    /**
-     * Process Password Policy.
-     *
-     * @param array $passwordPolicy
-     *
-     * @return array
-     */
-    private function processPolicy($passwordPolicy) {
-        $regexString = '/^';
-        $messageText = '';
-        foreach ($passwordPolicy as $key => $value) {
-            switch ($key) {
-                case 'MinimumLength':
-                    $minValue = $value;
-                    $messageText .= 'minimum length of ' . $value . ', ';
-                    break;
-                
-                case 'RequireUppercase':
-                    if ($value) {
-                        $regexString .= '(?=.*[A-Z])';
-                        $messageText .= 'one uppercase letter, ';
-                    } //If ends
-                    break;
-
-                case 'RequireLowercase':
-                    if ($value) {
-                        $regexString .= '(?=.*[a-z])';
-                        $messageText .= 'one lowercase letter, ';
-                    } //If ends
-                    break;
-
-                case 'RequireNumbers':
-                    if ($value) {
-                        $regexString .= '(?=.*\d)';
-                        $messageText .= 'one number, ';
-                    } //If ends
-                    break;
-
-                case 'RequireSymbols':
-                    if ($value) {
-                        //Generate the regex for special characters
-                        $regexString .= '(?=.*[\^$*.\[\]{}\(\)?\-\"!@#%&\/,><\':;|_~`=+])';
-                        $messageText .= 'one special character, ';
-                    } //If ends
-                    break;
-                
-                default:
-                    # code...
-                    break;
-            } //Switch ends
-        } //Foreach ends
-        $regexString .= '([^\s]){' . $minValue . ',99}';
-        $regexString .= '$/';
-        return ['regex' => $regexString, 'message' => $messageText];
-    } //Function ends
-
-
-    /**
-     * Get Schema Attributes.
-     */
-    public function getSchemaAttributes()
-    {
-        if(empty($this->dataUserPool)) {
-            $this->getDataUserPool();
-        } //If ends
-
-        if (!isset($this->dataUserPool['SchemaAttributes'])) {
-            throw new AwsCognitoException('Schema attributes not found in user pool.');
-        } //If ends
-        return $this->dataUserPool['SchemaAttributes'];
+        return $this->dataUserPool['Policies']['PasswordPolicy'];
     } //Function ends
 
 } //Class ends

@@ -5,9 +5,6 @@
 
 This package provides the Multi-Factor Authentication (MFA) functionality using AWS Cognito. This documentation provides the necessary information to implement the MFA functionality in your Laravel application.
 
-> [!IMPORTANT]
-> We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to handle MFA challenge verification within your application.
-
 
 ## Contents
 
@@ -146,22 +143,6 @@ The package provides a blade component for
 2. `MFA management`
 
 The MFA based authentication component is integrated into the `challenge` component.
-
-### *Vite Configuration*
-
-The blade component for the web application requires Vite to be properly configured to handle the necessary scripts and assets. Ensure that your Vite setup includes the appropriate configuration for handling the component's JavaScript and CSS files. The component uses bootstrap version 5.3 with Modal support.
-
-Add the following code to your `app.js` file in your project's `resources/js` folder to ensure proper handling of the component's assets:
-
-```javascript
-// app.js
-import './bootstrap';
-import { Modal } from 'bootstrap';
-
-window.Modal = Modal;
-```
-Building the blade component with Vite ensures that the necessary JavaScript and CSS assets are properly loaded, allowing the component to function correctly within your web application. To complete the setup, make sure to run the Vite build process using the appropriate command for your environment, such as `npm run dev` for development or `npm run build` for production.
-
 
 ### *MFA based Authentication*
 

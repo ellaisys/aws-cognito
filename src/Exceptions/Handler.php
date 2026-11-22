@@ -301,7 +301,7 @@ class Handler extends ExceptionHandler
     protected function JsonResponseBuilder(Throwable $e, $request,
         $statusCode,
         string $message,
-        string $errorKey = null): mixed
+        ?string $errorKey = null): mixed
     {
         return $this->response->fail(
             $e,
@@ -327,7 +327,7 @@ class Handler extends ExceptionHandler
     protected function WebResponseBuilder(Throwable $e, $request,
         $statusCode,
         string $message,
-        string $errorKey = null,
+        ?string $errorKey = null,
         bool $isRedirectToLogin = false): mixed
     {
         $systemErrorMsg = null;

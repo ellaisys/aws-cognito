@@ -21,13 +21,19 @@ This document provides guidance on configuring the AWS Cognito service and the L
         * Support for App Client without Secret Enabled
 
     + [Changes in Auth Configurations](#changes-in-auth-configurations)
-    + [Publishing Configurations](#publishing-configurations)
+    + [Publishing Configurations - Optional](#publishing-configurations-optional)
     + [Database Configurations](#database-configurations)
     + [Model Configurations](#model-configurations)
         * User Model
 
+    + [Vite Configurations](#vite-configurations)
+        * [Bootstrap Support](#bootstrap-support)
+        * [Tailwind CSS Support](#tailwind-css-support)
+
+    + [Routes and Web Views Configuration](README_ROUTES.md)
     + [Session Storage Configurations](#session-storage-configurations)
         * DynamoDB Storage
+        * Memcached Storage
 
 - [References](#references)
 
@@ -179,10 +185,14 @@ In order to use AWS Cognito as your authentication driver, you will need to make
 
 ### *Publishing Configurations* (Optional)
 
+The AWS Cognito package comes with a default configuration file that contains various settings for the package. Most of the time, the default configuration should work fine, but you may not always need to publish and modify it to suit your application's specific requirements. Changes to the configuration file should be made only if you need to customize the behavior of the package.
+
 You can publish the AWS Cognito configuration file using the following command:
 ```sh
 php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="config"
 ```
+
+The published configuration file will be located in the `config` directory of your Laravel application as `cognito.php`. You can modify this file to customize the behavior of the AWS Cognito package according to your application's requirements.
 
 
 ### *Database Configurations*
@@ -279,11 +289,64 @@ class User extends Authenticatable
 ```
 
 
+### *Vite Configurations*
+
+> [!IMPORTANT]
+> We have released the **laravel blade components** as a feature from V2.0.6. These view components have php/html blade code and javascript functions to handle MFA challenge verification within your application.
+
+To properly integrate the AWS Cognito package with your web application using Vite, you need to ensure that the necessary JavaScript and CSS assets are correctly handled. Add the following code to your `app.js` file in your project's `resources/js` folder:
+
+Building the blade component with Vite ensures that the necessary JavaScript and CSS assets are properly loaded, allowing the component to function correctly within your web application. To complete the setup, make sure to run the Vite build process using the appropriate command for your environment, such as `npm run dev` for development or `npm run build` for production.
+
+#### Bootstrap Support
+
+The package provides preconfigured blade views and components, for quick development. The views are based on Bootstrap stylesheet framework and can be customized as needed. It supports [Bootstrap v5.3](https://getbootstrap.com/docs/5.3) out of the box.
+
+```javascript
+// app.js
+import './bootstrap';
+import { Modal } from 'bootstrap';
+
+window.Modal = Modal;
+```
+
+This ensures that the Bootstrap modal functionality is available globally in your application, allowing the MFA blade components to function correctly.
+
+#### Tailwind CSS Support
+
+If you are using Tailwind CSS with Vite, ensure that your Vite configuration properly handles the Tailwind CSS files and any necessary PostCSS plugins. This will allow the blade component to correctly apply the Tailwind styles alongside the Bootstrap modal functionality.
+
+In case you are using Tailwind CSS, you may need to customize the views accordingly. The package does not provide Tailwind-specific views out of the box, so you will need to adapt the existing Bootstrap-based views to match your Tailwind setup. However, we provide bootstrap to tailwind conversion library to assist so that the conversion process is easier and more streamlined.
+
+If you are using Tailwind CSS v4, you may use the provided bootstrap to tailwind conversion library to adapt the views accordingly. For using the conversion library modify the `resources/css/app.css` and `resources/js/app.js` files to include the necessary Tailwind directives and ensure the conversion library is properly configured.
+
+```css
+@import 'tailwindcss';
+
+/* AWS Cognito package styles for Bootstrap-Tailwind integration */
+@import "../../vendor/ellaisys/aws-cognito/resources/css/bootstrap-tailwind.css";
+...
+```
+
+Similarly, for the JavaScript part, you may need to include the necessary Bootstrap-Tailwind integration scripts in your `resources/js/app.js` file to ensure proper functionality of the converted views.
+
+```javascript
+import 'bootstrap';
+
+/* AWS Cognito package scripts for Bootstrap-Tailwind integration */
+import '../../vendor/ellaisys/aws-cognito/resources/js/bootstrap-tailwind.js';
+import { Modal } from '../../vendor/ellaisys/aws-cognito/resources/js/bootstrap-tailwind.js';
+window.Modal = Modal;
+...
+```
+
 ### *Session Storage Configurations*
 
-The AWS Cognito service provider uses Laravel's built-in session management system to manage the session storage. By default, the session storage is set to `file` driver. You can change the session storage driver to `database`,  `dynamodb` in your `.env` file.
+The AWS Cognito service provider uses Laravel's built-in session management system to manage the session storage. By default, the session storage is set to `file` driver. You can change the session storage driver to `database`,  `dynamodb`, or `memcached` in your `.env` file.
 
-This package supports both `database` and `dynamodb` session storage drivers. You can choose the one that best suits your needs.
+This package supports `file`, `database`, `dynamodb`, and `memcached` session storage drivers. You can choose the one that best suits your needs.
+
+The `dynamodb` and `memcached` session additional configurations are required to properly set up the session storage. The Laravel documentation provides further details on configuring these drivers.
 
 ##### *DynamoDB Storage*
 If you have a deployment architecture, that involves multiple servers and you want to maintain the Sessions or Tokens across the servers, you can use the AWS DynamoDB.
@@ -319,6 +382,33 @@ DYNAMODB_ENDPOINT="https://dynamodb.us-west-2.amazonaws.com" // You can change t
 ```
 
 Refer the [AWS DynamoDB Documentation](https://docs.aws.amazon.com/general/latest/gr/ddb.html) and refer the endpoints provided in **Service endpoints** section.
+
+
+#### *Memcached Storage*
+Memcached is a high-performance, distributed memory caching system that can be used to store session data. If you want to use Memcached for session storage, you need to configure it in your `.env` file. This package supports Memcached as a session and cache storage driver.
+
+You will be required to enable the PHP Memcached extension in your server environment to use Memcached as a session and cache storage driver.
+
+**Update the .env file for Memcached configurations**
+
+Add/Edit the following fields to your `.env` file and set the values according to your Memcached settings:
+
+```env
+# Cache Configuration
+CACHE_DRIVER="memcached"
+
+# Session Configuration
+SESSION_DRIVER="memcached"
+SESSION_LIFETIME=120
+SESSION_DOMAIN="set-your-domain-name" //The domain name can be as per your preference
+SESSION_SECURE_COOKIE=true
+
+# Memcached Configuration
+MEMCACHED_HOST="127.0.0.1"
+MEMCACHED_PORT=11211
+```
+
+In case you are using SASL authentication with Memcached, you need to provide additional configuration options such as `MEMCACHED_USERNAME` and `MEMCACHED_PASSWORD` in your `.env` file.
 
 
 ## References

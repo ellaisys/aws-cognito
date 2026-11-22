@@ -38,7 +38,7 @@ AWS_COGNITO_WEB_PREFIX="cognito"
 ## Features
 
 - [Preconfigured Routes & Controllers](#routes)
-- [Web Views and Components]()
+- [Web Views and Components](#web-views-and-components)
 
 
 ## Routes
@@ -49,7 +49,7 @@ AWS_COGNITO_WEB_PREFIX="cognito"
 To help faster implementations, we have now provided with routes for web and APIs in this package. This includes Controllers, Views and updated Configuration file. 
 
 In case you want to omit this feature, add a few lines into the AppServiceProvider to ignore the routes and controllers
-Refer the section: [Ignore the routes and controllers](#ignore-the-routes-and-controllers)
+Refer the section: [Ignore the routes, controllers, and views](#ignore-the-routes-controllers-and-views)
 
 You can overwrite the controllers. Just publish and modify them. The controllers for Web and APIs will be saved differently in the app/Http/Controllers directory, for finer control.
 
@@ -144,7 +144,22 @@ POST      cognito/login/passkey/challenge ....... cognito.action.auth.passkey.ch
 ```
 
 
-## Ignore the routes and controllers
+## Web Views and Components
+
+The package provides Laravel blade view components for handling various web interactions related to AWS Cognito. These view components have php/html blade code and javascript functions to handles multiple web components, including MFA challenge verification within your application.
+
+If you need to overwrite the views that ship with this package, you can publish them using the vendor:publish Artisan command make required changes.
+
+```bash
+php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="views"
+```
+
+The views reference a layout file. Modify the layout after publishing the file. If your own blade layout file has to be used, amend **AWS_COGNITO_VIEWS_LAYOUT** paramter with the name of the layout file. The default value is 'cognito::layouts.app' but you can change it to 'layouts.app' to point to your own app.blade.php in the resources/views/layouts folder.
+
+The new version of the package should work fine, however, if you need to ignore the views, you can make the necessary changes in the AppServiceProvider. Refer the section: [Ignore the routes, controllers, and views](#ignore-the-routes-controllers-and-views)
+
+
+## Ignore the routes, controllers, and views
 
 If you would like to prevent AWS Cognito's routes and/or views from running entirely, you may use the ignoreRoutes and ignoreViews methods provided by AWS Cognito. Typically, this method should be called in the register method of your AppServiceProvider:
 
@@ -160,18 +175,3 @@ public function register(): void
     AwsCognito::ignoreViews();  //Ignore the views provided by the package
 }
 ```
-
-
-## Web Views and Components
-
-The package provides preconfigured blade views and components, for quick development. The views are based on Bootstrap stylesheet.
-
-If you need to overwrite the views that ship with this package, you can publish them using the vendor:publish Artisan command make required changes.
-
-```bash
-php artisan vendor:publish --provider="Ellaisys\Cognito\Providers\AwsCognitoServiceProvider" --tag="views"
-```
-
-The views reference a layout file. Modify the layout after publishing the file. If your own blade layout file has to be used, amend **AWS_COGNITO_VIEWS_LAYOUT** paramter with the name of the layout file. The default value is 'cognito::layouts.app' but you can change it to 'layouts.app' to point to your own app.blade.php in the resources/views/layouts folder.
-
-The new version of the package should work fine, you might have to just add some lines into the AppServiceProvider. Refer the section: [Ignore the routes and controllers](#ignore-the-routes-and-controllers)

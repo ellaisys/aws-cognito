@@ -59,7 +59,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         //Set Laravel Version
         $this->setLaravelVersion();
@@ -77,7 +77,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
         $this->registerCognitoExceptionHandler();
     } //Function ends
 
-    public function boot()
+    public function boot(): void
     {
         //Register publishing
         $this->registerPublishing();
@@ -435,6 +435,7 @@ class AwsCognitoServiceProvider extends ServiceProvider
     protected function registerProviders(): void
     {
         $this->app->register(ConsoleServiceProvider::class);
+        $this->app->register(PasswordServiceProvider::class);
     } //Function ends
 
     /**
