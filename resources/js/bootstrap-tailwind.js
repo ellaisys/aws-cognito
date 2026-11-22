@@ -1,16 +1,45 @@
-
 /**
- * Bootstrap-compatible dropdown behaviour.
- * Requires the corresponding dropdown CSS.
+ * Bootstrap-compatible dropdown and modal behaviour.
+ * Lightweight vanilla JavaScript; no Bootstrap JS or Popper.js dependency.
+ *
+ * This is a focused compatibility layer, not a complete Bootstrap API.
  */
 
+const DROPDOWN_SELECTOR = '[data-bs-toggle="dropdown"]';
+const DROPDOWN_CONTAINER_SELECTOR = '.dropdown, .dropup, .dropend, .dropstart';
+const DROPDOWN_MENU_SELECTOR = '.dropdown-menu';
+const DROPDOWN_ITEM_SELECTOR = '.dropdown-item';
+
+const MODAL_SELECTOR = '.modal';
+const MODAL_TOGGLE_SELECTOR = '[data-bs-toggle="modal"]';
+const MODAL_DISMISS_SELECTOR = '[data-bs-dismiss="modal"]';
+const MODAL_BACKDROP_CLASS = 'modal-backdrop';
+
+const FOCUSABLE_SELECTOR = [
+    'a[href]',
+    'area[href]',
+    'button:not([disabled])',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    'iframe',
+    'object',
+    'embed',
+    '[contenteditable="true"]',
+    '[tabindex]:not([tabindex="-1"])'
+].join(',');
+
+/**
+ * Bootstrap-compatible dropdown controller.
+ */
 class Dropdown {
     static instances = new WeakMap();
+    static initialized = false;
 
     constructor(toggle) {
         this.toggle = toggle;
-        this.dropdown = toggle.closest('.dropdown, .dropup, .dropend, .dropstart');
-        this.menu = this.dropdown?.querySelector('.dropdown-menu');
+        this.dropdown = toggle.closest(DROPDOWN_CONTAINER_SELECTOR);
+        this.menu = this.dropdown?.querySelector(DROPDOWN_MENU_SELECTOR) ?? null;
 
         if (!this.dropdown || !this.menu) {
             return;
@@ -18,144 +47,169 @@ class Dropdown {
 
         Dropdown.instances.set(toggle, this);
 
-        this.toggle.addEventListener('click', (event) => {
-            event.preventDefault();
-            this.toggleMenu();
-        });
-    }
-
-    toggleMenu() {
-        this.isOpen() ? this.hide() : this.show();
+        if (!this.toggle.hasAttribute('aria-expanded')) {
+            this.toggle.setAttribute('aria-expanded', String(this.isOpen()));
+        }
     }
 
     show() {
-        // Close other open dropdowns first.
-        document.querySelectorAll('.dropdown-menu.show').forEach((menu) => {
-            if (menu !== this.menu) {
-                menu.classList.remove('show');
+        if (!this.menu || this.isOpen()) {
+            return;
+        }
 
-                const toggle = menu.closest('.dropdown, .dropup, .dropend, .dropstart')
-                    ?.querySelector('[data-bs-toggle="dropdown"]');
-
-                toggle?.setAttribute('aria-expanded', 'false');
-            }
-        });
-
+        Dropdown.closeAll(this.menu);
         this.menu.classList.add('show');
         this.toggle.setAttribute('aria-expanded', 'true');
     }
 
     hide() {
+        if (!this.menu || !this.isOpen()) {
+            return;
+        }
+
         this.menu.classList.remove('show');
         this.toggle.setAttribute('aria-expanded', 'false');
     }
 
+    toggleMenu() {
+        if (this.isOpen()) {
+            this.hide();
+            return;
+        }
+
+        this.show();
+    }
+
     isOpen() {
-        return this.menu.classList.contains('show');
+        return Boolean(this.menu?.classList.contains('show'));
+    }
+
+    static getInstance(toggle) {
+        return Dropdown.instances.get(toggle) ?? null;
+    }
+
+    static getOrCreateInstance(toggle) {
+        return Dropdown.getInstance(toggle) ?? new Dropdown(toggle);
+    }
+
+    static close(menu) {
+        menu.classList.remove('show');
+
+        const toggle = menu
+            .closest(DROPDOWN_CONTAINER_SELECTOR)
+            ?.querySelector(DROPDOWN_SELECTOR);
+
+        toggle?.setAttribute('aria-expanded', 'false');
+    }
+
+    static closeAll(exceptMenu = null) {
+        document.querySelectorAll(`${DROPDOWN_MENU_SELECTOR}.show`).forEach((menu) => {
+            if (menu !== exceptMenu) {
+                Dropdown.close(menu);
+            }
+        });
     }
 
     static init() {
-        document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach((toggle) => {
-            if (!Dropdown.instances.has(toggle)) {
-                new Dropdown(toggle);
+        if (Dropdown.initialized) {
+            return;
+        }
+
+        Dropdown.initialized = true;
+
+        // Delegation also supports dropdowns inserted after page initialization.
+        document.addEventListener('click', (event) => {
+            if (!(event.target instanceof Element)) {
+                return;
             }
+
+            const toggle = event.target.closest(DROPDOWN_SELECTOR);
+
+            if (toggle) {
+                event.preventDefault();
+                Dropdown.getOrCreateInstance(toggle).toggleMenu();
+                return;
+            }
+
+            const item = event.target.closest(DROPDOWN_ITEM_SELECTOR);
+
+            if (item) {
+                const menu = item.closest(DROPDOWN_MENU_SELECTOR);
+
+                if (menu) {
+                    Dropdown.close(menu);
+                }
+
+                return;
+            }
+
+            if (!event.target.closest(DROPDOWN_CONTAINER_SELECTOR)) {
+                Dropdown.closeAll();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            const openMenu = document.querySelector(`${DROPDOWN_MENU_SELECTOR}.show`);
+
+            if (!openMenu) {
+                return;
+            }
+
+            const toggle = openMenu
+                .closest(DROPDOWN_CONTAINER_SELECTOR)
+                ?.querySelector(DROPDOWN_SELECTOR);
+
+            Dropdown.close(openMenu);
+            toggle?.focus();
         });
     }
 }
 
-// Initialize dropdowns.
-document.addEventListener('DOMContentLoaded', () => {
-    Dropdown.init();
-});
-
-// Close dropdowns when clicking outside.
-document.addEventListener('click', (event) => {
-    document.querySelectorAll('.dropdown-menu.show').forEach((menu) => {
-        const dropdown = menu.closest('.dropdown, .dropup, .dropend, .dropstart');
-
-        if (!dropdown?.contains(event.target)) {
-            menu.classList.remove('show');
-
-            dropdown?.querySelector('[data-bs-toggle="dropdown"]')
-                ?.setAttribute('aria-expanded', 'false');
-        }
-    });
-});
-
-// Close dropdowns on Escape.
-document.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape') {
-        return;
-    }
-
-    document.querySelectorAll('.dropdown-menu.show').forEach((menu) => {
-        menu.classList.remove('show');
-
-        const toggle = menu.closest('.dropdown, .dropup, .dropend, .dropstart')
-            ?.querySelector('[data-bs-toggle="dropdown"]');
-
-        toggle?.setAttribute('aria-expanded', 'false');
-        toggle?.focus();
-    });
-});
-
-// Close dropdown after selecting an item.
-document.addEventListener('click', (event) => {
-    if (!event.target.closest('.dropdown-item')) {
-        return;
-    }
-
-    const dropdown = event.target.closest('.dropdown, .dropup, .dropend, .dropstart');
-
-    dropdown?.querySelector('.dropdown-menu')?.classList.remove('show');
-
-    dropdown?.querySelector('[data-bs-toggle="dropdown"]')
-        ?.setAttribute('aria-expanded', 'false');
-});
-
-
 /**
- * Bootstrap 5.3-compatible Modal
- *
- * Lightweight vanilla JavaScript implementation.
- * Does not require Bootstrap or Popper.js.
+ * Bootstrap-compatible modal controller.
  */
 class Modal {
     static instances = new WeakMap();
     static activeInstance = null;
+    static initialized = false;
     static bodyLocked = false;
-    static originalBodyPadding = '';
+    static originalBodyPaddingRight = '';
 
     constructor(element) {
+        if (!(element instanceof Element) || !element.matches(MODAL_SELECTOR)) {
+            throw new TypeError('Modal requires an element with the .modal class.');
+        }
+
         this.element = element;
         this.backdrop = null;
         this.isTransitioning = false;
         this.transitionToken = 0;
         this.previousFocus = null;
+        this.isDisposed = false;
 
         Modal.instances.set(element, this);
     }
 
-    // --------------------------------------------------
-    // Instance methods
-    // --------------------------------------------------
-
     show() {
-        ++this.transitionToken;
-        this.isTransitioning = false;
-
-        if (this.element.classList.contains('show')) {
+        if (this.isDisposed || this.element.classList.contains('show')) {
             return;
         }
 
-        // Only one modal can be open at a time.
+        this.cancelPendingOperations();
+
+        // Preserve the original focus target when switching between modals.
         if (Modal.activeInstance && Modal.activeInstance !== this) {
-            Modal.activeInstance._hideImmediately();
+            this.previousFocus = Modal.activeInstance.previousFocus;
+            Modal.activeInstance.hideImmediately();
+        } else {
+            this.previousFocus = document.activeElement;
         }
 
-        this.previousFocus = document.activeElement;
         Modal.activeInstance = this;
-
         this.lockBody();
 
         this.element.style.display = 'block';
@@ -169,29 +223,25 @@ class Modal {
 
         this.createBackdrop();
 
-        // Force browser reflow before starting the transition.
-        this.element.offsetHeight;
+        // Force layout before applying the visible state so CSS transitions run.
+        void this.element.offsetHeight;
 
-        requestAnimationFrame(() => {
-            this.element.classList.add('show');
-            this.backdrop?.classList.add('show');
-
-            this.focusInitialElement();
-        });
+        this.element.classList.add('show');
+        this.backdrop?.classList.add('show');
+        this.focusInitialElement();
     }
 
     hide() {
-        if (!this.element.classList.contains('show')) {
-            return;
-        }
-
-        if (this.isTransitioning) {
+        if (
+            this.isDisposed ||
+            !this.element.classList.contains('show') ||
+            this.isTransitioning
+        ) {
             return;
         }
 
         this.isTransitioning = true;
-
-        const token = ++this.transitionToken;
+        const transitionToken = ++this.transitionToken;
 
         this.element.classList.remove('show');
         this.backdrop?.classList.remove('show');
@@ -199,9 +249,11 @@ class Modal {
         this.element.setAttribute('aria-hidden', 'true');
         this.element.removeAttribute('aria-modal');
 
-        const transitionElement = this.element.querySelector('.modal-dialog') || this.element;
-        this.waitForTransition(transitionElement).then(() => {
-            if (token !== this.transitionToken) {
+        Promise.all([
+            Modal.waitForTransition(this.element),
+            Modal.waitForTransition(this.backdrop)
+        ]).then(() => {
+            if (transitionToken !== this.transitionToken || this.isDisposed) {
                 return;
             }
 
@@ -210,91 +262,94 @@ class Modal {
     }
 
     toggle() {
-        this.element.classList.contains('show')
-            ? this.hide()
-            : this.show();
+        if (this.element.classList.contains('show')) {
+            this.hide();
+            return;
+        }
+
+        this.show();
     }
 
     dispose() {
-        this._hideImmediately();
+        if (this.isDisposed) {
+            return;
+        }
 
+        this.hideImmediately();
         Modal.instances.delete(this.element);
 
         this.element = null;
         this.backdrop = null;
         this.previousFocus = null;
+        this.isDisposed = true;
     }
 
-    // --------------------------------------------------
-    // Backdrop
-    // --------------------------------------------------
-
     createBackdrop() {
-        const backdropOption = this.element.getAttribute('data-bs-backdrop');
-
-        if (backdropOption === 'false') {
+        if (
+            this.backdrop ||
+            this.element.getAttribute('data-bs-backdrop') === 'false'
+        ) {
             return;
         }
 
         this.backdrop = document.createElement('div');
-        this.backdrop.className = 'modal-backdrop fade';
-
+        this.backdrop.className = `${MODAL_BACKDROP_CLASS} fade`;
         document.body.appendChild(this.backdrop);
 
-        this.backdrop.offsetHeight;
+        // Apply the initial backdrop state before adding .show.
+        void this.backdrop.offsetHeight;
     }
 
-    // --------------------------------------------------
-    // Focus management
-    // --------------------------------------------------
-
-    getFocusableElements() {
-        return Array.from(
-            this.element.querySelectorAll(
-                'a[href], button:not([disabled]), input:not([disabled]), ' +
-                'select:not([disabled]), textarea:not([disabled]), ' +
-                '[tabindex]:not([tabindex="-1"])'
-            )
-        ).filter((element) => {
-            return element.getAttribute('aria-hidden') !== 'true' &&
-                element.getClientRects().length > 0;
+    focusableElements() {
+        return Array.from(this.element.querySelectorAll(FOCUSABLE_SELECTOR)).filter((element) => {
+            return (
+                !element.hasAttribute('disabled') &&
+                element.getAttribute('aria-hidden') !== 'true' &&
+                element.getClientRects().length > 0
+            );
         });
     }
 
     focusInitialElement() {
-        const focusable = this.getFocusableElements();
+        const autofocusElement = this.element.querySelector('[autofocus]');
+        const focusableElements = this.focusableElements();
 
-        if (focusable.length) {
-            focusable[0].focus();
-        } else {
-            this.element.focus();
+        if (autofocusElement && focusableElements.includes(autofocusElement)) {
+            autofocusElement.focus();
+            return;
         }
+
+        if (focusableElements.length > 0) {
+            focusableElements[0].focus();
+            return;
+        }
+
+        this.element.focus();
     }
 
     trapFocus(event) {
-        const focusable = this.getFocusableElements();
+        const focusableElements = this.focusableElements();
 
-        if (!focusable.length) {
+        if (focusableElements.length === 0) {
             event.preventDefault();
             this.element.focus();
             return;
         }
 
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
 
-        if (event.shiftKey && document.activeElement === first) {
+        if (event.shiftKey && document.activeElement === firstElement) {
             event.preventDefault();
-            last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
+            lastElement.focus();
+            return;
+        }
+
+        if (!event.shiftKey && document.activeElement === lastElement) {
             event.preventDefault();
-            first.focus();
+            firstElement.focus();
         }
     }
-
-    // --------------------------------------------------
-    // Body scroll management
-    // --------------------------------------------------
 
     lockBody() {
         if (Modal.bodyLocked) {
@@ -304,19 +359,17 @@ class Modal {
         const scrollbarWidth =
             window.innerWidth - document.documentElement.clientWidth;
 
-        Modal.originalBodyPadding = document.body.style.paddingRight;
+        Modal.originalBodyPaddingRight = document.body.style.paddingRight;
 
-        const currentPadding = parseFloat(
-            getComputedStyle(document.body).paddingRight
+        const currentPadding = Number.parseFloat(
+            window.getComputedStyle(document.body).paddingRight
         ) || 0;
 
         if (scrollbarWidth > 0) {
-            document.body.style.paddingRight =
-                `${currentPadding + scrollbarWidth}px`;
+            document.body.style.paddingRight = `${currentPadding + scrollbarWidth}px`;
         }
 
         document.body.classList.add('modal-open');
-
         Modal.bodyLocked = true;
     }
 
@@ -326,54 +379,105 @@ class Modal {
         }
 
         document.body.classList.remove('modal-open');
-        document.body.style.paddingRight = Modal.originalBodyPadding;
-
+        document.body.style.paddingRight = Modal.originalBodyPaddingRight;
         Modal.bodyLocked = false;
     }
 
-    // --------------------------------------------------
-    // Transition handling
-    // --------------------------------------------------
+    completeHide() {
+        this.element.style.display = 'none';
+        this.backdrop?.remove();
+        this.backdrop = null;
+        this.isTransitioning = false;
 
-    waitForTransition(element) {
+        if (Modal.activeInstance === this) {
+            Modal.activeInstance = null;
+            this.unlockBody();
+            this.restoreFocus();
+        }
+    }
+
+    hideImmediately() {
+        this.cancelPendingOperations();
+
+        this.element.classList.remove('show');
+        this.element.style.display = 'none';
+        this.element.setAttribute('aria-hidden', 'true');
+        this.element.removeAttribute('aria-modal');
+
+        this.backdrop?.remove();
+        this.backdrop = null;
+        this.isTransitioning = false;
+
+        if (Modal.activeInstance === this) {
+            Modal.activeInstance = null;
+            this.unlockBody();
+        }
+    }
+
+    restoreFocus() {
+        if (this.previousFocus?.isConnected) {
+            this.previousFocus.focus();
+        }
+
+        this.previousFocus = null;
+    }
+
+    cancelPendingOperations() {
+        ++this.transitionToken;
+        this.isTransitioning = false;
+    }
+
+    handleStaticBackdrop() {
+        const dialog = this.element.querySelector('.modal-dialog') || this.element;
+
+        if (this.element.classList.contains('modal-static')) {
+            return;
+        }
+
+        this.element.classList.add('modal-static');
+
+        Modal.waitForTransition(dialog).then(() => {
+            this.element.classList.remove('modal-static');
+        });
+    }
+
+    static getInstance(element) {
+        return Modal.instances.get(element) ?? null;
+    }
+
+    static getOrCreateInstance(element) {
+        return Modal.getInstance(element) ?? new Modal(element);
+    }
+
+    static waitForTransition(element) {
+        if (!element) {
+            return Promise.resolve();
+        }
+
+        const style = window.getComputedStyle(element);
+        const durations = Modal.parseCssTimes(style.transitionDuration);
+        const delays = Modal.parseCssTimes(style.transitionDelay);
+        const transitionCount = Math.max(durations.length, delays.length);
+
+        let maxDuration = 0;
+
+        for (let index = 0; index < transitionCount; index += 1) {
+            const duration = durations[index % durations.length] || 0;
+            const delay = delays[index % delays.length] || 0;
+
+            maxDuration = Math.max(maxDuration, duration + delay);
+        }
+
+        if (maxDuration <= 0) {
+            return Promise.resolve();
+        }
+
         return new Promise((resolve) => {
-            if (!element || !element.classList.contains('fade')) {
-                resolve();
-                return;
-            }
-
-            const style = getComputedStyle(element);
-
-            const durations = style.transitionDuration
-                .split(',')
-                .map(value => parseFloat(value) * (value.includes('ms') ? 1 : 1000));
-
-            const delays = style.transitionDelay
-                .split(',')
-                .map(value => parseFloat(value) * (value.includes('ms') ? 1 : 1000));
-
-            const duration = Math.max(
-                ...durations.map((value, index) => {
-                    return value + (delays[index] || delays[0] || 0);
-                }),
-                0
-            );
-
-            if (duration === 0) {
-                resolve();
-                return;
-            }
-
-            let completed = false;
+            let timeoutId;
 
             const finish = () => {
-                if (completed) {
-                    return;
-                }
-
-                completed = true;
                 element.removeEventListener('transitionend', onTransitionEnd);
-                clearTimeout(timeout);
+                window.clearTimeout(timeoutId);
                 resolve();
             };
 
@@ -383,74 +487,43 @@ class Modal {
                 }
             };
 
-            const timeout = setTimeout(finish, duration + 50);
-
+            timeoutId = window.setTimeout(finish, maxDuration + 50);
             element.addEventListener('transitionend', onTransitionEnd);
         });
     }
 
-    // --------------------------------------------------
-    // Hide and cleanup
-    // --------------------------------------------------
+    static parseCssTimes(value) {
+        return value.split(',').map((time) => {
+            const trimmedTime = time.trim();
+            const numericValue = Number.parseFloat(trimmedTime);
 
-    completeHide() {
-        this.element.style.display = 'none';
-
-        this.backdrop?.remove();
-        this.backdrop = null;
-
-        this.isTransitioning = false;
-
-        if (Modal.activeInstance === this) {
-            Modal.activeInstance = null;
-            this.unlockBody();
-
-            if (this.previousFocus?.isConnected) {
-                this.previousFocus.focus();
+            if (Number.isNaN(numericValue)) {
+                return 0;
             }
-        }
-    }
 
-    _hideImmediately() {
-        ++this.transitionToken;
-
-        this.element.classList.remove('show');
-        this.element.style.display = 'none';
-
-        this.element.setAttribute('aria-hidden', 'true');
-        this.element.removeAttribute('aria-modal');
-
-        this.backdrop?.remove();
-        this.backdrop = null;
-
-        this.isTransitioning = false;
-
-        if (Modal.activeInstance === this) {
-            Modal.activeInstance = null;
-        }
-    }
-
-    handleStaticBackdrop() {
-        const dialog =
-            this.element.querySelector('.modal-dialog') || this.element;
-
-        this.element.classList.add('modal-static');
-
-        this.waitForTransition(dialog).then(() => {
-            this.element.classList.remove('modal-static');
+            return trimmedTime.endsWith('ms')
+                ? numericValue
+                : numericValue * 1000;
         });
     }
 
-    // --------------------------------------------------
-    // Static methods
-    // --------------------------------------------------
+    static handleBackdropClick(modal) {
+        const instance = Modal.getInstance(modal);
 
-    static getInstance(element) {
-        return Modal.instances.get(element) || null;
-    }
+        if (!instance || Modal.activeInstance !== instance) {
+            return;
+        }
 
-    static getOrCreateInstance(element) {
-        return Modal.getInstance(element) || new Modal(element);
+        const backdropOption = modal.getAttribute('data-bs-backdrop');
+
+        if (backdropOption === 'static') {
+            instance.handleStaticBackdrop();
+            return;
+        }
+
+        if (backdropOption !== 'false') {
+            instance.hide();
+        }
     }
 
     static init() {
@@ -460,67 +533,57 @@ class Modal {
 
         Modal.initialized = true;
 
-        // Open and dismiss modal.
         document.addEventListener('click', (event) => {
-            const trigger = event.target.closest(
-                '[data-bs-toggle="modal"]'
-            );
+            if (!(event.target instanceof Element)) {
+                return;
+            }
+
+            const trigger = event.target.closest(MODAL_TOGGLE_SELECTOR);
 
             if (trigger) {
                 event.preventDefault();
 
-                const selector = trigger.getAttribute('data-bs-target')
+                const target = trigger.getAttribute('data-bs-target')
                     || trigger.getAttribute('href');
 
-                if (selector?.startsWith('#')) {
-                    const element = document.querySelector(selector);
+                if (target?.startsWith('#')) {
+                    const modal = document.getElementById(target.slice(1));
 
-                    if (element?.classList.contains('modal')) {
-                        Modal.getOrCreateInstance(element).show();
+                    if (modal?.matches(MODAL_SELECTOR)) {
+                        Modal.getOrCreateInstance(modal).show();
                     }
                 }
 
                 return;
             }
 
-            const dismiss = event.target.closest(
-                '[data-bs-dismiss="modal"]'
-            );
+            const dismiss = event.target.closest(MODAL_DISMISS_SELECTOR);
 
             if (dismiss) {
-                const element = dismiss.closest('.modal');
+                const modal = dismiss.closest(MODAL_SELECTOR);
 
-                if (element) {
-                    Modal.getOrCreateInstance(element).hide();
+                if (modal) {
+                    Modal.getOrCreateInstance(modal).hide();
                 }
-            }
-        });
 
-        // Backdrop click.
-        document.addEventListener('click', (event) => {
-            const modal = event.target.closest('.modal');
-
-            if (!modal || event.target !== modal) {
                 return;
             }
 
-            const instance = Modal.getInstance(modal);
+            if (event.target.classList.contains(MODAL_BACKDROP_CLASS)) {
+                const activeModal = Modal.activeInstance?.element;
 
-            if (!instance) {
+                if (activeModal) {
+                    Modal.handleBackdropClick(activeModal);
+                }
+
                 return;
             }
 
-            const backdropOption =
-                modal.getAttribute('data-bs-backdrop');
-
-            if (backdropOption === 'static') {
-                instance.handleStaticBackdrop();
-            } else if (backdropOption !== 'false') {
-                instance.hide();
+            if (event.target.matches(MODAL_SELECTOR)) {
+                Modal.handleBackdropClick(event.target);
             }
         });
 
-        // Keyboard handling.
         document.addEventListener('keydown', (event) => {
             const instance = Modal.activeInstance;
 
@@ -529,15 +592,13 @@ class Modal {
             }
 
             if (event.key === 'Escape') {
-                const keyboardOption =
-                    instance.element.getAttribute('data-bs-keyboard');
-
-                if (keyboardOption === 'false') {
+                if (instance.element.getAttribute('data-bs-keyboard') === 'false') {
                     return;
                 }
 
                 event.preventDefault();
                 instance.hide();
+                return;
             }
 
             if (event.key === 'Tab') {
@@ -545,7 +606,7 @@ class Modal {
             }
         });
 
-        // Prevent focus from escaping the active modal.
+        // Keep keyboard focus inside the active modal.
         document.addEventListener('focusin', (event) => {
             const instance = Modal.activeInstance;
 
@@ -558,8 +619,8 @@ class Modal {
     }
 }
 
-Modal.initialized = false;
-
-// Initialize modal event handlers.
+// Install delegated event handlers once when this module is loaded.
+Dropdown.init();
 Modal.init();
-export { Modal };
+
+export { Dropdown, Modal };
