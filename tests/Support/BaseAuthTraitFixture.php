@@ -16,4 +16,4 @@ use Ellaisys\Cognito\Auth\BaseAuthTrait;
 class BaseAuthTraitFixture
 {
     use BaseAuthTrait;
-} // Class ends
+} //Class ends
