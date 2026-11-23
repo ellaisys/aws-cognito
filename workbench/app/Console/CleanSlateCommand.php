@@ -94,7 +94,7 @@ class CleanSlateCommand extends Command
     } //Function ends
 
     /**
-     * Cleans all user pools from AWS Cognito, with name TempUserPool
+     * Cleans all user pools from AWS Cognito, with name TempUserPool.
      */
     private function pools(): void
     {
@@ -111,14 +111,14 @@ class CleanSlateCommand extends Command
                     // Delete the user pool from AWS Cognito
                     $client->deleteUserPool($pool['Id']);
                 } //End if
-            } //Loop ends            
+            } //Loop ends
         } catch (Exception $exception) {
             Log::error("AwsCleanSlate:pools:Exception");
         } //Try-catch ends
     } //Function ends
 
     /**
-     * Cleans all clients from AWS Cognito, except WorkbenchPoolClient
+     * Cleans all clients from AWS Cognito, except WorkbenchPoolClient.
      */
     private function clients(): void
     {
@@ -135,14 +135,14 @@ class CleanSlateCommand extends Command
                     // Delete the client from AWS Cognito
                     $client->deleteUserPoolClient($this->userPoolId, $clientItem['ClientId']);
                 } //End if
-            } //Loop ends            
+            } //Loop ends
         } catch (Exception $exception) {
             Log::error("AwsCleanSlate:clients:Exception");
         } //Try-catch ends
     } //Function ends
 
     /**
-     * Cleans all users from AWS Cognito with email starting with 
+     * Cleans all users from AWS Cognito with email starting with
      * 'ellaisys+tb_tmp_*'
      */
     private function users(): void
@@ -160,7 +160,7 @@ class CleanSlateCommand extends Command
                 if (str_starts_with($email, 'ellaisys+tb_tmp_')) {
                     $client->deleteUser($this->userPoolId, $user['Username']);
                 } //End if
-            } //Loop ends            
+            } //Loop ends
         } catch (Exception $exception) {
             Log::error("AwsCleanSlate:users:Exception");
         } //Try-catch ends
@@ -183,7 +183,7 @@ class CleanSlateCommand extends Command
                 if ($group['GroupName'] !== 'default') {
                     $client->deleteGroup($group['GroupName'], $this->userPoolId);
                 } //End if
-            } //Loop ends            
+            } //Loop ends
         } catch (Exception $exception) {
             Log::error("AwsCleanSlate:groups:Exception");
         } //Try-catch ends
@@ -204,7 +204,7 @@ class CleanSlateCommand extends Command
             // Iterate through each term and delete it
             foreach ($terms as $term) {
                 $client->deleteTerms($term['TermsId'], $this->userPoolId);
-            } //Loop ends            
+            } //Loop ends
         } catch (Exception $exception) {
             Log::error("AwsCleanSlate:terms:Exception");
         } //Try-catch ends
