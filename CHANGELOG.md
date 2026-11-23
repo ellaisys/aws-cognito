@@ -1,7 +1,7 @@
 # AWS Cognito Laravel Package Changelog
 
 > [!NOTE]
-> Last Updated: <!-- AUTO:last_updated -->2026-11-22<!-- /AUTO:last_updated -->
+> Last Updated: <!-- AUTO:last_updated -->2026-11-23<!-- /AUTO:last_updated -->
 
 ## [Release 57 (tag v2.0.13)](https://github.com/ellaisys/aws-cognito/releases/tag/v2.0.13) - 2026-11-23
 - Feat: Issue [#158](https://github.com/ellaisys/aws-cognito/issues/158) Implement the Laravel validation rules for the AWS Cognito password policy. Update the test cases accordingly.
